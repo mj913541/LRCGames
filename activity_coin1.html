@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coin Activity 1</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      margin: 0;
+    }
+
+    .activity-container {
+      text-align: center;
+    }
+
+    .complete-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="activity-container">
+    <h1>Coin Activity 1</h1>
+    <p>Complete this activity to gain more points!</p>
+    <button class="complete-btn" onclick="completeActivity()">Complete Activity</button>
+  </div>
+
+  <script>
+    function completeActivity() {
+      localStorage.setItem('Coin1', 'completed');
+      window.close(); // Optionally close the activity tab
+    }
+  </script>
+</body>
+
+</html>

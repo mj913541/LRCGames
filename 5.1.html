@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML5 Pathway Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+      overflow: hidden; /* Prevent scroll bars */
+    }
+
+    #scoreBox {
+      font-size: 20px;
+      margin: 10px;
+      padding: 5px;
+      border: 3px solid #333;
+      border-radius: 10%;
+      background-color: #fff;
+    }
+
+    canvas {
+      border: 3px solid #000;
+      background: #fff;
+      border-radius: 2.5%;
+      width: 100%;
+      height: 100%;
+      margin: 5px;
+      max-width: 90vw; /* Maintain aspect ratio */
+      max-height: 90vh; /* Maintain aspect ratio */
+      box-sizing: border-box;
+    }
+
+    #message {
+      position: float;
+      font-size: 24px;
+      color: #333;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="scoreBox">Score: 0</div>
+  <div id="message"></div>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const scoreBox = document.getElementById("scoreBox");
+    const messageBox = document.getElementById("message");
+
+    const playerImage = new Image();
+    playerImage.src = "https://drive.google.com/thumbnail?id=11d2nVywZy-c7Fu7RzVI9nHUCBZIFYDAI";
+
+    const player = {
+      x: 50,
+      y: 550,
+      width: 50,
+      height: 50,
+      speed: 3
+    };
+
+    const items = [
+      { id: "Coin1", emoji: "🪙", value: 10, activityUrl: "activity_coin1.html" },
+      { id: "Coin2", emoji: "🪙", value: 10, activityUrl: "activity_coin2.html" },
+      { id: "Coin3", emoji: "🪙", value: 10, activityUrl: "activity_coin3.html" },
+      { id: "Book", emoji: "📖", value: 15, activityUrl: "activity_book.html" },
+      { id: "Diamond1", emoji: "💎", value: 20, activityUrl: "activity_diamond1.html" },
+      { id: "Diamond2", emoji: "💎", value: 20, activityUrl: "activity_diamond2.html" },
+      { id: "Diamond3", emoji: "💎", value: 20, activityUrl: "activity_diamond3.html" }
+    ];
+
+    let collectibles = [];
+
+    function generateCollectibles() {
+      collectibles = [];
+      items.forEach((item) => {
+        let randomX = Math.floor(Math.random() * (canvas.width - 50));
+        let randomY = Math.floor(Math.random() * (canvas.height - 50));
+        collectibles.push({
+          id: item.id,
+          x: randomX,
+          y: randomY,
+          emoji: item.emoji,
+          value: item.value,
+          activityUrl: item.activityUrl,
+          collected: false
+        });
+      });
+    }
+
+    generateCollectibles();
+
+    let score = 0;
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.drawImage(playerImage, player.x, player.y, player.width, player.height);
+
+      collectibles.forEach((item) => {
+        if (!item.collected) {
+          ctx.font = "30px Arial";
+          ctx.fillText(item.emoji, item.x, item.y + 30);
+        }
+      });
+
+      updatePlayerMovement();
+      checkCollisions();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.onload = function () {
+      gameLoop();
+    };
+
+    let keys = {};
+
+    window.addEventListener("keydown", function (e) {
+      keys[e.key] = true;
+    });
+
+    window.addEventListener("keyup", function (e) {
+      keys[e.key] = false;
+    });
+
+    function updatePlayerMovement() {
+      if (keys["ArrowUp"]) {
+        player.y -= player.speed;
+      }
+      if (keys["ArrowDown"]) {
+        player.y += player.speed;
+      }
+      if (keys["ArrowLeft"]) {
+        player.x -= player.speed;
+      }
+      if (keys["ArrowRight"]) {
+        player.x += player.speed;
+      }
+      player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+      player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+    }
+
+    function checkCollisions() {
+      collectibles.forEach((item) => {
+        if (!item.collected) {
+          if (
+            player.x < item.x + 30 &&
+            player.x + player.width > item.x &&
+            player.y < item.y + 30 &&
+            player.y + player.height > item.y
+          ) {
+            item.collected = true;
+            triggerActivity(item);
+          }
+        }
+      });
+    }
+
+    function updateScore() {
+      scoreBox.textContent = "Score: " + score;
+    }
+
+    function showMessage(message) {
+      messageBox.textContent = message;
+
+      setTimeout(() => {
+        messageBox.textContent = "";
+      }, 2000);
+    }
+
+    function triggerActivity(item) {
+      let activityId = item.id;
+      localStorage.setItem(activityId, 'pending');
+
+      const activityTab = window.open(item.activityUrl, '_blank');
+
+      window.addEventListener('storage', function (event) {
+        if (event.key === activityId && event.newValue === 'completed') {
+          score += item.value;
+          updateScore();
+          showMessage(`You collected a ${item.emoji} worth ${item.value} points!`);
+          localStorage.removeItem(activityId); // Clean up localStorage
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>
