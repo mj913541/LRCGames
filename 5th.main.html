@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>5th Grade Main</title>
+
+<style>
+	@import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
+
+	.body {
+		background-color: lightgray;
+	}
+
+        .container {
+		width: auto;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+		border: 3px solid black;
+		background: radial-gradient(circle, rgba(44,21,59,1) 17%, rgba(119,21,164,1) 31%, rgba(221,157,242,1) 48%, rgba(116,45,143,1) 71%, rgba(95,21,126,1) 100%);
+		margin: 10px;
+		border-radius: 15px;
+		box-shadow: 3px 3px 0 black;
+        }
+
+        .pathway {
+		width: 90vw;		
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		justify-content: center;
+		margin: auto;
+        }
+
+        .step {		
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		align-items: center;
+		cursor: pointer;
+		transition: transform 0.3s;
+		visibility: hidden;
+        }
+
+        .step:hover {
+		transform: scale(1.2);
+        }
+
+	.container img {
+		width: 100px;
+		height: auto;
+        }
+
+        .title {
+		font-family: 'Bubblegum Sans', sans-serif;
+		font-size: 48px;
+		color: darkturquoise;
+		font-variant: small-caps;
+		text-shadow: 2px 1px 0 silver;
+		margin: 0 2vw;
+		justify-content: space-between;
+		align-items: center;
+		text-align: center;
+		margin: 10px;
+		border-radius: 15px;
+        }
+
+	.hidden {
+		display: none;
+	}
+
+        .title span {
+		display: block;
+        }
+
+</style>
+</head>
+
+
+
+
+<body>
+	<div class="title container">
+		<img src="https://drive.google.com/thumbnail?id=1b7mScbRhzw5S5qznbdyrD3f_m67Zhi6N" alt="book lion">
+		<img src="https://drive.google.com/thumbnail?id=11Hb4Z9F288YYv696w1lLHrc3fEEZHvvI" alt="chromebook lion">
+		<img src="https://drive.google.com/thumbnail?id=11d2nVywZy-c7Fu7RzVI9nHUCBZIFYDAI" alt="abc lion">
+		<div class="title">
+		<span>5<sup>th</sup> Grade</span>
+		</div>
+		<img src="https://drive.google.com/thumbnail?id=11d2nVywZy-c7Fu7RzVI9nHUCBZIFYDAI" alt="abc lion">
+		<img src="https://drive.google.com/thumbnail?id=11Hb4Z9F288YYv696w1lLHrc3fEEZHvvI" alt="chromebook lion">
+		<img src="https://drive.google.com/thumbnail?id=1b7mScbRhzw5S5qznbdyrD3f_m67Zhi6N" alt="book lion">
+	</div>
+
+
+	<div class="pathway">
+		<div class="step" data-date="2024-07-17" onclick="openInNewTab1_1()"><img src="https://drive.google.com/thumbnail?id=1e7OfSWB6QZ9v6kU2jAsQYPgSRZdmEWz3" width="150" height="150" alt="puzzle piece 1"></div>
+		<div class="step" data-date="2024-08-22" onclick="openInNewTab1_2()"><img src="https://drive.google.com/thumbnail?id=1s3PJ5PBIqdvnlosL-vZiWPu_1JvStGP6" alt="puzzle piece 2"></div>
+		<div class="step" data-date="2024-08-29" onclick="openInNewTab1_3()"><img src="https://drive.google.com/thumbnail?id=1Ie8FxtEE3ARGfs4a_dSe16zc88ZVR8Mw" alt="puzzle piece 3"></div>
+		<div class="step" data-date="2024-09-06" onclick="openInNewTab1_4()"><img src="https://drive.google.com/thumbnail?id=1r4TLCzxyhEU5Fw3zkYi6QpuBmbuXbc2E" alt="puzzle piece 4"></div>
+		<div class="step" data-date="2024-09-13" onclick="openInNewTab1_5()"><img src="https://drive.google.com/thumbnail?id=12Yg9u_UtrN9iExvtX6XJ59ONcA0M5DSt" alt="puzzle piece 5"></div>
+		<div class="step" data-date="2024-09-20" onclick="openInNewTab1_6()"><img src="https://drive.google.com/thumbnail?id=1_neeuddBbELC8v_P8ksShdiWHiYsEpOV" alt="puzzle piece 6"></div>
+		<div class="step" data-date="2024-09-30" onclick="openInNewTab1_7()"><img src="https://drive.google.com/thumbnail?id=1xXvsJyU3uzKu3NDhAHvNoKx1hUZTwz7B" alt="puzzle piece 7"></div>
+		<div class="step" data-date="2024-10-07" onclick="openInNewTab1_8()"><img src="https://drive.google.com/thumbnail?id=1XALwZ6iNG__rhjWzMjHhve0dlqXVLfyQ" alt="puzzle piece 8"></div>
+		<div class="step" data-date="2024-10-07" onclick="openInNewTab1_9()"><img src="https://drive.google.com/thumbnail?id=1mr1z1gWHEGVQMxVbszD2JvkjsghbEW_H" alt="puzzle piece 9"></div>
+		<div class="step" data-date="2024-10-15" onclick="openInNewTab1_10()"><img src="https://drive.google.com/thumbnail?id=1LIV5QWKJdFyB5J4Nhs18u4JQV3fJXdCj" alt="puzzle piece 10"></div>
+		<div class="step" data-date="2024-10-22" onclick="openInNewTab1_11()"><img src="https://drive.google.com/thumbnail?id=1oVNc_TOZg_dmf3YACY-eEXAefPgHpEDZ" alt="puzzle piece 11"></div>
+		<div class="step" data-date="2024-10-30" onclick="openInNewTab1_12()"><img src="https://drive.google.com/thumbnail?id=1d32lmJmcvgxQqzJfIWJwyB79Huvmztxn" alt="puzzle piece 12"></div>
+
+
+		<div class="step" data-date="2024-11-07" onclick="openInNewTab1_13()"><img src="https://drive.google.com/thumbnail?id=1DpMqOhZ5O4irnJblCY3ztU7RFZPkniAF" alt="puzzle piece 13"></div>
+		<div class="step" data-date="2024-11-14" onclick="openInNewTab1_14()"><img src="https://drive.google.com/thumbnail?id=1QJIS_ghe42H4ff2c2aGQFLkkyBh0rrTP" alt="puzzle piece 14"></div>
+		<div class="step" data-date="2024-11-21" onclick="openInNewTab1_15()"><img src="https://drive.google.com/thumbnail?id=1Yyl6cIwj_gjFaFQR3KGu7vdtU7SVzOe2" alt="puzzle piece 15"></div>
+		<div class="step" data-date="2024-12-03" onclick="openInNewTab1_16()"><img src="https://drive.google.com/thumbnail?id=1v3Z18dQUprHQjEDxX74QEZRhAHtf9E7I" alt="puzzle piece 16"></div>
+		<div class="step" data-date="2024-12-10" onclick="openInNewTab1_17()"><img src="https://drive.google.com/thumbnail?id=1vPnXSZIFIXqTpTWN6CHDV-CEI5Ub1NsK" alt="puzzle piece 17"></div>
+		<div class="step" data-date="2024-12-17" onclick="openInNewTab1_18()"><img src="https://drive.google.com/thumbnail?id=1-nMQLhjk5hHDTBe-ew6DzphKCaceH6wC" alt="puzzle piece 18"></div>
+
+
+
+		<div class="step" data-date="2025-01-08" onclick="openInNewTab1_19()"><img src="https://drive.google.com/thumbnail?id=1Rff-yw2d5eEMkyaWLBKyIbg3kbOLxEqh" alt="puzzle piece 19"></div>
+		<div class="step" data-date="2025-01-15" onclick="openInNewTab1_20()"><img src="https://drive.google.com/thumbnail?id=1BfYqnwGxQlFqO56Es4_U5uvlv1Y5Ue6c" alt="puzzle piece 20"></div>
+		<div class="step" data-date="2025-01-23" onclick="openInNewTab1_21()"><img src="https://drive.google.com/thumbnail?id=1OR3D7zhrGqEeSex1UK96WWGgfyoA0GuK" alt="puzzle piece 21"></div>
+		<div class="step" data-date="2025-01-30" onclick="openInNewTab1_22()"><img src="https://drive.google.com/thumbnail?id=170w1x-UVpwept84GJFjJrHh9UME5n8vO" alt="puzzle piece 22"></div>
+
+
+		<div class="step" data-date="2025-02-06" onclick="openInNewTab1_23()"><img src="https://drive.google.com/thumbnail?id=1_a-d7BHayNBUVJCvQvT9UQnMGODD_2gd" alt="puzzle piece 23"></div>
+		<div class="step" data-date="2025-02-13" onclick="openInNewTab1_24()"><img src="https://drive.google.com/thumbnail?id=1sHqG_a_Wa52iSLg3wqUW3MQ1T0EWtZm3" width="150" height="150" alt="puzzle piece 24"></div>
+		<div class="step" data-date="2025-02-24" onclick="openInNewTab1_25()"><img src="https://drive.google.com/thumbnail?id=1UYNyYHkj9tb0-8cFTmDv0JiXRgrKXpXo" width="150" height="150" alt="puzzle piece 25"></div>
+		<div class="step" data-date="2025-03-04" onclick="openInNewTab1_26()"><img src="https://drive.google.com/thumbnail?id=1fybLbPRG25xfIQbj5jHwbNZXnLDKRyKT" alt="puzzle piece 26"></div>
+		<div class="step" data-date="2025-03-11" onclick="openInNewTab1_27()"><img src="https://drive.google.com/thumbnail?id=1VO4GoLSXzLeuCQSVLErkyMSg_ABspyaM" alt="puzzle piece 27"></div>
+		<div class="step" data-date="2025-03-18" onclick="openInNewTab1_28()"><img src="https://drive.google.com/thumbnail?id=1RZkUDqzvf82Ym18e5hUggNv2CgZeFWkI" alt="puzzle piece 28"></div>
+
+		<div class="step" data-date="2025-04-02" onclick="openInNewTab1_29()"><img src="https://drive.google.com/thumbnail?id=1_ILTzr7QvCoBKH3yeABmSRxBJK1bFrtQ" alt="puzzle piece 29"></div>
+		<div class="step" data-date="2025-04-10" onclick="openInNewTab1_30()"><img src="https://drive.google.com/thumbnail?id=1u9CQO9pFmYE_e6XJA-xHPrCSI_pSPDoc" alt="puzzle piece 30"></div>
+		<div class="step" data-date="2025-04-17" onclick="openInNewTab1_31()"><img src="https://drive.google.com/thumbnail?id=1rsNKNkWb9oXWgnHFfIl4kZEvYBfedyxe" alt="puzzle piece 31"></div>
+		<div class="step" data-date="2025-04-28" onclick="openInNewTab1_32()"><img src="https://drive.google.com/thumbnail?id=1IKfIF1KLUC4jn271kWhncUyEJzbd6_V8" width="150" height="150" alt="puzzle piece 32"></div>
+
+		<div class="step" data-date="2025-05-05" onclick="openInNewTab1_33()"><img src="https://drive.google.com/thumbnail?id=1QRMrf672K7aYTL_5kc1flVk-X62z7T-_" width="150" height="150" alt="puzzle piece 33"></div>
+
+
+
+	</div>
+
+
+<script>
+	function openInNewTab1_1() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_1", "_blank");}
+	function openInNewTab1_2() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_2", "_blank");}
+	function openInNewTab1_3() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_3", "_blank");}
+	function openInNewTab1_4() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_4", "_blank");}
+	function openInNewTab1_5() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_5", "_blank");}
+	function openInNewTab1_6() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_6", "_blank");}
+	function openInNewTab1_7() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_7", "_blank");}
+	function openInNewTab1_8() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_8", "_blank");}
+	function openInNewTab1_9() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_9", "_blank");}
+	function openInNewTab1_10() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_10", "_blank");}
+	function openInNewTab1_11() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_11", "_blank");}
+	function openInNewTab1_12() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_12", "_blank");}
+	function openInNewTab1_13() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_13", "_blank");}
+	function openInNewTab1_14() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_14", "_blank");}
+	function openInNewTab1_15() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_15", "_blank");}
+	function openInNewTab1_16() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_16", "_blank");}
+	function openInNewTab1_17() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_17", "_blank");}
+	function openInNewTab1_18() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_18", "_blank");}
+	function openInNewTab1_19() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_19", "_blank");}
+	function openInNewTab1_20() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_20", "_blank");}
+	function openInNewTab1_21() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_21", "_blank");}
+	function openInNewTab1_22() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_22", "_blank");}
+	function openInNewTab1_23() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_23", "_blank");}
+	function openInNewTab1_24() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_24", "_blank");}
+	function openInNewTab1_25() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_25", "_blank");}
+	function openInNewTab1_26() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_26", "_blank");}
+	function openInNewTab1_27() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_27", "_blank");}
+	function openInNewTab1_28() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_28", "_blank");}
+	function openInNewTab1_29() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_29", "_blank");}
+	function openInNewTab1_30() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_30", "_blank");}
+	function openInNewTab1_31() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_31", "_blank");}
+	function openInNewTab1_32() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_32", "_blank");}
+	function openInNewTab1_33() {window.open("https://sites.google.com/sd308.org/mrsmindyalbrechtlms/main-grade-level/5th-grade/5_33", "_blank");}
+
+	document.addEventListener('DOMContentLoaded', function () {
+		const steps = document.querySelectorAll('.step');
+		const currentDate = new Date();
+
+		steps.forEach(step => {
+			const stepDate = new Date(step.getAttribute('data-date'));
+			if (currentDate >= stepDate) {
+				step.style.visibility = 'visible';
+				}
+			});
+		});
+
+</script>
+</body>
+</html>
