@@ -1,46 +1,223 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Coin Activity 1</title>
-  <style>
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f0f0f0;
-      margin: 0;
-    }
-
-    .activity-container {
-      text-align: center;
-    }
-
-    .complete-btn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Game</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+        }
+        .game-container {
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 600px;
+            background: #ffcccb;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .word {
+            font-size: 2em;
+            color: #4caf50;
+            margin: 20px;
+            animation: fadeIn 2s ease-in-out;
+        }
+        .score {
+            font-size: 1.5em;
+            color: #ff5722;
+        }
+        .input-word {
+            font-size: 1.5em;
+            padding: 10px;
+            border: 2px solid #4caf50;
+            border-radius: 5px;
+        }
+        .message {
+            font-size: 1.2em;
+            color: #2196f3;
+            margin: 10px;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 13px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            width: 0;
+            background-color: #4caf50;
+            border-radius: 13px;
+            transition: width 0.5s;
+        }
+        .hidden {
+            display: none;
+        }
+        .congratulations {
+            font-size: 2em;
+            color: #4caf50;
+            margin: 20px;
+        }
+        .congrats-image {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #4caf50;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
 </head>
-
 <body>
-  <div class="activity-container">
-    <h1>Coin Activity 1</h1>
-    <p>Complete this activity to gain more points!</p>
-    <button class="complete-btn" onclick="completeActivity()">Complete Activity</button>
-  </div>
+    <div class="game-container" id="game-container">
+        <h1>Typing Game</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="word" id="word"></div>
+        <div class="image-container">
+            <img id="word-image" src="" alt="word image">
+        </div>
+        <input type="text" id="input-word" class="input-word" placeholder="Type the word here">
+        <div class="message" id="message"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <button id="restart-button">Restart Game</button>
+    </div>
+    <div class="game-container hidden" id="congratulations-container">
+        <h1 class="congratulations">Congratulations!</h1>
+        <p>You typed all the words correctly!</p>
+        <img src="images/congrats.jpg" alt="Congratulations" class="congrats-image">
+        <button id="restart-button-congrats">Restart Game</button>
+    </div>
+    <script>
+        const words = [
+            "the", "of", "and", "a", "to", "in", "is", "you", "that", "it", 
+            "he", "was", "for", "on", "are", "as", "with", "his", "they", "I",
+            "at", "be", "this", "have", "from", "or", "one", "had", "by", "word",
+            "but", "not", "what", "all", "were", "we", "when", "your", "can", "said",
+            "there", "use", "an", "each", "which", "she", "do", "how", "their", "if",
+            "will", "up", "other", "about", "out", "many", "then", "them", "these", "so",
+            "some", "her", "would", "make", "like", "him", "into", "time", "has", "look",
+            "two", "more", "write", "go", "see", "number", "no", "way", "could", "people",
+            "my", "than", "first", "water", "been", "call", "who", "oil", "its", "now",
+            "find", "long", "down", "day", "did", "get", "come", "made", "may", "part"
+        ];
 
-  <script>
-    function completeActivity() {
-      localStorage.setItem('Coin1', 'completed');
-      window.close(); // Optionally close the activity tab
-    }
-  </script>
+        const wordImages = {
+            "the": "images/the.jpg",
+            "of": "images/of.jpg",
+            "and": "images/and.jpg",
+            // Add paths for other words
+            // Example: "a": "images/a.jpg",
+            // ...
+        };
+
+        let selectedWords = [];
+        let score = 0;
+        let currentWordIndex = 0;
+
+        const wordElement = document.getElementById('word');
+        const inputElement = document.getElementById('input-word');
+        const messageElement = document.getElementById('message');
+        const scoreElement = document.getElementById('score');
+        const imageElement = document.getElementById('word-image');
+        const progressBarElement = document.getElementById('progress-bar');
+        const restartButton = document.getElementById('restart-button');
+        const gameContainer = document.getElementById('game-container');
+        const congratulationsContainer = document.getElementById('congratulations-container');
+        const restartButtonCongrats = document.getElementById('restart-button-congrats');
+
+        function getRandomWords(num) {
+            const shuffled = words.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        function updateProgressBar() {
+            const progress = (currentWordIndex / selectedWords.length) * 100;
+            progressBarElement.style.width = progress + '%';
+        }
+
+        function displayNewWord() {
+            if (currentWordIndex < selectedWords.length) {
+                const currentWord = selectedWords[currentWordIndex];
+                wordElement.textContent = currentWord;
+                imageElement.src = wordImages[currentWord] || '';
+                imageElement.alt = currentWord;
+                inputElement.value = '';
+                inputElement.focus();
+                updateProgressBar();
+            } else {
+                showCongratulations();
+            }
+        }
+
+        function showCongratulations() {
+            gameContainer.classList.add('hidden');
+            congratulationsContainer.classList.remove('hidden');
+            completeActivity(); // Call the function to signal completion
+        }
+
+        function restartGame() {
+            selectedWords = getRandomWords(8);
+            score = 0;
+            currentWordIndex = 0;
+            scoreElement.textContent = score;
+            inputElement.disabled = false;
+            messageElement.textContent = '';
+            gameContainer.classList.remove('hidden');
+            congratulationsContainer.classList.add('hidden');
+            displayNewWord();
+        }
+
+        inputElement.addEventListener('input', () => {
+            const typedWord = inputElement.value.trim();
+            if (typedWord === wordElement.textContent) {
+                score++;
+                scoreElement.textContent = score;
+                messageElement.textContent = 'Correct!';
+                messageElement.style.color = '#4caf50';
+                currentWordIndex++;
+                displayNewWord();
+            } else {
+                messageElement.textContent = 'Keep trying!';
+                messageElement.style.color = '#ff5722';
+            }
+        });
+
+        restartButton.addEventListener('click', restartGame);
+        restartButtonCongrats.addEventListener('click', restartGame);
+
+        function completeActivity() {
+            localStorage.setItem('Coin1', 'completed');
+            window.close(); // Optionally close the activity tab
+        }
+
+        restartGame();
+    </script>
 </body>
-
 </html>
