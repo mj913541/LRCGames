@@ -88,11 +88,7 @@
     <div id="game-board"></div>
     <button id="restart-btn">Play Again</button>
     <p id="flip-count">Flips: 0</p>
-    <script type="text/javascript" src="https://cdn.emailjs.com/dist/email.min.js"></script>
-    <script type="text/javascript">
-        (function() {
-            emailjs.init("YOUR_USER_ID"); // Replace with your EmailJS user ID
-        })();
+    <button id="next-btn" style="display: none;">Next</button>
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -193,10 +189,16 @@
                 if (matches === cardArray.length / 2) {
                     setTimeout(() => {
                         alert('Congratulations! You have matched all the cards.');
-                        sendCompletionEmail();
                     }, 500);
+                    document.getElementById('next-btn').style.display = "block"
                 }
             }
+
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                completeActivity();
+            });
+
 
             document.getElementById('restart-btn').addEventListener('click', () => {
                 gameBoard.innerHTML = '';
