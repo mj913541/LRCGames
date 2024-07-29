@@ -208,7 +208,15 @@
             });
 
             createBoard();
+
+            function completeActivity() {
+            localStorage.setItem('Coin2', 'completed');
+            window.close(); // Optionally close the activity tab
+        }
         });
+
+
+
     </script>
 </body>
 </html>
