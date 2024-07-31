@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Checkout</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e6f2ff;
+            color: #333;
+            text-align: center;
+        }
+        #bookCheckout {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #4a90e2;
+            font-size: 1.8em;
+        }
+        video {
+            width: 100%;
+            border: 3px solid #4a90e2;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        p {
+            font-size: 1.1em;
+            color: #555;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            background-color: #2a5d8b;
+        }
+    </style>
+</head>
+<body>
+    <div id="bookCheckout">
+        <h2>Book Checkout</h2>
+
+        <video src="your-video-source.mp4" controls></video>
+        <p>Did you complete book checkout?</p>
+        <button id="check-answer-btn">I can't today</button>
+        <button id="next-btn">Yes</button>
+    </div>
+<script>
+
+            document.getElementById('check-answer-btn').addEventListener('click', () => {
+                noPoints();
+            });
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                awardPoints();
+            });
+
+            function awardPoints() {
+            localStorage.setItem('diamond2', 'completed');
+            window.close(); // Optionally close the activity tab
+        }
+
+        function noPoints() {
+            window.close(); // Optionally close the activity tab
+        }
+</script>
+</body>
+</html>
