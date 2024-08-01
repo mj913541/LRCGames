@@ -37,6 +37,7 @@
             flex-wrap: wrap;
             justify-content: center;
             margin: 20px;
+            padding: 10px;
         }
         .card {
             background-color: white;
@@ -55,6 +56,7 @@
         li {
         padding-left: 40px;
         padding-right: 10px;
+        padding-bottom: 10px;
         list-style-position: inside;
         }
         .card.collapsed {
@@ -70,9 +72,10 @@
             font-size: 20px;
         }
         .card p {
-            padding: 0 20px 20px;
+            padding: 20px 20px 20px;
             margin: 0;
         }
+        .hidden{display: none;}
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -116,7 +119,7 @@
                 </br>Not sure how to place holds or browse our catalog? 
                 </br>Click Here to Watch a quick video to learn how. </p>
 
-                <div style="position: relative; padding-bottom: 52.7086383601757%; height: 0;">
+                <div style="position: relative; padding-bottom: 52%; height: 0;">
                     <iframe src="https://www.loom.com/embed/3ec5cea364f3443492344f2f4fae05c5?sid=86988d3e-060c-4c64-87ee-dd1c454f7bb1" frameborder="2px solid black" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; top: 0; left: 10px; width: 95%; height: 95%;"></iframe></div>
 
                 <p></br></br></br>Books are not the only thing we can offer! </p>
@@ -133,6 +136,19 @@
                 </p>
         </div>
         <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>Other Information</h2>
+            <p>Additional resources and information for staff.</p>
+        </div>
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>⬇️ Read-A-Thon Stuff! ⬇️</h2>
+            <p> <div style="position: relative; padding-bottom: 52.7086383601757%; height: 0;">
+                <iframe src="https://www.youtube.com/embed/BuaV4XjeHKE" title="How to Sign in to your Teacher Read-a-Thon Dashboard" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></p>
+                <ul>
+                    <li>Introductory Letter & Calendar</li>
+                    <li>Tracking Sheets</li>
+                </ul>
+            </div>
+        <div class="card collapsed hidden" onclick="toggleCard(this)">
             <h2>Other Information</h2>
             <p>Additional resources and information for staff.</p>
         </div>
