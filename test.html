@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Resources</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        header {
+            background: linear-gradient(135deg, #006400, #32CD32); /* Dark green to lime green gradient */
+            color: #FFD700; /* Gold */
+            padding: 20px;
+            text-align: center;
+            font-size: 3em;
+            font-weight: bold;
+            position: relative;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 20px;
+            animation: fadeIn 2s ease-in-out;
+        }
+        header img {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            height: 60px;
+            border-radius: 50%;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 20px;
+        }
+        .card {
+            background-color: white;
+            border: 1px solid #ccc;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 45%;
+            margin: 10px;
+            text-align: left;
+            cursor: pointer;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        .card.collapsed {
+            max-height: 50px; /* Height for only showing the title */
+        }
+        .card.expanded {
+            max-height: 1000px; /* Large height to show full content */
+        }
+        .card h2 {
+            color: #006400;
+            margin: 15px;
+            text-align: center;
+            font-size: 20px;
+        }
+        .card p {
+            padding: 0 20px 20px;
+            margin: 0;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="lion_mascot.png" alt="School Mascot">
+        Staff Resources
+    </header>
+    <div class="container">
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>⬇️ Setting Up Classroom Technology ⬇️</h2>
+            <p> Every room should receive a plastic gallon bag with tech items inside. 
+                The black item in the lower right hand corner of the sheet is the dongle that connects your chromebook to the extra monitor and/or the projector.  This video, although a bit longer than you’re used to, explains the entire set up for this tool. If you still need help setting up your classroom after watching, please don’t hesitate to reach out to me.  I can also help you set up phone hard lines if they were disconnected over the summer.
+            </br>
+            </br>
+                If you are like me, your chromebook has been in your school bag all summer. Make sure to plug it in a day or two before you plan to return to the building. If the battery has been completely drained (which may occur if it hasn't been plugged in for a couple months), it may take a day of charging to even turn on. Do not worry if it doesn't turn on immediately when you first plug it in to charge. Walk away for a few hours, and then try again. 
+                Check for updates and allow any updates to occur. In order to check for updates, click on the time in the lower right-hand corner. Installing updates may take several minutes (to an hour) when it hasn't been turned on in a few months, so plan accordingly. 
+            </br>
+            </br>
+                Finally, there is a good chance your password is going to expire within the next month or so. Updating your password before it expires will ease some of the headaches at the start of the year. If you would like to update your password, follow these steps:  
+                <nl>
+                    <li>Click mypassword.sd308.org</li>
+                    <li>Log in with your current district/Google credentials. Remember, your username will just be the first part of your email: i.e. malbrecht and NOT malbrecht@sd308.org.</li>
+                    <li>You will then be prompted to enter a new password. FYI, sometimes it can take a few minutes to update across all the websites and whatnot. So, be patient.</li>
+                </nl> 
+            </p>
+        </div>
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>Setting Up Classroom Technology</h2>
+            <p>Guidelines and help for setting up classroom technology.</p>
+        </div>
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>Other Information</h2>
+            <p>Additional resources and information for staff.</p>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(card) {
+            card.classList.toggle('collapsed');
+            card.classList.toggle('expanded');
+        }
+    </script>
+</body>
+</html>
