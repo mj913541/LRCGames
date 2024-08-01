@@ -39,6 +39,19 @@
             margin: 20px;
             padding: 10px;
         }
+
+        .card2 {
+            background-color: white;
+            border: 3px solid #ccc;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            margin: 10px;
+            text-align: left;
+            cursor: pointer;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
         .card {
             background-color: white;
             border: 2px solid #ccc;
@@ -140,8 +153,6 @@
                 </p>
         </div>
 
-
-
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Expectations for LRC Class ⬇️</h2>
             <p>Student Book Return & Renewal
@@ -162,7 +173,7 @@
         </div>
 
 
-        <div class="card collapsed" onclick="toggleCard(this)">
+        <div class="card collapsed hidden" onclick="toggleCard(this)">
             <h2>⬇️ Read-A-Thon Stuff! ⬇️</h2>
             <p> <div style="position: relative; padding-bottom: 52.7086383601757%; height: 0;">
                 <iframe src="https://www.youtube.com/embed/BuaV4XjeHKE" title="How to Sign in to your Teacher Read-a-Thon Dashboard" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></p>
@@ -173,8 +184,7 @@
             </div></div>
 
         
-        
-        <div class="card collapsed" onclick="toggleCard(this)">
+        <div class="card collapsed hidden" onclick="toggleCard(this)">
             <h2>⬇️ Technology Help Videos ⬇️</h2>
             <p><ul><li>Technology Help Tickets:</li>
                <li>Tech Ticket - <a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU"> Not Working </a></li> 
@@ -187,10 +197,6 @@
                 <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing">Shareable Links & Restrictions (View, Comment, Edit)</a></li>
                 <li><a href="https://www.loom.com/share/2187fe2d141345bda4f3c292fd201842?sharedAppSource=personal_library">How to hide and unhide their Google File Bar</a></li></ul></ul></p>
         </div>
-        <div class="card collapsed" onclick="toggleCard(this)">
-            <h2>Other Information</h2>
-            <p>Additional resources and information for staff.</p>
-        </div>
         <div class="card collapsed hidden" onclick="toggleCard(this)">
             <h2>Other Information</h2>
             <p>Additional resources and information for staff.</p>
@@ -200,9 +206,13 @@
             <p>Additional resources and information for staff.</p>
         </div>
     </div>
-    <div class="container">
-        <div class="card expanded"></div>
-            <h2><span>⬇️ Other Items ⬇️</span></h2>
+    <div class="container" onclick="toggleCard(this)">
+        <div class="card expanded">
+            <h2>⬇️ Other Items ⬇️</h2>
+            <a href="htt" target="_blank" title="Bluestem">Bluestem Award List Grades 4-5</a>
+            <a href="h" target="_blank" title="Monarch">Monarch Award List Grades K-3</a>
+            <a href="https://docs.google.com/spreadsheets/d/1qJXgARJIykCFctkqhveEjXzjlUyNAS3H3lFRQDUgP_M/edit?usp=sharing" target="_blank" title="5th Grade Passwords"></a>
+    </div>
     <script>
         function toggleCard(card) {
             card.classList.toggle('collapsed');
