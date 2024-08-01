@@ -63,7 +63,7 @@
             max-height: 50px; /* Height for only showing the title */
         }
         .card.expanded {
-            max-height: 1000px; /* Large height to show full content */
+            max-height: 2000px; /* Large height to show full content */
         }
         .card h2 {
             color: #006400;
@@ -75,7 +75,9 @@
             padding: 20px 20px 20px;
             margin: 0;
         }
+
         .hidden{display: none;}
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -110,6 +112,8 @@
                 </ol> 
             </p>
         </div>
+
+
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Staff Requesting Materials ⬇️</h2>
             <p>Staff is welcome to peruse the book shelves or request particular titles or topics. 
@@ -135,6 +139,9 @@
                 </br>Please allow at least 2 full school days for technological items to be prepared for checkout. 
                 </p>
         </div>
+
+
+
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Expectations for LRC Class ⬇️</h2>
             <p>Student Book Return & Renewal
@@ -153,6 +160,8 @@
                Please note: Book checkout will not resume until week 2, due to time required to refresh student behavior expectations.
                ALL students should always bring their chrome books and headphones with them.</p>
         </div>
+
+
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Read-A-Thon Stuff! ⬇️</h2>
             <p> <div style="position: relative; padding-bottom: 52.7086383601757%; height: 0;">
@@ -161,10 +170,22 @@
                     <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing">Introductory Letter & Calendar</a></li>
                     <li><a href="https://docs.google.com/presentation/d/1OpGv8hLg6f6hTqZ_WhVsUPdHFOJXhuOxHybHAlXPFVU/edit?usp=sharing">Tracking Sheets</a></li>
                 </ul>
-            </div>
+            </div></div>
+
+        
+        
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Technology Help Videos ⬇️</h2>
-            <p>Additional resources and information for staff.</p>
+            <p><ul><li>Technology Help Tickets:</li>
+               <li>Tech Ticket - <a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU"> Not Working </a></li> 
+               <li>Tech Ticket - <a href="https://watch.screencastify.com/v/iDNISAZXfzYWC7xCEBGQ">More Devices</a> </li> 
+               </ul>
+                <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing">Projecting your Chromebook Screen</a></li>
+                <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library">Setting up conferences using Google Calendar</a></li>
+                <li><a href="https://www.loom.com/share/956fdfd3dcbf4db38d633af1848d67f3?sharedAppSource=personal_library"> Video  to send to Parents on how to sign up for conferences using Google Calendar</a></li>
+                <li>Google Drive: </li><ul>
+                <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing">Shareable Links & Restrictions (View, Comment, Edit)</a></li>
+                <li><a href="https://www.loom.com/share/2187fe2d141345bda4f3c292fd201842?sharedAppSource=personal_library">How to hide and unhide their Google File Bar</a></li></ul></ul></p>
         </div>
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>Other Information</h2>
@@ -179,7 +200,9 @@
             <p>Additional resources and information for staff.</p>
         </div>
     </div>
-
+    <div class="container">
+        <div class="card expanded"></div>
+            <h2><span>⬇️ Other Items ⬇️</span></h2>
     <script>
         function toggleCard(card) {
             card.classList.toggle('collapsed');
