@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LB Staff Resources" />
+    <title>LB Staff Resources</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: silver;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+            padding-top: 70px; /* Added padding for the header */
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            max-width: 800px;
+            margin: auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 4px 4px 8px black;
+            overflow: hidden;
+        }
+
+        .lion-image {
+            flex-shrink: 0;
+            width: 200px;
+            height: 200px;
+            background-image: url('./pictures/lblionlogo.png');
+            background-size: cover;
+            background-position: center;
+            align-items: center;
+        }
+
+        .text-content {
+            padding: 20px;
+            text-align: left;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2em;
+            text-align: center;
+            font-variant: small-caps;
+        }
+
+        header {
+            width: 95%;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            margin-right: 5%;
+            margin-left: 5%;
+            position: fixed;
+            border-bottom-left-radius: 8%;
+            border-bottom-right-radius: 8%;
+            top: 0;
+        }
+
+        p{
+            text-align: center;
+        }
+
+        header img {
+            height: 50px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <img src="pictures/lblionlogo.png" alt="School Mascot">
+        <nav>
+            <ul>
+                <li><a href="./index.html">Home</a></li>
+                <li><a href="./destiny.html">Destiny</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="http://sd308.link/library" target="_blank" title="Access Destiny Discover">
+            <div class="lion-image"></div>
+        </a>
+        <div class="text-content">
+            <h1>Click on the lion to access Destiny Discover!</h1>
+            <p>
+                <u><b>Students</u></b><br>
+                <b>Username: </b>ID Number<br>
+                <b>Password: </b>Chromebook Password
+            </p>
+            <p>
+                <u><b>Staff</u></b><br>
+                <b>Username: </b>SD308 credentials (ex: malbrecht)<br>
+                <b>Password: </b>Chromebook Password
+            </p>
+        </div>
+    </main>
+
+    <script>
+        // JavaScript can go here
+    </script>
+</body>
+
+</html>
