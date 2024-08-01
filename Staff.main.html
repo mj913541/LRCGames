@@ -30,9 +30,7 @@
             position: absolute;
             left: 10px;
             top: 10px;
-            height: 60px;
-            border-radius: 50%;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            height: 90px;
         }
         .container {
             display: flex;
@@ -42,7 +40,7 @@
         }
         .card {
             background-color: white;
-            border: 1px solid #ccc;
+            border: 2px solid #ccc;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 45%;
@@ -55,10 +53,10 @@
             flex-direction: column;
         }
         li {
-        padding-left: 40px; /* Adjust the value to your preference */
-        /* or use margin-left instead */
-        list-style-position: inside; /* Optional: positions the bullet inside */
-    }
+        padding-left: 40px;
+        padding-right: 10px;
+        list-style-position: inside;
+        }
         .card.collapsed {
             max-height: 50px; /* Height for only showing the title */
         }
@@ -87,7 +85,7 @@
 </head>
 <body>
     <header>
-        <img src="lion_mascot.png" alt="School Mascot">
+        <img src="pictures/lblionlogo.png" alt="School Mascot">
         Staff Resources
     </header>
     <div class="container">
@@ -102,11 +100,11 @@
             </br>
             </br>
                 Finally, there is a good chance your password is going to expire within the next month or so. Updating your password before it expires will ease some of the headaches at the start of the year. If you would like to update your password, follow these steps:  
-                <nl>
+                <ol>
                     <li>Click mypassword.sd308.org</li>
                     <li>Log in with your current district/Google credentials. Remember, your username will just be the first part of your email: i.e. malbrecht and NOT malbrecht@sd308.org.</li>
                     <li>You will then be prompted to enter a new password. FYI, sometimes it can take a few minutes to update across all the websites and whatnot. So, be patient.</li>
-                </nl> 
+                </ol> 
             </p>
         </div>
         <div class="card collapsed" onclick="toggleCard(this)">
