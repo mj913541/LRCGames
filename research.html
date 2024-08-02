@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your Research Journey Here!</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif; /* Playful font */
+            margin: 0;
+            padding: 0;
+            background-color: #e0ffe0; /* Light green background */
+            color: #333;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+
+        header {
+            background: linear-gradient(135deg, #32CD32, #FFD700); /* Lime green to gold gradient */
+            color: #006400; /* Dark green */
+            padding: 20px;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            margin: 20px;
+            animation: fadeIn 2s ease-in-out;
+            position: relative;
+        }
+
+        header img {
+            position: absolute;
+            left: 20px;
+            top: 10px;
+            height: 70px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .container {
+            width: 98%;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            background-color: #fff;
+            border: 2px solid #b0e57c; /* Light green border */
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 1000px;
+            margin: 10px;
+            text-align: center;
+            justify-content: space-around;
+            cursor: pointer;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transform: scale(1);
+            transition: transform 0.3s ease-in-out;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+        .card:hover {
+            transform: scale(1.05);
+            border-color: #ffd700; /* Gold on hover */
+        }
+
+        .card.collapsed {
+            max-height: 50px; /* Height for only showing the title */
+        }
+
+        .card.expanded {
+            max-height: 2000px; /* Large height to show full content */
+        }
+
+        .card h2 {
+            text-align: center;
+            position: relative;
+            width: 100%; /* Make h2 take the full width */
+            margin: 0;
+            color: #32CD32; /* Lime green */
+            font-size: 1.5em;
+            font-weight: bold;
+            padding: 10px 0;
+            border-bottom: 2px solid #ccc; /* Optional border for separation */
+        }
+
+        .card img {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+        }
+
+        .card p {
+            padding: 10px;
+            margin: 0;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .card a {
+            color: #006400; /* Dark green */
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s ease;
+        }
+
+        .card a:hover {
+            color: #FFD700; /* Gold on hover */
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes float {
+            0% {
+                transform: translatey(0px);
+            }
+            50% {
+                transform: translatey(-10px);
+            }
+            100% {
+                transform: translatey(0px);
+            }
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #FFD700; /* Gold */
+            text-align: center;
+            margin-top: 20px;
+            text-shadow: 1px 1px 3px #006400;
+            animation: fadeIn 3s ease-in-out;
+        }
+
+        .section-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .section-card {
+            background-color: #fff;
+            border: 2px solid #FFD700;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 700px;
+            margin: 10px;
+            text-align: center;
+            transition: transform 0.3s ease;
+            overflow: hidden;
+            position: relative;
+            padding: 10px;
+            transform: scale(1);
+            transition: transform 0.3s ease-in-out;
+            font-size: 1.2em;
+        }
+
+        .section-card:hover {
+            transform: scale(1.05);
+            border-color: #32CD32;
+        }
+
+        .section-card img {
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .section-card a {
+            display: inline-block;
+            text-decoration: none;
+            color: #006400;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: color 0.3s ease;
+        }
+
+        .section-card a:hover {
+            color: #FFD700;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            .section-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img src="https://via.placeholder.com/70" alt="School Mascot">
+        Start Your Research Journey Here!
+    </header>
+    
+    <div class="container">
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>⬇️ Dictionary & Thesaurus ⬇️</h2>
+            <div class="section-container">
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="Ninja Words Dictionary">
+                    <a href="https://ninjawords.com/" target="_blank" rel="noopener noreferrer">Ninja Words Dictionary</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="Kids Dictionary & Thesaurus">
+                    <a href="https://kids.wordsmyth.net/we/?ent=different" target="_blank" rel="noopener noreferrer">Kids Dictionary & Thesaurus</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="Merriam-Webster Dictionary & Thesaurus">
+                    <a href="https://www.merriam-webster.com/thesaurus/different" target="_blank" rel="noopener noreferrer">Merriam-Webster Dictionary & Thesaurus</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>⬇️ Kid Safe Search Engines ⬇️</h2>
+            <div class="section-container">
+                <div class="section-card">
+                    <img src="http" alt="KidRex">
+                    <a href="https://www.alarms.org/kidrex/" target="_blank" rel="noopener noreferrer">KidRex</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://www.kidtopia.info/" alt="Kidtopia">
+                    <a href="https://www.kidtopia.info/" target="_blank" rel="noopener noreferrer">Kidtopia</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="kids-search">
+                    <a href="https://www.kids-search.com/" target="_blank" rel="noopener noreferrer">kids-search</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="kiddle">
+                    <a href="https://www.kiddle.co/" target="_blank" rel="noopener noreferrer">kiddle</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <h2>⬇️ Research & Reading Websites ⬇️</h2>
+            <div class="section-container">
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="Britannica">
+                    <a href="https://www.britannica.com/" target="_blank" rel="noopener noreferrer">Britannica</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="World Book">
+                    <a href="https://www.worldbookonline.com/" target="_blank" rel="noopener noreferrer">World Book</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="National Geographic">
+                    <a href="https://kids.nationalgeographic.com/" target="_blank" rel="noopener noreferrer">NatGeo Kids</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="Britannica">
+                    <a href="https://www.britannica.com/" target="_blank" rel="noopener noreferrer">Britannica</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="World Book">
+                    <a href="https://www.worldbookonline.com/" target="_blank" rel="noopener noreferrer">World Book</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="National Geographic">
+                    <a href="https://kids.nationalgeographic.com/" target="_blank" rel="noopener noreferrer">NatGeo Kids</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="Britannica">
+                    <a href="https://www.britannica.com/" target="_blank" rel="noopener noreferrer">Britannica</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="World Book">
+                    <a href="https://www.worldbookonline.com/" target="_blank" rel="noopener noreferrer">World Book</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="National Geographic">
+                    <a href="https://kids.nationalgeographic.com/" target="_blank" rel="noopener noreferrer">NatGeo Kids</a>
+                </div>
+                <div class="section-card">
+                    <img src="https://via.placeholder.com/80" alt="National Geographic">
+                    <a href="https://kids.nationalgeographic.com/" target="_blank" rel="noopener noreferrer">NatGeo Kids</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleCard(card) {
+            if (card.classList.contains('collapsed')) {
+                card.classList.remove('collapsed');
+                card.classList.add('expanded');
+            } else {
+                card.classList.remove('expanded');
+                card.classList.add('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>
