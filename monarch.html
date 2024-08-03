@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illinois Monarch Award</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .hidden {display: none}
+
+        header {
+            background-color: #f37736;
+            color: white;
+            text-align: center;
+            padding: 20px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(-45deg, #f37736, #ff6200, #ff914d, #ffb73f);
+            top: -50%;
+            left: -50%;
+            z-index: 0;
+            transform: rotate(0deg);
+            transition: transform 0.5s linear;
+        }
+
+        header:hover::before {
+            transform: rotate(45deg);
+        }
+
+        header h1,
+        header h2 {
+            position: relative;
+            z-index: 1;
+        }
+
+        nav {
+            background-color: #ff6200;
+            padding: 10px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            font-size: 18px;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+
+        nav a:hover {
+            background-color: #ff914d;
+            border-radius: 5px;
+            transform: scale(1.1);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            text-align: center;
+            color: #f37736;
+            margin-bottom: 20px;
+            font-size: 32px;
+        }
+
+        .accordion {
+            margin-bottom: 20px;
+        }
+
+        .accordion-item {
+            background-color: #fff5eb;
+            border: 2px solid #ff914d;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, transform 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transform: scale(1);
+        }
+
+        .accordion-item:hover {
+            transform: scale(1.02);
+        }
+
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            background-color: #ff914d;
+            color: white;
+            font-size: 20px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .accordion-header:hover {
+            background-color: #ff6200;
+        }
+
+        .accordion-content {
+            padding: 15px;
+            display: none;
+            border-top: 2px solid #ff914d;
+        }
+
+        .accordion-content.open {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .book {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .book img {
+            width: 120px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .book img:hover {
+            transform: scale(1.05);
+        }
+
+        .book-description {
+            flex: 1;
+        }
+
+        .book-title {
+            font-size: 22px;
+            color: #f37736;
+            margin: 0;
+            padding: 0;
+        }
+
+        .book-author {
+            font-size: 18px;
+            color: #555;
+            margin: 5px 0;
+            padding: 0;
+        }
+
+        .book-summary {
+            font-size: 16px;
+            color: #666;
+            margin: 10px 0;
+        }
+
+        .read-more {
+            display: inline-block;
+            background-color: #ff914d;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .read-more:hover {
+            background-color: #ff6200;
+            transform: scale(1.1);
+        }
+
+        .vote-section {
+            text-align: center;
+            padding: 20px;
+            background-color: #f37736;
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .vote-button {
+            background-color: white;
+            color: #f37736;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .vote-button:hover {
+            background-color: #ff6200;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .tournament-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .bracket-container {
+            overflow-x: auto;
+            background-color: #fff5eb;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .tournament-bracket {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .tournament-bracket::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 2px dashed #ff914d;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+
+        .round {
+            flex: 1;
+            padding: 10px;
+        }
+
+        .round h4 {
+            margin: 0;
+            color: #f37736;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .match {
+            margin: 20px 0;
+            position: relative;
+            transition: transform 0.3s;
+        }
+
+        .match:hover {
+            transform: scale(1.05);
+        }
+
+        .match img {
+            width: 100px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .match p {
+            color: #555;
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .fun-facts {
+            background-color: #ff914d;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .fun-facts ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .fun-facts li {
+            font-size: 18px;
+            margin: 10px 0;
+            transition: transform 0.3s;
+        }
+
+        .fun-facts li:hover {
+            transform: scale(1.1);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #f37736;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('.icon');
+                    content.classList.toggle('open');
+                    icon.textContent = content.classList.contains('open') ? '-' : '+';
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <header>
+        <h1>Illinois Monarch Award</h1>
+        <h2>Explore, Watch, and Vote for Your Favorite Books!</h2>
+    </header>
+
+    <nav>
+        <a href="#home">Home</a>
+        <a href="#nominees">Nominees</a>
+        <a href="#vote">Vote</a>
+        <a href="#tournament">Tournament</a>
+        <a href="#fun-facts">Fun Facts</a>
+    </nav>
+
+    <div class="container">
+        <section id="nominees" class="accordion">
+            <h2 class="section-title">📚 Monarch Nominees</h2>
+
+            <!-- Book 1 -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="icon">+</span>
+                    <span>Book Title 1</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="book">
+                        <img src="https://via.placeholder.com/120x180" alt="Book Title 1">
+                        <div class="book-description">
+                            <h3 class="book-title">Book Title 1</h3>
+                            <p class="book-author">by Author Name</p>
+                            <p class="book-summary">A brief summary of the book goes here. Discover the adventures and excitement in this amazing story!</p>
+                            <a href="#" class="read-more">Watch the Reading</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Book 2 -->
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    <span class="icon">+</span>
+                    <span>Book Title 2</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="book">
+                        <img src="https://via.placeholder.com/120x180" alt="Book Title 2">
+                        <div class="book-description">
+                            <h3 class="book-title">Book Title 2</h3>
+                            <p class="book-author">by Author Name</p>
+                            <p class="book-summary">Explore the themes and characters in this engaging tale. A journey that will captivate your imagination.</p>
+                            <a href="#" class="read-more">Watch the Reading</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <section id="vote" class="vote-section">
+            <h2 class="section-title">🗳️ Cast Your Vote!</h2>
+            <p>Vote for your favorite book and help us crown this year's Monarch Award winner!</p>
+            <button class="vote-button">Vote Now</button>
+        </section>
+
+        <section id="tournament" class="tournament-section">
+            <h2 class="section-title">🏆 Book Tournament</h2>
+            <p>Join us in an exciting tournament where books go head-to-head for the ultimate title. Check out the bracket below!</p>
+            <img src="https://via.placeholder.com/600x400" alt="Tournament Bracket" class="tournament-bracket">
+        </section>
+
+        <section id="fun-facts" class="fun-facts">
+            <h2>🦋 Fun Facts About Monarch Butterflies</h2>
+            <ul>
+                <li>Monarch butterflies are known for their incredible migration journey from North America to central Mexico.</li>
+                <li>They have bright orange wings with black and white spots that act as a warning to predators.</li>
+                <li>Monarch caterpillars feed on milkweed, which makes them taste bad to potential predators.</li>
+                <!-- Add more fun facts as needed -->
+            </ul>
+        </section>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 Illinois Monarch Award | All Rights Reserved</p>
+    </footer>
+</body>
+
+</html>

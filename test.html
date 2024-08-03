@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Illinois Monarch Award</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #fafafa;
+            margin: 0;
+            padding: 0;
+        }
+
+        .hidden {display: none;}
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+        .accordion {
+            margin-bottom: 20px;
+
+        }
+
+        .accordion-item {
+            background-color: #fff5eb;
+            border: 2px solid #ff914d;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, transform 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+            transform: scale(1);
+        }
+
+        .accordion-item:hover {
+            transform: scale(1.02);
+        }
+
+        .accordion-header {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 15px;
+            background-color: #ff914d;
+            color: white;
+            font-size: 20px;
+            border-radius: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .accordion-header:hover {
+            background-color: #ff6200;
+        }
+
+        .accordion-content {
+            padding: 15px;
+            display: none;
+        }
+
+        .accordion-content.open {
+            display: flex;
+            align-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .book {
+            width: 400px;
+            display: flex;
+            align-items: center;
+            margin: 10px;
+        }
+
+        .book img {
+            width: 120px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-right: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .book img:hover {
+            transform: scale(1.05);
+        }
+
+        .book-description {
+            flex: 1;
+        }
+
+        .book-title {
+            font-size: 20px;
+            color: #f37736;
+            margin: 0;
+            padding: 0;
+        }
+
+        .book-author {
+            font-size: 16px;
+            color: #555;
+            margin: 5px 0;
+            padding: 0;
+        }
+
+        .read-more {
+            display: inline-block;
+            background-color: #ff914d;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .read-more:hover {
+            background-color: #ff6200;
+            transform: scale(1.1);
+        }
+
+
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const accordionHeaders = document.querySelectorAll('.accordion-header');
+            accordionHeaders.forEach(header => {
+                header.addEventListener('click', function () {
+                    const content = this.nextElementSibling;
+                    const icon = this.querySelector('.icon');
+                    content.classList.toggle('open');
+                    icon.textContent = content.classList.contains('open') ? '-' : '+';
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+
+<div class="container">
+<div class="accordion-header">
+            <span>Round 1</span>
+        </div>
+        <div class="accordion-content">
+            <div class="book">
+                <img src="https://via.placeholder.com/120x180" alt="Book Title 1">
+                <div class="book-description">
+                    <h3 class="book-title">Book Title 1</h3>
+                    <p class="book-author">by Author Name</p>
+                    <a href="#" class="read-more">Watch Video</a>
+                </div>
+            </div>
+            <div class="book">
+                <img src="https://via.placeholder.com/120x180" alt="Book Title 1">
+                <div class="book-description">
+                    <h3 class="book-title">Book Title 2</h3>
+                    <p class="book-author">by Author Name</p>
+                    <a href="#" class="read-more">Watch Video</a>
+                </div>
+            </div>
+            <div class="book">
+                <div class="book-description">
+                    <h3 class="book-title">voting</h3>
+                    <a href="#" class="read-more">Vote</a>
+                </div>
+            </div>
+            <div class="book">
+            <h3 class="book-title">Wk 1 Winner</h3> </br>
+            <img src="https://via.placeholder.com/120x180" alt="winner">
+        </div>
+</div>
+
+</body>
