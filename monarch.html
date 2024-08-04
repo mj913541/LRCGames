@@ -13,8 +13,6 @@
             padding: 0;
         }
 
-        .hidden {display: none}
-
         header {
             background-color: #f37736;
             color: white;
@@ -55,20 +53,6 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        nav a {
-            color: white;
-            text-decoration: none;
-            padding: 10px;
-            font-size: 18px;
-            transition: transform 0.2s, background-color 0.3s;
-        }
-
-        nav a:hover {
-            background-color: #ff914d;
-            border-radius: 5px;
-            transform: scale(1.1);
-        }
-
         .container {
             max-width: 1200px;
             margin: 20px auto;
@@ -85,6 +69,21 @@
             font-size: 32px;
         }
 
+        .hidden {display: none;}
+
+        h3 {
+            text-align: center;
+            align-items: center;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
         .accordion {
             margin-bottom: 20px;
         }
@@ -123,11 +122,12 @@
         .accordion-content {
             padding: 15px;
             display: none;
-            border-top: 2px solid #ff914d;
         }
 
         .accordion-content.open {
-            display: block;
+            display: flex;
+            align-content: space-between;
+            align-items: center;
             animation: fadeIn 0.3s ease-in;
         }
 
@@ -143,10 +143,40 @@
             }
         }
 
+        .winner {
+            width: 200px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            text-align: center;
+            border-radius: 10%;
+            border: 5px dashed #f37736;
+        }
+
+        .winner img {
+            width: 120px;
+            height: 180px;
+            object-fit: cover;
+            align-items: center;
+            text-align: center;
+            border-radius: 8px;
+            margin: auto;
+            display: flex;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .winner img:hover {
+            transform: scale(1.05);
+        }
+
         .book {
+            width: 400px;
             display: flex;
             align-items: center;
-            margin-bottom: 20px;
+            text-align: center;
+            margin: 10px;
         }
 
         .book img {
@@ -154,9 +184,12 @@
             height: 180px;
             object-fit: cover;
             border-radius: 8px;
-            margin-right: 20px;
+            margin: auto;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s;
+            display: flex;
+            align-items: center;
+            text-align: center;
         }
 
         .book img:hover {
@@ -168,23 +201,25 @@
         }
 
         .book-title {
-            font-size: 22px;
+            font-size: 20px;
             color: #f37736;
             margin: 0;
             padding: 0;
         }
 
-        .book-author {
-            font-size: 18px;
-            color: #555;
-            margin: 5px 0;
+        .winner-title {
+            font-size: 20px;
+            color: #f37736;
+            text-align: center;
+            margin: auto;
             padding: 0;
         }
 
-        .book-summary {
+        .book-author {
             font-size: 16px;
-            color: #666;
-            margin: 10px 0;
+            color: #555;
+            margin: 5px 0;
+            padding: 0;
         }
 
         .read-more {
@@ -193,7 +228,6 @@
             color: white;
             padding: 8px 12px;
             border-radius: 5px;
-            text-decoration: none;
             transition: background-color 0.3s, transform 0.2s;
         }
 
@@ -232,6 +266,7 @@
 
         .tournament-section {
             text-align: center;
+            text-shadow: 1px 2px 2px black;
             margin-bottom: 20px;
         }
 
@@ -239,7 +274,6 @@
             overflow-x: auto;
             background-color: #fff5eb;
             border-radius: 10px;
-            padding: 20px;
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
@@ -247,62 +281,19 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
+            width: 97%;
             text-align: center;
-            margin: 20px 0;
+            border: 3px solid #ff6200;
+            border-radius: 10%;
+            margin: auto;
             position: relative;
-        }
-
-        .tournament-bracket::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border: 2px dashed #ff914d;
-            border-radius: 10px;
-            pointer-events: none;
-        }
-
-        .round {
-            flex: 1;
-            padding: 10px;
-        }
-
-        .round h4 {
-            margin: 0;
-            color: #f37736;
-            font-size: 22px;
-            margin-bottom: 10px;
-        }
-
-        .match {
-            margin: 20px 0;
-            position: relative;
-            transition: transform 0.3s;
-        }
-
-        .match:hover {
-            transform: scale(1.05);
-        }
-
-        .match img {
-            width: 100px;
-            height: 150px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .match p {
-            color: #555;
-            font-size: 16px;
-            margin: 5px 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         .fun-facts {
+            align-items: center;
+            width: 95%;
+            margin: auto;
             background-color: #ff914d;
             color: white;
             padding: 20px;
@@ -353,25 +344,14 @@
     <header>
         <h1>Illinois Monarch Award</h1>
         <h2>Explore, Watch, and Vote for Your Favorite Books!</h2>
+        <nav></nav>
     </header>
 
-    <nav>
-        <a href="#home">Home</a>
-        <a href="#nominees">Nominees</a>
-        <a href="#vote">Vote</a>
-        <a href="#tournament">Tournament</a>
-        <a href="#fun-facts">Fun Facts</a>
-    </nav>
+    <body>
 
-    <div class="container">
-        <section id="nominees" class="accordion">
-            <h2 class="section-title">📚 Monarch Nominees</h2>
-
-            <!-- Book 1 -->
-            <div class="accordion-item">
-                <div class="accordion-header">
-                    <span class="icon">+</span>
-                    <span>Book Title 1</span>
+        <div class="container">
+        <div class="accordion-header">
+                    <span>Round 1 Part 1</span>
                 </div>
                 <div class="accordion-content">
                     <div class="book">
@@ -379,48 +359,71 @@
                         <div class="book-description">
                             <h3 class="book-title">Book Title 1</h3>
                             <p class="book-author">by Author Name</p>
-                            <p class="book-summary">A brief summary of the book goes here. Discover the adventures and excitement in this amazing story!</p>
-                            <a href="#" class="read-more">Watch the Reading</a>
+                            <a href="#" class="read-more">Watch Video</a>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- Book 2 -->
-            <div class="accordion-item">
-                <div class="accordion-header">
-                    <span class="icon">+</span>
-                    <span>Book Title 2</span>
-                </div>
-                <div class="accordion-content">
                     <div class="book">
-                        <img src="https://via.placeholder.com/120x180" alt="Book Title 2">
+                        <img src="https://via.placeholder.com/120x180" alt="Book Title 1">
                         <div class="book-description">
                             <h3 class="book-title">Book Title 2</h3>
                             <p class="book-author">by Author Name</p>
-                            <p class="book-summary">Explore the themes and characters in this engaging tale. A journey that will captivate your imagination.</p>
-                            <a href="#" class="read-more">Watch the Reading</a>
+                            <a href="#" class="read-more">Watch Video</a>
                         </div>
+                    </div>
+                    <div class="book">
+                        <div class="book-description">
+                            <h3 class="book-title">voting</h3>
+                            <a href="#" class="read-more">Vote</a>
+                        </div>
+                    </div>
+                    <div class="winner">
+                        <h3 class="winner-title">Wk 1 Winner</h3> 
+                    <img src="https://via.placeholder.com/120x180" alt="winner">
+                </div>
+        </div>
+        </div>
+        
+        <div class="container">
+            <div class="accordion-header">
+                        <span>Round 1 Part 2</span>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="book">
+                            <img src="https://via.placeholder.com/120x180" alt="Book Title 3">
+                            <div class="book-description">
+                                <h3 class="book-title">Book Title 3</h3>
+                                <p class="book-author">by Author Name</p>
+                                <a href="#" class="read-more">Watch Video</a>
+                            </div>
+                        </div>
+                        <div class="book">
+                            <img src="https://via.placeholder.com/120x180" alt="Book Title 4">
+                            <div class="book-description">
+                                <h3 class="book-title">Book Title 4</h3>
+                                <p class="book-author">by Author Name</p>
+                                <a href="#" class="read-more">Watch Video</a>
+                            </div>
+                        </div>
+                        <div class="book">
+                            <div class="book-description">
+                                <h3 class="book-title">voting</h3>
+                                <a href="#" class="read-more">Vote</a>
+                            </div>
+                        </div>
+                        <div class="winner">
+                            <h3 class="winner-title">Wk 2 Winner</h3> 
+                        <img src="https://via.placeholder.com/120x180" alt="winner">
                     </div>
                 </div>
             </div>
 
-        </section>
-
-        <section id="vote" class="vote-section">
-            <h2 class="section-title">🗳️ Cast Your Vote!</h2>
-            <p>Vote for your favorite book and help us crown this year's Monarch Award winner!</p>
-            <button class="vote-button">Vote Now</button>
-        </section>
-
         <section id="tournament" class="tournament-section">
-            <h2 class="section-title">🏆 Book Tournament</h2>
-            <p>Join us in an exciting tournament where books go head-to-head for the ultimate title. Check out the bracket below!</p>
+            <h2 class="section-title">🏆 Book Tournament 🏆</h2>
             <img src="https://via.placeholder.com/600x400" alt="Tournament Bracket" class="tournament-bracket">
         </section>
 
         <section id="fun-facts" class="fun-facts">
-            <h2>🦋 Fun Facts About Monarch Butterflies</h2>
+            <h2>🦋 Fun Facts About Monarch Butterflies 🦋</h2>
             <ul>
                 <li>Monarch butterflies are known for their incredible migration journey from North America to central Mexico.</li>
                 <li>They have bright orange wings with black and white spots that act as a warning to predators.</li>
