@@ -13,26 +13,19 @@
             color: #333;
         }
 
-        header {
+        .pageHeader {
             background: linear-gradient(135deg, #006400, #32CD32); /* Dark green to lime green gradient */
+           height: 100px;
             color: #FFD700; /* Gold */
             padding: 20px;
             text-align: center;
             font-size: 3em;
             font-weight: bold;
-            position: relative;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
             margin: 20px;
             animation: fadeIn 2s ease-in-out;
-        }
-
-        header img {
-            position: absolute;
-            left: 10px;
-            top: 10px;
-            height: 90px;
         }
 
         .container {
@@ -204,6 +197,46 @@
                 margin: 10px 0;
             }
         }
+
+        Header {
+            width: 100%;
+            background-color: #333;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            position: fixed;
+            border-bottom-left-radius: 8%;
+            border-bottom-right-radius: 8%;
+            top: 0;
+        }
+
+        Header img {
+            height: 50px;
+        }
+
+        nav ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 20px;
+        }
+
+        nav ul li {
+            display: inline;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 1.2em;
+        }
+
+        nav ul li a:hover {
+            text-decoration: underline;
+        }
     </style>
 
 
@@ -211,8 +244,17 @@
 <body>
     <header>
         <img src="../pictures/lblionlogo.png" alt="School Mascot">
-        Staff Resources
+        <nav>
+            <ul>
+                <li><a href="./index.html">Home</a></li>
+                <li><a href="./destiny.html">Destiny</a></li>
+                <li><a href="./research.html">Research & Reading</a></li>
+            </ul>
+        </nav>
     </header>
+    <div>
+    <section id="pageHeader" class="pageHeader">Staff Resources</section></div>
+
     <div class="container">
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Setting Up Classroom Technology ⬇️</h2>
