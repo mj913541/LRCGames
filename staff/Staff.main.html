@@ -13,13 +13,13 @@
             color: #333;
         }
 
-        .pageHeader {
+        Header {
             background: linear-gradient(135deg, #006400, #32CD32); /* Dark green to lime green gradient */
-           height: 100px;
+            height: 100px;
             color: #FFD700; /* Gold */
-            padding: 20px;
+            padding: 20px 0;
             text-align: center;
-            font-size: 3em;
+            font-size: 5em;
             font-weight: bold;
             border-radius: 15px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
@@ -77,15 +77,17 @@
         ol {
             margin-top: 0;
             margin-left: 40px;
-            padding: 20px;
             list-style-position: inside;
             text-indent: -6%;
+            padding-right: 20px;
         }
 
         ul {
-            margin: auto;
-            padding: 20px;
+            margin-top: 0;
+            margin-left: 40px;
             list-style-position: inside;
+            text-indent: -6%;
+            padding-right: 20px;
         }
         .card.collapsed {
             max-height: 50px; /* Height for only showing the title */
@@ -103,7 +105,7 @@
         }
 
         .card p {
-            padding: 20px 20px 0px 20px;
+            padding: 0px 20px 0px 20px;
             margin: 0;
         }
 
@@ -198,44 +200,8 @@
             }
         }
 
-        Header {
-            width: 100%;
-            background-color: #333;
-            color: white;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 20px;
-            position: fixed;
-            border-bottom-left-radius: 8%;
-            border-bottom-right-radius: 8%;
-            top: 0;
-        }
-
         Header img {
-            height: 50px;
-        }
-
-        nav ul {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            gap: 20px;
-        }
-
-        nav ul li {
-            display: inline;
-        }
-
-        nav ul li a {
-            color: white;
-            text-decoration: none;
-            font-size: 1.2em;
-        }
-
-        nav ul li a:hover {
-            text-decoration: underline;
+            height: 100px;
         }
     </style>
 
@@ -244,32 +210,23 @@
 <body>
     <header>
         <img src="../pictures/lblionlogo.png" alt="School Mascot">
-        <nav>
-            <ul>
-                <li><a href="./index.html">Home</a></li>
-                <li><a href="./destiny.html">Destiny</a></li>
-                <li><a href="./research.html">Research & Reading</a></li>
-            </ul>
-        </nav>
+        Staff Resources
     </header>
     <div>
-    <section id="pageHeader" class="pageHeader">Staff Resources</section></div>
+
 
     <div class="container">
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Setting Up Classroom Technology ⬇️</h2>
-                <p> Every room should receive a plastic gallon bag with tech items inside. 
-                The black item in the lower right hand corner of the sheet is the dongle that connects your chromebook to the extra monitor and/or the projector.
-                This video explains the entire set up for this tool. If you still need help setting up your classroom after watching, please don not hesitate to reach out to me or fill out an IT Help ticket.
-                I can also help you set up phone lines if they were disconnected over the summer. </p>
                 <p> If you are like me, your chromebook has been in your school bag all summer. Make sure to plug it in a day or two before you plan to return to the building. 
                 If the battery has been completely drained (which may occur if it hasn't been plugged in for a couple months), it may take a day of charging to even turn on. 
                 Do not worry if it doesn't turn on immediately when you first plug it in to charge. Walk away for a few hours, and then try again. 
                 Check for updates and allow any updates to occur. In order to check for updates, click on the time in the lower right-hand corner. 
                 Installing updates may take several minutes (to an hour) when it hasn't been turned on in a few months, so plan accordingly. </p> 
+            </br>
                 <p>Finally, there is a good chance your password is going to expire within the next month or so. 
                 Updating your password before it expires will ease some of the headaches at the start of the year. 
-                If you would like to update your password, follow these steps:</p>
+                If you would like to update your password, follow these steps:</p> </br>
                     <ol>
                     <li>Click mypassword.sd308.org</li>
                     <li>Log in with your current district/Google credentials. Remember, your username will just be the first part of your email: i.e. malbrecht and NOT malbrecht@sd308.org.</li>
@@ -282,7 +239,7 @@
             <p>Staff is welcome to peruse the book shelves or request particular titles or topics. 
                 Staff have no limits to the number of books they can check out at one time. 
                 <b>Please plan one full week for LRC items to be delivered.</b>
-                Staff should place holds directly on the Destiny website. 
+                Staff should place holds directly on the <a href="../destiny.html">Destiny website.</a> 
         </br> </br> Not sure how to place holds or browse our catalog? 
         </br>   Watch a quick video to learn how below:</p> </br>
 
@@ -290,45 +247,51 @@
                     <iframe src="https://www.loom.com/embed/3ec5cea364f3443492344f2f4fae05c5?sid=86988d3e-060c-4c64-87ee-dd1c454f7bb1" 
                     frameborder="2px solid black" webkitallowfullscreen mozallowfullscreen allowfullscreen style="position: absolute; 
                     top: 0; left: 10px; width: 95%; height: 95%;"></iframe></div>
-
+</br></br>
                 <p><b>Books are not the only thing we can offer!</b>
+                </br>
                         <ul> Other Items Available Include: <ul><li>CD/Cassette players</li>
                                 <li>Computer monitors</li>
-                                <li>DVD Players</li></ul>
-                        Technology will not automatically be assigned. </br>Please email me for technology items.</ul></p>
+                                <li>DVD Players</li>
+                                <li>Books on tape</li></ul>
+                        Technology will not automatically be assigned. </br>Please email me for technology items. (malbrecht@sd308.org)</ul></p>
         </div>
 
         <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Expectations for LRC Class ⬇️</h2>
             <p> <b> Student Book Return & Renewal </b> </br> </br> 
-             <ul>  <li> Students are usually only permitted to have a maximun of two books checked out to their account. However, they will be allowed a third title, if that title is for a classroom research project. </li> 
-             </br>  <li> Beginning this year, students will only be able to check out if they present both books on their account for return or renewal. </li> </ul>
+             <ul>  <li> Students are usually only permitted to have a maximun of two books checked out to their account. 
+                However, they will be allowed a third title, if that title is for a classroom research project. </li> 
+             </br>  <li> Beginning this year, students will only be able to check out if they present 
+                <i>both</i> books on their account for return or renewal. Due to this, please encourage students to leave LRC books at school.</li> 
+             </br>  <li>On your book collection day, please have students put their books in the LRC cart & bring it down to the LRC during book collection times.
+               <ul><li> Two students should bring down the cart and transfer the books to the grade level book return box. </li>
+              <li>  Please be sure to send <b>two</b> students down, as finagaling the door and the cart is challenging for one. </li>
+             <li>They will then take the cart to the next teacher in the grade level. (noted on cart)</li></ul> </li>
+            <li>If students do not turn their books into the cart, please have them keep them on their person and bring them down on their way to LRC class.
+                Please do not send the books down at any other time of the day. </li>
+            </br>    <li>If a student wishes to RENEW their book, they should put a post-it on the front cover. <ul>
+                 <li>  If they are able, please have them write their name on the post-it. </li> 
+                 <li>   These books do not need to be separated any further from the other returns.</li> </ul> </li>
+            </ul>
             </p>
-                
-                On your book collection day, please have students put their books in the LRC cart and bring it down to the LRC during book collection times. 
-                Two students should bring down the cart and transfer the books to the grade level book return box. 
-                Please be sure to send <b>two</b> students down, as finagaling the door and the cart is challenging. 
-                They will then take the cart to the next teacher in the grade level. (noted on cart)
-                If students do not turn their books into the cart, please have them keep them on their person and bring them down on their way to LRC class.
-                Please do not send the books down at any other time of the day. 
-                If a student wishes to RENEW their book, they should put a post-it on the front cover. 
-                If they are able, please have them write their name on the post-it. These books do not need to be separated any further from the other returns. 
-
-
-             <b>Book Collection Days:</b>
-                Book collection days are the day prior to LRC class:
-                    A: Basic, Cavello
-                    B: Day, Adams, Brandwein, Rosenthal
-                    C: Pulsa, R/W, Schmidt, Tomter
-                    D: Daleiden
-                    E: Carroll, Harrison, Peterson, Ewalt
+             
+            <p> <b>Book Collection Days</b>
+            <ul>   <li> Book collection days are the day prior to LRC class:
+                 <ul> <li>  A: Basic, Cavello </li>
+                 <li>  B: Day, Adams, Brandwein, Rosenthal</li> 
+                 <li>   C: Pulsa, R/W, Schmidt, Tomter </li>
+                 <li>    D: Daleiden </li>
+                 <li>    E: Carroll, Harrison, Peterson, Ewalt</li></ul> </li> </ul>  </p>
                     
-             <b>Expectations for Class Drop Off / Pick Up</b>
-                Due to the structural layout of the LRC, please bring your class line all the way down the ramp of the door across from the art room door. 
-                Please also come down to the bottom of the ramp to collect your class after LRC. Students will line up in the main area of the LRC to be ready for you.
-                Please note: Book checkout will not resume until week 2, due to time required to refresh student behavior expectations.
-                
-                ALL students should always bring their chrome books, headphones, and mice (optional) with them.
+                 <p>  <b>Expectations for Class Drop Off / Pick Up</b>
+            <ul> <li> Due to the structural layout of the LRC, please bring your class line all the way down the ramp of the door across from the art room door. 
+            </li>  <li>   Please also come down to the bottom of the ramp to collect your class after LRC. Students will line up in the main area of the LRC to be ready for you.
+            </li>   </ul></p>
+
+             <p><center> Please note: Book checkout will not resume until week 2, due to time required to refresh student behavior expectations.
+             </br></br>
+                ALL students should always bring their chrome books, headphones, and mice (optional) with them.</center></p> 
         </div>
 
 
@@ -347,11 +310,11 @@
             <ul><li>Technology Help Tickets:<ul>
                <li>Tech Ticket - <a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU"> Not Working </a></li> 
                <li>Tech Ticket - <a href="https://watch.screencastify.com/v/iDNISAZXfzYWC7xCEBGQ">More Devices</a> </li> </ul></li>
-                <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing">Projecting your Chromebook Screen</a></li>
-                <li>Conferences <ul>
+            </br>    <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing">Projecting your Chromebook Screen</a></li>
+            </br>    <li>Conferences <ul>
                 <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library">Setting up conferences using Google Calendar</a></li>
                 <li><a href="https://www.loom.com/share/956fdfd3dcbf4db38d633af1848d67f3?sharedAppSource=personal_library"> Video  to send to Parents on how to sign up for conferences using Google Calendar</a></li></ul>
-                <li>Google Drive:<ul>
+            </br>    <li>Google Drive:<ul>
                 <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing">Shareable Links & Restrictions (View, Comment, Edit)</a></li>
                 <li><a href="https://www.loom.com/share/2187fe2d141345bda4f3c292fd201842?sharedAppSource=personal_library">How to hide and unhide their Google File Bar</a></li></ul></li>
         </div>
