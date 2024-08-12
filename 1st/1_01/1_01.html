@@ -8,6 +8,7 @@
   <style>
     body {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       background-color: #f0f0f0;
@@ -32,11 +33,10 @@
       border: 3px solid #000;
       background: #fff;
       border-radius: 2.5%;
-      height: 600px;
       width: auto;
       margin: 5px;
-      max-width: 90vw; /* Maintain aspect ratio */
-      max-height: 90vh; /* Maintain aspect ratio */
+      max-width: 80vw; /* Maintain aspect ratio */
+      max-height: 80vh; /* Maintain aspect ratio */
       box-sizing: border-box;
     }
 
@@ -45,15 +45,15 @@
       font-size: 24px;
       color: #333;
     }
-    
+
     h3 {
-      font-size: 18px;
+      font-size: 16px;
       margin: 0;
       font-weight: bold;
     }
     
     ul {
-      font-size: 18px;
+      font-size: 16px;
     }
 
     li {
@@ -64,13 +64,23 @@
 
 <body>
   <div id="subtitle"><center><b>Try to earn all the points!</b> <br>  Coins are worth 10!! <br> Diamonds are worth 25!!</center> 
+  </div>
+  <div id="scoreBox">Score: 0</div>
+  <div id="message"></div>
+  <canvas id="gameCanvas" width="700" height="500"></canvas>
+<div>
   <br><br><br><br> <h3>By the end of this class you will:</h3>   <ul>
     <li>Log into a computer</li>
     <li>Learn new technology vocabulary words</li>
-    <li>Navigate the internet using the correct buttons</li> </ul> </div>
-  <div id="scoreBox">Score: 0</div>
-  <div id="message"></div>
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <li>Navigate the internet using the correct buttons</li> </ul>
+  <h3>Strand: Empowered Learner</h3>   <ul>
+      <li>Standard: 1.d. Students understand the fundamental concepts of technology operations, demonstrate the ability to choose, use, and troubleshoot current technologies and are able to transfer their knowledge to explore emerging technologies.
+  </li> </ul>
+  <h3>I Can Statements:</h3>   <ul>
+        <li>I can log into my chromebook</li>
+        <li>I can follow classroom procedures</li>
+        <li>I can click on links to access lesson activities</li> </ul>
+  </div>
 
   <script>
   const canvas = document.getElementById("gameCanvas");
