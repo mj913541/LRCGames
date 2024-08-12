@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matching Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 10px;
+        }
+
+        .card {
+            width: 100px;
+            height: 150px;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front, .card-back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            backface-visibility: hidden;
+        }
+
+        .card-front {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+        }
+
+        .card-back {
+            background-color: #4caf50;
+            transform: rotateY(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        img {
+            pointer-events: none; /* Make it to where the img can't be draggable */
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #flip-count {
+            margin-top: 10px;
+            font-size: 18px;
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Matching Game</h1>
+    <div id="game-board"></div>
+    <button id="restart-btn">Play Again</button>
+    <p id="flip-count">Flips: 0</p>
+    <button id="next-btn" style="display: none;">Next</button>
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = [
+                { name: 'A', img: 'https://drive.google.com/thumbnail?id=17WmjoeRcOiUZkAyK3SnwsgQJxDnynGvb&sz=w100' },
+                { name: 'A', img: 'https://drive.google.com/thumbnail?id=17WmjoeRcOiUZkAyK3SnwsgQJxDnynGvb&sz=w100' },
+                { name: 'B', img: 'https://drive.google.com/thumbnail?id=anotherImageIdHere' },
+                { name: 'B', img: 'https://drive.google.com/thumbnail?id=anotherImageIdHere' },
+                // Add more pairs as needed
+            ];
+
+            let cardArray = [...cards];
+            cardArray.sort(() => 0.5 - Math.random());
+
+            const gameBoard = document.getElementById('game-board');
+            let firstCard = null;
+            let secondCard = null;
+            let flips = 0;
+            let matches = 0;
+            let lockBoard = false;
+
+            function createBoard() {
+                cardArray.forEach((card, index) => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('card');
+                    cardElement.dataset.name = card.name;
+
+                    const cardInner = document.createElement('div');
+                    cardInner.classList.add('card-inner');
+
+                    const cardFront = document.createElement('div');
+                    cardFront.classList.add('card-front');
+                    cardFront.textContent = '?';
+
+                    const cardBack = document.createElement('div');
+                    cardBack.classList.add('card-back');
+                    const imgElement = document.createElement('img');
+                    imgElement.src = card.img;
+                    cardBack.appendChild(imgElement);
+
+                    cardInner.appendChild(cardFront);
+                    cardInner.appendChild(cardBack);
+                    cardElement.appendChild(cardInner);
+
+                    cardElement.addEventListener('click', flipCard);
+                    gameBoard.appendChild(cardElement);
+                });
+            }
+
+            function flipCard() {
+                if (lockBoard || this === firstCard || this.classList.contains('flipped')) return;
+
+                this.classList.add('flipped');
+
+                if (!firstCard) {
+                    firstCard = this;
+                    return;
+                }
+
+                secondCard = this;
+                flips++;
+                document.getElementById('flip-count').textContent = `Flips: ${flips}`;
+
+                checkForMatch();
+            }
+
+            function checkForMatch() {
+                if (firstCard.dataset.name === secondCard.dataset.name) {
+                    disableCards();
+                    matches++;
+                    checkCompletion();
+                } else {
+                    unflipCards();
+                }
+            }
+
+            function disableCards() {
+                firstCard.removeEventListener('click', flipCard);
+                secondCard.removeEventListener('click', flipCard);
+                resetBoard();
+            }
+
+            function unflipCards() {
+                lockBoard = true;
+                setTimeout(() => {
+                    firstCard.classList.remove('flipped');
+                    secondCard.classList.remove('flipped');
+                    resetBoard();
+                }, 1000);
+            }
+
+            function resetBoard() {
+                [firstCard, secondCard] = [null, null];
+                lockBoard = false;
+            }
+
+            function checkCompletion() {
+                if (matches === cardArray.length / 2) {
+                    setTimeout(() => {
+                        alert('Congratulations! You have matched all the cards.');
+                    }, 500);
+                    document.getElementById('next-btn').style.display = "block"
+                }
+            }
+
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                completeActivity();
+            });
+
+
+            document.getElementById('restart-btn').addEventListener('click', () => {
+                gameBoard.innerHTML = '';
+                document.getElementById('flip-count').textContent = 'Flips: 0';
+                flips = 0;
+                matches = 0;
+                cardArray.sort(() => 0.5 - Math.random());
+                createBoard();
+            });
+
+            createBoard();
+
+            function completeActivity() {
+            localStorage.setItem('Coin2', 'completed');
+            window.close(); // Optionally close the activity tab
+        }
+        });
+
+
+
+    </script>
+</body>
+</html>
