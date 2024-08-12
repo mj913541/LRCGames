@@ -1,175 +1,166 @@
-<!DOCTYPE HTML>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lion Learning Pathway</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Schedule Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #87ceeb; /* Sky blue background */
+        }
 
-<style>
-body {
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background-color: #87ceeb; /* Sky blue background */
-}
+        .road-container {
+            position: relative;
+            width: 90%;
+            height: 200px; /* Adjust as needed */
+            margin-bottom: 20px; /* Space for buttons */
+        }
 
-.road-container {
-  position: relative;
-  width: 90%;
-  height: 200px; /* Adjust as needed */
-  margin-bottom: 20px; /* Space for buttons */
-}
+        .road {
+            position: absolute;
+            width: 100%;
+            height: 45px; /* Adjust height as needed */
+            top: 50%;
+            background-color: #333; /* Dark grey for the road */
+        }
 
-.road {
-  position: absolute;
-  width: 100%;
-  height: 45px; /* Adjust height as needed */
-  top: 50%;
-  background-color: #333; /* Dark grey for the road */
-}
+        .dashed-line {
+            position: absolute;
+            width: 100%;
+            height: 40px; /* Adjust height as needed */
+            top: 60%;
+            border-top: 2px dashed white; /* Create a dashed line */
+        }
 
-.dashed-line {
-  position: absolute;
-  width: 100%;
-  height: 40px; /* Adjust height as needed */
-  top: 60%;
-  border-top: 2px dashed white; /* Create a dashed line */
-}
+        .rocking-image {
+            position: absolute;
+            width: 100px; /* Adjust as needed */
+            bottom: 70px; /* Adjust to position the lion above the road */
+            animation: rock 2s infinite;
+            transition: left 1s ease, transform 1s ease;
+            z-index: 10; /* Ensure the lion is always in front of icons */
+        }
 
-.rocking-image {
-  position: absolute;
-  width: 100px; /* Adjust as needed */
-  bottom: 70px; /* Adjust to position the car above the road */
-  animation: rock 2s infinite;
-  transition: left 1s ease, transform 1s ease;
-  z-index: 10; /* Ensure the car is always in front of icons */
-}
+        @keyframes rock {
+            0%, 100% { transform: rotate(15deg); }
+            25% { transform: rotate(-15deg); }
+            50% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
+        }
 
-@keyframes rock {
-  0%,
-  100% {
-    transform: rotate(15deg);
-  }
-  25% {
-    transform: rotate(-15deg);
-  }
-  50% {
-    transform: rotate(15deg);
-  }
-  75% {
-    transform: rotate(-15deg);
-  }
-}
+        .icon {
+            position: absolute;
+            bottom: 90px;
+            font-size: 50px; /* Adjusted for more stops */
+            z-index: 5; /* Ensure icons are behind the lion */
+        }
 
-.icon {
-  position: absolute;
-  bottom: 90px;
-  font-size: 50px; /* Adjusted for more stops */
-  z-index: 5; /* Ensure icons are behind the car */
-}
+        /* Rearranged emoji stops */
+        .icon.stop-1 { left: 2%; }   /* Home */
+        .icon.stop-2 { left: 12%; }  /* Bus */
+        .icon.stop-3 { left: 22%; }  /* Reading */
+        .icon.stop-4 { left: 32%; }  /* Recess */
+        .icon.stop-5 { left: 42%; }  /* Lunch */
+        .icon.stop-6 { left: 52%; }  /* Social Studies & Science */
+        .icon.stop-7 { left: 62%; }  /* Writing */
+        .icon.stop-8 { left: 72%; }  /* LRC */
+        .icon.stop-9 { left: 82%; }  /* Math */
+        .icon.stop-10 { left: 92%; } /* Bus */
+        .icon.stop-11 { left: 98%; } /* Home */
 
-/* Rearranged emoji stops */
-.icon.stop-1 { left: 2%; }   /* Home */
-.icon.stop-2 { left: 12%; }  /* Bus */
-.icon.stop-3 { left: 22%; }  /* Reading */
-.icon.stop-4 { left: 32%; }  /* Recess */
-.icon.stop-5 { left: 42%; }  /* Lunch */
-.icon.stop-6 { left: 52%; }  /* Social Studies & Science */
-.icon.stop-7 { left: 62%; }  /* Writing */
-.icon.stop-8 { left: 72%; }  /* LRC */
-.icon.stop-9 { left: 82%; }  /* Math */
-.icon.stop-10 { left: 92%; } /* Bus */
-.icon.stop-11 { left: 98%; } /* Home */
-
-button {
-  margin: 10px;
-  padding: 10px 20px;
-  font-size: 16px;
-  cursor: pointer;
-  display: none; /* Initially hide the buttons */
-}
-</style>
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            display: none; /* Initially hide the buttons */
+        }
+    </style>
 </head>
 <body>
-  <div class="road-container">
-    <div class="road"></div>
-    <div class="dashed-line"></div>
-    <img src="https://drive.google.com/thumbnail?id=11d2nVywZy-c7Fu7RzVI9nHUCBZIFYDAI" alt="Rocking Image" class="rocking-image" id="lion">
-    
-    <!-- Emoji Stops -->
-    <div class="icon stop-1">🏠</div> <!-- Home -->
-    <div class="icon stop-2">🚌</div> <!-- Bus -->
-    <div class="icon stop-3">📖</div> <!-- Reading -->
-    <div class="icon stop-4">⚽</div> <!-- Recess -->
-    <div class="icon stop-5">🍎</div> <!-- Lunch -->
-    <div class="icon stop-6">🌍</div> <!-- Social Studies & Science -->
-    <div class="icon stop-7">✍️</div> <!-- Writing -->
-    <div class="icon stop-8">📚</div> <!-- LRC -->
-    <div class="icon stop-9">🔢</div> <!-- Math -->
-    <div class="icon stop-10">🚌</div> <!-- Bus -->
-    <div class="icon stop-11">🏠</div> <!-- Home -->
-  </div>
+    <div class="road-container">
+        <div class="road"></div>
+        <div class="dashed-line"></div>
+        <img id="lion" src="https://drive.google.com/thumbnail?id=11d2nVywZy-c7Fu7RzVI9nHUCBZIFYDAI" class="rocking-image" style="left: 0;">
+        <div class="icon stop-1">🏠</div>
+        <div class="icon stop-2">🚌</div>
+        <div class="icon stop-3">📚</div>
+        <div class="icon stop-4">⚽</div>
+        <div class="icon stop-5">🍽️</div>
+        <div class="icon stop-6">🌍</div>
+        <div class="icon stop-7">✍️</div>
+        <div class="icon stop-8">🏫</div>
+        <div class="icon stop-9">➕</div>
+        <div class="icon stop-10">🚌</div>
+        <div class="icon stop-11">🏠</div>
+    </div>
 
-  <!-- Buttons to move the lion -->
-  <button id="btn-1" onclick="moveLionToStop(2)">Go to School</button>
-  <button id="btn-2" onclick="startActivity(2, '../1st/1_typingWarmUp.html')">Start Reading Activity</button>
-  <button id="btn-3" onclick="startActivity(3, 'https://www.example.com/activity2')">Start Recess Activity</button>
-  <button id="btn-4" onclick="startActivity(4, 'https://www.example.com/activity3')">Start Lunch Activity</button>
-  <button id="btn-5" onclick="startActivity(5, 'https://www.example.com/activity4')">Start Social Studies & Science Activity</button>
-  <button id="btn-6" onclick="startActivity(6, 'https://www.example.com/activity5')">Start Writing Activity</button>
-  <button id="btn-7" onclick="startActivity(7, 'https://www.example.com/activity6')">Start LRC Activity</button>
-  <button id="btn-8" onclick="startActivity(8, 'https://www.example.com/activity7')">Start Math Activity</button>
-  <button id="btn-9" onclick="moveLionToStop(10)">Get on the Bus</button>
-  <button id="btn-10" onclick="moveLionToStop(11)">Go Home</button>
+    <button id="nextButton">Next</button>
 
-<script>
-function moveLionToStop(stopNumber) {
-  const lion = document.getElementById("lion");
-  const positions = ["2%", "12%", "22%", "32%", "42%", "52%", "62%", "72%", "82%", "92%", "98%"];
-  
-  // Hide all buttons initially
-  hideAllButtons();
-  
-  // Move the lion to the correct position
-  lion.style.left = positions[stopNumber - 1];
-  
-  // Reapply rocking animation
-  lion.style.animation = "none";
-  setTimeout(() => {
-    lion.style.animation = "rock 2s infinite";
-  }, 10);
-  
-  // Show the corresponding button for the next stop
-  if (stopNumber < positions.length) {
-    document.getElementById(`btn-${stopNumber + 1}`).style.display = "block";
-  }
-}
+    <script>
+const lion = document.getElementById("lion");
+const nextButton = document.getElementById("nextButton");
 
-function startActivity(stopNumber, url) {
-  // Open new tab for activity
-  let activityWindow = window.open(url, "_blank");
-  
-  // Check when the activity window is closed
-  let activityCheck = setInterval(() => {
-    if (activityWindow.closed) {
-      clearInterval(activityCheck);
-      moveLionToStop(stopNumber + 1);
+const stops = [
+    { emoji: "🏠", activityUrl: "./1_typingWarmUp.html" },
+    { emoji: "🚌", activityUrl: "./5_01_activity_coin1.html" },
+    { emoji: "📚", activityUrl: "./5_01_activity_coin2.html" },
+    { emoji: "⚽", activityUrl: "./5_01_activity_recess.html" },
+    { emoji: "🍽️", activityUrl: "./5_01_activity_lunch.html" },
+    { emoji: "🌍", activityUrl: "./5_01_activity_socialstudies.html" },
+    { emoji: "✍️", activityUrl: "./5_01_activity_writing.html" },
+    { emoji: "🏫", activityUrl: "./5_01_activity_lrc.html" },
+    { emoji: "➕", activityUrl: "./5_01_activity_math.html" },
+    { emoji: "🚌", activityUrl: "./5_01_activity_bus.html" },
+    { emoji: "🏠", activityUrl: "./5_01_activity_home.html" }
+];
+
+let currentStop = 0;
+
+nextButton.style.display = "block";
+
+nextButton.addEventListener("click", () => {
+    if (currentStop < stops.length) {
+        moveLionToNextStop();
+        triggerActivity(stops[currentStop]);
+        currentStop++;
+    } else {
+        nextButton.style.display = "none";
     }
-  }, 1000); // Check every second if the window is closed
+});
+
+function moveLionToNextStop() {
+    const stopClass = `.icon.stop-${currentStop + 1}`;
+    const stopElement = document.querySelector(stopClass);
+    if (stopElement) {
+        lion.style.left = stopElement.style.left;
+    }
 }
 
-function hideAllButtons() {
-  const buttons = document.querySelectorAll("button");
-  buttons.forEach(button => button.style.display = "none");
+function triggerActivity(stop) {
+    const activityTab = window.open(stop.activityUrl, '_blank');
+    // Handle completion in global event listener
 }
 
-// Start with the "Go to School" button visible
-document.getElementById("btn-1").style.display = "block";
+function handleStorageEvent(event) {
+    // Check if the activity completion matches the current stop's emoji
+    if (event.key === stops[currentStop].emoji && event.newValue === 'completed') {
+        nextButton.style.display = "block";
+        localStorage.removeItem(event.key); // Clean up localStorage
+        moveLionToNextStop(); // Move the lion to the next stop
+    }
+}
 
-</script>
+// Add storage event listener globally
+window.addEventListener('storage', handleStorageEvent);
+
+    </script>
 </body>
 </html>
