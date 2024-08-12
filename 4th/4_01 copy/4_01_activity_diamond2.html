@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRC Class Pathway</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #f0f8ff;
+            color: #333;
+            text-align: center;
+        }
+
+        h2 {
+            color: #ff4500;
+            font-size: 2em;
+        }
+
+        h3 {
+            color: #32cd32;
+            font-size: 1.5em;
+        }
+
+        video {
+            width: 80%;
+            border: 5px solid #ffa500;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        p {
+            font-size: 1.2em;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0;
+            font-size: 1.2em;
+        }
+
+        input[type="radio"] {
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            font-size: 1.2em;
+            margin: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .incorrect {
+            color: red;
+        }
+
+        #congratulations {
+            background-color: #ffeb3b;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        #next-btn {
+            background-color: #ffa500;
+        }
+
+        #next-btn:hover {
+            background-color: #ff8c00;
+        }
+    </style>
+</head>
+<body>
+    <div id="mustDo">
+        <h2>Must Do</h2>
+        <div id="activity1">
+            <h3>Must Do Activity 1</h3>
+            <video src="your-video-source.mp4" controls></video>
+            <div id="questions1">
+                <p>Question 1: What is 2+2?</p>
+                <label><input type="radio" name="q1" value="3"> 3</label>
+                <label><input type="radio" name="q1" value="4" data-correct="true"> 4</label>
+                <label><input type="radio" name="q1" value="5"> 5</label>
+                <p>Question 2: What is the capital of France?</p>
+                <label><input type="radio" name="q2" value="Paris" data-correct="true"> Paris</label>
+                <label><input type="radio" name="q2" value="London"> London</label>
+                <label><input type="radio" name="q2" value="Berlin"> Berlin</label>
+                <p>Question 3: What color is the sky?</p>
+                <label><input type="radio" name="q3" value="Blue" data-correct="true"> Blue</label>
+                <label><input type="radio" name="q3" value="Green"> Green</label>
+                <label><input type="radio" name="q3" value="Red"> Red</label>
+                <button onclick="showNextActivity('questions1', 'next-btn')">Submit</button>
+            </div>
+        </div>
+    </div>
+    <div id="congratulations" class="hidden">
+        <h3>Congratulations! You have completed the activities.</h3>
+        <button id="next-btn" class="hidden">Next</button>
+    </div>
+    <script>
+        function showNextActivity(currentActivityId, nextActivityId) {
+            const questionsDiv = document.getElementById(currentActivityId);
+            const selectedAnswers = questionsDiv.querySelectorAll('input[type="radio"]:checked');
+            const correctAnswers = Array.from(questionsDiv.querySelectorAll('input[data-correct="true"]'));
+
+            let allCorrect = true;
+            selectedAnswers.forEach(answer => {
+                if (correctAnswers.includes(answer)) {
+                    answer.parentElement.classList.add('correct');
+                } else {
+                    answer.parentElement.classList.add('incorrect');
+                    allCorrect = false;
+                }
+            });
+
+            if (allCorrect) {
+                document.getElementById(nextActivityId).classList.remove('hidden');
+                document.getElementById('congratulations').classList.remove('hidden');
+            } else {
+                alert('Please answer all questions correctly.');
+            }
+        }
+
+        document.getElementById('next-btn').addEventListener('click', () => {
+            awardPoints();
+        });
+
+        function awardPoints() {
+            localStorage.setItem('Diamond2', 'completed');
+            window.close();
+        }
+    </script>
+</body>
+</html>
