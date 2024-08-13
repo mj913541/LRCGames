@@ -18,7 +18,7 @@
             border-radius: 20px;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
-        .word {
+        .letter {
             font-size: 2em;
             color: #4caf50;
             margin: 20px;
@@ -28,7 +28,7 @@
             font-size: 1.5em;
             color: #ff5722;
         }
-        .input-word {
+        .input-letter {
             font-size: 1.5em;
             padding: 10px;
             border: 2px solid #4caf50;
@@ -38,13 +38,6 @@
             font-size: 1.2em;
             color: #2196f3;
             margin: 10px;
-        }
-        .image-container img {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #4caf50;
-            border-radius: 10px;
-            margin: 20px 0;
         }
         .progress-bar-container {
             width: 100%;
@@ -68,13 +61,6 @@
             color: #4caf50;
             margin: 20px;
         }
-        .congrats-image {
-            max-width: 100%;
-            height: auto;
-            border: 2px solid #4caf50;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
         button {
             background-color: #4caf50;
             color: white;
@@ -97,11 +83,8 @@
     <div class="game-container" id="game-container">
         <h1>Typing Game</h1>
         <div class="score">Score: <span id="score">0</span></div>
-        <div class="word" id="word"></div>
-        <div class="image-container">
-            <img id="word-image" src="" alt="word image">
-        </div>
-        <input type="text" id="input-word" class="input-word" placeholder="Type the word here">
+        <div class="letter" id="letter"></div>
+        <input type="text" id="input-letter" class="input-letter" placeholder="Type the letter here">
         <div class="message" id="message"></div>
         <div class="progress-bar-container">
             <div class="progress-bar" id="progress-bar"></div>
@@ -110,64 +93,44 @@
     </div>
     <div class="game-container hidden" id="congratulations-container">
         <h1 class="congratulations">Congratulations!</h1>
-        <p>You typed all the words correctly!</p>
-        <img src="images/congrats.jpg" alt="Congratulations" class="congrats-image">
+        <p>You typed all the letters correctly!</p>
         <button id="restart-button-congrats">Next</button>
     </div>
     <script>
-        const words = [
-            "the", "of", "and", "a", "to", "in", "is", "you", "that", "it", 
-            "he", "was", "for", "on", "are", "as", "with", "his", "they", "I",
-            "at", "be", "this", "have", "from", "or", "one", "had", "by", "word",
-            "but", "not", "what", "all", "were", "we", "when", "your", "can", "said",
-            "there", "use", "an", "each", "which", "she", "do", "how", "their", "if",
-            "will", "up", "other", "about", "out", "many", "then", "them", "these", "so",
-            "some", "her", "would", "make", "like", "him", "into", "time", "has", "look",
-            "two", "more", "write", "go", "see", "number", "no", "way", "could", "people",
-            "my", "than", "first", "water", "been", "call", "who", "oil", "its", "now",
-            "find", "long", "down", "day", "did", "get", "come", "made", "may", "part"
+        const letters = [
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", 
+            "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", 
+            "u", "v", "w", "x", "y", "z"
         ];
 
-        const wordImages = {
-            "the": "images/the.jpg",
-            "of": "images/of.jpg",
-            "and": "images/and.jpg",
-            // Add paths for other words
-            // Example: "a": "images/a.jpg",
-            // ...
-        };
-
-        let selectedWords = [];
+        let selectedLetters = [];
         let score = 0;
-        let currentWordIndex = 0;
+        let currentLetterIndex = 0;
 
-        const wordElement = document.getElementById('word');
-        const inputElement = document.getElementById('input-word');
+        const letterElement = document.getElementById('letter');
+        const inputElement = document.getElementById('input-letter');
         const messageElement = document.getElementById('message');
         const scoreElement = document.getElementById('score');
-        const imageElement = document.getElementById('word-image');
         const progressBarElement = document.getElementById('progress-bar');
         const restartButton = document.getElementById('restart-button');
         const gameContainer = document.getElementById('game-container');
         const congratulationsContainer = document.getElementById('congratulations-container');
         const restartButtonCongrats = document.getElementById('restart-button-congrats');
 
-        function getRandomWords(num) {
-            const shuffled = words.sort(() => 0.5 - Math.random());
+        function getRandomLetters(num) {
+            const shuffled = letters.sort(() => 0.5 - Math.random());
             return shuffled.slice(0, num);
         }
 
         function updateProgressBar() {
-            const progress = (currentWordIndex / selectedWords.length) * 100;
+            const progress = (currentLetterIndex / selectedLetters.length) * 100;
             progressBarElement.style.width = progress + '%';
         }
 
-        function displayNewWord() {
-            if (currentWordIndex < selectedWords.length) {
-                const currentWord = selectedWords[currentWordIndex];
-                wordElement.textContent = currentWord;
-                imageElement.src = wordImages[currentWord] || '';
-                imageElement.alt = currentWord;
+        function displayNewLetter() {
+            if (currentLetterIndex < selectedLetters.length) {
+                const currentLetter = selectedLetters[currentLetterIndex];
+                letterElement.textContent = currentLetter;
                 inputElement.value = '';
                 inputElement.focus();
                 updateProgressBar();
@@ -183,26 +146,26 @@
         }
 
         function restartGame() {
-            selectedWords = getRandomWords(8);
+            selectedLetters = getRandomLetters(8);
             score = 0;
-            currentWordIndex = 0;
+            currentLetterIndex = 0;
             scoreElement.textContent = score;
             inputElement.disabled = false;
             messageElement.textContent = '';
             gameContainer.classList.remove('hidden');
             congratulationsContainer.classList.add('hidden');
-            displayNewWord();
+            displayNewLetter();
         }
 
         inputElement.addEventListener('input', () => {
-            const typedWord = inputElement.value.trim();
-            if (typedWord === wordElement.textContent) {
+            const typedLetter = inputElement.value.trim();
+            if (typedLetter === letterElement.textContent) {
                 score++;
                 scoreElement.textContent = score;
                 messageElement.textContent = 'Correct!';
                 messageElement.style.color = '#4caf50';
-                currentWordIndex++;
-                displayNewWord();
+                currentLetterIndex++;
+                displayNewLetter();
             } else {
                 messageElement.textContent = 'Keep trying!';
                 messageElement.style.color = '#ff5722';
