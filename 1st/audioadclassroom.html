@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Page with Multiple Sound Buttons</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        .video-container {
+            margin-bottom: 20px;
+        }
+        .image-row {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .image-row img {
+            width: 30%;
+            height: auto;
+            cursor: pointer;
+        }
+        .sound-button-container {
+            margin-bottom: 20px;
+        }
+        .sound-button {
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            width: 60px;
+            height: 60px;
+            cursor: pointer;
+            font-size: 30px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+        }
+        .sound-button:focus {
+            outline: none;
+        }
+        .question-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Direction Video Spot -->
+    <div class="video-container">
+        <video width="600" controls>
+            <source src="your-video-file.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <!-- Sound Emoji Buttons -->
+    <div class="sound-button-container">
+        <button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>
+        <button class="sound-button" onclick="playAudio('audioClip2')">🔊</button>
+        <button class="sound-button" onclick="playAudio('audioClip3')">🔊</button>
+    </div>
+
+    <!-- Three Images in a Row -->
+    <div class="image-row">
+        <a href="link1.html"><img src="image1.jpg" alt="Image 1"></a>
+        <a href="link2.html"><img src="image2.jpg" alt="Image 2"></a>
+        <a href="link3.html"><img src="image3.jpg" alt="Image 3"></a>
+    </div>
+
+    <!-- Question Spot -->
+    <div class="question-container">
+        <p><strong>Your Question Here:</strong></p>
+        <p>What do you think about this activity?</p>
+    </div>
+
+    <!-- Audio Elements -->
+    <audio id="audioClip1">
+        <source src="audio-file1.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="audioClip2">
+        <source src="audio-file2.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <audio id="audioClip3">
+        <source src="audio-file3.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <script>
+        function playAudio(audioId) {
+            const audio = document.getElementById(audioId);
+            audio.play();
+        }
+    </script>
+
+</body>
+</html>

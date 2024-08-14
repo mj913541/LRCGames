@@ -86,6 +86,24 @@
         #next-btn:hover {
             background-color: #ff8c00;
         }
+        .sound-button {
+    background-color: #1f1d1d;
+    border: none;
+    border-radius: 50%;
+    padding: 10px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 20px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+    vertical-align: middle; /* Adjust the alignment to match text */
+}
+        .sound-button:focus {
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -93,20 +111,19 @@
         <h2>Must Do</h2>
         <div id="activity1">
             <h3>Must Do Activity 1</h3>
-            <video src="your-video-source.mp4" controls></video>
+            <video src="/videos/general/arrivalDissmissalCHAMPSs.mp4" controls></video>
             <div id="questions1">
-                <p>Question 1: What is 2+2?</p>
-                <label><input type="radio" name="q1" value="3"> 3</label>
-                <label><input type="radio" name="q1" value="4" data-correct="true"> 4</label>
-                <label><input type="radio" name="q1" value="5"> 5</label>
-                <p>Question 2: What is the capital of France?</p>
-                <label><input type="radio" name="q2" value="Paris" data-correct="true"> Paris</label>
-                <label><input type="radio" name="q2" value="London"> London</label>
-                <label><input type="radio" name="q2" value="Berlin"> Berlin</label>
-                <p>Question 3: What color is the sky?</p>
-                <label><input type="radio" name="q3" value="Blue" data-correct="true"> Blue</label>
-                <label><input type="radio" name="q3" value="Green"> Green</label>
-                <label><input type="radio" name="q3" value="Red"> Red</label>
+                <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>What kind of feet do we use in the LRC?</p>
+                <label><input type="radio" name="q1" value="running"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> running</label>
+                <label><input type="radio" name="q1" value="walking" data-correct="true"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> walking</label>
+                <label><input type="radio" name="q1" value="skipping"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> skipping</label>
+                <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>What should our voice levels be during arrival and dismissal?</p>
+                <label><input type="radio" name="q2" value="slient" data-correct="true"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> slient</label>
+                <label><input type="radio" name="q2" value="normal"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> normal</label>
+                <label><input type="radio" name="q2" value="whisper"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> whisper</label>
+                <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>True or False: Only purposeful movements should be happening during arrival and dismissal</p>
+                <label><input type="radio" name="q3" value="True" data-correct="true"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> True</label>
+                <label><input type="radio" name="q3" value="False"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> False</label>
                 <button onclick="showNextActivity('questions1', 'next-btn')">Submit</button>
             </div>
         </div>

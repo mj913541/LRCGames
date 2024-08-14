@@ -86,6 +86,26 @@
         #next-btn:hover {
             background-color: #ff8c00;
         }
+
+        .sound-button {
+            background-color: #1f1d1d;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle; /* Adjust the alignment to match text */
+        }
+        .sound-button:focus {
+            outline: none;
+        }
+        
     </style>
 </head>
 <body>
@@ -93,20 +113,20 @@
         <h2>Must Do</h2>
         <div id="activity1">
             <h3>Must Do Activity 1</h3>
-            <video src="your-video-source.mp4" controls></video>
+            <video src="../../videos/general/workTimeCHAMPS.mp4" controls></video>
             <div id="questions1">
-                <p>Question 1: What is 2+2?</p>
-                <label><input type="radio" name="q1" value="3"> 3</label>
-                <label><input type="radio" name="q1" value="4" data-correct="true"> 4</label>
-                <label><input type="radio" name="q1" value="5"> 5</label>
-                <p>Question 2: What is the capital of France?</p>
-                <label><input type="radio" name="q2" value="Paris" data-correct="true"> Paris</label>
-                <label><input type="radio" name="q2" value="London"> London</label>
-                <label><input type="radio" name="q2" value="Berlin"> Berlin</label>
-                <p>Question 3: What color is the sky?</p>
-                <label><input type="radio" name="q3" value="Blue" data-correct="true"> Blue</label>
-                <label><input type="radio" name="q3" value="Green"> Green</label>
-                <label><input type="radio" name="q3" value="Red"> Red</label>
+                <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>Question 1: What is 2+2?</p>
+                <label><input type="radio" name="q1" value="3"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> 3</label>
+                <label><input type="radio" name="q1" value="4" data-correct="true"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> 4</label>
+                <label><input type="radio" name="q1" value="5"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> 5</label>
+                <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>Question 2: What is the capital of France?</p>
+                <label><input type="radio" name="q2" value="Paris" data-correct="true"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> Paris</label>
+                <label><input type="radio" name="q2" value="London"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> London</label>
+                <label><input type="radio" name="q2" value="Berlin"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> Berlin</label>
+                <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> 3: What color is the sky?</p>
+                <label><input type="radio" name="q3" value="Blue" data-correct="true"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> Blue</label>
+                <label><input type="radio" name="q3" value="Green"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> Green</label>
+                <label><input type="radio" name="q3" value="Red"><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button> Red</label>
                 <button onclick="showNextActivity('questions1', 'next-btn')">Submit</button>
             </div>
         </div>
