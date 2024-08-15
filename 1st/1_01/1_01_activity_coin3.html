@@ -74,14 +74,13 @@
 </head>
 <body>
     <!-- Video Player -->
-    <button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>
     <video controls width="600">
         <source src="../../videos/general/usingMouseAndTrackpad.mp4" type="video/mp4">
         Your browser does not support the video tag.
     </video>
   
     <h2>Drag and Drop Game</h2>
-    <p><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>Match the items to their correct drop zones!</p>
+    <p><button class="sound-button" onclick="playAudio('../../audios/watchVideoDragDrop.mp3')">🔊</button>Match the items to their correct drop zones!</p>
 
     <div class="gridcontainer">
         <div class="dropzone" id="dropzone1"><img src="../../pictures/lionClipArt/lionBook.png" alt="Dropzone 1" width="80" height="80"></div>
@@ -104,6 +103,11 @@
     </div>
 
     <script>
+function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
+
         document.addEventListener('DOMContentLoaded', () => {
 
 let originalParents = {};

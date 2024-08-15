@@ -35,6 +35,7 @@
             margin-top: 20px;
             font-size: 18px;
             font-weight: bold;
+            align-items: center;
         }
         button {
             margin-top: 20px;
@@ -42,6 +43,7 @@
             font-size: 16px;
             cursor: pointer;
             background-color: #4caf50;
+            align-items: center;
             color: white;
             border: none;
             border-radius: 5px;
@@ -49,24 +51,49 @@
         button:hover {
             background-color: #45a049;
         }
+
+        .sound-button {
+            background-color: #1f1d1d;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle; /* Adjust the alignment to match text */
+        }
+        .sound-button:focus {
+            outline: none;
+        }
     </style>
 </head>
 <body>
+    <!-- Video Player -->
+    <video controls width="600">
+        <source src="../../videos/general/usingMouseAndTrackpad.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+  
     <h2>Drag and Drop Game</h2>
-    <p>Match the items to their correct drop zones!</p>
+    <p><button class="sound-button" onclick="playAudio('../../audios/watchVideoDragDrop.mp3')">🔊</button>Match the items to their correct drop zones!</p>
 
     <div class="gridcontainer">
-        <div class="dropzone" id="dropzone1">1</div>
-        <div class="dropzone" id="dropzone2">2</div>
-        <div class="dropzone" id="dropzone3">3</div>
-        <div class="dropzone" id="dropzone4">4</div>
+        <div class="dropzone" id="dropzone1"><img src="../../pictures/lionClipArt/lionBook.png" alt="Dropzone 1" width="80" height="80"></div>
+        <div class="dropzone" id="dropzone2"><img src="../../pictures/lionClipArt/lionGlobe.png" alt="Dropzone 2" width="80" height="80"></div>
+        <div class="dropzone" id="dropzone3"><img src="../../pictures/lionClipArt/lionLaptop.png" alt="Dropzone 3" width="80" height="80"></div>
+        <div class="dropzone" id="dropzone4"><img src="../../pictures/lionClipArt/lionLetters.png" alt="Dropzone 4" width="80" height="80"></div>
     </div>
 
     <div class="gridcontainer" id="draggables-container">
-        <div class="draggable" id="item1" draggable="true">Item 1</div>
-        <div class="draggable" id="item2" draggable="true">Item 2</div>
-        <div class="draggable" id="item3" draggable="true">Item 3</div>
-        <div class="draggable" id="item4" draggable="true">Item 4</div>
+        <div class="draggable" id="item1" draggable="true"><img src="../../pictures/lionClipArt/lionBook.png" alt="Item 1" width="80" height="80"></div>
+        <div class="draggable" id="item2" draggable="true"><img src="../../pictures/lionClipArt/lionGlobe.png" alt="Item 2" width="80" height="80"></div>
+        <div class="draggable" id="item3" draggable="true"><img src="../../pictures/lionClipArt/lionLaptop.png" alt="Item 3" width="80" height="80"></div>
+        <div class="draggable" id="item4" draggable="true"><img src="../../pictures/lionClipArt/lionLetters.png" alt="Item 4" width="80" height="80"></div>
     </div>
 
     <div>
@@ -76,109 +103,113 @@
     </div>
 
     <script>
+function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
+
         document.addEventListener('DOMContentLoaded', () => {
 
-            let originalParents = {};
+let originalParents = {};
 
-            function shuffleDraggables() {
-                const draggablesContainer = document.getElementById('draggables-container');
-                const draggables = Array.from(draggablesContainer.children);
+function shuffleDraggables() {
+    const draggablesContainer = document.getElementById('draggables-container');
+    const draggables = Array.from(draggablesContainer.children);
 
-                // Shuffle the array
-                for (let i = draggables.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [draggables[i], draggables[j]] = [draggables[j], draggables[i]];
-                }
+    // Shuffle the array
+    for (let i = draggables.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [draggables[i], draggables[j]] = [draggables[j], draggables[i]];
+    }
 
-                // Append the shuffled items back to the container
-                draggables.forEach(draggable => draggablesContainer.appendChild(draggable));
-            }
+    // Append the shuffled items back to the container
+    draggables.forEach(draggable => draggablesContainer.appendChild(draggable));
+}
 
-            function checkAnswer() {
-                const correctPairs = {
-                    'dropzone1': 'item1',
-                    'dropzone2': 'item2',
-                    'dropzone3': 'item3',
-                    'dropzone4': 'item4'
-                };
+function checkAnswer() {
+    const correctPairs = {
+        'dropzone1': 'item1',
+        'dropzone2': 'item2',
+        'dropzone3': 'item3',
+        'dropzone4': 'item4'
+    };
 
-                let correct = true;
-                for (let zoneId in correctPairs) {
-                    const dropzone = document.getElementById(zoneId);
-                    const itemInZone = dropzone.firstElementChild;
-                    if (!itemInZone || itemInZone.id !== correctPairs[zoneId]) {
-                        correct = false;
-                        break;
-                    }
-                }
-
-                const messageElement = document.getElementById('message');
-                if (correct) {
-                    messageElement.textContent = 'Congratulations! You got it right!';
-                    messageElement.style.color = '#4CAF50'; // Green color for correct
-                    document.getElementById('next-btn').style.display = 'block'; // Show next button
-                } else {
-                    messageElement.textContent = 'Oops! Try again.';
-                    messageElement.style.color = '#f44336'; // Red color for incorrect
-                    resetIncorrectItems(correctPairs);
-                }
-            }
-
-            function resetIncorrectItems(correctPairs) {
-                for (let zoneId in correctPairs) {
-                    const dropzone = document.getElementById(zoneId);
-                    const itemInZone = dropzone.firstElementChild;
-                    if (itemInZone && itemInZone.id !== correctPairs[zoneId]) {
-                        const originalParent = originalParents[itemInZone.id];
-                        originalParent.appendChild(itemInZone);
-                    }
-                }
-            }
-
-            function addDragAndDropHandlers() {
-                const draggables = document.querySelectorAll('.draggable');
-                const dropzones = document.querySelectorAll('.dropzone');
-
-                draggables.forEach(draggable => {
-                    draggable.addEventListener('dragstart', e => {
-                        e.dataTransfer.setData('text/plain', draggable.id);
-                        originalParents[draggable.id] = draggable.parentElement;
-                    });
-                });
-
-                dropzones.forEach(dropzone => {
-                    dropzone.addEventListener('dragover', e => {
-                        e.preventDefault();
-                    });
-
-                    dropzone.addEventListener('drop', e => {
-                        e.preventDefault();
-                        const draggableId = e.dataTransfer.getData('text/plain');
-                        const draggable = document.getElementById(draggableId);
-                        e.target.appendChild(draggable);
-                    });
-                });
-            }
-
-            // Initialize game
-            addDragAndDropHandlers();
-            shuffleDraggables();
-
-            // Attach event listener for check answer button
-            document.getElementById('check-answer-btn').addEventListener('click', checkAnswer);
-
-            // Next button functionality
-            document.getElementById('next-btn').addEventListener('click', () => {
-                awardPoints();
-            });
-
-            function awardPoints() {
-            localStorage.setItem('Coin3', 'completed');
-            window.close(); // Optionally close the activity tab
+    let correct = true;
+    for (let zoneId in correctPairs) {
+        const dropzone = document.getElementById(zoneId);
+        const itemInZone = dropzone.querySelector('.draggable');
+        if (!itemInZone || itemInZone.id !== correctPairs[zoneId]) {
+            correct = false;
+            break;
         }
+    }
 
+    const messageElement = document.getElementById('message');
+    if (correct) {
+        messageElement.textContent = 'Congratulations! You got it right!';
+        messageElement.style.color = '#4CAF50'; // Green color for correct
+        document.getElementById('next-btn').style.display = 'block'; // Show next button
+    } else {
+        messageElement.textContent = 'Oops! Try again.';
+        messageElement.style.color = '#f44336'; // Red color for incorrect
+        resetIncorrectItems(correctPairs);
+    }
+}
 
+function resetIncorrectItems(correctPairs) {
+    for (let zoneId in correctPairs) {
+        const dropzone = document.getElementById(zoneId);
+        const itemInZone = dropzone.querySelector('.draggable');
+        if (itemInZone && itemInZone.id !== correctPairs[zoneId]) {
+            const originalParent = originalParents[itemInZone.id];
+            originalParent.appendChild(itemInZone);
+        }
+    }
+}
+
+function addDragAndDropHandlers() {
+    const draggables = document.querySelectorAll('.draggable');
+    const dropzones = document.querySelectorAll('.dropzone');
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', draggable.id);
+            originalParents[draggable.id] = draggable.parentElement;
         });
+    });
+
+    dropzones.forEach(dropzone => {
+        dropzone.addEventListener('dragover', e => {
+            e.preventDefault();
+        });
+
+        dropzone.addEventListener('drop', e => {
+            e.preventDefault();
+            const draggableId = e.dataTransfer.getData('text/plain');
+            const draggable = document.getElementById(draggableId);
+            e.target.appendChild(draggable);
+        });
+    });
+}
+
+// Initialize game
+addDragAndDropHandlers();
+shuffleDraggables();
+
+// Attach event listener for check answer button
+document.getElementById('check-answer-btn').addEventListener('click', checkAnswer);
+
+// Next button functionality
+document.getElementById('next-btn').addEventListener('click', () => {
+    awardPoints();
+});
+
+function awardPoints() {
+    localStorage.setItem('Coin3', 'completed');
+    window.close(); // Optionally close the activity tab
+}
+
+});
     </script>
 </body>
 </html>

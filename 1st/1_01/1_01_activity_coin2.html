@@ -111,7 +111,7 @@
     </style>
 </head>
 <body>
-    <h1><button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>Matching Game</h1>
+    <h1><button class="sound-button" onclick="playAudio('../../audios/watchVideoFindMatches.mp3')">🔊</button>Matching Game</h1>
     <!-- Direction Video Spot -->
     <div class="video-container">
         <video width="600" controls>
@@ -119,8 +119,6 @@
             Your browser does not support the video tag.
         </video>
     </div>
-
-    <button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>
     <div id="game-board"></div>
 
     <button id="restart-btn">Play Again</button>
@@ -128,6 +126,11 @@
     <button id="next-btn" style="display: none;">Next</button>
     </script>
     <script>
+            function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
+
         document.addEventListener('DOMContentLoaded', () => {
             const cards = [
                 { name: 'A', img: '../../pictures/alphabetLetters/lowera.png' },

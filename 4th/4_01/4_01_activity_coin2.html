@@ -39,7 +39,17 @@
             transform: rotateY(180deg);
         }
 
+        .card-back img {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            width: 100%;      /* Make the image take up the full width of the card */
+            height: 100%;     /* Make the image take up the full height of the card */
+            object-fit: cover; /* Ensure the image covers the entire card without distortion */
+            border-radius: 5px; /* Optional: add rounded corners to match the card */
+        }
         .card-front, .card-back {
+            background-color: #fff;
+            border: 1px solid #ccc;
             width: 100%;
             height: 100%;
             position: absolute;
@@ -56,7 +66,6 @@
         }
 
         .card-back {
-            background-color: #4caf50;
             transform: rotateY(180deg);
             display: flex;
             justify-content: center;
@@ -80,23 +89,58 @@
             margin-top: 10px;
             font-size: 18px;
         }
+        .sound-button {
+            background-color: #1f1d1d;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle; /* Adjust the alignment to match text */
+        }
+        .sound-button:focus {
+            outline: none;
+        }
 
     </style>
 </head>
 <body>
-    <h1>Matching Game</h1>
+    <h1><button class="sound-button" onclick="playAudio('../../audios/watchVideoFindMatches.mp3')">🔊</button>Matching Game</h1>
+    <!-- Direction Video Spot -->
+    <div class="video-container">
+        <video width="600" controls>
+            <source src="../../videos/general/takingCareOfAComputer.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
     <div id="game-board"></div>
+
     <button id="restart-btn">Play Again</button>
     <p id="flip-count">Flips: 0</p>
     <button id="next-btn" style="display: none;">Next</button>
     </script>
     <script>
+            function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
+
         document.addEventListener('DOMContentLoaded', () => {
             const cards = [
-                { name: 'A', img: 'https://drive.google.com/thumbnail?id=17WmjoeRcOiUZkAyK3SnwsgQJxDnynGvb&sz=w100' },
-                { name: 'A', img: 'https://drive.google.com/thumbnail?id=17WmjoeRcOiUZkAyK3SnwsgQJxDnynGvb&sz=w100' },
-                { name: 'B', img: 'https://drive.google.com/thumbnail?id=anotherImageIdHere' },
-                { name: 'B', img: 'https://drive.google.com/thumbnail?id=anotherImageIdHere' },
+                { name: 'A', img: '../../pictures/alphabetLetters/lowera.png' },
+                { name: 'A', img: '../../pictures/alphabetLetters/upperA.png' },
+                { name: 'B', img: '../../pictures/alphabetLetters/lowerb.png' },
+                { name: 'B', img: '../../pictures/alphabetLetters/upperB.png' },
+                { name: 'C', img: '../../pictures/alphabetLetters/lowerc.png' },
+                { name: 'C', img: '../../pictures/alphabetLetters/upperC.png' },
+                { name: 'D', img: '../../pictures/alphabetLetters/lowerd.png' },
+                { name: 'D', img: '../../pictures/alphabetLetters/upperD.png' },
                 // Add more pairs as needed
             ];
 

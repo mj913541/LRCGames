@@ -89,39 +89,31 @@
         <video src="../../videos/slideDirections/1.01SlideDirections.mp4" controls></video>
     <!-- Sound Emoji Buttons -->
     <div class="sound-button-container">
-        <button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>
+        <button class="sound-button" onclick="playAudio('../../audios/clickClassroomTeacher.mp3')">🔊</button>
     </div>
 
     <!-- Three Images in a Row -->
     <div class="image-row">
-        <a href="https://classroom.google.com/c/NjY3NzI4NjI0ODc5/a/NzA0MTgxMDcxNjg2/details"><img src="/pictures/staffPhotos/cday_sd308org.png" alt="Mrs. Day"></a>
-        <a href="https://classroom.google.com/c/NjcwNTAwMjgzNDY4/a/NzA0MTgxNDQwNjg3/details"><img src="/pictures/staffPhotos/krogers_sd308org.png" alt="Mrs. Rogers"></a>
-        <a href="https://classroom.google.com/c/NjU1ODUwODkwNDg3/a/NzA0MTgxMDcxNjc0/details"><img src="/pictures/staffPhotos/cwilson_sd308org.png" alt="Mrs. Wilson"></a>
+        <a href="https://classroom.google.com/c/NjY3NzI4NjI0ODc5/a/NzA0MTgxMDcxNjg2/details"><img src="../../pictures/staffPhotos/cday_sd308org.png" alt="Mrs. Day"></a>
+        <a href="https://classroom.google.com/c/NjcwNTAwMjgzNDY4/a/NzA0MTgxNDQwNjg3/details"><img src="../../pictures/staffPhotos/krogers_sd308org.png" alt="Mrs. Rogers"></a>
+        <a href="https://classroom.google.com/c/NjU1ODUwODkwNDg3/a/NzA0MTgxMDcxNjc0/details"><img src="../../pictures/staffPhotos/cwilson_sd308org.png" alt="Mrs. Wilson"></a>
     </div>
 
-    <div class="sound-button-container">
-        <button class="sound-button" onclick="playAudio('audioClip1')">🔊</button>
-    </div>
-    <p>Did turn in your assignmentt?</p>
-        <button id="check-answer-btn">Oops</button>
+    <p>        <button class="sound-button" onclick="playAudio('../../audios/didYouSubmit.mp3')">🔊</button>Did turn in your assignmentt?</p>
         <button id="next-btn">Yes</button>
     </div>
 <script>
-
-            document.getElementById('check-answer-btn').addEventListener('click', () => {
-                noPoints();
-            });
+    function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
 
             document.getElementById('next-btn').addEventListener('click', () => {
                 awardPoints();
             });
 
             function awardPoints() {
-            localStorage.setItem('diamond3', 'completed');
-            window.close(); // Optionally close the activity tab
-        }
-
-        function noPoints() {
+            localStorage.setItem('Diamond3', 'completed');
             window.close(); // Optionally close the activity tab
         }
 </script>
