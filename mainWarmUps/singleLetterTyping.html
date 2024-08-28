@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Single LetterTyping Game</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+        }
+        .game-container {
+            margin: 0 auto;
+            padding: 20px;
+            max-width: 600px;
+            background: #ffcccb;
+            border-radius: 20px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .letter {
+            font-size: 5em;
+            color: #4caf50;
+            margin: 20px;
+            animation: fadeIn 2s ease-in-out;
+        }
+        .score {
+            font-size: 1.5em;
+            color: #ff5722;
+        }
+        .input-letter {
+            font-size: 1.5em;
+            padding: 10px;
+            border: 2px solid #4caf50;
+            border-radius: 5px;
+        }
+        .message {
+            font-size: 1.2em;
+            color: #2196f3;
+            margin: 10px;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #ddd;
+            border-radius: 13px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 20px;
+            width: 0;
+            background-color: #4caf50;
+            border-radius: 13px;
+            transition: width 0.5s;
+        }
+        .hidden {
+            display: none;
+        }
+        .congratulations {
+            font-size: 2em;
+            color: #4caf50;
+            margin: 20px;
+        }
+        button {
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container" id="game-container">
+        <h1>Typing Game</h1>
+        <div class="score">Score: <span id="score">0</span></div>
+        <div class="letter" id="letter"></div>
+        <input type="text" id="input-letter" class="input-letter" placeholder="Type the letter here">
+        <div class="message" id="message"></div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <!-- Remove restart button -->
+    </div>
+    <div class="game-container hidden" id="congratulations-container">
+        <h1 class="congratulations">Congratulations!</h1>
+        <p>You typed all the letters correctly!</p>
+        <button id="next-button">Next</button>
+    </div>
+ 
+
+    <script>
+        const letters = [
+            "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", 
+            "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", 
+            "u", "v", "w", "x", "y", "z"
+        ];
+    
+        let selectedLetters = [];
+        let score = 0;
+        let currentLetterIndex = 0;
+    
+        const letterElement = document.getElementById('letter');
+        const inputElement = document.getElementById('input-letter');
+        const messageElement = document.getElementById('message');
+        const scoreElement = document.getElementById('score');
+        const progressBarElement = document.getElementById('progress-bar');
+        const gameContainer = document.getElementById('game-container');
+        const congratulationsContainer = document.getElementById('congratulations-container');
+        const nextButton = document.getElementById('next-button');
+    
+        function getRandomLetters(num) {
+            const shuffled = letters.sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+    
+        function updateProgressBar() {
+            const progress = (currentLetterIndex / selectedLetters.length) * 100;
+            progressBarElement.style.width = progress + '%';
+        }
+    
+        function displayNewLetter() {
+            if (currentLetterIndex < selectedLetters.length) {
+                const currentLetter = selectedLetters[currentLetterIndex];
+                letterElement.textContent = currentLetter;
+                inputElement.value = '';
+                inputElement.focus();
+                updateProgressBar();
+            } else {
+                console.log("All letters typed correctly.");
+                showCongratulations();
+            }
+        }
+    
+        function showCongratulations() {
+            console.log("Showing congratulations message.");
+            gameContainer.classList.add('hidden');
+            congratulationsContainer.classList.remove('hidden');
+            completeActivity(); // Call the function to signal completion
+        }
+    
+        function completeActivity() {
+    window.opener.postMessage('stepCompleted', '*');  // Notify the main page
+    window.close();  // Close the activity tab
+}
+    
+        inputElement.addEventListener('input', () => {
+            const typedLetter = inputElement.value.trim();
+            if (typedLetter === letterElement.textContent) {
+                score++;
+                scoreElement.textContent = score;
+                messageElement.textContent = 'Correct!';
+                messageElement.style.color = '#4caf50';
+                currentLetterIndex++;
+                displayNewLetter();
+            } else {
+                messageElement.textContent = 'Keep trying!';
+                messageElement.style.color = '#ff5722';
+            }
+        });
+    
+        nextButton.addEventListener('click', completeActivity);
+    
+        // Initialize the game
+        console.log("Initializing game...");
+        selectedLetters = getRandomLetters(8);
+        console.log("Selected letters:", selectedLetters);
+        displayNewLetter();
+    </script>
+    
+</body>
+</html>
