@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Video with Form</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-top: 20px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        label img {
+            width: 150px;
+            height: 150px;
+            margin-right: 10px;
+        }
+
+        #nextButton {
+            display: none;
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #0000FF;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .hidden {display:none;}
+
+        #nextButton:hover {
+            background-color: #FFFF00;
+        }
+
+        #chartContainer {
+            width: 400px;
+            height: 400px;
+            margin-top: 20px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Audio plays once the page loads -->
+    <audio autoplay>
+        <source src="./audio/background_music.mp3" type="audio/mp3">
+        Your browser does not support the audio tag.
+    </audio>
+
+    <!-- Heading -->
+    <h1>Choose Your Favorite Book</h1>
+
+    <!-- Form with two items -->
+    <form id="itemForm">
+        <label>
+            <img src="../pictures/monarchPictures/invasionOfTheUnicornsCover.jpg" alt="Invasion of the Unicorns">
+            <input type="radio" name="item" value="Item 1"> Invasion of the Unicorns
+        </label>
+
+        <label>
+            <img src="../pictures/monarchPictures/louCover.jpg" alt="Lou">
+            <input type="radio" name="item" value="Item 2"> Lou
+        </label>
+
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+
+    <!-- Pie Chart Container -->
+    <div id="chartContainer">
+        <canvas id="myChart"></canvas>
+    </div>
+
+    <!-- Next Button -->
+    <button id="nextButton" onclick="completeActivity()">Next</button>
+<!-- Winner display section -->
+<button id="winnerButton" class="hidden">Check Winner</button>
+<p id="winnerDisplay"></p>
+ 
+ 
+ <script>
+ // Initialize vote counts (get from localStorage if they exist)
+let voteCounts = JSON.parse(localStorage.getItem('voteCounts')) || { item1: 0, item2: 0 };
+
+let chart; // Declare chart variable globally to reset it later
+
+function submitForm() {
+    const selectedItem = document.querySelector('input[name="item"]:checked');
+    if (!selectedItem) {
+        alert('Please select an item.');
+        return;
+    }
+
+    // Reset the chart before creating a new one
+    if (chart) {
+        chart.destroy();  // Destroy the old chart if it exists
+    }
+
+    // Update vote counts based on the selected item
+    if (selectedItem.value === 'Item 1') {
+        voteCounts.item1++;
+    } else if (selectedItem.value === 'Item 2') {
+        voteCounts.item2++;
+    }
+
+    // Store updated vote counts in localStorage
+    localStorage.setItem('voteCounts', JSON.stringify(voteCounts));
+
+    // Create a new pie chart with the updated vote counts
+    const data = {
+        labels: ['Item 1', 'Item 2'],
+        datasets: [{
+            label: 'Votes',
+            data: [voteCounts.item1, voteCounts.item2],
+            backgroundColor: ['#FF6384', '#36A2EB'],
+            hoverOffset: 4
+        }]
+    };
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: data
+    });
+
+    // Show the Next button
+    document.getElementById('nextButton').style.display = 'block';
+}
+
+// Function to display stored votes when needed (e.g., on page load or for showing the winner)
+function displayVotes() {
+    if (!voteCounts) return;
+
+    // Display the vote counts or recreate the chart
+    const data = {
+        labels: ['Item 1', 'Item 2'],
+        datasets: [{
+            label: 'Votes',
+            data: [voteCounts.item1, voteCounts.item2],
+            backgroundColor: ['#FF6384', '#36A2EB'],
+            hoverOffset: 4
+        }]
+    };
+
+    const ctx = document.getElementById('myChart').getContext('2d');
+    chart = new Chart(ctx, {
+        type: 'pie',
+        data: data
+    });
+}
+
+// Function to determine the winner
+function getWinner() {
+    const voteCounts = JSON.parse(localStorage.getItem('voteCounts'));
+    if (!voteCounts) return 'No votes yet';
+
+    if (voteCounts.item1 > voteCounts.item2) {
+        return 'Item 1 is the winner!';
+    } else if (voteCounts.item2 > voteCounts.item1) {
+        return 'Item 2 is the winner!';
+    } else {
+        return 'It\'s a tie!';
+    }
+}
+
+// Call getWinner on button click or page load to display the result
+document.getElementById('winnerButton').addEventListener('click', function() {
+    const winner = getWinner();
+    document.getElementById('winnerDisplay').innerText = winner;
+});
+
+    </script>
+
+</body>
+
+</html>
