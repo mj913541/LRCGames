@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="LRC Video Page" />
+    <title>LRC Video</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: silver;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2em;
+            font-variant: small-caps;
+        }
+
+        .video-container {
+            margin-top: 20px;
+        }
+
+        video {
+            max-width: 70%;
+            height: auto;
+        }
+
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .grade-button {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            font-family: 'Bubblegum Sans', sans-serif;
+            color: #fff;
+            background-color: #444;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            text-shadow: 2px 2px 2px #000;
+            box-shadow: 2px 2px 2px #000;
+        }
+
+        .grade-button:hover {
+            transform: scale(1.1);
+            background-color: #666;
+        }
+
+        #grade3 {
+            background: radial-gradient(circle, rgba(58,133,14,1) 17%, rgba(32,201,3,1) 31%, rgba(1,228,92,1) 48%, rgba(49,97,48,1) 71%, rgba(53,147,84,1) 100%);
+        }
+
+        #grade4 {
+            background: radial-gradient(circle, rgba(101,100,50,1) 17%, rgba(153,164,21,1) 31%, rgba(231,242,15,1) 48%, rgba(139,143,45,1) 71%, rgba(154,151,25,1) 100%);
+        }
+
+        #grade5 {
+            background: radial-gradient(circle, rgba(44,21,59,1) 17%, rgba(119,21,164,1) 31%, rgba(221,157,242,1) 48%, rgba(116,45,143,1) 71%, rgba(95,21,126,1) 100%);
+        }
+
+        .next-button {
+            display: none;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            font-family: 'Bubblegum Sans', sans-serif;
+            color: #fff;
+            background-color: #007bff;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.3s, background-color 0.3s;
+            text-shadow: 2px 2px 2px #000;
+            box-shadow: 2px 2px 2px #000;
+        }
+
+        .next-button:hover {
+            transform: scale(1.1);
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" style="margin-top: 80px;">
+        <h1>Watch the Video & Click Your Grade Level!</h1>
+
+        <div class="video-container">
+            <video controls>
+                <source src="../videos/general/loggingIntoFormative.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="button-container">
+            <button class="grade-button grade4" onclick="openInNewTabFourth()">4th</button>
+            <button class="grade-button grade5" onclick="openInNewTabFifth()">5th</button>
+        </div>
+
+        <!-- New Next Button -->
+        <div class="button-container">
+            <button class="next-button" id="nextButton" onclick="goToNextPage()">Next</button>
+        </div>
+    </div>
+
+    <script>
+        function openInNewTabFourth() {
+            window.open("https://app.formative.com/formatives/65086b14d829b3f7b6e4badc", "_blank");
+        }
+
+        function openInNewTabFifth() {
+            window.open("https://app.formative.com/formatives/65086b14d829b3f7b6e4badc", "_blank");
+        }
+
+        function goToNextPage() {
+            // Add your action for the Next button here
+            window.opener.postMessage('stepCompleted', '*');  // Notify the main page
+    window.close();  // Close the activity tab
+}
+
+        // Function to show the Next button after 5 minutes
+        setTimeout(function() {
+            document.getElementById('nextButton').style.display = 'block';
+        }, 300000); // 300000 milliseconds = 5 minutes
+    </script>
+</body>
+
+</html>
