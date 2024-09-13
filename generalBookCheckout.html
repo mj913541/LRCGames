@@ -54,10 +54,31 @@
         button:active {
             background-color: #2a5d8b;
         }
+        .sound-button {
+            background-color: #1f1d1d;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle; /* Adjust the alignment to match text */
+        }
+        .sound-button:focus {
+            outline: none;
+        }
     </style>
 </head>
 <body>
     <div id="bookCheckout">
+
+        <button class="sound-button" onclick="playAudio('./audios/continueToBookCheckout.mp3')">🔊</button> Directions</label>
+
         <h2>Returning Books</h2>
         <video src="./videos/general/scanningIntro.mp4" controls></video>
         <h2>Shelving Picture Books</h2>
@@ -66,8 +87,8 @@
         <video src="./videos/general/chapterBookReturn.mp4" controls></video>
         <h2>Book Checkout</h2>
         <video src="./videos/general/bookCheckout.mp4" controls></video>
-        <br>
-        <h1>🛑➡️📚</h1>
+    </br> </br>
+        <h1>🛑➡️📚</h1> </br> </br>
         <h2>Did you complete book checkout?</h2>
         <button id="check-answer-btn">👎I can't today👎</button>
         <button id="next-btn">👍Yes👍</button>
@@ -81,6 +102,11 @@
             document.getElementById('next-btn').addEventListener('click', () => {
                 awardPoints();
             });
+
+            function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
 
             function awardPoints() {
     window.opener.postMessage('stepCompleted', '*');  // Notify the main page

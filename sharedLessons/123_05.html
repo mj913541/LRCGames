@@ -143,6 +143,11 @@
             <div class="number">4</div>
             <div class="step locked" id="step4" onclick="openStep(4)">🎨</div>
         </div>
+        <div class="arrow" id="arrow4">➡️</div>
+        <div class="step-container">
+            <div class="number">5</div>
+            <div class="step locked" id="step5" onclick="openStep(5)">🎉</div>
+        </div>
     </div>
 
     <!-- Completion Box -->
@@ -152,7 +157,7 @@
     </div>
 
     <script>
-        const totalSteps = 4;
+        const totalSteps = 5;
         let currentStep = 1;
         let points = 0;
         let newWindow;
@@ -164,8 +169,9 @@
             }
     
             let urls = [
-                '../Monarch/monarch1_1a.html',
+                '../Monarch/monarch11Introduction.html',
                 '../generalBookCheckout.html',
+                '../Monarch/monarch1_1a.html',
                 '../Monarch/monarch1_1b.html',
                 '../Monarch/monarch1_1Vote.html', 
             ];
