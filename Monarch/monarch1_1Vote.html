@@ -194,7 +194,10 @@ document.getElementById('winnerButton').addEventListener('click', function() {
     const winner = getWinner();
     document.getElementById('winnerDisplay').innerText = winner;
 });
-
+function completeActivity() {
+            window.opener.postMessage('stepCompleted', '*');  // Notify the main page
+    window.close();  // Close the activity tab
+}
     </script>
 
 </body>
