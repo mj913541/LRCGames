@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sliding Letters Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #ff6347;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .drop-zone {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            background-color: #fff;
+            font-size: 1.5em;
+        }
+        .letter-cell {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px;
+            border: 2px solid #000;
+            border-radius: 5px;
+            background-color: #ffebcd;
+            font-size: 1.5em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            user-select: none;
+        }
+        .correct {
+            background-color: #32cd32 !important;
+        }
+        .incorrect {
+            background-color: #ff4500 !important;
+        }
+        #try-again, #next {
+            display: none;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #ff6347;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Sliding Letters Game</h1>
+<p>Drag the letters into the correct order</p>
+
+<div class="container" id="drop-grid">
+    <!-- Empty drop zones will be created here -->
+</div>
+
+<div class="container" id="letter-grid">
+    <!-- Letters will be populated here -->
+</div>
+
+<button id="try-again" onclick="tryAgain()">Try Again</button>
+<button id="next" onclick="nextLevel()">Next</button>
+
+<script>
+    const word = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';  // The target word
+    let shuffledWord = [];
+
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function createDropZone(index) {
+        const dropZone = document.createElement('div');
+        dropZone.className = 'drop-zone';
+        dropZone.setAttribute('data-index', index);
+        dropZone.addEventListener('dragover', dragOver);
+        dropZone.addEventListener('drop', drop);
+        return dropZone;
+    }
+
+    function createLetterCell(letter, index) {
+        const cell = document.createElement('div');
+        cell.className = 'letter-cell';
+        cell.draggable = true;
+        cell.innerText = letter;
+        cell.setAttribute('data-index', index);
+
+        cell.addEventListener('dragstart', dragStart);
+        cell.addEventListener('dragover', dragOver);
+        cell.addEventListener('drop', drop);
+
+        return cell;
+    }
+
+    function populateGrids() {
+        const letterGrid = document.getElementById('letter-grid');
+        const dropGrid = document.getElementById('drop-grid');
+        letterGrid.innerHTML = '';
+        dropGrid.innerHTML = '';
+
+        shuffledWord = word.split('');
+        shuffleArray(shuffledWord);
+
+        // Create empty drop zones
+        for (let i = 0; i < word.length; i++) {
+            dropGrid.appendChild(createDropZone(i));
+        }
+
+        // Populate letters grid with shuffled letters
+        shuffledWord.forEach((letter, index) => {
+            letterGrid.appendChild(createLetterCell(letter, index));
+        });
+    }
+
+    let draggedElement;
+    let isCorrect = true;
+
+    function dragStart(event) {
+        draggedElement = event.target;
+    }
+
+    function dragOver(event) {
+        event.preventDefault();
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        const dropZone = event.target;
+
+        if (dropZone.classList.contains('drop-zone')) {
+            dropZone.innerText = draggedElement.innerText;
+            const droppedIndex = dropZone.getAttribute('data-index');
+            const draggedLetter = draggedElement.innerText;
+
+            // Check if the dropped letter is in the correct position
+            if (draggedLetter === word[droppedIndex]) {
+                dropZone.classList.add('correct');
+                dropZone.classList.remove('incorrect');
+            } else {
+                dropZone.classList.add('incorrect');
+                dropZone.classList.remove('correct');
+                isCorrect = false;
+            }
+        }
+
+        // Allow letters to be moved again from the drop zone
+        draggedElement.innerText = '';
+        checkCompletion();
+    }
+
+    function checkCompletion() {
+        const dropZones = document.querySelectorAll('.drop-zone');
+        const allCorrect = Array.from(dropZones).every(zone => 
+            zone.classList.contains('correct') && zone.innerText
+        );
+
+        if (allCorrect) {
+            document.getElementById('next').style.display = 'inline-block';
+        } else {
+            document.getElementById('try-again').style.display = 'inline-block';
+        }
+    }
+
+    function tryAgain() {
+        const dropZones = document.querySelectorAll('.drop-zone');
+        dropZones.forEach(zone => {
+            if (zone.classList.contains('incorrect')) {
+                zone.innerText = '';
+                zone.classList.remove('incorrect');
+            }
+        });
+        document.getElementById('try-again').style.display = 'none';
+    }
+
+    function nextLevel() {
+        alert('Congratulations! You have completed the game!');
+    }
+
+    // Initial population of the grid
+    populateGrids();
+</script>
+
+</body>
+</html>
