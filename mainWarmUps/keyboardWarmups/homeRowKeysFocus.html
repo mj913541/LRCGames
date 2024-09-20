@@ -319,10 +319,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-function completeActivity() {
-	window.opener.postMessage('stepCompleted', '*');  // Notify the main page
-window.close();  // Close the activity tab
-}
+
 
     window.restartGame = function() {
         draggables.forEach(draggable => {
@@ -336,6 +333,12 @@ window.close();  // Close the activity tab
         congratulationsMessage.classList.add('hidden');
         shuffleDraggables();
     };
+
+
+	function completeActivity() {
+            window.opener.postMessage('stepCompleted', '*');  // Notify the main page
+    window.close();  // Close the activity tab
+}
 });
 
 </script>
