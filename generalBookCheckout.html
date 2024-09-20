@@ -91,8 +91,9 @@
         <h1>🛑➡️📚</h1> </br> </br>
 
 
-        <button id="next-btn">Next</button>
-    </div>
+        <div class="button-container">
+            <button class="next-button" id="nextButton" onclick="goToNextPage()">Next</button>
+        </div>
 <script>
 
             document.getElementById('check-answer-btn').addEventListener('click', () => {
@@ -108,12 +109,8 @@
         audio.play();
     }
 
-            function awardPoints() {
-    window.opener.postMessage('stepCompleted', '*');  // Notify the main page
-    window.close();  // Close the activity tab
-}
-
-        function noPoints() {
+    function goToNextPage() {
+            // Add your action for the Next button here
             window.opener.postMessage('stepCompleted', '*');  // Notify the main page
     window.close();  // Close the activity tab
 }
