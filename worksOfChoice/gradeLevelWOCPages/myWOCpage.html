@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="1st Works of Choice" />
+    <title>1st Works of Choice</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
+
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            background-color: rgb(50, 129, 92);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .card.collapsed {
+            max-height: 50px; /* Height for only showing the title */
+        }
+
+        .card.expanded {
+            max-height: 2000px; /* Large height to show full content */
+        }
+
+        h1 {
+            color: #124212;
+            font-size: 2.5rem;
+        }
+
+        .month-section {
+            width: 98%;
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 0 20px;
+            flex-wrap: wrap;
+        }
+
+        .work-section {
+            background-color: #fff;
+            border: 2px solid #b0e57c; /* Light green border */
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            margin: 10px;
+            text-align: center;
+            justify-content: space-around;
+            cursor: pointer;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            flex-wrap: wrap;
+        }
+
+    </style>
+</head>
+
+<body>
+    <h1>🎉 Works of Choice! 📚</h1>
+
+    <!-- August Section -->
+    <div class="month-section">
+        <div class="card collapsed" onclick="toggleCard(this)">
+            <img src="../../pictures/monthSigns/augustSeptemberChoices.jpg" alt="AugustSeptember" style="width: 700px; height: 200px;">
+            <div class="content" id="august1">
+        <!-- Work 1 -->
+        <div class="work-section">
+                <h3>Back to School Fun 🎒</h3>
+                <video controls>
+                    <source src="video_link_here.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <p>Get ready for school with a fun story! <a href="https://example.com/back-to-school" target="_blank">Check it out</a></p>
+                <img src="back_to_school_image.jpg" alt="Back to School">
+            </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <script>
+        function toggleCard(card) {
+            if (card.classList.contains('collapsed')) {
+                card.classList.remove('collapsed');
+                card.classList.add('expanded');
+            } else {
+                card.classList.remove('expanded');
+                card.classList.add('collapsed');
+            }
+        }
+    </script>
+</body>
+</html>
