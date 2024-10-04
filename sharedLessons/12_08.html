@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Steps Challenge with Points and Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f0f8ff;
+            padding: 50px;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        #points-counter {
+            font-size: 24px;
+            margin-bottom: 40px;
+        }
+
+        #steps-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: relative;
+        }
+
+        .step-container {
+            position: relative;
+            margin: 20px;
+            text-align: center;
+        }
+
+        .number {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background-color: white;
+            border-radius: 50%;
+            padding: 5px 10px;
+            font-size: 18px;
+        }
+
+        .step {
+            padding: 10px;
+            font-size: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .step.locked {
+            color: gray;
+            cursor: not-allowed;
+            filter: grayscale(100%);
+        }
+
+        .step:hover {
+            transform: scale(1.2);
+        }
+
+        a {
+            color: darkblue; /* Color of the link text */
+            text-decoration: underline; /* Underline the link text */
+            font-size: 20px;
+        }
+
+        .arrow {
+            font-size: 30px;
+            margin: 10px;
+            color: gray;
+            filter: grayscale(100%);
+        }
+
+        .arrow.unlocked {
+            filter: none;
+        }
+
+        #completion-box {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 2px solid #333;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #completion-box a {
+            text-decoration: none;
+            color: #333;
+            font-size: 18px;
+        }
+
+        /* Firework and Confetti animation */
+        @keyframes firework {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+
+        .firework {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #FF6347;
+            border-radius: 50%;
+            animation: firework 1s infinite;
+            z-index: 900;
+        }
+    </style>
+</head>
+<body>
+    <h1>Emoji Steps Challenge</h1>
+    <div id="points-counter">Points: 0</div>
+    <div id="steps-container">
+        <div class="step-container">
+            <div class="number">1</div>
+            <div class="step" id="step1" onclick="openStep(1)">🚀</div>
+        </div>
+        <div class="arrow" id="arrow1">➡️</div>
+        <div class="step-container">
+            <div class="number">2</div>
+            <div class="step locked" id="step2" onclick="openStep(2)">🌟</div>
+        </div>
+        <div class="arrow" id="arrow2">➡️</div>
+        <div class="step-container">
+            <div class="number">3</div>
+            <div class="step locked" id="step3" onclick="openStep(3)">🧩</div>
+        </div>
+        <div class="arrow" id="arrow3">➡️</div>
+        <div class="step-container">
+            <div class="number">4</div>
+            <div class="step locked" id="step4" onclick="openStep(4)">🎨</div>
+        </div>
+        <div class="arrow" id="arrow4">➡️</div>
+        <div class="step-container">
+            <div class="number">5</div>
+            <div class="step locked" id="step5" onclick="openStep(5)">🎉</div>
+        </div>
+    </div>
+
+    <!-- Completion Box -->
+    <div id="completion-box">
+        <h2>Congratulations!</h2>
+        <a href="https://sites.google.com/sd308.org/mrsmindyalbrechtlms/1st-choices" target="_blank">Works of Choice</a>
+    </div>
+
+    <script>
+        const totalSteps = 5;
+        let currentStep = 1;
+        let points = 0;
+        let newWindow;
+    
+        function openStep(step) {
+            if (step > currentStep) {
+                alert("Please complete the previous steps first!");
+                return;
+            }
+    
+            let urls = [
+                '../Monarch/monarch11Introduction.html',
+                '../generalBookCheckout.html',
+                '../Monarch/monarch1_2a.html',
+                '../Monarch/monarch1_2b.html',
+                '../Monarch/monarch1_2Vote.html', 
+            ];
+    
+            // Open the URL in a new window and store the reference
+            newWindow = window.open(urls[step - 1], '_blank');
+    
+            // Listen for messages from the opened window
+            window.addEventListener('message', function(event) {
+                if (event.data === 'stepCompleted' && step === currentStep) {
+                    unlockNextStep(step);
+                }
+            });
+
+            window.addEventListener('message', function(event) {
+    // Check the origin of the message for security
+    // if (event.origin !== 'expected_origin') return; // Optional: replace with actual origin if needed
+
+    if (event.data === 'matchingGameCompleted') {
+        unlockNextStep(currentStep); // Adjust step as needed
+    }
+});
+        }
+    
+        function unlockNextStep(step) {
+            if (step >= totalSteps) {
+                showCompletion();
+                return;
+            }
+            currentStep = step + 1;
+            points += 10;
+    
+            document.getElementById('points-counter').innerText = `Points: ${points}`;
+    
+            const nextStepElement = document.getElementById(`step${currentStep}`);
+            const nextArrowElement = document.getElementById(`arrow${step}`);
+    
+            if (nextStepElement) {
+                nextStepElement.classList.remove('locked');
+            }
+            if (nextArrowElement) {
+                nextArrowElement.classList.add('unlocked');
+            }
+        }
+    
+        function showCompletion() {
+            points += 10;
+            document.getElementById('points-counter').innerText = `Points: ${points}`;
+            document.getElementById('completion-box').style.display = 'block';
+            createFireworkAnimation();
+        }
+    
+        function createFireworkAnimation() {
+            for (let i = 0; i < 100; i++) {
+                let firework = document.createElement('div');
+                firework.className = 'firework';
+                firework.style.left = `${Math.random() * 100}vw`;
+                firework.style.top = `${Math.random() * 100}vh`;
+                firework.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                document.body.appendChild(firework);
+    
+                setTimeout(() => {
+                    firework.remove();
+                }, 1000);
+            }
+        }
+    </script>
+    
+
+
+</body>
+</html>
