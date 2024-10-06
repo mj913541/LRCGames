@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Checkout</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e6f2ff;
+            color: #333;
+            text-align: center;
+        }
+        #bookCheckout {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            color: #4a90e2;
+            font-size: 1.8em;
+        }
+        video {
+            width: 100%;
+            border: 3px solid #4a90e2;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        p {
+            font-size: 1.1em;
+            color: #555;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            background-color: #2a5d8b;
+        }
+        .sound-button {
+    background-color: #1f1d1d;
+    border: none;
+    border-radius: 50%;
+    padding: 10px;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 20px;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 5px;
+    vertical-align: middle; /* Adjust the alignment to match text */
+}
+        .sound-button:focus {
+            outline: none;
+        }
+        .image-row {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+        }
+        .image-row img {
+            width: 30%;
+            height: auto;
+            border-radius: 10%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="bookCheckout">
+        <h2>Google Classroom Assignment</h2>
+
+        <video src="../../videos/slideDirections/345.01SlideDirections.mp4" controls></video>
+    <!-- Sound Emoji Buttons -->
+    <div class="sound-button-container">
+        <button class="sound-button" onclick="playAudio('../../audios/clickClassroomTeacher.mp3')">🔊</button>
+    </div>
+
+    <!-- Three Images in a Row -->
+    <div class="image-row">
+        <a href="https://classroom.google.com/c/NjEzNDYzODc2NTM3/a/NzA0Mjc0MzQ1MTQ1/details"><img src="../pictures/staffPhotos/kpulsa_sd308org.png" alt="Ms. Pulsa"></a>
+        <a href="https://classroom.google.com/c/NjEzNDYzMTA0MzA1/a/NzA0MjczMzMyMDQx/details"><img src="../pictures/staffPhotos/shossain_sd308org.png" alt="Mrs. Hossain"></a>
+        <a href="https://classroom.google.com/c/NjEzNDYzODU1NjQy/a/NzA0MjczMzMyMDUw/details"><img src="../pictures/staffPhotos/jcarroll_sd308org.png" alt="Mrs. Carroll"></a>
+    </div>
+    <div class="image-row">
+        <a href="https://classroom.google.com/c/NjEzNDY0NDEwNjgy/a/NzA0MTkwNTAxMDI0/details"><img src="../pictures/staffPhotos/mcavello_sd308org.png" alt="Mr. Cavello"></a>
+        <a href="https://classroom.google.com/c/NjM4NzAwMzU3MzQ4/a/NzA0MTkwNTAyMzUy/details"><img src="../pictures/staffPhotos/ttomter_sd308org.png" alt="Mrs. Tomter"></a>
+        <a href="https://classroom.google.com/c/NjEzNDY0Mjc1NTA2/a/NzA0MTkwNTAyMzY4/details"><img src="../pictures/staffPhotos/jrosenthal_sd308org.png" alt="Mrs. Rosenthal"></a>
+    </div>
+    <div class="image-row">
+        <a href="https://classroom.google.com/c/NjEzNDYzNTIwMzg2/a/NzA0MTkwNjkwMjQ1/details"><img src="../pictures/staffPhotos/adaleiden_sd308org.png" alt="Mrs. Daleiden"></a>
+        <a href="https://classroom.google.com/c/NjEzNDU2MTM5MzQx/a/NzA0MTkwNjkwMjYw/details"><img src="../pictures/staffPhotos/nziemer_sd308org.png" alt="Mrs. Ziemer"></a>
+        <a href="https://classroom.google.com/c/NjEzNDYzOTE1MDE3/a/NzA0MTkwNjkwMjIx/details"><img src="../pictures/staffPhotos/mvivona_sd308org.png" alt="Mrs. Vivona"></a>
+    </div>
+
+    <p>        <button class="sound-button" onclick="playAudio('../../audios/didYouSubmit.mp3')">🔊</button>Did turn in your assignmentt?</p>
+        <button id="next-btn">Yes</button>
+    </div>
+<script>
+    function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                awardPoints();
+            });
+
+            function awardPoints() {
+            localStorage.setItem('Diamond3', 'completed');
+            window.close(); // Optionally close the activity tab
+        }
+</script>
+</body>
+</html>
