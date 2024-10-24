@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pumpkin Patch Voting</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background-color: #2b2b2b;
+            color: #f5f5f5;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        h1, h2 {
+            animation: glow 2s infinite alternate;
+        }
+
+        .halloween-header, .halloween-footer {
+            padding: 20px;
+            background-color: #4d2800;
+            border: 5px solid #ff6f00;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 80%;
+            margin: 20px auto;
+            overflow: hidden;
+            border: 5px solid #ff6f00;
+            border-radius: 15px;
+        }
+
+        .carousel {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .carousel-item {
+            min-width: 100%;
+            transition: opacity 0.5s ease;
+        }
+
+        .carousel-item img {
+            width: 200;
+            height: 150;
+            border-radius: 15px;
+        }
+
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            color: #ff6f00;
+            border: black;
+            padding: 10px 20px;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .carousel-button.prev {
+            left: 0;
+        }
+
+        .carousel-button.next {
+            right: 0;
+        }
+
+        .vote-button {
+            display: inline-block;
+            background-color: #ff6f00;
+            color: #2b2b2b;
+            padding: 15px 25px;
+            text-decoration: none;
+            font-size: 1.5rem;
+            border: 3px solid #2b2b2b;
+            border-radius: 8px;
+            margin: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .vote-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #ff6f00;
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 5px #ff6f00, 0 0 10px #ff6f00;
+            }
+            to {
+                text-shadow: 0 0 20px #ff6f00, 0 0 30px #ff6f00;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="halloween-header">
+        <h1>🎃 Welcome to the Pumpkin Patch! 🎃</h1>
+        <p>Click through the pumpkins and vote for your favorite one!</p>
+    </header>
+
+    <section class="carousel-container">
+        <div class="carousel">
+            <div class="carousel-item active"><img src="../pictures/pumpkins/pumpkin2024_01.png" alt="Pumpkin 1"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_02a.png" alt="Pumpkin 2a"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_02b.png" alt="Pumpkin 2b"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_03.png" alt="Pumpkin 3"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_04.png" alt="Pumpkin 4"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_05.png" alt="Pumpkin 5"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_06.png" alt="Pumpkin 6"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_07.png" alt="Pumpkin 7"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_08.png" alt="Pumpkin 8"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_09.png" alt="Pumpkin 9"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_10.png" alt="Pumpkin 10"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_11.png" alt="Pumpkin 11"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_12.png" alt="Pumpkin 12"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_13.png" alt="Pumpkin 13"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_14.png" alt="Pumpkin 14"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_15.png" alt="Pumpkin 15"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_16a.png" alt="Pumpkin 16a"></div>
+            <div class="carousel-item"><img src="../pictures/pumpkins/pumpkin2024_16b.png" alt="Pumpkin 16b"></div>
+            
+        </div>
+        <button class="carousel-button prev" onclick="prevSlide()">&#9664;</button>
+        <button class="carousel-button next" onclick="nextSlide()">&#9654;</button>
+    </section>
+
+    <section class="vote-section">
+        <h2>Vote for Your Favorite Pumpkin!</h2>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSe7aD4WGSDBhTzDRpfDO0v8D_j8uveRp3xMXJhIXADRmRdHNQ/viewform?usp=sf_link" target="_blank" class="vote-button">📝 Vote Here!</a>
+    </section>
+
+    <footer class="halloween-footer">
+        <h1>Happy Fall! 🎃👻</h1>
+    </footer>
+
+    <script>
+        let currentIndex = 0;
+        const items = document.querySelectorAll('.carousel-item');
+
+        function showSlide(index) {
+            items.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+            document.querySelector('.carousel').style.transform = `translateX(-${index * 100}%)`;
+        }
+
+        function nextSlide() {
+            currentIndex = (currentIndex + 1) % items.length;
+            showSlide(currentIndex);
+        }
+
+        function prevSlide() {
+            currentIndex = (currentIndex - 1 + items.length) % items.length;
+            showSlide(currentIndex);
+        }
+
+        showSlide(currentIndex);
+    </script>
+</body>
+</html>
