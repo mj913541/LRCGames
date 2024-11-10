@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Checkout</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e6f2ff;
+            color: #333;
+            text-align: center;
+        }
+        #bookCheckout {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px auto;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #4a90e2;
+            font-size: 1.8em;
+        }
+        h2 {
+            font-size: 20em;
+        }
+        video {
+            width: 100%;
+            border: 3px solid #4a90e2;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        p {
+            font-size: 1.1em;
+            color: #555;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 1em;
+            margin: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #357abd;
+        }
+        button:active {
+            background-color: #2a5d8b;
+        }
+        .sound-button {
+            background-color: #1f1d1d;
+            border: none;
+            border-radius: 50%;
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle; /* Adjust the alignment to match text */
+        }
+        .sound-button:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="bookCheckout">
+<h1>Use Destiny to find at least one Just Right Book for you this week.</h1>
+    </br> </br>
+        <h2>🛑➡️📚</h2> </br> </br>
+
+
+        <div class="button-container">
+            <button class="next-button" id="nextButton" onclick="goToNextPage()">Next</button>
+        </div>
+<script>
+
+            document.getElementById('check-answer-btn').addEventListener('click', () => {
+                noPoints();
+            });
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                awardPoints();
+            });
+
+            function playAudio(audioSrc) {
+        let audio = new Audio(audioSrc);
+        audio.play();
+    }
+
+    function goToNextPage() {
+            // Add your action for the Next button here
+            window.opener.postMessage('stepCompleted', '*');  // Notify the main page
+    window.close();  // Close the activity tab
+}
+</script>
+</body>
+</html>
