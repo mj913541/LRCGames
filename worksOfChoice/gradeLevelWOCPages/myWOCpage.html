@@ -1,123 +1,402 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="1st Works of Choice" />
-    <title>1st Works of Choice</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4th & 5th Works of Choice</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Bubblegum+Sans&display=swap');
-
         body {
             font-family: 'Comic Sans MS', sans-serif;
-            background-color: rgb(50, 129, 92);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            text-align: center;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 0;
+            color: #333;
         }
-
-        .card.collapsed {
-            max-height: 50px; /* Height for only showing the title */
-        }
-
-        .card.expanded {
-            max-height: 2000px; /* Large height to show full content */
-        }
-
         h1 {
-            color: #124212;
-            font-size: 2.5rem;
-        }
-
-        .month-section {
-            width: 98%;
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            padding: 0 20px;
-            flex-wrap: wrap;
-        }
-
-        .work-section {
-            background-color: #fff;
-            border: 2px solid #b0e57c; /* Light green border */
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            margin: 10px;
             text-align: center;
-            justify-content: space-around;
-            cursor: pointer;
-            overflow: hidden;
-            transition: max-height 0.5s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-            flex-wrap: wrap;
+            color: red;
+            font-weight: 900;
+            animation: colorChange 2s infinite;
         }
+        @keyframes colorChange {
+            0% { color: #ff5722; }
+            50% { color: #4caf50; }
+            100% { color: #ff5722; }
+        }
+        .month-section {
+            border: 4px solid black;
+            border-radius: 20px;
+            margin: 20px auto;
+            padding: 10px;
+            max-width: 1000px;
+            background-color: #ffffff;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+            animation: bounceIn 1.5s;
+        }
+
+        .month-section h2 img {
+    display: block;
+    margin: 0 auto; /* Centers the image horizontally */
+    max-width: 90%; /* Ensures the image doesn't overflow */
+    height: auto; /* Maintains the aspect ratio */
+}
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .month-section h2 {
+            text-align: center;
+            color: #2196f3;
+        }
+        .game-grid {
+    display: flex; /* Change grid layout to flexbox */
+    justify-content: space-around; /* Evenly distribute items with space between them */
+    align-items: center; /* Center items vertically (if needed) */
+    gap: 5px; /* Optional: Adds spacing between items */
+    flex-wrap: wrap; /* Ensures items wrap to the next row if the container is too narrow */
+}
+.game {
+    flex: 1; /* Makes each game item take up equal width */
+    text-align: center; /* Centers text and images within each game */
+    max-width: 200px; /* Optional: Limits the width of each game item */
+}
+.game img {
+    width: 100%; /* Ensures images fill the available space */
+    height: auto; /* Maintains aspect ratio */
+    border: 2px solid black;
+    border-radius: 20px;
+}
+        .game img:hover {
+            transform: scale(1.1);
+        }
+        .game a {
+            text-decoration: none;
+            color: red;
+            font-size: 18px;
+            font-display: bold;
+            display: block;
+            margin-top: 5px;
+        }
+        footer {
+            text-align: center;
+            padding: 20px;
+            background-color: #4caf50;
+            color: #fff;
+        }
+        .hidden {display: none;}
 
     </style>
 </head>
-
 <body>
-    <h1>🎉 Works of Choice! 📚</h1>
+    <h1>Works of Choice</h1>
 
-    <!-- August Section -->
+    <!-- August & September -->
     <div class="month-section">
-        <div class="card collapsed" onclick="toggleCard(this)">
-            <img src="../../pictures/monthSigns/augustSeptemberChoices.jpg" alt="AugustSeptember" style="width: 700px; height: 200px;">
-            <div class="content" id="august1">
-        <!-- Work 1 -->
-        <div class="work-section">
-                <h3>Back to School Fun 🎒</h3>
-                <video controls>
-                    <source src="video_link_here.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <p>Get ready for school with a fun story! <a href="https://example.com/back-to-school" target="_blank">Check it out</a></p>
-                <img src="back_to_school_image.jpg" alt="Back to School">
+        <h2><img src="../../pictures/monthSigns/augustSeptemberChoices.jpg" alt="August September"></h2>
+        <div class="game-grid">
+            <div class="game">
+                <a href="https://www.abcya.com/games/parts-of-speech-quest-nouns" target="_blank">
+                    <img src="../../pictures/worksOfChoice/posNouns.png" alt="Parts of Speech Quest 1: Nouns">
+                </a>
+                <a href="https://www.abcya.com/games/parts-of-speech-quest-nouns">Parts of Speech Quest 1: Nouns</a>
+            
             </div>
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/breakoutNaturalDisasters.png" alt="Breakout EDU: Natural Hazards">
+                <a href="https://platform.breakoutedu.com/game/play/keyla-takes-on-natural-hazards-127522-H3TLT8E8V9">Breakout EDU: Natural Hazards</a>
+            
+            </div>
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/keyboardChallengeImage.png" alt="Keyboard Challenge">
+                <a href="https://www.abcya.com/games/keyboard_challenge">Keyboard Challenge</a>
+
+            </div>
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/shelvingGame.png" alt="Shelving Books">
+                <a href="https://shelver.mrs-lodges-library.com/?authuser=0">Shelving Books</a>
+                <a href="https://drive.google.com/file/d/146GuXIoQ-dhL6h-t5rg4zutfdI6Y1YR6/view?usp=sharing">How to Play</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- October -->
+    <div class="month-section">
+        <h2><img src="../../pictures/monthSigns/octoberChoices.jpg" alt="October"></h2>
+        <div class="game-grid">
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/posVerbs.png" alt="Parts of Speech Quest 2: Verbs">
+                <a href="https://www.abcya.com/games/parts-of-speech-quest-verbs?authuser=0">Parts of Speech Quest 2: Verbs</a>
+
+            </div>
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/ghostTyping.png" alt="Ghost Typing Challenge">
+                <a href="https://www.abcya.com/games/ghost_typing?authuser=0">Ghost Typing Challenge</a>
+                <a href="https://drive.google.com/file/d/1GcNKpu2h6ADGqjP0fRtPHfkLaS15bYuJ/view?usp=sharing">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/bookshelfSpookyStories45.png" alt="Spooky Stories Bookshelf">
+                <a href="https://docs.google.com/presentation/d/e/2PACX-1vTvisx65JD0fCQjB3lpXxmiA0lT0IKKr7fn2mL3ilAon8-agnLkDw9l7w8Y3FjP8kAU4zTdUOY_KckX/pub?start=false&loop=false&delayms=3000">Spooky Stories Bookshelf</a>
+
+            </div>
+            <div class="game">
+                <img src="../../pictures/worksOfChoice/breakoutSpider.png" alt="Spider BreakoutEDU">
+                <a href="https://platform.breakoutedu.com/game/play/help-spidey-save-his-halloween-78?authuser=0">Spider BreakoutEDU</a>
+                <a href="https://platform.breakoutedu.com/game/play/help-spidey-save-his-halloween-78?authuser=0">How to Play</a>
+            </div>
+        </div>
+    </div>
+
+        <!-- Repeat for other months -->
+        <div class="month-section">
+            <h2><img src="../../pictures/monthSigns/novemberChoices.jpg" alt="October"></h2>
+            <div class="game-grid">
+                <div class="game">
+                    <img src="../../pictures/worksOfChoice/posAdjectives.png" alt="Parts of Speech Quest 3: Adjectives">
+                    <a href="https://www.abcya.com/games/parts-of-speech-quest-adjectives">Parts of Speech Quest 3: Adjectives</a>
+
+                </div>
+                <div class="game">
+                    <img src="../../pictures/worksOfChoice/novemberBitmojiClassroom.png" alt="November Bitmoji Classroom">
+                    <a href="https://docs.google.com/presentation/d/e/2PACX-1vQlAoAzu0CuhJLJoOpc0rN5ltmYIGzdM4TyLIR8hARKuGURUcvzf-XcRU_hco__28u4MNIuOXgDefYz/pub?start=true&loop=true&delayms=60000&slide=id.g8f49124bcc_0_0">November Bitmoji Classroom</a>
+
+                </div>
+                <div class="game">
+                    <img src="../../pictures/worksOfChoice/bookshelfVeteransDay.png" alt="Veterans Day Bookshelf">
+                    <a href="https://docs.google.com/presentation/d/e/2PACX-1vRWc6BvGsjW0z3xGObxX1IWAI8VldOcpnfVoBKnGo2wgjpHX1F_R3Onbwu7LRRh6cfsADMSWS6NUsTR/pub?start=false&loop=false&delayms=60000&slide=id.ga7339460c1_0_5">Veterans Day Bookshelf</a>
+
+                </div>
+                <div class="game">
+                    <img src="../../pictures/worksOfChoice/typingDotCom.png" alt="Typing.com">
+                    <a href="https://www.typing.com/student/login">Typing.com</a>
+
+                </div>
+            </div>
+        </div>
+
+            <!-- Repeat for other months -->
+            <div class="month-section hidden">
+        <h2>September</h2>
+        <div class="game-grid">
+            <div class="game">
+                <img src="placeholder1.jpg" alt="Game 1">
+                <a href="#">Game 1 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder2.jpg" alt="Game 2">
+                <a href="#">Game 2 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder3.jpg" alt="Game 3">
+                <a href="#">Game 3 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder4.jpg" alt="Game 4">
+                <a href="#">Game 4 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+        </div>
+    </div>
+
+        <!-- Repeat for other months -->
+        <div class="month-section hidden">
+            <h2>September</h2>
+            <div class="game-grid">
+                <div class="game">
+                    <img src="placeholder1.jpg" alt="Game 1">
+                    <a href="#">Game 1 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder2.jpg" alt="Game 2">
+                    <a href="#">Game 2 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder3.jpg" alt="Game 3">
+                    <a href="#">Game 3 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder4.jpg" alt="Game 4">
+                    <a href="#">Game 4 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+            </div>
+        </div>
+
+            <!-- Repeat for other months -->
+            <div class="month-section hidden">
+        <h2>September</h2>
+        <div class="game-grid">
+            <div class="game">
+                <img src="placeholder1.jpg" alt="Game 1">
+                <a href="#">Game 1 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder2.jpg" alt="Game 2">
+                <a href="#">Game 2 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder3.jpg" alt="Game 3">
+                <a href="#">Game 3 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder4.jpg" alt="Game 4">
+                <a href="#">Game 4 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+        </div>
+    </div>
+
+        <!-- Repeat for other months -->
+        <div class="month-section hidden">
+            <h2>September</h2>
+            <div class="game-grid">
+                <div class="game">
+                    <img src="placeholder1.jpg" alt="Game 1">
+                    <a href="#">Game 1 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder2.jpg" alt="Game 2">
+                    <a href="#">Game 2 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder3.jpg" alt="Game 3">
+                    <a href="#">Game 3 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder4.jpg" alt="Game 4">
+                    <a href="#">Game 4 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+            </div>
+        </div>
+
+            <!-- Repeat for other months -->
+            <div class="month-section hidden">
+        <h2>September</h2>
+        <div class="game-grid">
+            <div class="game">
+                <img src="placeholder1.jpg" alt="Game 1">
+                <a href="#">Game 1 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder2.jpg" alt="Game 2">
+                <a href="#">Game 2 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder3.jpg" alt="Game 3">
+                <a href="#">Game 3 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder4.jpg" alt="Game 4">
+                <a href="#">Game 4 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+        </div>
+    </div>
+
+        <!-- Repeat for other months -->
+        <div class="month-section hidden">
+            <h2>September</h2>
+            <div class="game-grid">
+                <div class="game">
+                    <img src="placeholder1.jpg" alt="Game 1">
+                    <a href="#">Game 1 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder2.jpg" alt="Game 2">
+                    <a href="#">Game 2 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder3.jpg" alt="Game 3">
+                    <a href="#">Game 3 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder4.jpg" alt="Game 4">
+                    <a href="#">Game 4 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+            </div>
+        </div>
 
 
+            <!-- Repeat for other months -->
+            <div class="month-section hidden">
+        <h2>September</h2>
+        <div class="game-grid">
+            <div class="game">
+                <img src="placeholder1.jpg" alt="Game 1">
+                <a href="#">Game 1 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder2.jpg" alt="Game 2">
+                <a href="#">Game 2 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder3.jpg" alt="Game 3">
+                <a href="#">Game 3 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+            <div class="game">
+                <img src="placeholder4.jpg" alt="Game 4">
+                <a href="#">Game 4 Title</a>
+                <a href="#">How to Play</a>
+            </div>
+        </div>
+    </div>
 
 
+        <!-- Repeat for other months -->
+        <div class="month-section hidden">
+            <h2>September</h2>
+            <div class="game-grid">
+                <div class="game">
+                    <img src="placeholder1.jpg" alt="Game 1">
+                    <a href="#">Game 1 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder2.jpg" alt="Game 2">
+                    <a href="#">Game 2 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder3.jpg" alt="Game 3">
+                    <a href="#">Game 3 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+                <div class="game">
+                    <img src="placeholder4.jpg" alt="Game 4">
+                    <a href="#">Game 4 Title</a>
+                    <a href="#">How to Play</a>
+                </div>
+            </div>
+        </div>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <script>
-        function toggleCard(card) {
-            if (card.classList.contains('collapsed')) {
-                card.classList.remove('collapsed');
-                card.classList.add('expanded');
-            } else {
-                card.classList.remove('expanded');
-                card.classList.add('collapsed');
-            }
-        }
-    </script>
+    <!-- Repeat the above structure for all months -->
+    <footer>
+        © 2024 Works of Choice
+    </footer>
 </body>
 </html>
