@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Long Beach Book Fair: Explore A Galaxy of Books!</title>
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: radial-gradient(circle at top, #0b1e35, #020b1a 80%);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #ffd700;
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #f1f1f1;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Container Layout */
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 20px;
+        }
+
+        .card {
+            width: 300px;
+            background: linear-gradient(145deg, #1a237e, #3949ab);
+            margin: 20px;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            position: relative;
+            animation: float 5s infinite ease-in-out;
+        }
+
+        .card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .card h3 {
+            color: #ffd700;
+            margin-top: 15px;
+        }
+
+        .card a {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            text-align: center;
+            text-decoration: none;
+            background: #ffd700;
+            color: #1a1a2e;
+            border-radius: 5px;
+        }
+
+        .card a:hover {
+            background: #ff6f00;
+        }
+
+        /* Highlight Section */
+        .highlight {
+            width: 100%;
+            background: linear-gradient(120deg, #020b1a, #1a237e);
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+        }
+
+/* Carousel Styling */
+.carousel {
+    position: relative;
+    width: 80%;
+    height: 300px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.carousel img {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: left 0.5s ease-in-out;
+    opacity: 0;
+}
+
+.carousel img.active {
+    left: 0;
+    opacity: 1;
+}
+
+
+        /* Stars Animation */
+        .stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .stars span {
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            opacity: 0.8;
+            border-radius: 50%;
+            animation: twinkle 3s infinite ease-in-out;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            background: linear-gradient(120deg, #1a237e, #3949ab);
+            padding: 10px;
+            color: #ddd;
+            margin-top: 20px;
+        }
+
+/* Randomized Stars */
+.stars span:nth-child(1) { top: 10%; left: 20%; animation-duration: 2.5s; }
+.stars span:nth-child(2) { top: 30%; left: 50%; animation-duration: 3s; }
+.stars span:nth-child(3) { top: 50%; left: 70%; animation-duration: 2s; }
+.stars span:nth-child(4) { top: 80%; left: 40%; animation-duration: 3.5s; }
+.stars span:nth-child(5) { top: 20%; left: 80%; animation-duration: 1.8s; }
+.stars span:nth-child(6) { top: 15%; left: 10%; animation-duration: 2.2s; }
+.stars span:nth-child(7) { top: 45%; left: 30%; animation-duration: 3.1s; }
+.stars span:nth-child(8) { top: 60%; left: 90%; animation-duration: 2.7s; }
+.stars span:nth-child(9) { top: 5%; left: 70%; animation-duration: 2.3s; }
+.stars span:nth-child(10) { top: 75%; left: 15%; animation-duration: 3.3s; }
+.stars span:nth-child(11) { top: 50%; left: 10%; animation-duration: 1.9s; }
+.stars span:nth-child(12) { top: 25%; left: 60%; animation-duration: 2.6s; }
+.stars span:nth-child(13) { top: 35%; left: 80%; animation-duration: 2.4s; }
+.stars span:nth-child(14) { top: 65%; left: 5%; animation-duration: 3.2s; }
+.stars span:nth-child(15) { top: 85%; left: 95%; animation-duration: 2.1s; }
+
+
+        /* Responsive Styles */
+        @media (max-width: 1024px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .card {
+                width: 90%;
+            }
+
+            .highlight img {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            p {
+                font-size: 1rem;
+            }
+
+            .card img {
+                height: 150px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .highlight {
+                padding: 20px;
+            }
+
+            .card {
+                width: 100%;
+                margin: 10px 0;
+            }
+
+            .highlight img {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Starry Background -->
+    <div class="stars">
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+    
+
+    <!-- Header -->
+    <header>
+        <h1>📚 Long Beach Book Fair: Explore A Galaxy of Books! 🚀</h1>
+        <p style="text-align: center; margin: 10px 0 20px;">Embark on an interstellar journey to discover the magic of reading!</p>
+        <p style="text-align: center; margin: 10px 0 20px;">The Book Fair is coming this December 3-6 — just in time for holiday gift-giving! 
+            <br> Shop in person or online to discover great books for all ages, and 
+            every purchase helps support our school library. <br> Do not miss this chance to give the 
+            gift of reading while giving back to our school!</p>
+    </header>
+
+<!-- Container with Cards -->
+<div class="container">
+    <!-- Card 1: Online Book Fair -->
+    <div class="card">
+        <img src="./bfOnlineBookFair.png" alt="Online Fair">
+        <h3>Online Book Fair</h3>
+        <p>The online book fair offers even more book options than the in-person fair and is open now for easy shopping!</p>
+        <a href="https://literati.com/store/?school=long-beach-elementary-school-montgomery-il">Shop Now!</a>
+    </div>
+
+    <!-- Card 2: Gift Cards -->
+    <div class="card">
+        <img src="./bfGiftCards.png" alt="Gift Cards">
+        <h3>Gift Cards</h3>
+        <p>Gift cards for the book fair are a convenient option for parents, eliminating the need for students to carry cash while offering flexibility since they never expire!</p>
+        <a href="https://literati.com/store/?school=long-beach-elementary-school-montgomery-il">Purchase A Forever Gift Card <br> (Scroll Down After Click) </a>
+    </div>
+
+    <!-- Card 3: Teacher Wishlists -->
+    <div class="card">
+        <img src="./bfWishLists.png" alt="Teacher Wishlists">
+        <h3>Donate to a Classroom</h3>
+        <p>Teacher wishlists let you donate a book with a special nameplate for your student to personalize, creating a lasting gift for the classroom!</p>
+        <a href="https://docs.google.com/spreadsheets/d/1BkQ9l7HjNheXQu7EUgYO6ZXH-ukx_zchyw83bvT2n_o/edit?usp=sharing">Access Wishlists</a>
+    </div>
+</div>
+
+    <!-- Link for more information (centered below the cards) -->
+    <p style="text-align: center; margin-top: 20px;">
+        <a href="https://example.com" target="_blank" style="color: #ffd700; text-decoration: underline; font-size: 1.5rem;">
+            Click here for more detailed overall information
+        </a>
+    </p>
+
+
+<!-- Highlight Section -->
+<div class="highlight">
+    <h2>🌌 Craft Night Under the Winter Starry Sky! 🌌</h2>
+    <p>Join us on Friday evening for a special family craft event! Students must be accompanied by an adult.</p>
+    <div class="carousel">
+        <img src="https://via.placeholder.com/800x300" alt="Event Highlight 1" class="active">
+        <img src="https://via.placeholder.com/800x300/ff7f7f" alt="Event Highlight 2">
+        <img src="https://via.placeholder.com/800x300/7f7fff" alt="Event Highlight 3">
+    </div>
+</div>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Longbeach Elementary Book Fair.</p>
+    </footer>
+
+    <script>
+        const carouselImages = document.querySelectorAll('.carousel img');
+        let currentIndex = 0;
+    
+        function changeSlide() {
+            // Remove "active" class from the current image
+            carouselImages[currentIndex].classList.remove('active');
+            
+            // Increment index and loop back if necessary
+            currentIndex = (currentIndex + 1) % carouselImages.length;
+    
+            // Add "active" class to the next image
+            carouselImages[currentIndex].classList.add('active');
+        }
+    
+        // Change slides every 3 seconds
+        setInterval(changeSlide, 3000);
+    </script>
+    
+
+</body>
+</html>
