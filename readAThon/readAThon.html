@@ -14,7 +14,7 @@
             padding: 0;
         }
         .container {
-            margin-top: 50px;
+            margin-top: 5px;
         }
         h1 {
             font-size: 3em;
@@ -56,7 +56,7 @@
             to { box-shadow: 0 0 20px #00ff00; }
         }
         .content-section {
-            margin: 20px auto;
+            margin: 5px auto;
             width: 90%;
             max-width: 600px;
             background: white;
@@ -103,6 +103,48 @@
             bottom: 0;
             transition: height 0.5s ease-in-out;
         }
+
+        /* styles.css */
+.slideshow-container {
+    position: relative;
+    width: 100%;
+    max-width: 600px; /* Adjust as needed */
+    margin: auto;
+    overflow: hidden;
+}
+
+.slide {
+    display: none;
+    width: 100%;
+    height: auto;
+}
+
+img {
+    width: 100%;
+    height: auto;
+}
+
+.form-container {
+            display: flex;
+            justify-content: space-around;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-container iframe {
+            width: 30%;
+            height: 600px;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .form-container iframe {
+                width: 100%;
+                height: 500px;
+                margin-bottom: 20px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -137,6 +179,12 @@ Supporting local education is a powerful way to show that your business cares ab
 
 Join us in making a difference! Your partnership will not only benefit our students but also demonstrate your commitment to helping grow a stronger, more connected community. Thank you for your support!
 </div>
+
+<div class="content-section">
+    <h2>Introductory Letter & Calendar</h2>
+    <p><a href="#">Download PDFs</a></p>
+</div>
+
     <div class="content-section">
         <h2>Grade Level Trackers (EC-5th Grade)</h2>
         <p><a href="#">Download PDFs</a></p>
@@ -147,6 +195,12 @@ Join us in making a difference! Your partnership will not only benefit our stude
         <p>Stay tuned for special appearances!</p>
     </div>
     
+    <div class="form-container">
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd-example1/viewform" title="Form 1"></iframe>
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd-example2/viewform" title="Form 2"></iframe>
+        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd-example3/viewform" title="Form 3"></iframe>
+    </div>
+
     <div class="content-section">
         <h2>Total Money Earned</h2>
         <div class="thermometer-container">
@@ -157,6 +211,12 @@ Join us in making a difference! Your partnership will not only benefit our stude
         </div>
         <p><strong>$<span id="money-earned">0.00</span></strong> (updates live!)</p>
         <button class="button" onclick="updateThermometer(500)">Simulate Earnings</button>
+    </div>
+
+    <div class="slideshow-container">
+        <img class="slide" src="image1.jpg" alt="Image 1">
+        <img class="slide" src="image2.jpg" alt="Image 2">
+        <img class="slide" src="image3.jpg" alt="Image 3">
     </div>
     
     <div class="content-section">
@@ -181,6 +241,21 @@ Join us in making a difference! Your partnership will not only benefit our stude
             }
         }
         
+        let slideIndex = 0;
+
+function showSlides() {
+    let slides = document.getElementsByClassName("slide");
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";
+    }
+    slideIndex++;
+    if (slideIndex > slides.length) {slideIndex = 1} 
+    slides[slideIndex - 1].style.display = "block";
+    setTimeout(showSlides, 2000); // Change image every 2 seconds
+}
+
+showSlides();
+
         function updateThermometer(amount) {
             let moneyEarnedElement = document.getElementById('money-earned');
             let thermometerFill = document.getElementById('thermometer-fill');
