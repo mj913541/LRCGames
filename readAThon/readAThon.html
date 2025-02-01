@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elementary Read-A-Thon</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            text-align: center;
+            background-color: #ffefd5;
+            overflow: hidden;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        h1 {
+            font-size: 3em;
+            color: #ff4500;
+            animation: bounce 2s infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .book {
+            width: 100px;
+            position: absolute;
+            top: -50px;
+            animation: fall linear infinite;
+        }
+        @keyframes fall {
+            0% { transform: translateY(-50px); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        .button {
+            padding: 15px 30px;
+            font-size: 1.5em;
+            color: white;
+            background: #008000;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            animation: glow 1.5s infinite alternate;
+        }
+        @keyframes glow {
+            from { box-shadow: 0 0 10px #008000; }
+            to { box-shadow: 0 0 20px #00ff00; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome to the Read-A-Thon!</h1>
+        <button class="button" onclick="startRain()">Let the Books Rain!</button>
+    </div>
+    <script>
+        function startRain() {
+            for (let i = 0; i < 10; i++) {
+                let book = document.createElement('img');
+                book.src = 'https://cdn-icons-png.flaticon.com/512/2232/2232688.png';
+                book.classList.add('book');
+                document.body.appendChild(book);
+                book.style.left = Math.random() * window.innerWidth + 'px';
+                book.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                setTimeout(() => book.remove(), 5000);
+            }
+        }
+    </script>
+</body>
+</html>
