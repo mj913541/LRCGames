@@ -9,7 +9,9 @@
             font-family: 'Comic Sans MS', cursive, sans-serif;
             text-align: center;
             background-color: #ffefd5;
-            overflow: hidden;
+            overflow-y: auto;
+            margin: 0;
+            padding: 0;
         }
         .container {
             margin-top: 50px;
@@ -22,6 +24,12 @@
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
+        }
+        .goal {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #008000;
+            margin-bottom: 20px;
         }
         .book {
             width: 100px;
@@ -47,13 +55,122 @@
             from { box-shadow: 0 0 10px #008000; }
             to { box-shadow: 0 0 20px #00ff00; }
         }
+        .content-section {
+            margin: 20px auto;
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px gray;
+        }
+        .prizes {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .prizes img {
+            width: 100px;
+            height: 100px;
+            border-radius: 10px;
+        }
+        .thermometer-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .thermometer-goal {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #008000;
+            margin-bottom: 5px;
+        }
+        .thermometer {
+            width: 50px;
+            height: 300px;
+            background: lightgray;
+            border-radius: 25px;
+            position: relative;
+            margin: 10px auto;
+            overflow: hidden;
+        }
+        .thermometer-fill {
+            width: 100%;
+            height: 0;
+            background: red;
+            position: absolute;
+            bottom: 0;
+            transition: height 0.5s ease-in-out;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Welcome to the Read-A-Thon!</h1>
+        <p class="goal">Our Goal: $5000</p>
         <button class="button" onclick="startRain()">Let the Books Rain!</button>
     </div>
+    
+    <div class="content-section">
+    Our school is excited to announce a READ-A-THON fundraiser to support our LRC! 
+    As part of a district with limited resources, 
+    this is our chance to make a big difference in the lives of our students by raising funds for books, 
+    educational materials, and other essentials for the LRC. 
+    These resources will inspire a love of reading and help our students develop critical skills they need to succeed.
+    We invite all families to contribute in any way they can. 
+    Your donation will directly benefit our students, ensuring they have access to the tools they need to excel. 
+    If you'd like to make an even more personal impact, we encourage you to consider donating a book from our curated list. 
+    When you do, the book will arrive fully processed to meet our LRC specifications, 
+    and your child can proudly write their name on a special donation plaque inside the book as a lasting reminder of their generosity.
+    Let’s come together to build a brighter future for our students and help them discover the joy of reading! 
+    Your support will make all the difference.
+
+
+
+
+</br></br></br></br></br>
+
+
+    We are thrilled to invite local businesses to support our upcoming READ-A-THON fundraiser, benefiting our school’s Learning Resource Center (LRC)! As a community-driven initiative, this event presents an excellent opportunity for your business to make a lasting impact on our students while gaining valuable exposure.
+
+By sponsoring the READ-A-THON, your business will be recognized throughout the event and in all associated marketing materials. Your support will directly help us raise funds to purchase books and essential educational resources for our LRC, ensuring that all students—regardless of background—have the tools they need to succeed academically.
+
+Supporting local education is a powerful way to show that your business cares about the future of our community. Plus, it’s a great opportunity to boost your visibility among families and other local businesses. With multiple sponsorship levels, you can find an option that works best for your business.
+
+Join us in making a difference! Your partnership will not only benefit our students but also demonstrate your commitment to helping grow a stronger, more connected community. Thank you for your support!
+</div>
+    <div class="content-section">
+        <h2>Grade Level Trackers (EC-5th Grade)</h2>
+        <p><a href="#">Download PDFs</a></p>
+    </div>
+    
+    <div class="content-section">
+        <h2>Catch Mrs. A!</h2>
+        <p>Stay tuned for special appearances!</p>
+    </div>
+    
+    <div class="content-section">
+        <h2>Total Money Earned</h2>
+        <div class="thermometer-container">
+            <p class="thermometer-goal">Goal: $5000</p>
+            <div class="thermometer">
+                <div class="thermometer-fill" id="thermometer-fill"></div>
+            </div>
+        </div>
+        <p><strong>$<span id="money-earned">0.00</span></strong> (updates live!)</p>
+        <button class="button" onclick="updateThermometer(500)">Simulate Earnings</button>
+    </div>
+    
+    <div class="content-section">
+        <h2>Prizes</h2>
+        <div class="prizes">
+            <img src="https://via.placeholder.com/100" alt="Prize 1">
+            <img src="https://via.placeholder.com/100" alt="Prize 2">
+            <img src="https://via.placeholder.com/100" alt="Prize 3">
+        </div>
+    </div>
+    
     <script>
         function startRain() {
             for (let i = 0; i < 10; i++) {
@@ -65,6 +182,18 @@
                 book.style.animationDuration = (Math.random() * 3 + 2) + 's';
                 setTimeout(() => book.remove(), 5000);
             }
+        }
+        
+        function updateThermometer(amount) {
+            let moneyEarnedElement = document.getElementById('money-earned');
+            let thermometerFill = document.getElementById('thermometer-fill');
+            let currentAmount = parseFloat(moneyEarnedElement.innerText.replace('$', ''));
+            let newAmount = currentAmount + amount;
+            let maxAmount = 5000;
+            let fillHeight = (newAmount / maxAmount) * 100;
+            
+            moneyEarnedElement.innerText = newAmount.toFixed(2);
+            thermometerFill.style.height = Math.min(fillHeight, 100) + '%';
         }
     </script>
 </body>
