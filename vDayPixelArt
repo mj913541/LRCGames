@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine's Day Google Slideshow</title>
+    <style>
+        /* Basic reset for page styling */
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100%;
+        }
+
+        /* Background with a Valentine’s theme */
+        body {
+            background-color: #FFEBEE; /* Light pink background */
+            color: #d50000; /* Red text color */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        h1 {
+            font-size: 3em;
+            text-align: center;
+            color: #D50000;
+            margin-bottom: 20px;
+            font-family: 'Cursive', sans-serif;
+        }
+
+        .slide-container {
+            border: 10px solid #D50000; /* Red border around the slideshow */
+            padding: 20px;
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        /* Heart-shaped decoration in the background */
+        .heart {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 50px;
+            color: #D50000;
+        }
+
+        /* Add a little bounce effect to the heart decoration */
+        @keyframes bounce {
+            0%, 20%, 40%, 60%, 80%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .heart {
+            animation: bounce 1.5s infinite;
+        }
+
+        /* Google Slides container style */
+        iframe {
+            border: none;
+            width: 800px;
+            height: 450px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <h1>Happy Valentine's Day! 💖</h1>
+    
+    <div class="heart">❤️</div>
+    
+    <div class="slide-container">
+        <iframe src="<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSlUkRyrVdQb5Zsw1cEOLGRXCyiFOz7I2W0i7hov6lOU6ekMbEgqAwrKccBLJWaIZfc6_HpaBGRjcc_/embed?start=false&loop=false&delayms=3000" 
+      frameborder="0" 
+      width="1440" 
+      height="839" 
+      allowfullscreen="true" 
+      mozallowfullscreen="true" 
+      webkitallowfullscreen="true">
+        </iframe>
+    </div>
+
+</body>
+</html>
