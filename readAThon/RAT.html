@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Read-A-Thon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: radial-gradient(circle, #FFFF00, #4CAF50, #FFFF00);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 3em;
+      animation: bounce 2s infinite;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      width: 80%;
+      margin: 20px auto;
+    }
+
+    .content {
+      background-color: #fff9e6;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 45%;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .content img {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .rounded-img {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 5px solid #4CAF50;
+      object-fit: cover;
+    }
+
+    .thermometer-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 100px;
+      margin: 20px 0;
+    }
+
+    .thermometer-goal {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #008000;
+      margin-bottom: 5px;
+    }
+
+    .thermometer {
+      width: 50px;
+      height: 300px;
+      background: lightgray;
+      border-radius: 25px;
+      position: relative;
+      margin: 10px 0;
+    }
+
+    .thermometer-fill {
+      width: 100%;
+      height: 0;
+      background: red;
+      position: absolute;
+      bottom: 0;
+      transition: height 0.5s ease-in-out;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .content {
+        width: 90%;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <img src="./lionCubBooks.png" alt="book lion" class="rounded-img">
+  <h1>Read-A-Thon</h1>
+  <h2>Our Goals: $3,000.00 & 200,000 Minutes</h2>
+</header>
+
+<div class="container">
+  <!-- Money Earned Thermometer -->
+  <div class="thermometer-container">
+    <p class="thermometer-goal">Goal: $3,000.00</p>
+    <div class="thermometer">
+      <div class="thermometer-fill" id="thermometer-fill-money"></div>
+    </div>
+    <p><strong>$<span id="money-earned">0.00</span></strong></p>
+  </div>
+
+  <!-- Minutes Read Thermometer -->
+  <div class="thermometer-container">
+    <p class="thermometer-goal">Goal: 200,000 Minutes</p>
+    <div class="thermometer">
+      <div class="thermometer-fill" id="thermometer-fill-minutes"></div>
+    </div>
+    <p><strong><span id="minutes-read">0</span> Minutes</strong></p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="content">
+    <h3>Image 1 Title</h3>
+    <img src="https://via.placeholder.com/300" alt="Placeholder Image 1">
+    <p>This is an example of an image with some description.</p>
+  </div>
+
+  <div class="content">
+    <h3>Image 2 Title</h3>
+    <img src="https://via.placeholder.com/300" alt="Placeholder Image 2">
+    <p>This is another example with a description below the image.</p>
+  </div>
+</div>
+
+<script>
+  function updateThermometer(amount, type) {
+    if (type === 'money') {
+      const moneyEarnedElement = document.getElementById('money-earned');
+      const thermometerFill = document.getElementById('thermometer-fill-money');
+      const currentAmount = parseFloat(moneyEarnedElement.innerText.replace('$', ''));
+      const newAmount = currentAmount + amount;
+      const maxAmount = 3000;
+      const fillHeight = (newAmount / maxAmount) * 100;
+
+      moneyEarnedElement.innerText = newAmount.toFixed(2);
+      thermometerFill.style.height = Math.min(fillHeight, 100) + '%';
+    } else if (type === 'minutes') {
+      const minutesReadElement = document.getElementById('minutes-read');
+      const thermometerFill = document.getElementById('thermometer-fill-minutes');
+      const currentMinutes = parseInt(minutesReadElement.innerText.replace(',', ''));
+      const newMinutes = currentMinutes + amount;
+      const maxMinutes = 200000;
+      const fillHeight = (newMinutes / maxMinutes) * 100;
+
+      minutesReadElement.innerText = newMinutes.toLocaleString();
+      thermometerFill.style.height = Math.min(fillHeight, 100) + '%';
+    }
+  }
+
+  // Example usage:
+  // updateThermometer(500, 'money');
+  // updateThermometer(10000, 'minutes');
+</script>
+
+</body>
+</html
+::contentReference[oaicite:0]{index=0}
+ 

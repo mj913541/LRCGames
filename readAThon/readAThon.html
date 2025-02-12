@@ -5,14 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elementary Read-A-Thon</title>
     <style>
-        body {
-            font-family: 'Comic Sans MS', cursive, sans-serif;
-            text-align: center;
-            background-color: #ffefd5;
-            overflow-y: auto;
-            margin: 0;
-            padding: 0;
-        }
+    body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    text-align: center;
+    background-color: #ffefd5;
+    overflow-y: auto;
+    margin: 0;
+    padding: 0;
+    display: flex;            /* Flexbox to arrange child elements next to each other */
+    flex-wrap: wrap;          /* Allow wrapping when there's not enough space */
+    justify-content: center;  /* Optionally center the items */
+    gap: 20px;                /* Space between items */
+}
+
+
         .container {
             margin-top: 5px;
         }
@@ -58,7 +64,6 @@
         .content-section {
             margin: 5px auto;
             width: 90%;
-            max-width: 600px;
             background: white;
             padding: 20px;
             border-radius: 10px;
@@ -125,11 +130,11 @@ img {
 }
 
 .form-container {
-            display: flex;
-            justify-content: space-around;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
+    display: flex; /* makes items in this container appear next to each other */
+    justify-content: space-around;
+    gap: 20px;
+    flex-wrap: wrap;
+}
 
         .form-container iframe {
             width: 30%;
@@ -149,59 +154,64 @@ img {
 </head>
 <body>
     <div class="container">
-        <h1>Welcome to the Read-A-Thon!</h1>
-        <p class="goal">Our Goal: $5000</p>
+        <h1>Welcome to the Read-A-Thon!</h1> 
+    </div>
+    <div class="container">
+        <p class="goal">Our Goal: $3000 & 200,000 Minutes</p>
+    </div>
+    <div class="container">
         <button class="button" onclick="startRain()">Let the Books Rain!</button>
     </div>
     
     <div class="content-section">
-
-
-
-
-
-</br></br></br></br></br>
-To our LONG BEACH Elementary School families,
-
-We're very excited about our upcoming Read-A-Thon fundraiser and want to share an amazing opportunity for local businesses. If you own, manage, or know of a business that would like to support our school, consider becoming a Read-A-Thon sponsor. By becoming a sponsor, a business will gain exposure to thousands of individuals who are all passionate about supporting literacy and our community.
-
-Hurry, as there are only a limited number of digital and printed sponsorship spots available, including an exclusive Literacy Champion sponsorship. Reserve sponsorship spots today by clicking here. As always, we extend our heartfelt thanks for your support of our school community.
-
-Warm regards,
-
-LONG BEACH Elementary School
-
-    We are thrilled to invite local businesses to support our upcoming READ-A-THON fundraiser, benefiting our school’s Learning Resource Center (LRC)! As a community-driven initiative, this event presents an excellent opportunity for your business to make a lasting impact on our students while gaining valuable exposure.
-
-By sponsoring the READ-A-THON, your business will be recognized throughout the event and in all associated marketing materials. Your support will directly help us raise funds to purchase books and essential educational resources for our LRC, ensuring that all students—regardless of background—have the tools they need to succeed academically.
-
-Supporting local education is a powerful way to show that your business cares about the future of our community. Plus, it’s a great opportunity to boost your visibility among families and other local businesses. With multiple sponsorship levels, you can find an option that works best for your business.
-
-Join us in making a difference! Your partnership will not only benefit our students but also demonstrate your commitment to helping grow a stronger, more connected community. Thank you for your support!
+<c>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
+At Long Beach Elementary School, we believe in providing our students with the tools they need to learn and grow.</br>
+ However, we can't do it without your support. 
+</br>This year, we're aiming for 100% participation from our families, and together, we can make this our best fundraiser ever!</br></br>
+</c>
+<b>Donors Encourage Students.</br>
+Students Read.</br>
+Long Beach Elementary School Raises Funds.</br>
+Your involvement makes a difference.</b></br></br>
+<c>This Read-A-Thon is not just about fundraising—it's an opportunity to inspire a love of reading in our students. </br>
+As part of a district with limited resources, this is our chance to raise funds for essential books, educational materials, and other resources for our LRC. </br>
+These additions will enhance our students’ learning experiences and help them develop the critical skills they need to succeed.</br>
+We invite all families to contribute in any way they can. </br>
+Every donation goes directly toward supporting our LRC, ensuring that our students have access to the materials they need. </br>
+</br>
+For those who would like to make an even more personal impact, we encourage you to consider donating a book from our curated list [Link Here]. When you do, the book will arrive fully processed to meet our LRC specifications, and your child will have the opportunity to write their name on a special donation plaque inside the book, creating a lasting reminder of their generosity.
+Let’s come together to make a difference, help our students discover the joy of reading, and build a brighter future for all. Your support truly makes all the difference!
+</c>
 </div>
 
-<div class="content-section">
+<div class="container">
     <h2>Introductory Letter & Calendar</h2>
     <p><a href="#">Download PDFs</a></p>
 </div>
 
-    <div class="content-section">
+    <div class="container">
         <h2>Grade Level Trackers (EC-5th Grade)</h2>
         <p><a href="#">Download PDFs</a></p>
     </div>
     
-    <div class="content-section">
+    <div class="container">
         <h2>Catch Mrs. A!</h2>
         <p>Stay tuned for special appearances!</p>
     </div>
     
     <div class="form-container">
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd-example1/viewform" title="Form 1"></iframe>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd-example2/viewform" title="Form 2"></iframe>
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSd-example3/viewform" title="Form 3"></iframe>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-example1/viewform" target="_blank">
+            <img src="./readInATentChallenge.png" alt="Read in a Tent Challenge" />
+        </a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-example2/viewform" target="_blank">
+            <img src="./cookingReadingChallenge.png" alt="Cooking Reading Challenge" />
+        </a>
+        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-example3/viewform" target="_blank">
+            <img src="./animalReadingChallenge.png" alt="'PAWS'" />
+        </a>
     </div>
 
-    <div class="content-section">
+    <div class="container">
         <h2>Total Money Earned</h2>
         <div class="thermometer-container">
             <p class="thermometer-goal">Goal: $5000</p>
@@ -219,7 +229,7 @@ Join us in making a difference! Your partnership will not only benefit our stude
         <img class="slide" src="image3.jpg" alt="Image 3">
     </div>
     
-    <div class="content-section">
+    <div class="container">
         <h2>Prizes</h2>
         <div class="prizes">
             <img src="https://via.placeholder.com/100" alt="Prize 1">
