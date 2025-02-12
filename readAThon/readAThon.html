@@ -1,43 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elementary Read-A-Thon</title>
-    <style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Read-A-Thon</title>
+  <style>
     body {
-    font-family: 'Comic Sans MS', cursive, sans-serif;
-    text-align: center;
-    background-color: #ffefd5;
-    overflow-y: auto;
-    margin: 0;
-    padding: 0;
-    display: flex;            /* Flexbox to arrange child elements next to each other */
-    flex-wrap: wrap;          /* Allow wrapping when there's not enough space */
-    justify-content: center;  /* Optionally center the items */
-    gap: 20px;                /* Space between items */
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: radial-gradient(circle, #FFFF00, #4CAF50, #FFFF00);
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 3em;
+      animation: bounce 2s infinite;
+    }
+
+    h2 {
+      font-size: 24px;
+      margin-top: 10px;
+    }
+
+    .container {
+  display: flex;
+  justify-content: space-evenly; /* Ensures items are spaced evenly */
+  align-items: center; /* Vertically aligns the items */
+  width: 95%; /* Adjust width as needed */
+  margin: 10px auto;
 }
 
+.content {
+  background-color: #fff9e6;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 30%; /* Adjust width for consistent layout */
+}
 
-        .container {
-            margin-top: 5px;
-        }
-        h1 {
-            font-size: 3em;
-            color: #ff4500;
-            animation: bounce 2s infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .goal {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #008000;
-            margin-bottom: 20px;
-        }
-        .book {
+    .content img {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      margin-bottom: 20px;
+    }
+
+    .rounded-img {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 5px solid #4CAF50;
+      cursor: pointer; /* Makes the image a clickable button */
+    }
+
+
+    .thermometer-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 30%;
+      max-width: 200px; /* You can adjust the width here */
+      margin: 20px 0;
+    }
+
+    .thermometer-goal {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #008000;
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .thermometer {
+      width: 50px;
+      height: 300px;
+      background: lightgray;
+      border-radius: 25px;
+      position: relative;
+      margin: 10px 0;
+    }
+
+    .thermometer-fill {
+      width: 100%;
+      height: 0;
+      background: red;
+      position: absolute;
+      bottom: 0;
+      transition: height 0.5s ease-in-out;
+    }
+
+    .book {
             width: 100px;
             position: absolute;
             top: -50px;
@@ -47,199 +114,186 @@
             0% { transform: translateY(-50px); opacity: 1; }
             100% { transform: translateY(100vh); opacity: 0; }
         }
-        .button {
-            padding: 15px 30px;
-            font-size: 1.5em;
-            color: white;
-            background: #008000;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            animation: glow 1.5s infinite alternate;
-        }
-        @keyframes glow {
-            from { box-shadow: 0 0 10px #008000; }
-            to { box-shadow: 0 0 20px #00ff00; }
-        }
-        .content-section {
-            margin: 5px auto;
-            width: 90%;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px gray;
-        }
-        .prizes {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .prizes img {
-            width: 100px;
-            height: 100px;
-            border-radius: 10px;
-        }
-        .thermometer-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .thermometer-goal {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #008000;
-            margin-bottom: 5px;
-        }
-        .thermometer {
-            width: 50px;
-            height: 300px;
-            background: lightgray;
-            border-radius: 25px;
-            position: relative;
-            margin: 10px auto;
-            overflow: hidden;
-        }
-        .thermometer-fill {
-            width: 100%;
-            height: 0;
-            background: red;
-            position: absolute;
-            bottom: 0;
-            transition: height 0.5s ease-in-out;
-        }
 
-        /* styles.css */
-.slideshow-container {
-    position: relative;
-    width: 100%;
-    max-width: 600px; /* Adjust as needed */
-    margin: auto;
-    overflow: hidden;
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .content {
+        width: 90%;
+      }
+
+      h1 {
+        font-size: 28px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+    }
+
+    .trackers-container {
+        display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  flex-wrap: wrap;
+  max-width: 90%;
+  gap: 10px;
+  margin: 20px auto;
+  background: radial-gradient(circle, #FFFF00, #4CAF50, #FFFF00);
+  padding: 20px;
+  border-radius: 10px; /* Optional: makes the corners of the container rounded */
+  border: 5px solid #388E3C;
 }
 
-.slide {
-    display: none;
-    width: 100%;
-    height: auto;
+.trackers {
+  display: block; /* Make sure the anchor tag behaves like a block-level element */
 }
 
-img {
-    width: 100%;
-    height: auto;
+.trackers img {
+  width: 100px; /* Adjust the image size */
+  height: 100px; /* Adjust the image size */
+  border-radius: 8px; /* Optional: gives the image rounded corners */
+  transition: transform 0.3s ease; /* Add a smooth effect on hover */
 }
 
-.form-container {
-    display: flex; /* makes items in this container appear next to each other */
-    justify-content: space-around;
-    gap: 20px;
-    flex-wrap: wrap;
+.trackers img:hover {
+  transform: scale(1.1); /* Slightly enlarge the image on hover */
 }
 
-        .form-container iframe {
-            width: 30%;
-            height: 600px;
-            border: none;
-        }
-
-        @media (max-width: 768px) {
-            .form-container iframe {
-                width: 100%;
-                height: 500px;
-                margin-bottom: 20px;
-            }
-        }
-
-    </style>
+  </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Welcome to the Read-A-Thon!</h1> 
-    </div>
-    <div class="container">
-        <p class="goal">Our Goal: $3000 & 200,000 Minutes</p>
-    </div>
-    <div class="container">
-        <button class="button" onclick="startRain()">Let the Books Rain!</button>
-    </div>
-    
-    <div class="content-section">
-<c>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
-At Long Beach Elementary School, we believe in providing our students with the tools they need to learn and grow.</br>
- However, we can't do it without your support. 
-</br>This year, we're aiming for 100% participation from our families, and together, we can make this our best fundraiser ever!</br></br>
-</c>
-<b>Donors Encourage Students.</br>
-Students Read.</br>
-Long Beach Elementary School Raises Funds.</br>
-Your involvement makes a difference.</b></br></br>
-<c>This Read-A-Thon is not just about fundraising—it's an opportunity to inspire a love of reading in our students. </br>
-As part of a district with limited resources, this is our chance to raise funds for essential books, educational materials, and other resources for our LRC. </br>
-These additions will enhance our students’ learning experiences and help them develop the critical skills they need to succeed.</br>
-We invite all families to contribute in any way they can. </br>
-Every donation goes directly toward supporting our LRC, ensuring that our students have access to the materials they need. </br>
-</br>
-For those who would like to make an even more personal impact, we encourage you to consider donating a book from our curated list [Link Here]. When you do, the book will arrive fully processed to meet our LRC specifications, and your child will have the opportunity to write their name on a special donation plaque inside the book, creating a lasting reminder of their generosity.
-Let’s come together to make a difference, help our students discover the joy of reading, and build a brighter future for all. Your support truly makes all the difference!
-</c>
-</div>
+
+    <header>
+        <!-- Image as a button with no default button styling -->
+        <button onclick="startRain();" style="background: none; border: none; padding: 0; cursor: pointer;">
+          <img src="./lionCubBooks.png" alt="book lion" class="rounded-img">
+        </button>
+        <h1>Read-A-Thon</h1>
+        <h2>Our Goals: $3,000.00 & 200,000 Minutes</h2>
+      </header>
+      
 
 <div class="container">
-    <h2>Introductory Letter & Calendar</h2>
-    <p><a href="#">Download PDFs</a></p>
+  <!-- Money Earned Thermometer -->
+  <div class="thermometer-container">
+    <p class="thermometer-goal">Goal: $3,000.00</p>
+    <div class="thermometer">
+      <div class="thermometer-fill" id="thermometer-fill-money"></div>
+    </div>
+    <p><strong>$<span id="money-earned">0.00</span></strong></p>
+  </div>
+
+  <div class="content">
+    <h3>Image 2 Title</h3>
+    <img src="https://via.placeholder.com/300" alt="Placeholder Image 2">
+    <p>This is another example with a description below the image.</p>
+  </div>
+
+
+  <!-- Minutes Read Thermometer -->
+  <div class="thermometer-container">
+    <p class="thermometer-goal">Goal: 200,000 Minutes</p>
+    <div class="thermometer">
+      <div class="thermometer-fill" id="thermometer-fill-minutes"></div>
+    </div>
+    <p><strong><span id="minutes-read">0</span> Minutes</strong></p>
+  </div>
 </div>
 
-    <div class="container">
-        <h2>Grade Level Trackers (EC-5th Grade)</h2>
-        <p><a href="#">Download PDFs</a></p>
-    </div>
-    
-    <div class="container">
-        <h2>Catch Mrs. A!</h2>
-        <p>Stay tuned for special appearances!</p>
-    </div>
-    
-    <div class="form-container">
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-example1/viewform" target="_blank">
-            <img src="./readInATentChallenge.png" alt="Read in a Tent Challenge" />
-        </a>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-example2/viewform" target="_blank">
-            <img src="./cookingReadingChallenge.png" alt="Cooking Reading Challenge" />
-        </a>
-        <a href="https://docs.google.com/forms/d/e/1FAIpQLSd-example3/viewform" target="_blank">
-            <img src="./animalReadingChallenge.png" alt="'PAWS'" />
-        </a>
+<div class="trackers-container">
+    <a href="https://example1.com" class="trackers">
+      <img src="https://via.placeholder.com/100" alt="Image 1">
+    </a>
+    <a href="https://example2.com" class="trackers">
+      <img src="https://via.placeholder.com/100" alt="Image 2">
+    </a>
+    <a href="https://example3.com" class="trackers">
+      <img src="https://via.placeholder.com/100" alt="Image 3">
+    </a>
+    <a href="https://example4.com" class="trackers">
+      <img src="https://via.placeholder.com/100" alt="Image 4">
+    </a>
+    <a href="https://example5.com" class="trackers">
+      <img src="https://via.placeholder.com/100" alt="Image 5">
+    </a>
+    <a href="https://example6.com" class="trackers">
+      <img src="https://via.placeholder.com/100" alt="Image 6">
+    </a>
+  </div>
+  
+
+  <div class="content" style="flex: 1 1 30%;">
+    <h3>Image 2 Title</h3>
+    <img src="https://via.placeholder.com/300" alt="Placeholder Image 2">
+    <p>This is another example with a description below the image.</p>
+  </div>
+</div>
+
+
+<div class="content-section">
+    <c>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
+    At Long Beach Elementary School, we believe in providing our students with the tools they need to learn and grow.</br>
+     However, we can't do it without your support. 
+    </br>This year, we're aiming for 100% participation from our families, and together, we can make this our best fundraiser ever!</br></br>
+    </c>
+    <b>Donors Encourage Students.</br>
+    Students Read.</br>
+    Long Beach Elementary School Raises Funds.</br>
+    Your involvement makes a difference.</b></br></br>
+    <c>This Read-A-Thon is not just about fundraising—it's an opportunity to inspire a love of reading in our students. </br>
+    As part of a district with limited resources, this is our chance to raise funds for essential books, educational materials, and other resources for our LRC. </br>
+    These additions will enhance our students’ learning experiences and help them develop the critical skills they need to succeed.</br>
+    We invite all families to contribute in any way they can. </br>
+    Every donation goes directly toward supporting our LRC, ensuring that our students have access to the materials they need. </br>
+    </br>
+    For those who would like to make an even more personal impact, we encourage you to consider donating a book from our curated list [Link Here]. When you do, the book will arrive fully processed to meet our LRC specifications, and your child will have the opportunity to write their name on a special donation plaque inside the book, creating a lasting reminder of their generosity.
+    Let’s come together to make a difference, help our students discover the joy of reading, and build a brighter future for all. Your support truly makes all the difference!
+    </c>
     </div>
 
-    <div class="container">
-        <h2>Total Money Earned</h2>
-        <div class="thermometer-container">
-            <p class="thermometer-goal">Goal: $5000</p>
-            <div class="thermometer">
-                <div class="thermometer-fill" id="thermometer-fill"></div>
-            </div>
-        </div>
-        <p><strong>$<span id="money-earned">0.00</span></strong> (updates live!)</p>
-        <button class="button" onclick="updateThermometer(500)">Simulate Earnings</button>
-    </div>
 
-    <div class="slideshow-container">
-        <img class="slide" src="image1.jpg" alt="Image 1">
-        <img class="slide" src="image2.jpg" alt="Image 2">
-        <img class="slide" src="image3.jpg" alt="Image 3">
-    </div>
-    
-    <div class="container">
-        <h2>Prizes</h2>
-        <div class="prizes">
-            <img src="https://via.placeholder.com/100" alt="Prize 1">
-            <img src="https://via.placeholder.com/100" alt="Prize 2">
-            <img src="https://via.placeholder.com/100" alt="Prize 3">
-        </div>
-    </div>
-    
-    <script>
-        function startRain() {
+
+<script>
+  const moneyGoal = 3000;
+  const minutesGoal = 200000;
+
+  function updateThermometer(amount, type) {
+    if (type === 'money') {
+      const moneyEarnedElement = document.getElementById('money-earned');
+      const thermometerFill = document.getElementById('thermometer-fill-money');
+      const currentAmount = parseFloat(moneyEarnedElement.innerText.replace('$', ''));
+      const newAmount = currentAmount + amount;
+      const fillHeight = (newAmount / moneyGoal) * 100;
+
+      moneyEarnedElement.innerText = newAmount.toFixed(2);
+      thermometerFill.style.height = Math.min(fillHeight, 100) + '%';
+    } else if (type === 'minutes') {
+      const minutesReadElement = document.getElementById('minutes-read');
+      const thermometerFill = document.getElementById('thermometer-fill-minutes');
+      const currentMinutes = parseInt(minutesReadElement.innerText.replace(',', ''));
+      const newMinutes = currentMinutes + amount;
+      const fillHeight = (newMinutes / minutesGoal) * 100;
+
+      minutesReadElement.innerText = newMinutes.toLocaleString();
+      thermometerFill.style.height = Math.min(fillHeight, 100) + '%';
+    }
+  }
+
+  // Example usage:
+  // updateThermometer(500, 'money');
+  // updateThermometer(10000, 'minutes');
+
+
+  function startRain() {
             for (let i = 0; i < 10; i++) {
                 let book = document.createElement('img');
                 book.src = 'https://cdn-icons-png.flaticon.com/512/2232/2232688.png';
@@ -250,33 +304,7 @@ Let’s come together to make a difference, help our students discover the joy o
                 setTimeout(() => book.remove(), 5000);
             }
         }
-        
-        let slideIndex = 0;
+</script>
 
-function showSlides() {
-    let slides = document.getElementsByClassName("slide");
-    for (let i = 0; i < slides.length; i++) {
-        slides[i].style.display = "none";
-    }
-    slideIndex++;
-    if (slideIndex > slides.length) {slideIndex = 1} 
-    slides[slideIndex - 1].style.display = "block";
-    setTimeout(showSlides, 2000); // Change image every 2 seconds
-}
-
-showSlides();
-
-        function updateThermometer(amount) {
-            let moneyEarnedElement = document.getElementById('money-earned');
-            let thermometerFill = document.getElementById('thermometer-fill');
-            let currentAmount = parseFloat(moneyEarnedElement.innerText.replace('$', ''));
-            let newAmount = currentAmount + amount;
-            let maxAmount = 5000;
-            let fillHeight = (newAmount / maxAmount) * 100;
-            
-            moneyEarnedElement.innerText = newAmount.toFixed(2);
-            thermometerFill.style.height = Math.min(fillHeight, 100) + '%';
-        }
-    </script>
 </body>
 </html>
