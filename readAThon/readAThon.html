@@ -30,6 +30,10 @@
       margin-top: 10px;
     }
 
+    p {
+      font-size: 16px;
+    }
+
     .container {
   display: flex;
   justify-content: space-evenly; /* Ensures items are spaced evenly */
@@ -39,7 +43,7 @@
 }
 
 .content {
-  background-color: #fff9e6;
+  background-color: A5D6A7;
   padding: 20px;
   border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -47,7 +51,7 @@
   flex-direction: column;
   align-items: center;
   margin-bottom: 20px;
-  width: 30%; /* Adjust width for consistent layout */
+  width: 60%; /* Adjust width for consistent layout */
 }
 
     .content img {
@@ -73,7 +77,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      width: 30%;
+      width: 25%;
       max-width: 200px; /* You can adjust the width here */
       margin: 20px 0;
     }
@@ -98,7 +102,7 @@
     .thermometer-fill {
       width: 100%;
       height: 0;
-      background: red;
+      background: #4CAF50;
       position: absolute;
       bottom: 0;
       transition: height 0.5s ease-in-out;
@@ -139,34 +143,52 @@
       }
     }
 
-    .trackers-container {
-        display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  flex-wrap: wrap;
-  max-width: 90%;
-  gap: 10px;
-  margin: 20px auto;
-  background: radial-gradient(circle, #FFFF00, #4CAF50, #FFFF00);
-  padding: 20px;
-  border-radius: 10px; /* Optional: makes the corners of the container rounded */
-  border: 5px solid #388E3C;
-}
+    .printables-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
-.trackers {
-  display: block; /* Make sure the anchor tag behaves like a block-level element */
-}
+  /* Title styling */
+  .printables-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 15px;
+    color: #008000;
+    text-align: center;
+  }
 
-.trackers img {
-  width: 100px; /* Adjust the image size */
-  height: 100px; /* Adjust the image size */
-  border-radius: 8px; /* Optional: gives the image rounded corners */
-  transition: transform 0.3s ease; /* Add a smooth effect on hover */
-}
+  /* Row container for printables */
+  .printables-wrapper {
+    display: flex;
+    flex-wrap: wrap;  /* Allows wrapping on smaller screens */
+    justify-content: center; /* Centers items in the row */
+    gap: 5px;
+    max-width: 95%; /* Prevents items from stretching too far */
+  }
 
-.trackers img:hover {
-  transform: scale(1.1); /* Slightly enlarge the image on hover */
-}
+  /* Individual printable items */
+  .printable-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+  }
+
+  /* Image styling */
+  .printable-item img {
+    width: 100px;
+    height: auto;
+  }
+
+  /* Text under each image */
+  .printable-item p {
+    margin-top: 5px;
+    font-size: 14px;
+    font-weight: bold;
+  }
 
   </style>
 </head>
@@ -193,9 +215,23 @@
   </div>
 
   <div class="content">
-    <h3>Image 2 Title</h3>
-    <img src="https://via.placeholder.com/300" alt="Placeholder Image 2">
-    <p>This is another example with a description below the image.</p>
+    <p><center>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
+      At Long Beach Elementary School, we believe in providing our students with the tools they need to learn and grow.
+       However, we can't do it without your support. 
+      This year, we're aiming for 100% participation from our families, and together, we can make this our best fundraiser ever!</br></br>
+      <b>Donors Encourage Students.</br>
+      Students Read.</br>
+      Long Beach Elementary School Raises Funds.</br>
+      Your involvement makes a difference.</b></br></br>
+      This Read-A-Thon is not just about fundraising—it's an opportunity to inspire a love of reading in our students.
+      As part of a district with limited resources, this is our chance to raise funds for essential books, educational materials, and other resources for our LRC.
+      These additions will enhance our students’ learning experiences and help them develop the critical skills they need to succeed.
+      We invite all families to contribute in any way they can. 
+      Every donation goes directly toward supporting our LRC, ensuring that our students have access to the materials they need.</br> 
+      </br>
+      For those who would like to make an even more personal impact, we encourage you to consider donating a book from our curated list [Link Here]. When you do, the book will arrive fully processed to meet our LRC specifications, and your child will have the opportunity to write their name on a special donation plaque inside the book, creating a lasting reminder of their generosity.
+      Let’s come together to make a difference, help our students discover the joy of reading, and build a brighter future for all. Your support truly makes all the difference!
+      </center></p>
   </div>
 
 
@@ -209,56 +245,61 @@
   </div>
 </div>
 
-<div class="trackers-container">
-    <a href="https://example1.com" class="trackers">
-      <img src="https://via.placeholder.com/100" alt="Image 1">
-    </a>
-    <a href="https://example2.com" class="trackers">
-      <img src="https://via.placeholder.com/100" alt="Image 2">
-    </a>
-    <a href="https://example3.com" class="trackers">
-      <img src="https://via.placeholder.com/100" alt="Image 3">
-    </a>
-    <a href="https://example4.com" class="trackers">
-      <img src="https://via.placeholder.com/100" alt="Image 4">
-    </a>
-    <a href="https://example5.com" class="trackers">
-      <img src="https://via.placeholder.com/100" alt="Image 5">
-    </a>
-    <a href="https://example6.com" class="trackers">
-      <img src="https://via.placeholder.com/100" alt="Image 6">
-    </a>
-  </div>
-  
+<div class="printables-container">
+  <p class="printables-title">Read-A-Thon Tracking Sheets</p>
 
-  <div class="content" style="flex: 1 1 30%;">
-    <h3>Image 2 Title</h3>
-    <img src="https://via.placeholder.com/300" alt="Placeholder Image 2">
-    <p>This is another example with a description below the image.</p>
+  <div class="printables-wrapper">
+    <div class="printable-item">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRNC5CqX3PekbjtjiyYR7nDIs6al_QoajGrtLb-Tf7F1TsaxxL9i5lw1fhpJXdN6CO4i9-hr_fM1n5p/pub?start=true&loop=true&delayms=5000" class="printables">
+        <img src="./readAThonReaderRat.png" alt="Early Childhood">
+      </a>
+      <p>Early Childhood</p>
+    </div>
+
+    <div class="printable-item">
+      <a href="https://example2.com" class="printables">
+        <img src="https://via.placeholder.com/100" alt="Kindergarten">
+      </a>
+      <p>Kindergarten</p>
+    </div>
+
+    <div class="printable-item">
+      <a href="https://example3.com" class="printables">
+        <img src="https://via.placeholder.com/100" alt="1st Grade">
+      </a>
+      <p>4th & 5th Grade</p>
+    </div>
+
+    <div class="printable-item">
+      <a href="https://example4.com" class="printables">
+        <img src="https://via.placeholder.com/100" alt="2nd Grade">
+      </a>
+      <p>Classroom Leaderboard</p>
+    </div>
+
+    <div class="printable-item">
+      <a href="https://example5.com" class="printables">
+        <img src="https://via.placeholder.com/100" alt="3rd Grade">
+      </a>
+      <p>Top Readers</p>
+    </div>
+
+    <div class="printable-item">
+      <a href="https://example6.com" class="printables">
+        <img src="https://via.placeholder.com/100" alt="4th Grade">
+      </a>
+      <p>Schoolwide Progress</p>
+    </div>
+
+    <div class="printable-item">
+      <a href="https://example7.com" class="printables">
+        <img src="https://via.placeholder.com/100" alt="5th Grade">
+      </a>
+      <p>Prize Tracker</p>
+    </div>
   </div>
 </div>
-
-
-<div class="content-section">
-    <c>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
-    At Long Beach Elementary School, we believe in providing our students with the tools they need to learn and grow.</br>
-     However, we can't do it without your support. 
-    </br>This year, we're aiming for 100% participation from our families, and together, we can make this our best fundraiser ever!</br></br>
-    </c>
-    <b>Donors Encourage Students.</br>
-    Students Read.</br>
-    Long Beach Elementary School Raises Funds.</br>
-    Your involvement makes a difference.</b></br></br>
-    <c>This Read-A-Thon is not just about fundraising—it's an opportunity to inspire a love of reading in our students. </br>
-    As part of a district with limited resources, this is our chance to raise funds for essential books, educational materials, and other resources for our LRC. </br>
-    These additions will enhance our students’ learning experiences and help them develop the critical skills they need to succeed.</br>
-    We invite all families to contribute in any way they can. </br>
-    Every donation goes directly toward supporting our LRC, ensuring that our students have access to the materials they need. </br>
-    </br>
-    For those who would like to make an even more personal impact, we encourage you to consider donating a book from our curated list [Link Here]. When you do, the book will arrive fully processed to meet our LRC specifications, and your child will have the opportunity to write their name on a special donation plaque inside the book, creating a lasting reminder of their generosity.
-    Let’s come together to make a difference, help our students discover the joy of reading, and build a brighter future for all. Your support truly makes all the difference!
-    </c>
-    </div>
+  
 
 
 
