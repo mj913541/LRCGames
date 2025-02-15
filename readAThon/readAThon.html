@@ -190,6 +190,80 @@
     font-weight: bold;
   }
 
+  .leaderboard {
+  display: flex;
+  justify-content: space-between;  /* Adjust spacing to spread out items evenly */
+  flex-wrap: wrap;
+  gap: 20px;
+}
+.leaderboard-section {
+  background: #A5D6A7;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 250px;
+}
+
+    .leaderboard-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;  /* Align to the start of the row */
+  gap: 5px;  /* Increased gap to give more space between items */
+  max-width: 100%; /* Allow items to take full available width */
+}
+
+    .leaderboard-title {
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #008000;
+    text-align: center;
+  }
+
+    .leaderboard-container {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: A5D6A7;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+
+
+    h2 {
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    ol {
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      font-size: 18px;
+      background: white;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    @media (max-width: 768px) {
+  .leaderboard {
+    flex-direction: column;
+    align-items: center; /* Center items vertically */
+  }
+  
+  .leaderboard-wrapper {
+    justify-content: center;  /* Center the items in the wrapper */
+    width: 100%;  /* Full width for better space utilization on smaller screens */
+  }
+}
+
+
   </style>
 </head>
 <body>
@@ -203,7 +277,6 @@
         <h2>Our Goals: $3,000.00 & 200,000 Minutes</h2>
       </header>
       
-
 <div class="container">
   <!-- Money Earned Thermometer -->
   <div class="thermometer-container">
@@ -250,49 +323,63 @@
 
   <div class="printables-wrapper">
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRNC5CqX3PekbjtjiyYR7nDIs6al_QoajGrtLb-Tf7F1TsaxxL9i5lw1fhpJXdN6CO4i9-hr_fM1n5p/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRNC5CqX3PekbjtjiyYR7nDIs6al_QoajGrtLb-Tf7F1TsaxxL9i5lw1fhpJXdN6CO4i9-hr_fM1n5p/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="Early Childhood">
       </a>
       <p>Early Childhood</p>
     </div>
 
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRkFtLUoaw19tFr6aRMrwAByivzThm0YxiH0eoW9N7SFaLCLDyl_6PpTKW-emWziUXqZWMN6Iniq-gj/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRkFtLUoaw19tFr6aRMrwAByivzThm0YxiH0eoW9N7SFaLCLDyl_6PpTKW-emWziUXqZWMN6Iniq-gj/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="Kindergarten">
       </a>
       <p>Kindergarten</p>
     </div>
 
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vTt5AaS_jMUNpNqPmd0fuoj7KgNrya7cW6pllc8s1E-VR6LeoC__VF00KNJevkJCMml_XpuzAEkxVCr/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vTt5AaS_jMUNpNqPmd0fuoj7KgNrya7cW6pllc8s1E-VR6LeoC__VF00KNJevkJCMml_XpuzAEkxVCr/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="1st Grade">
       </a>
       <p>1st Grade</p>
     </div>
 
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vQgJks-44AyqJEXkxXXa4tZ8c7kpPc6o5qe_EVcIrNmmkhWGPdMQ6oelpY8i0-mAiXIR28ui5bKwdI-/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vQgJks-44AyqJEXkxXXa4tZ8c7kpPc6o5qe_EVcIrNmmkhWGPdMQ6oelpY8i0-mAiXIR28ui5bKwdI-/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="2nd Grade">
       </a>
       <p>2nd Grade</p>
     </div>
 
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vQLDAQLB-4NPayY2JH6TzbmfWnE-I3oHlADHxLlexF-yIr_nB5LY0VX4HitlydRkNBMqrdMgCdBUDyZ/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vQLDAQLB-4NPayY2JH6TzbmfWnE-I3oHlADHxLlexF-yIr_nB5LY0VX4HitlydRkNBMqrdMgCdBUDyZ/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="3rd Grade">
       </a>
       <p>3rd Grade</p>
     </div>
 
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRyy8hzOL89y-JUF_EligFI7i4mHMtYtOzkqzj2EH_JfUXLW6Tv9EDn8y7fU2Piz_eOb2esEthU1DMK/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRyy8hzOL89y-JUF_EligFI7i4mHMtYtOzkqzj2EH_JfUXLW6Tv9EDn8y7fU2Piz_eOb2esEthU1DMK/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="4th Grade">
       </a>
       <p>4th Grade</p>
     </div>
 
     <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vSzehJ1FUAz2VhSJTgUr-VRgCDVKzCJQecz1vXRJfJOFTADBnhP0fhvIXQsd5db_VCYha225p8llEbq/pub?start=true&loop=true&delayms=5000" class="printables">
+      <a href="https://docs.google.com/presentation/d/e/2PACX-1vSzehJ1FUAz2VhSJTgUr-VRgCDVKzCJQecz1vXRJfJOFTADBnhP0fhvIXQsd5db_VCYha225p8llEbq/pub?start=true&loop=true&delayms=5000" class="printables" 
+      target="_blank" 
+      rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="5th Grade">
       </a>
       <p>5th Grade</p>
@@ -300,6 +387,29 @@
   </div>
 </div>
   
+
+<div class="leaderboard-container">
+  <p class="leaderboard-title">Read-A-Thon Leaderboard</p>
+
+  <div class="leaderboard-wrapper">
+    <div class="leaderboard">
+      <div class="leaderboard-section">
+        <h2>Top Readers</h2>
+        <ol id="top-readers"></ol>
+      </div>
+      <div class="leaderboard-section">
+        <h2>Top Fundraisers</h2>
+        <ol id="top-fundraisers"></ol>
+      </div>
+      <div class="leaderboard-section">
+        <h2>Top Grades</h2>
+      </div>
+      <div class="leaderboard-section">
+        <h2>Top Classes</h2>
+      </div>
+    </div>
+  </div>
+</div>
 
 
 
@@ -345,6 +455,51 @@
                 setTimeout(() => book.remove(), 5000);
             }
         }
+
+function updateLeaderboard(id, data) {
+  const list = document.getElementById(id);
+  list.innerHTML = "";
+  data.forEach((entry, index) => {
+    const listItem = document.createElement("li");
+    // Format the text correctly by removing any duplicate number (index + 1 is already the rank)
+    listItem.textContent = `${entry.name} - ${entry.value}`;
+    list.appendChild(listItem);
+  });
+}
+
+  // Example data (replace with real data)
+  const topReaders = [
+    { name: "Student A", value: "5,000 minutes" },
+    { name: "Student B", value: "4,800 minutes" },
+    { name: "Student C", value: "4,600 minutes" }
+  ];
+
+  const topFundraisers = [
+    { name: "Student D", value: "$500" },
+    { name: "Student E", value: "$450" },
+    { name: "Student F", value: "$400" }
+  ];
+
+  const topClasses = [
+    { name: "Ms. Smith's Class", value: "50,000 minutes" },
+    { name: "Mr. Johnson's Class", value: "48,500 minutes" },
+    { name: "Mrs. Lee's Class", value: "47,000 minutes" }
+  ];
+
+  const topGrades = [
+    { name: "5th Grade", value: "120,000 minutes" },
+    { name: "4th Grade", value: "115,000 minutes" },
+    { name: "3rd Grade", value: "110,000 minutes" }
+  ];
+
+  
+  // Update leaderboards on page load
+  document.addEventListener("DOMContentLoaded", () => {
+    updateLeaderboard("top-readers", topReaders);
+    updateLeaderboard("top-fundraisers", topFundraisers);
+    updateLeaderboard("top-classes", topClasses);
+    updateLeaderboard("top-grades", topGrades);
+  });
 </script>
 
 </body>

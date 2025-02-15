@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Read-A-Thon Leaderboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f9f9f9;
+      text-align: center;
+      padding: 20px;
+    }
+    .leaderboard {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .leaderboard-section {
+      background: #A5D6A7;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 350px;
+    }
+    h2 {
+      background: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    ol {
+      padding: 0;
+      list-style: none;
+    }
+    li {
+      font-size: 18px;
+      background: white;
+      margin: 5px 0;
+      padding: 8px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .highlight {
+      font-weight: bold;
+      color: #D32F2F;
+    }
+    .chart-container {
+      width: 100%;
+      height: auto;
+      margin-top: 20px;
+    }
+    @media (max-width: 768px) {
+      .leaderboard {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Read-A-Thon Leaderboard</h1>
+  <div class="leaderboard">
+    <div class="leaderboard-section">
+      <h2>Top Readers</h2>
+      <ol id="top-readers"></ol>
+      <div class="chart-container">
+        <canvas id="minutesChart"></canvas>
+      </div>
+    </div>
+    <div class="leaderboard-section">
+      <h2>Top Fundraisers</h2>
+      <ol id="top-fundraisers"></ol>
+      <div class="chart-container">
+        <canvas id="fundraisingChart"></canvas>
+      </div>
+    </div>
+    <div class="leaderboard-section">
+      <h2>Top Grades</h2>
+      <div class="chart-container">
+        <canvas id="gradesChart"></canvas>
+      </div>
+    </div>
+    <div class="leaderboard-section">
+      <h2>Top Classes</h2>
+      <div class="chart-container">
+        <canvas id="classesChart"></canvas>
+      </div>
+    </div>
+  </div>
+  <script>
+    const leaderboardData = {
+      readers: [
+        { name: 'Student A', minutes: 5000 },
+        { name: 'Student B', minutes: 4500 },
+        { name: 'Student C', minutes: 4200 },
+        { name: 'Mrs. A', minutes: 4800 }
+      ],
+      fundraisers: [
+        { name: 'Student X', amount: 500 },
+        { name: 'Student Y', amount: 450 },
+        { name: 'Student Z', amount: 420 }
+      ],
+      grades: [12000, 14000, 16000, 18000, 20000, 22000, 24000],
+      classes: [25000, 27000, 29000],
+      gradeLabels: ['E.C.', 'K', '1st', '2nd', '3rd', '4th', '5th'],
+      classLabels: ['Class 1', 'Class 2', 'Class 3']
+    };
+
+    function populateList(elementId, data, unit) {
+      const list = document.getElementById(elementId);
+      list.innerHTML = data.map((item, index) => 
+        `<li>${index + 1}. ${item.name} - <span class="highlight">${item.minutes || item.amount}${unit}</span></li>`
+      ).join('');
+    }
+    
+    populateList('top-readers', leaderboardData.readers, ' minutes');
+    populateList('top-fundraisers', leaderboardData.fundraisers, '');
+
+    function createChart(canvasId, labels, data, labelText) {
+      new Chart(document.getElementById(canvasId).getContext('2d'), {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: labelText,
+            data: data,
+            backgroundColor: ['#FF7043', '#29B6F6', '#66BB6A', '#FFCA28', '#AB47BC', '#EC407A', '#26A69A']
+          }]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: { beginAtZero: true }
+          }
+        }
+      });
+    }
+    
+    createChart('minutesChart', leaderboardData.readers.map(r => r.name), leaderboardData.readers.map(r => r.minutes), 'Minutes Read');
+    createChart('fundraisingChart', leaderboardData.fundraisers.map(f => f.name), leaderboardData.fundraisers.map(f => f.amount), 'Funds Raised ($)');
+    createChart('gradesChart', leaderboardData.gradeLabels, leaderboardData.grades, 'Total Minutes Read');
+    createChart('classesChart', leaderboardData.classLabels, leaderboardData.classes, 'Total Minutes Read');
+  </script>
+</body>
+</html>
