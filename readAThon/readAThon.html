@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Read-A-Thon</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -35,24 +36,24 @@
     }
 
     .container {
-  display: flex;
-  justify-content: space-evenly; /* Ensures items are spaced evenly */
-  align-items: center; /* Vertically aligns the items */
-  width: 95%; /* Adjust width as needed */
-  margin: 10px auto;
-}
+      display: flex;
+      justify-content: space-evenly; /* Ensures items are spaced evenly */
+      align-items: center; /* Vertically aligns the items */
+      width: 95%; /* Adjust width as needed */
+      margin: 10px auto;
+    }
 
-.content {
-  background-color: A5D6A7;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px;
-  width: 60%; /* Adjust width for consistent layout */
-}
+    .content {
+      background-color: A5D6A7;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+      width: 60%; /* Adjust width for consistent layout */
+    }
 
     .content img {
       width: 100%;
@@ -70,7 +71,6 @@
       border: 5px solid #4CAF50;
       cursor: pointer; /* Makes the image a clickable button */
     }
-
 
     .thermometer-container {
       display: flex;
@@ -109,15 +109,16 @@
     }
 
     .book {
-            width: 100px;
-            position: absolute;
-            top: -50px;
-            animation: fall linear infinite;
-        }
-        @keyframes fall {
-            0% { transform: translateY(-50px); opacity: 1; }
-            100% { transform: translateY(100vh); opacity: 0; }
-        }
+      width: 100px;
+      position: absolute;
+      top: -50px;
+      animation: fall linear infinite;
+    }
+
+    @keyframes fall {
+      0% { transform: translateY(-50px); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
 
     @keyframes bounce {
       0%, 100% { transform: translateY(0); }
@@ -129,108 +130,101 @@
         flex-direction: column;
         align-items: center;
       }
-
       .content {
         width: 90%;
       }
-
       h1 {
         font-size: 28px;
       }
-
       h2 {
         font-size: 20px;
       }
     }
 
     .printables-container {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
 
-  /* Title styling */
-  .printables-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 15px;
-    color: #008000;
-    text-align: center;
-  }
+  /* Printables below */
+    .printables-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 15px;
+      color: #008000;
+      text-align: center;
+    }
 
-  /* Row container for printables */
-  .printables-wrapper {
-    display: flex;
-    flex-wrap: wrap;  /* Allows wrapping on smaller screens */
-    justify-content: center; /* Centers items in the row */
-    gap: 5px;
-    max-width: 95%; /* Prevents items from stretching too far */
-  }
+    .printables-wrapper {
+      display: flex;
+      flex-wrap: wrap;  /* Allows wrapping on smaller screens */
+      justify-content: center; /* Centers items in the row */
+      gap: 5px;
+      max-width: 95%; /* Prevents items from stretching too far */
+    }
 
-  /* Individual printable items */
-  .printable-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+    .printable-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
 
-  }
+    .printable-item img {
+      width: 100px;
+      height: auto;
+    }
 
-  /* Image styling */
-  .printable-item img {
-    width: 100px;
-    height: auto;
-  }
+    .printable-item p {
+      margin-top: 5px;
+      font-size: 14px;
+      font-weight: bold;
+    }
 
-  /* Text under each image */
-  .printable-item p {
-    margin-top: 5px;
-    font-size: 14px;
-    font-weight: bold;
-  }
+  /* Leaderboard Sections */
+    .leaderboard {
+      display: flex;
+      justify-content: space-between;  /* Adjust spacing to spread out items evenly */
+      flex-wrap: wrap;
+      gap: 20px;
+    }
 
-  .leaderboard {
-  display: flex;
-  justify-content: space-between;  /* Adjust spacing to spread out items evenly */
-  flex-wrap: wrap;
-  gap: 20px;
-}
-.leaderboard-section {
-  background: #A5D6A7;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  width: 250px;
-}
+    .leaderboard-section {
+      background: #A5D6A7;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 250px;
+    }
 
     .leaderboard-wrapper {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;  /* Align to the start of the row */
-  gap: 5px;  /* Increased gap to give more space between items */
-  max-width: 100%; /* Allow items to take full available width */
-}
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;  /* Align to the start of the row */
+      gap: 5px;  /* Increased gap to give more space between items */
+      max-width: 100%; /* Allow items to take full available width */
+    }
 
     .leaderboard-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 10px;
-    color: #008000;
-    text-align: center;
-  }
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #008000;
+      text-align: center;
+    }
 
     .leaderboard-container {
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background-color: A5D6A7;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
-
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-color: A5D6A7;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
 
     h2 {
       background: #4CAF50;
@@ -238,10 +232,12 @@
       padding: 10px;
       border-radius: 5px;
     }
+
     ol {
       padding: 0;
       list-style: none;
     }
+
     li {
       font-size: 18px;
       background: white;
@@ -252,43 +248,82 @@
     }
 
     @media (max-width: 768px) {
-  .leaderboard {
-    flex-direction: column;
-    align-items: center; /* Center items vertically */
-  }
-  
-  .leaderboard-wrapper {
-    justify-content: center;  /* Center the items in the wrapper */
-    width: 100%;  /* Full width for better space utilization on smaller screens */
-  }
+      .leaderboard {
+        flex-direction: column;
+        align-items: center; /* Center items vertically */
+      }
+      .leaderboard-wrapper {
+        justify-content: center;  /* Center the items in the wrapper */
+        width: 100%;  /* Full width for better space utilization on smaller screens */
+      }
+    }
+
+    .googlegraphs-container {
+  display: grid;
+  align-items: center;
+  grid-template-rows: auto auto;
+  gap: 1rem;
 }
 
+.responsive-iframe {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+}
+
+.responsive-iframe iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.iframe-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.half-width {
+  width: 100%;
+}
 
   </style>
 </head>
+
+
+
+
+
 <body>
 
-    <header>
-        <!-- Image as a button with no default button styling -->
-        <button onclick="startRain();" style="background: none; border: none; padding: 0; cursor: pointer;">
-          <img src="./lionCubBooks.png" alt="book lion" class="rounded-img">
-        </button>
-        <h1>Read-A-Thon</h1>
-        <h2>Our Goals: $3,000.00 & 200,000 Minutes</h2>
-      </header>
+  <header>
+    <button onclick="startRain();" style="background: none; border: none; padding: 0; cursor: pointer;">
+      <img src="./lionCubBooks.png" alt="book lion" class="rounded-img">
+    </button>
+    <h1>Read-A-Thon</h1>
+    <h2>Our Goals: $3,000.00 & 200,000 Minutes</h2>
+  </header>
       
 <div class="container">
-  <!-- Money Earned Thermometer -->
-  <div class="thermometer-container">
-    <p class="thermometer-goal">Goal: $3,000.00</p>
-    <div class="thermometer">
-      <div class="thermometer-fill" id="thermometer-fill-money"></div>
+    <!-- Money Earned Thermometer -->
+    <div class="thermometer-container">
+      <p class="thermometer-goal">Goal: $3,000.00</p>
+      <div class="thermometer">
+        <div class="thermometer-fill" id="thermometer-fill-money">
+        </div>
+      </div>
+      <p><strong>$<span id="money-earned">0.00</span></strong></p>
     </div>
-    <p><strong>$<span id="money-earned">0.00</span></strong></p>
-  </div>
-
-  <div class="content">
-    <p><center>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
+    <div class="content">
+      <p><center>We are excited to host a Read-A-Thon at Long Beach Elementary School!</br>
       At Long Beach Elementary School, we believe in providing our students with the tools they need to learn and grow.
        However, we can't do it without your support. 
       This year, we're aiming for 100% participation from our families, and together, we can make this our best fundraiser ever!</br></br>
@@ -305,14 +340,13 @@
       For those who would like to make an even more personal impact, we encourage you to consider donating a book from our curated list [Link Here]. When you do, the book will arrive fully processed to meet our LRC specifications, and your child will have the opportunity to write their name on a special donation plaque inside the book, creating a lasting reminder of their generosity.
       Let’s come together to make a difference, help our students discover the joy of reading, and build a brighter future for all. Your support truly makes all the difference!
       </center></p>
-  </div>
-
-
-  <!-- Minutes Read Thermometer -->
-  <div class="thermometer-container">
-    <p class="thermometer-goal">Goal: 200,000 Minutes</p>
-    <div class="thermometer">
-      <div class="thermometer-fill" id="thermometer-fill-minutes"></div>
+    </div>
+    <!-- Minutes Read Thermometer -->
+    <div class="thermometer-container">
+      <p class="thermometer-goal">Goal: 200,000 Minutes</p>
+      <div class="thermometer">
+        <div class="thermometer-fill" id="thermometer-fill-minutes">
+        </div>
     </div>
     <p><strong><span id="minutes-read">0</span> Minutes</strong></p>
   </div>
@@ -320,96 +354,110 @@
 
 <div class="printables-container">
   <p class="printables-title">Read-A-Thon Tracking Sheets</p>
-
-  <div class="printables-wrapper">
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRNC5CqX3PekbjtjiyYR7nDIs6al_QoajGrtLb-Tf7F1TsaxxL9i5lw1fhpJXdN6CO4i9-hr_fM1n5p/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+    <div class="printables-wrapper">
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vRNC5CqX3PekbjtjiyYR7nDIs6al_QoajGrtLb-Tf7F1TsaxxL9i5lw1fhpJXdN6CO4i9-hr_fM1n5p/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="Early Childhood">
-      </a>
-      <p>Early Childhood</p>
-    </div>
-
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRkFtLUoaw19tFr6aRMrwAByivzThm0YxiH0eoW9N7SFaLCLDyl_6PpTKW-emWziUXqZWMN6Iniq-gj/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+        </a>
+        <p>Early Childhood</p>
+      </div>
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vRkFtLUoaw19tFr6aRMrwAByivzThm0YxiH0eoW9N7SFaLCLDyl_6PpTKW-emWziUXqZWMN6Iniq-gj/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="Kindergarten">
-      </a>
-      <p>Kindergarten</p>
-    </div>
-
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vTt5AaS_jMUNpNqPmd0fuoj7KgNrya7cW6pllc8s1E-VR6LeoC__VF00KNJevkJCMml_XpuzAEkxVCr/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+        </a>
+        <p>Kindergarten</p>
+      </div>
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vTt5AaS_jMUNpNqPmd0fuoj7KgNrya7cW6pllc8s1E-VR6LeoC__VF00KNJevkJCMml_XpuzAEkxVCr/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="1st Grade">
-      </a>
-      <p>1st Grade</p>
-    </div>
-
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vQgJks-44AyqJEXkxXXa4tZ8c7kpPc6o5qe_EVcIrNmmkhWGPdMQ6oelpY8i0-mAiXIR28ui5bKwdI-/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+        </a>
+        <p>1st Grade</p>
+      </div>
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vQgJks-44AyqJEXkxXXa4tZ8c7kpPc6o5qe_EVcIrNmmkhWGPdMQ6oelpY8i0-mAiXIR28ui5bKwdI-/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="2nd Grade">
-      </a>
-      <p>2nd Grade</p>
-    </div>
-
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vQLDAQLB-4NPayY2JH6TzbmfWnE-I3oHlADHxLlexF-yIr_nB5LY0VX4HitlydRkNBMqrdMgCdBUDyZ/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+        </a>
+        <p>2nd Grade</p>
+      </div>
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vQLDAQLB-4NPayY2JH6TzbmfWnE-I3oHlADHxLlexF-yIr_nB5LY0VX4HitlydRkNBMqrdMgCdBUDyZ/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="3rd Grade">
-      </a>
-      <p>3rd Grade</p>
-    </div>
-
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vRyy8hzOL89y-JUF_EligFI7i4mHMtYtOzkqzj2EH_JfUXLW6Tv9EDn8y7fU2Piz_eOb2esEthU1DMK/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+        </a>
+        <p>3rd Grade</p>
+      </div>
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vRyy8hzOL89y-JUF_EligFI7i4mHMtYtOzkqzj2EH_JfUXLW6Tv9EDn8y7fU2Piz_eOb2esEthU1DMK/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="4th Grade">
-      </a>
-      <p>4th Grade</p>
-    </div>
-
-    <div class="printable-item">
-      <a href="https://docs.google.com/presentation/d/e/2PACX-1vSzehJ1FUAz2VhSJTgUr-VRgCDVKzCJQecz1vXRJfJOFTADBnhP0fhvIXQsd5db_VCYha225p8llEbq/pub?start=true&loop=true&delayms=5000" class="printables" 
-      target="_blank" 
-      rel="noopener noreferrer">
+        </a>
+        <p>4th Grade</p>
+      </div>
+      <div class="printable-item">
+        <a href="https://docs.google.com/presentation/d/e/2PACX-1vSzehJ1FUAz2VhSJTgUr-VRgCDVKzCJQecz1vXRJfJOFTADBnhP0fhvIXQsd5db_VCYha225p8llEbq/pub?start=true&loop=true&delayms=5000" class="printables" target="_blank" rel="noopener noreferrer">
         <img src="./readAThonReaderRat.png" alt="5th Grade">
-      </a>
-      <p>5th Grade</p>
+        </a>
+        <p>5th Grade</p>
+      </div>
     </div>
-  </div>
 </div>
   
 
 <div class="leaderboard-container">
   <p class="leaderboard-title">Read-A-Thon Leaderboard</p>
+    <div class="leaderboard-wrapper">
+        <div class="leaderboard">
+            <div class="leaderboard-section">
+                <h2>Top Readers</h2>
+                <ol id="top-readers"></ol>
+                    <div class="leaderboard-bar-container">
+                        <div class="leaderboard-bar" id="top-readers-bar">
+                        </div>
+                    </div>
+            </div>
+            <div class="leaderboard-section">
+                <h2>Top Fundraisers</h2>
+                <ol id="top-fundraisers"></ol>
+                    <div class="leaderboard-bar-container">
+                        <div class="leaderboard-bar" id="top-fundraisers-bar">
+                        </div>
+                    </div>
+            </div>
+            <div class="leaderboard-section">
+                <h2>Top Classes</h2>
+                <ol id="top-classes"></ol>
+                    <div class="leaderboard-bar-container">
+                        <div class="leaderboard-bar" id="top-classes-bar">
+                        </div>
+                    </div>
+            </div>
+            <div class="leaderboard-section">
+                <h2>Top Grades</h2>
+                <ol id="top-grades"></ol>
+                <div class="leaderboard-bar-container">
+                    <div class="leaderboard-bar" id="top-grades-bar">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-  <div class="leaderboard-wrapper">
-    <div class="leaderboard">
-      <div class="leaderboard-section">
-        <h2>Top Readers</h2>
-        <ol id="top-readers"></ol>
-      </div>
-      <div class="leaderboard-section">
-        <h2>Top Fundraisers</h2>
-        <ol id="top-fundraisers"></ol>
-      </div>
-      <div class="leaderboard-section">
-        <h2>Top Grades</h2>
-      </div>
-      <div class="leaderboard-section">
-        <h2>Top Classes</h2>
-      </div>
+
+<div class="googlegraphs-container">
+  <div class="responsive-iframe full-width">
+    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=1606915229&amp;format=interactive" frameborder="0" allowfullscreen></iframe>
+  </div>
+  <div class="iframe-row">
+    <div class="responsive-iframe half-width">
+      <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=842406164&amp;format=interactive" frameborder="0" allowfullscreen></iframe>
+    </div>
+    <div class="responsive-iframe half-width">
+      <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=735350939&amp;format=interactive" frameborder="0" allowfullscreen></iframe>
     </div>
   </div>
 </div>
+
+
+
 
 
 
@@ -443,7 +491,6 @@
   // updateThermometer(500, 'money');
   // updateThermometer(10000, 'minutes');
 
-
   function startRain() {
             for (let i = 0; i < 10; i++) {
                 let book = document.createElement('img');
@@ -456,49 +503,97 @@
             }
         }
 
-function updateLeaderboard(id, data) {
-  const list = document.getElementById(id);
-  list.innerHTML = "";
-  data.forEach((entry, index) => {
-    const listItem = document.createElement("li");
-    // Format the text correctly by removing any duplicate number (index + 1 is already the rank)
-    listItem.textContent = `${entry.name} - ${entry.value}`;
-    list.appendChild(listItem);
-  });
-}
-
-  // Example data (replace with real data)
+  // Data for leaderboards
   const topReaders = [
-    { name: "Student A", value: "5,000 minutes" },
-    { name: "Student B", value: "4,800 minutes" },
-    { name: "Student C", value: "4,600 minutes" }
+    { name: "Student A", value: 100 },  // value in minutes
+    { name: "Student B", value: 90 },
+    { name: "Student C", value: 80 }
   ];
 
   const topFundraisers = [
-    { name: "Student D", value: "$500" },
-    { name: "Student E", value: "$450" },
-    { name: "Student F", value: "$400" }
+    { name: "Student D", value: 500 }, // value in dollars
+    { name: "Student E", value: 450 },
+    { name: "Student F", value: 400 }
   ];
 
   const topClasses = [
-    { name: "Ms. Smith's Class", value: "50,000 minutes" },
-    { name: "Mr. Johnson's Class", value: "48,500 minutes" },
-    { name: "Mrs. Lee's Class", value: "47,000 minutes" }
+    { name: "Ms. Smith's", value: 1000 }, // value in minutes
+    { name: "Mr. Johnson's", value: 900 },
+    { name: "Mrs. Lee's", value: 850 }
   ];
 
   const topGrades = [
-    { name: "5th Grade", value: "120,000 minutes" },
-    { name: "4th Grade", value: "115,000 minutes" },
-    { name: "3rd Grade", value: "110,000 minutes" }
+    { name: "5th Grade", value: 1500 }, // value in minutes
+    { name: "4th Grade", value: 1400 },
+    { name: "3rd Grade", value: 1300 }
   ];
 
-  
-  // Update leaderboards on page load
+  function updateLeaderboard(id, data) {
+    const list = document.getElementById(id);
+    list.innerHTML = "";
+    data.forEach((entry, index) => {
+      const listItem = document.createElement("li");
+      listItem.textContent = `${entry.name} - ${entry.value}`;
+      list.appendChild(listItem);
+    });
+  }
+
+  function updateBars() {
+    // Update top readers bar
+    const topReadersBarContainer = document.getElementById('top-readers-bar');
+    const maxReaderValue = Math.max(...topReaders.map(item => item.value));
+    topReaders.forEach((reader) => {
+      const bar = document.createElement('div');
+      bar.style.width = `${(reader.value / maxReaderValue) * 100}%`;
+      bar.style.height = '20px';
+      bar.style.backgroundColor = '#4CAF50';
+      bar.style.marginBottom = '5px';
+      topReadersBarContainer.appendChild(bar);
+    });
+
+    // Update top fundraisers bar
+    const topFundraisersBarContainer = document.getElementById('top-fundraisers-bar');
+    const maxFundraiserValue = Math.max(...topFundraisers.map(item => item.value));
+    topFundraisers.forEach((fundraiser) => {
+      const bar = document.createElement('div');
+      bar.style.width = `${(fundraiser.value / maxFundraiserValue) * 100}%`;
+      bar.style.height = '20px';
+      bar.style.backgroundColor = '#4CAF50';
+      bar.style.marginBottom = '5px';
+      topFundraisersBarContainer.appendChild(bar);
+    });
+
+    // Update top classes bar
+    const topClassesBarContainer = document.getElementById('top-classes-bar');
+    const maxClassValue = Math.max(...topClasses.map(item => item.value));
+    topClasses.forEach((classEntry) => {
+      const bar = document.createElement('div');
+      bar.style.width = `${(classEntry.value / maxClassValue) * 100}%`;
+      bar.style.height = '20px';
+      bar.style.backgroundColor = '#4CAF50';
+      bar.style.marginBottom = '5px';
+      topClassesBarContainer.appendChild(bar);
+    });
+
+    // Update top grades bar
+    const topGradesBarContainer = document.getElementById('top-grades-bar');
+    const maxGradeValue = Math.max(...topGrades.map(item => item.value));
+    topGrades.forEach((grade) => {
+      const bar = document.createElement('div');
+      bar.style.width = `${(grade.value / maxGradeValue) * 100}%`;
+      bar.style.height = '20px';
+      bar.style.backgroundColor = '#4CAF50';
+      bar.style.marginBottom = '5px';
+      topGradesBarContainer.appendChild(bar);
+    });
+}
+
   document.addEventListener("DOMContentLoaded", () => {
     updateLeaderboard("top-readers", topReaders);
     updateLeaderboard("top-fundraisers", topFundraisers);
     updateLeaderboard("top-classes", topClasses);
     updateLeaderboard("top-grades", topGrades);
+    updateBars();
   });
 </script>
 
