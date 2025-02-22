@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>1_9 Voting</title>
+    <title>Monarch 8b</title>
     <style>
         body {
             background-color: #f2f2f2;
@@ -12,30 +11,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 10px;
+            height: 100vh;
+            margin: 0;
         }
 
-        h1 {
-            font-size: 2em;
-            margin-bottom: 20px;
-        }
-
-        #formContainer {
-            margin-top: 20px;
-            width: 100%;
-            max-width: 600px;
-            border: 1px solid #ccc;
+        video {
+            border: 5px solid #FF0000; /* Red border for video */
             border-radius: 10px;
-        }
-
-        iframe {
-            padding-top: 20px;
-            width: 100%;
-            height: 1000px; /* Adjust height as needed */
-            border: none;
+            max-width: 80%;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
         }
 
         #nextButton {
+            display: none; /* Hidden by default */
             margin-top: 20px;
             padding: 15px 30px;
             font-size: 18px;
@@ -53,35 +41,27 @@
         }
     </style>
 </head>
-
 <body>
 
-    <!-- Audio plays once the page loads -->
-    <audio autoplay>
-        <source src="../audios/monarchVotingAudio.mp3" type="audio/mp3">
-        Your browser does not support the audio tag.
-    </audio>
-
-    <!-- Heading -->
-    <h1>Choose Your Favorite Book</h1>
-
-    <!-- Google Form Embed -->
-    <div id="formContainer">
-        <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSefXVm1AGcYjl6wymcxdiveNp7ig21ys-xRRjNRaVewSwF3Ew/viewform?embedded=true" width="640" height="657" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-    </div>
-    
-    <!-- Next Button -->
+    <video id="video" controls autoplay>
+        <source src="../videos/monarch/factsVsOpinionsVsRobots.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
     <button id="nextButton" onclick="completeActivity()">Next</button>
-    
 
     <script>
+        const video = document.getElementById('video');
+        const nextButton = document.getElementById('nextButton');
+
+        video.onended = function() {
+            nextButton.style.display = 'block';
+        };
+
         function completeActivity() {
             window.opener.postMessage('stepCompleted', '*');  // Notify the main page
-            window.close();  // Close the activity tab
-        }
-
+    window.close();  // Close the activity tab
+}
     </script>
 
 </body>
-
 </html>
