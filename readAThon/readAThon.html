@@ -507,24 +507,28 @@
   const topReaders = [
     { name: "Student A", value: 100 },  // value in minutes
     { name: "Student B", value: 90 },
-    { name: "Student C", value: 80 }
+    { name: "Student C", value: 80 },
+    { name: "Student D", value: 80 }
   ];
 
   const topFundraisers = [
-    { name: "Student D", value: 500 }, // value in dollars
+    { name: "Student G", value: 500 }, // value in dollars
     { name: "Student E", value: 450 },
+    { name: "Student H", value: 450 },
     { name: "Student F", value: 400 }
   ];
 
   const topClasses = [
     { name: "Ms. Smith's", value: 1000 }, // value in minutes
-    { name: "Mr. Johnson's", value: 900 },
+    { name: "Mr. Tom's", value: 900 },
+    { name: "Mr. Tom's", value: 900 },
     { name: "Mrs. Lee's", value: 850 }
   ];
 
   const topGrades = [
     { name: "5th Grade", value: 1500 }, // value in minutes
     { name: "4th Grade", value: 1400 },
+    { name: "2nd Grade", value: 1400 },
     { name: "3rd Grade", value: 1300 }
   ];
 
@@ -595,6 +599,8 @@
     updateLeaderboard("top-grades", topGrades);
     updateBars();
   });
+
+  updateThermometer(900, 'money');
 </script>
 
 </body>
