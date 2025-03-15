@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monarch 2a</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Style for the video players */
+        .video-container {
+            display: flex;
+            justify-content: space-around; /* To space out the videos */
+            width: 100%;
+            max-width: 1000px;
+            margin-bottom: 20px;
+        }
+
+        video {
+            border: 5px solid #FF0000; /* Red border for video */
+            border-radius: 10px;
+            max-width: 30%; /* Ensure the videos fit side by side */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        #nextButton {
+            display: none; /* Hidden by default */
+            margin-top: 20px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            background-color: #0000FF; /* Blue button */
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #nextButton:hover {
+            background-color: #FFFF00; /* Yellow on hover */
+        }
+    </style>
+</head>
+<body>
+    <h1>Watch the Videos and Hit Next</h1>
+    <div class="video-container">
+        <video id="video1" controls autoplay>
+            <source src="../../videos/monarch/invasionOfTheUnicorns.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <video id="video2" controls autoplay>
+            <source src="../../videos/monarch/normanDidntDoIt.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+        <video id="video3" controls autoplay>
+            <source src="../../videos/monarch/nigelAndTheMoonReadAloud.mp4" type="video/mp4">
+            Your browser does not support the video tag.
+        </video>
+    </div>
+
+    <button id="nextButton" onclick="completeActivity()">Next</button>
+
+    <script>
+        const video1 = document.getElementById('video1');
+        const video2 = document.getElementById('video2');
+        const video3 = document.getElementById('video3');
+        const nextButton = document.getElementById('nextButton');
+
+        // Set the onended event for all three videos
+        video1.onended = video2.onended = video3.onended = function() {
+            // Show the next button when all videos have ended
+            if (video1.ended && video2.ended && video3.ended) {
+                nextButton.style.display = 'block';
+            }
+        };
+
+        function completeActivity() {
+            window.opener.postMessage('stepCompleted', '*');  // Notify the main page
+            window.close();  // Close the activity tab
+        }
+    </script>
+
+</body>
+</html>
