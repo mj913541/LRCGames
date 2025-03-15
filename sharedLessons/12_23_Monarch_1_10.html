@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Week 23</title>
+    <title>Week 22</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -121,7 +121,7 @@
     </style>
 </head>
 <body>
-    <h1>LRC Week 23: Monarch 10</h1>
+    <h1>LRC Week 22</h1>
     <div id="points-counter">Points: 0</div>
     <div id="steps-container">
         <div class="step-container">
@@ -133,16 +133,26 @@
             <div class="number">2</div>
             <div class="step locked" id="step2" onclick="openStep(2)">🌟</div>
         </div>
+        <div class="arrow" id="arrow2">➡️</div>
+        <div class="step-container">
+            <div class="number">3</div>
+            <div class="step locked" id="step3" onclick="openStep(3)">🧩</div>
+        </div>
+        <div class="arrow" id="arrow3">➡️</div>
+        <div class="step-container">
+            <div class="number">4</div>
+            <div class="step locked" id="step4" onclick="openStep(4)">🎨</div>
+        </div>
     </div>
 
     <!-- Completion Box -->
     <div id="completion-box">
         <h2>Congratulations!</h2>
-        <a href="" target="_blank">Works of Choice</a>
+        <a href="https://mj913541.github.io/LRCGames/worksOfChoice/gradeLevelWOCPages/45WOCpage.html" target="_blank">Works of Choice</a>
     </div>
 
     <script>
-        const totalSteps = 3;
+        const totalSteps = 4;
         let currentStep = 1;
         let points = 0;
         let newWindow;
@@ -154,7 +164,9 @@
             }
     
             let urls = [
+                '../Monarch/monarch1_10a.html',
                 '../justRightBookCheckOut.html',
+                '../Monarch/monarch1_10b.html',
                 '../Monarch/monarch1_10Vote.html', 
             ];
     
