@@ -265,36 +265,11 @@
   gap: 1rem;
 }
 
-.responsive-iframe {
-  position: relative;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  height: 0;
-  overflow: hidden;
-}
-
-.responsive-iframe iframe {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-}
-
-.iframe-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-}
-
-.full-width {
-  width: 100%;
-}
-
-.half-width {
-  width: 100%;
-}
-
+iframe {
+      display: block;
+      margin: auto;
+      max-width: 100%;
+    }
   </style>
 </head>
 
@@ -414,14 +389,6 @@
                     </div>
             </div>
             <div class="leaderboard-section">
-                <h2>Top Fundraisers</h2>
-                <ol id="top-fundraisers"></ol>
-                    <div class="leaderboard-bar-container">
-                        <div class="leaderboard-bar" id="top-fundraisers-bar">
-                        </div>
-                    </div>
-            </div>
-            <div class="leaderboard-section">
                 <h2>Top Classes</h2>
                 <ol id="top-classes"></ol>
                     <div class="leaderboard-bar-container">
@@ -442,19 +409,13 @@
 </div>
 
 
-<div class="googlegraphs-container">
-  <div class="responsive-iframe full-width">
-    <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=1606915229&amp;format=interactive" frameborder="0" allowfullscreen></iframe>
-  </div>
-  <div class="iframe-row">
-    <div class="responsive-iframe half-width">
-      <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=842406164&amp;format=interactive" frameborder="0" allowfullscreen></iframe>
-    </div>
-    <div class="responsive-iframe half-width">
-      <iframe src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=735350939&amp;format=interactive" frameborder="0" allowfullscreen></iframe>
-    </div>
-  </div>
-</div>
+<p><strong>Top Grade Levels</strong></p>
+<iframe width="600" height="371" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=1606915229&amp;format=interactive"></iframe>
+      <hr>
+
+      <p><strong>Top Classes</strong></p>
+      <iframe width="100%" height="740" seamless frameborder="0" scrolling="no" src="https://docs.google.com/spreadsheets/d/e/2PACX-1vSMc_CppnQcUy3rDiaJQZ4Hlx6nwkA7u_WTeFEd_srK7PRy8qgFSGpubyj2TzGw0VC99WOJOIm0UNcZ/pubchart?oid=735350939&amp;format=interactive"></iframe>   </div>
+
 
 
 
@@ -505,31 +466,24 @@
 
   // Data for leaderboards
   const topReaders = [
-    { name: "Student A", value: 100 },  // value in minutes
-    { name: "Student B", value: 90 },
-    { name: "Student C", value: 80 },
-    { name: "Student D", value: 80 }
-  ];
-
-  const topFundraisers = [
-    { name: "Student G", value: 500 }, // value in dollars
-    { name: "Student E", value: 450 },
-    { name: "Student H", value: 450 },
-    { name: "Student F", value: 400 }
+    { name: "Mrs. A", value: 2273 },  // value in minutes
+    { name: "Henry M", value: 1815 },
+    { name: "Aliyan K", value: 1668 },
+    { name: "Liliana H", value: 1629 }
   ];
 
   const topClasses = [
-    { name: "Ms. Smith's", value: 1000 }, // value in minutes
-    { name: "Mr. Tom's", value: 900 },
-    { name: "Mr. Tom's", value: 900 },
-    { name: "Mrs. Lee's", value: 850 }
+    { name: "Mrs. Daleiden", value: 33735 }, // value in minutes
+    { name: "Mrs Tomter", value: 25438 },
+    { name: "Mrs. Schmidt", value: 23340 },
+    { name: "Mrs. Ziemer", value: 21770 }
   ];
 
   const topGrades = [
-    { name: "5th Grade", value: 1500 }, // value in minutes
-    { name: "4th Grade", value: 1400 },
-    { name: "2nd Grade", value: 1400 },
-    { name: "3rd Grade", value: 1300 }
+    { name: "1st Grade", value: 1500 }, // value in minutes
+    { name: "2nd & 3rd Grade", value: 148 },
+    { name: "5th Grade", value: 137 },
+    { name: "4th Grade", value: 73 }
   ];
 
   function updateLeaderboard(id, data) {
@@ -553,18 +507,6 @@
       bar.style.backgroundColor = '#4CAF50';
       bar.style.marginBottom = '5px';
       topReadersBarContainer.appendChild(bar);
-    });
-
-    // Update top fundraisers bar
-    const topFundraisersBarContainer = document.getElementById('top-fundraisers-bar');
-    const maxFundraiserValue = Math.max(...topFundraisers.map(item => item.value));
-    topFundraisers.forEach((fundraiser) => {
-      const bar = document.createElement('div');
-      bar.style.width = `${(fundraiser.value / maxFundraiserValue) * 100}%`;
-      bar.style.height = '20px';
-      bar.style.backgroundColor = '#4CAF50';
-      bar.style.marginBottom = '5px';
-      topFundraisersBarContainer.appendChild(bar);
     });
 
     // Update top classes bar
@@ -594,13 +536,13 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     updateLeaderboard("top-readers", topReaders);
-    updateLeaderboard("top-fundraisers", topFundraisers);
     updateLeaderboard("top-classes", topClasses);
     updateLeaderboard("top-grades", topGrades);
     updateBars();
   });
 
-  updateThermometer(1045, 'money');
+  updateThermometer(2733.19, 'money');
+  updateThermometer(224642, 'minutes');
 </script>
 
 </body>
