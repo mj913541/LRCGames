@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Picture Books Wishlist</title>
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+      max-width: 1200px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .book-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      justify-content: center;
+    }
+    .book-card {
+      background-color: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      padding: 16px;
+      width: 280px;
+      text-align: center;
+    }
+    .book-card img {
+      width: 100%;
+      height: auto;
+      border-radius: 6px;
+    }
+    .book-card h3 {
+      margin: 10px 0;
+      font-size: 1.1em;
+    }
+    .book-card label {
+      display: block;
+      margin: 8px 0;
+      font-weight: 500;
+    }
+    iframe {
+      margin-top: 8px;
+      width: 100%;
+      height: 160px;
+      border: none;
+      border-radius: 6px;
+    }
+    button {
+      margin-top: 30px;
+      padding: 10px 20px;
+      font-size: 1rem;
+      background-color: #0066cc;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #004c99;
+    }
+    #thank-you {
+      display: none;
+      text-align: center;
+      margin-top: 40px;
+      font-size: 1.2rem;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>📚 LRC Picture Book Wishlist</h1>
+  <p style="text-align: center;">Choose which books you'd love to see more of in our library!</p>
+
+  <form id="wishlist-form">
+    <div class="book-grid">
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Princess%20In%20Black-L.jpg" alt="Princess In Black cover">
+        <h3>Princess In Black</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Princess In Black">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/1wrz2gXW06E" allowfullscreen></iframe>
+      </div>
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Where's%20Waldo-L.jpg" alt="Where's Waldo? cover">
+        <h3>Where's Waldo?</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Wheres Waldo?">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/3r8b1lL5f0Y" allowfullscreen></iframe>
+      </div>
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Press%20Start!-L.jpg" alt="Press Start! cover">
+        <h3>Press Start!</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Press Start!">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/ubGn2mbr4wU" allowfullscreen></iframe>
+      </div>
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Owl%20Diaries-L.jpg" alt="Owl Diaries cover">
+        <h3>Owl Diaries</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Owl Diaries">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/No-fVfGoZsY" allowfullscreen></iframe>
+      </div>
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Bruce%20the%20Bear-L.jpg" alt="Bruce the Bear cover">
+        <h3>Bruce the Bear</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Bruce the Bear">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/abc123" allowfullscreen></iframe>
+      </div>
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Bruce%20the%20Bear-L.jpg" alt="Minecraft Woodsword Chronicles cover">
+        <h3>Bruce the Bear</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Minecraft Woodsword Chronicles">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/abc123" allowfullscreen></iframe>
+      </div>
+
+
+      <div class="book-card">
+        <img src="https://covers.openlibrary.org/b/title/Bruce%20the%20Bear-L.jpg" alt="Minecraft Stonesword Saga cover">
+        <h3>Bruce the Bear</h3>
+        <label>
+          <input type="checkbox" name="entry.161052693" value="Minecraft Stonesword Saga">
+          Vote for this book
+        </label>
+        <iframe src="https://www.youtube.com/embed/abc123" allowfullscreen></iframe>
+      </div>
+
+
+    </div>
+
+    <div style="text-align: center;">
+      <button type="submit">📨 Submit </button>
+    </div>
+  </form>
+
+  <div id="thank-you">✅ Thank you! Your choices have been submitted.</div>
+
+
+
+
+
+
+
+
+
+  
+
+<script>
+  document.getElementById("wishlist-form").addEventListener("submit", function(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    fetch("https://docs.google.com/forms/d/e/1FAIpQLSerK3g9aKUhwSo1FHxXZUvBGJy2yOPjHZwu_oWoEIONR-LFKg/formResponse", {
+      method: "POST",
+      mode: "no-cors",
+      body: formData
+    }).then(() => {
+      form.style.display = "none";
+      document.getElementById("thank-you").style.display = "block";
+
+      // Redirect to the book series page after 4 seconds
+      setTimeout(() => {
+        window.location.href = "bookSeriesToBuy.html";
+      }, 1000);
+    });
+  });
+</script>
+
+</body>
+</html>
