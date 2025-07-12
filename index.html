@@ -7,7 +7,7 @@
     <meta name="description" content="LRC Landing Page" />
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>LB LMC Lions' Den</title>
-    
+
   <style>
     body {
       margin: 0;
@@ -41,20 +41,19 @@
     }
 
     /* Image buttons positioned at fixed pixel spots */
-    .image-button {
-      position: absolute;
-      cursor: pointer;
-      z-index: 2;
-      transition: transform 0.2s;
-    }
+.click-zone {
+  position: absolute;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.click-zone:hover {
+  transform: scale(1.05);
+}
 
-    .image-button:hover {
-      transform: scale(1.05);
-    }
 
     #staff-den {
       top: 450px;
-      left: 118px;
+      left: 120px;
       width: 144px;
       height: 87px;
     }
@@ -67,10 +66,10 @@
     }
 
     #tech-trail {
-      top: 756px;
+      top: 758px;
       left: 77px;
-      width: 150px;
-      height: 97px;
+      width: 149px;
+      height: 96px;
     }
 
     #reading-river {
@@ -94,10 +93,7 @@
       z-index: 3;
     }
 
-    #tech-trail:hover + #grade-menu,
-    #grade-menu:hover {
-      display: flex;
-    }
+
 
  .grade-icon {
       width: 80px;
@@ -160,17 +156,11 @@
 <body>
   <div class="background-container">
     <!-- Clickable Buttons -->
-    <a id="staff-den" class="image-button" href="/staff.html">
-      <img src="staff.png" alt="Staff Den" width="100%" height="100%">
-    </a>
+    <a id="staff-den" class="click-zone" href="/staff.html" title="Click for Staff Resources"></a>
 
-    <a id="research-treehouse" class="image-button" href="/research.html">
-      <img src="treehouse.png" alt="Research Treehouse" width="100%" height="100%">
-    </a>
+    <a id="research-treehouse" class="click-zone" href="/research.html" title="Go to Research Treehouse"></a>
 
-    <div id="tech-trail" class="image-button" title="Explore the Tech Trail!">
-      <img src="techtrail.png" alt="Tech Trail" width="100%" height="100%">
-    </div>
+<a id="tech-trail" class="click-zone" href="#" title="Explore the Tech Trail!" onclick="toggleGradeMenu(event)"></a>
 
     <div id="grade-menu">
       <a id="grade1" class="grade-icon" href="/grade1.html" title="1st Grade">1<sup>st</sup></a>
@@ -180,9 +170,7 @@
       <a id="grade5" class="grade-icon" href="/grade5.html" title="5th Grade">5<sup>th</sup></a>
     </div>
 
-    <a id="reading-river" class="image-button" href="/catalog.html">
-      <img src="readingriver.png" alt="Check Out Cave" width="100%" height="100%">
-    </a>
+        <a id="reading-river" class="click-zone" href="/catalog.html" title="Discover our book catalog"></a>
 
     <!-- Animal Decorations -->
     <div id="lion" class="animal" title="Hi, I'm your Lion Librarian! 🦁"></div>
@@ -190,5 +178,28 @@
     <div id="giraffe" class="animal" title="Stretch your brain like a giraffe's neck! 🦒"></div>
     <div id="crocodile" class="animal" title="Snap up a great book! 🐊"></div>
   </div>
+
+<script>
+  const gradeMenu = document.getElementById("grade-menu");
+
+  function toggleGradeMenu(event) {
+    event.preventDefault(); // Stop the page from jumping
+    if (gradeMenu.style.display === "flex") {
+      gradeMenu.style.display = "none";
+    } else {
+      gradeMenu.style.display = "flex";
+    }
+  }
+
+  // Hide the menu if clicking outside
+  document.addEventListener("click", function(event) {
+    const techTrail = document.getElementById("tech-trail");
+    if (!gradeMenu.contains(event.target) && event.target !== techTrail) {
+      gradeMenu.style.display = "none";
+    }
+  });
+</script>
+
+
 </body>
 </html>
