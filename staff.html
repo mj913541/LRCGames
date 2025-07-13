@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Staff - Lions' Den</title>
+  <style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    background-image: url('pictures/otherIcons/backgroundStaff.png');
+    background-size: cover;
+    background-position: center right;
+    background-repeat: no-repeat;
+    height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+  }
+
+  .overlay {
+    position: absolute;
+    top: 40px;
+    left: 250px;
+    min-width: 400px;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 10;
+  }
+
+  .overlay h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+    color: #e8f5e9;
+    text-shadow: 2px 2px 6px #1b5e20;
+  }
+
+  .toggle-card {
+    background: rgba(85, 107, 47, 0.6);
+    border-radius: 16px;
+    padding: 10px 15px;
+    max-width: 800px;
+    transition: width 0.3s ease-in-out, background 0.3s ease-in-out;
+  }
+
+  .toggle-card.open {
+    background: rgba(85, 107, 47, 1);
+  }
+
+  .toggle-card h2 {
+    cursor: pointer;
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+  }
+
+  .card-columns {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Change to 4 for 4 columns */
+  }
+
+  .card-columns .column {
+    padding: 10px 15px;
+    border-left: 4px double #1b5e20; /* Bold double jungle green divider */
+  }
+
+  .card-columns .column:first-child {
+    border-left: none; /* Remove divider on first column */
+  }
+
+  .card-content {
+    display: none;
+    font-size: 1rem;
+    padding-top: 5px;
+  }
+
+  .card-content.show {
+    display: block;
+  }
+
+  .right-box {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 30px;
+    padding: 16px;
+    border-radius: 14px;
+    width: 70vw;
+  }
+
+  .quick-links-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 30px;
+    justify-items: center;
+  }
+
+  .quick-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .quick-link img {
+    width: 100px;
+    height: 100px;
+    border-radius: 18px;
+    margin-bottom: 4px;
+  }
+
+  .quick-link a {
+    color: #2e7d32;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1rem;
+    line-height: 1.1rem;
+  }
+</style>
+
+</head>
+<body>
+  <div class="overlay">
+<h1>Lion Staff Den</h1>
+
+<div class="toggle-card">
+  <h2 onclick="toggleCard(this)">⬇️ Tech Prep & Troubleshooting</h2>
+  <div class="card-content">
+    <div class="card-columns">
+      <div class="column">
+        <p><b>Start-of-Year Chromebook Tips:</b><br></br>
+        Plug in your Chromebook 1–2 days before returning. 
+        </br> If fully drained, it may need hours of charging before turning on. 
+        </br></br>Click the clock in the lower right to check for system updates.</p>
+      </div>
+      <div class="column">
+        <p><b>Password Reset:</b><br></br>
+        Visit <a href="https://mypassword.sd308.org" target="_blank">mypassword.sd308.org</a> to reset your password early. 
+        </br>Use your short username (e.g., malbrecht). 
+        </br></br>Password updates may take a few minutes across systems.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toggle-card">
+  <h2 onclick="toggleCard(this)">⬇️ LRC Materials & Requests</h2>
+  <div class="card-content">
+    <div class="card-columns">
+      <div class="column">
+        <p><b>Book Requests:</b><br>
+        You can request unlimited books through the <a href="../destiny.html" target="_blank">Destiny catalog</a>. Please allow one week for delivery.</p>
+
+        <p><b>Other Available Items:</b><br>
+        Cassette/CD players, monitors, DVD players, books on tape.<br>
+        <i>Email <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a> to request tech items.</i></p>
+      </div>
+      <div class="column">
+        <p><b>Catalog Help:</b></p>
+        <div style="position:relative; padding-bottom:52%; height:0;">
+          <iframe src="https://www.loom.com/embed/3ec5cea364f3443492344f2f4fae05c5?sid=86988d3e-060c-4c64-87ee-dd1c454f7bb1" 
+          frameborder="0" allowfullscreen style="position:absolute; top:0; left:0; width:95%; height:95%;"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toggle-card">
+  <h2 onclick="toggleCard(this)">⬇️ LRC Class Expectations</h2>
+  <div class="card-content">
+    <div class="card-columns">
+      <div class="column">
+        <p><b>Book Checkout:</b><br>
+        • 2-book limit (3 for research)<br>
+        • Students must return or renew both books before getting new ones<br>
+        • Checkout starts Week 2</p>
+
+        <p><b>What to Bring:</b><br>
+        Students should always bring Chromebooks, headphones, and (optional) mice.</p>
+      </div>
+      <div class="column">
+        <p><b>Arrival & Dismissal:</b><br>
+        • Drop off at the ramp near the art room<br>
+        • Pick up students from inside the LRC<br>
+        They will be lined up and ready</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toggle-card">
+  <h2 onclick="toggleCard(this)">⬇️ Tech Help & Event Resources</h2>
+  <div class="card-content">
+    <div class="card-columns">
+      <div class="column">
+        <p><b>Tech Help Videos & Docs:</b></p>
+        <ul>
+          <li><a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU" target="_blank">Submit a Tech Ticket</a></li>
+          <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing" target="_blank">Project from Chromebook</a></li>
+          <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library" target="_blank">Google Calendar: Set Up Conferences</a></li>
+          <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing" target="_blank">Google Drive: Share Settings</a></li>
+        </ul>
+      </div>
+      <div class="column">
+        <p><b>Event Resources:</b></p>
+        <ul>
+          <li><a href="../eventsLinks/2024-09-30_Literacy Night_Flyer.pdf" target="_blank">📚 Literacy Night Flyer (PDF)</a></li>
+          <li><a href="pumpkin-patch.html" target="_blank">🎃 Pumpkin Contest Page</a></li>
+          <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing" target="_blank">📖 Read-A-Thon Intro & Calendar</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+  <div class="right-box">
+    <div class="quick-links-grid">
+      <div class="quick-link">
+        <a href="https://example.com" target="_blank" title="Monarch">
+          <img src="./pictures/monarchBluestemPictures/monarchLogo.png" alt="Monarch Award List Grades K-3">
+          Monarch Award List<br>Grades K-3
+        </a>
+      </div>
+      <div class="quick-link">
+        <a href="https://example.com" target="_blank" title="Bluestem">
+          <img src="./pictures/monarchBluestemPictures/bluestemLogo.png" alt="Bluestem Award List Grades 4-5">
+          Bluestem Award List<br>Grades 4-5
+        </a>
+      </div>
+      <div class="quick-link">
+        <a href="https://docs.google.com/spreadsheets/d/1qJXgARJIykCFctkqhveEjXzjlUyNAS3H3lFRQDUgP_M/edit?usp=sharing" target="_blank" title="5th Grade Passwords">
+          <img src="./pictures/otherIcons/passwordsPicture.png" alt="5th Grade Passwords">
+          <br>5th Grade Passwords
+        </a>
+      </div>
+      <div class="quick-link">
+        <a href="https://docs.google.com/spreadsheets/d/1vmh0_TqeSGMvin15IUNrFVoSxqyUU-nNnntaE0EW61E/edit?usp=sharing" target="_blank" title="Staff Book Requests">
+          <img src="./pictures/otherIcons/bookStack.png" alt="Staff Book Requests">
+          <br>Staff Requests <br>for LRC Purchases
+        </a>
+      </div>
+      <div class="quick-link">
+        <a href="https://www.oswego.lib.il.us/kids/parent-teacher-resources/" target="_blank" title="Oswego Public Library">
+          <img src="./pictures/picturesForLinks/oswegoPubLibLogo.png" alt="Oswego Public Library">
+          <br>Request Items from <br>Oswego Public Library
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  function toggleCard(header) {
+    const allCards = document.querySelectorAll('.toggle-card');
+
+    allCards.forEach(card => {
+      const content = card.querySelector('.card-content');
+      
+      // Close all other cards
+      if (card !== header.parentElement) {
+        content.classList.remove('show');
+        card.classList.remove('open');
+      }
+    });
+
+    // Toggle current card
+    const currentCard = header.parentElement;
+    const currentContent = header.nextElementSibling;
+
+    currentContent.classList.toggle('show');
+    currentCard.classList.toggle('open');
+  }
+</script>
+
+</body>
+</html>

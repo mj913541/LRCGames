@@ -1,268 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Resources</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f0f0f0;
-            color: #333;
-        }
-
-        Header {
-            background: linear-gradient(135deg, #006400, #32CD32); /* Dark green to lime green gradient */
-            height: 100px;
-            color: #FFD700; /* Gold */
-            padding: 20px 0;
-            text-align: center;
-            font-size: 5em;
-            font-weight: bold;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            margin: 20px;
-            animation: fadeIn 2s ease-in-out;
-        }
-
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 95%;
-            margin: 20px;
-            padding: 10px;
-        }
-
-        .card2 {
-            background-color: white;
-            border: 2px solid #ccc;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            text-align: center;
-            align-items: center;
-            cursor: pointer;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card2img {
-            width: fit-content;
-            height: 60px;
-            margin-right: 10px;
-            vertical-align: middle;
-        }
-
-        .card {
-            background-color: white;
-            border: 2px solid #ccc;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 45%;
-            margin: 10px;
-            text-align: left;
-            cursor: pointer;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            display: flex;
-            flex-direction: column;
-        }
-
-        ol {
-            margin-top: 0;
-            margin-left: 40px;
-            list-style-position: inside;
-            text-indent: -6%;
-            padding-right: 20px;
-        }
-
-        ul {
-            margin-top: 0;
-            margin-left: 40px;
-            list-style-position: inside;
-            text-indent: -6%;
-            padding-right: 20px;
-        }
-        .card.collapsed {
-            max-height: 50px; /* Height for only showing the title */
-        }
-
-        .card.expanded {
-            max-height: 2000px; /* Large height to show full content */
-        }
-
-        .card h2 {
-            color: #006400;
-            margin: 15px;
-            text-align: center;
-            font-size: 20px;
-        }
-
-        .card p {
-            padding: 0px 20px 0px 20px;
-            margin: 0;
-        }
 
 
-        .hidden {
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
-        }
-
-        .other-items-container {
-            width: 98%;
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-            padding: 0 20px;
-        }
-
-        .other-items-card {
-            width: 98%;
-            background-color: white;
-            border: 2px solid #ccc;
-            border-radius: 15px;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            overflow: hidden;
-            display: flex;
-            justify-content: space-around;
-            padding: 20px;
-            flex-wrap: wrap;
-        }
-        .other-items-card.collapsed {
-            max-height: 40px; /* Height for only showing the title */
-        }
-
-        .other-items-card.expanded {
-            max-height: 2000px; /* Large height to show full content */
-        }
-
-        .other-item {
-            display: inline-block;
-            margin: 10px 20px;
-            text-align: center;
-        }
-
-        .other-items-card h2 {
-            width: 98%; /* Make h2 take the full width */
-            margin: 0;
-            color: #006400; /* Dark green */
-            font-size: 22px;
-            font-weight: bold;
-            padding: 10px 0;
-            border-bottom: 2px solid #ccc; /* Optional border for separation */
-        }
-
-        .other-items-card h3 {
-            font-size: 10px;
-            font-style: italic;
-        }
-
-        .other-item img {
-            width: 100px;
-            height: 100px;
-            display: block;
-            margin: 0 auto;
-        }
-
-        .other-item a {
-            display: block;
-            text-decoration: none;
-            color: #333;
-            font-weight: bold;
-            margin-top: 5px;
-        }
-
-        @media (max-width: 768px) {
-            .other-items-card {
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .other-item {
-                margin: 10px 0;
-            }
-        }
-
-        .new-section {
-            background-color: white;
-            border: 2px solid #ccc;
-            border-radius: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            margin: 10px;
-            padding: 15px;
-            text-align: center;
-        }
-
-        .new-section h2 {
-            color: #006400;
-            margin: 0;
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .new-section img {
-            max-width: 100%;
-            height: auto;
-            margin: 10px 0;
-        }
-
-        .new-section a {
-            display: block;
-            text-decoration: none;
-            color: #006400;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .new-section a:hover {
-            text-decoration: underline;
-        }
-
-        .pdf-link img {
-            width: 100px;
-            height: 100px;
-        }
-
-        .pdf-link {
-            display: inline-block;
-            margin: 10px;
-        }
-
-        Header img {
-            height: 100px;
-        }
-    </style>
-
-
-</head>
-<body>
-    <header>
-        <img src="../pictures/lblionlogo.png" alt="School Mascot">
-        Staff Resources
-    </header>
-    <div>
-
-
-    <div class="container">
-        <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Setting Up Classroom Technology ⬇️</h2>
                 <p> If you are like me, your chromebook has been in your school bag all summer. Make sure to plug it in a day or two before you plan to return to the building. 
                 If the battery has been completely drained (which may occur if it hasn't been plugged in for a couple months), it may take a day of charging to even turn on. 
@@ -280,7 +17,6 @@
                     </ol> 
         </div>
 
-        <div class="card collapsed" onclick="toggleCard(this)">
             <h2>⬇️ Requesting LRC Staff Materials ⬇️</h2>
             <p>Staff is welcome to peruse the book shelves or request particular titles or topics. 
                 Staff have no limits to the number of books they can check out at one time. 
@@ -303,7 +39,7 @@
                         Technology will not automatically be assigned. </br>Please email me for technology items. (malbrecht@sd308.org)</ul></p>
         </div>
 
-        <div class="card collapsed" onclick="toggleCard(this)">
+
             <h2>⬇️ Expectations for LRC Class ⬇️</h2>
             <p> <b> Student Book Return & Renewal </b> </br> </br> 
              <ul>  <li> Students are usually only permitted to have a maximun of two books checked out to their account. 
@@ -319,9 +55,9 @@
              <p><center> Please note: Book checkout will not resume until week 2, due to time required to refresh student behavior expectations.
              </br></br>
                 ALL students should always bring their chrome books, headphones, and mice (optional) with them.</center></p> 
-        </div>
 
-        <div class="card collapsed" onclick="toggleCard(this)">
+
+
             <h2>⬇️ Technology Help Videos ⬇️</h2>
             <ul><li>Technology Help Tickets:<ul>
                <li>Tech Ticket - <a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU"> Not Working </a></li> 
@@ -333,10 +69,8 @@
             </br>    <li>Google Drive:<ul>
                 <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing">Shareable Links & Restrictions (View, Comment, Edit)</a></li>
                 <li><a href="https://www.loom.com/share/2187fe2d141345bda4f3c292fd201842?sharedAppSource=personal_library">How to hide and unhide their Google File Bar</a></li></ul></li>
-        </div>
 
-        <!-- Literacy Night Card -->
-        <div class="card collapsed" onclick="toggleCard(this)">
+
             <h2>⬇️ 📚 Literacy Night 📚 ⬇️</h2>
             <p>Join us for Literacy Night! Click the links below to sign up as a volunteer, view the event flyer, and download the information packet.</p>
             <!-- Volunteer Sign Up Embed -->
@@ -345,11 +79,10 @@
             </div>
             <img src="../eventsLinks/2024-09-30_Literacy Night_Save the Date.png" alt="Literacy Night Save the Date">
             <p><a href="../eventsLinks/2024-09-30_Literacy Night_Flyer.pdf" target="_blank"><img src="../pictures/pdf-icon.png" alt="Download PDF" style="width: 50px; height: 50px;"> Literacy Night Flier</a></p>
-        </div>
 
-        <!-- Pumpkin Contest Card -->
-        <div class="card collapsed hidden" onclick="toggleCard(this)">
-            <h2>⬇️ 🎃 Pumpkin Contest 🎃 ⬇️</h2>
+
+
+            🎃 Pumpkin Contest 🎃
             <p>Get ready for our annual Pumpkin Contest! Click the links below for contest details and to sign up for a walkthrough time.</p>
             <!-- Clickable PDF Link -->
             <p><a href="../eventsLinks/2024-09-03_Pumpkin Contest Flyer.pdf" target="_blank"><img src="../pictures/pdf-icon.png" alt="Download PDF" style="width: 50px; height: 50px;"> Download Pumpkin Contest Details</a></p>
@@ -361,56 +94,14 @@
             </div>
         </div>
 
-        <div class="card collapsed hidden" onclick="toggleCard(this)">
-            <h2>⬇️ Read-A-Thon Stuff! ⬇️</h2>
-            <p> <div style="position: relative; padding-bottom: 52.7086383601757%; height: 0;">
+   
+   Read-A-Thon Stuff!
                 <iframe src="https://www.youtube.com/embed/BuaV4XjeHKE" title="How to Sign in to your Teacher Read-a-Thon Dashboard" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></p>
                 <ul>
                     <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing">Introductory Letter & Calendar</a></li>
                     <li><a href="https://docs.google.com/presentation/d/1OpGv8hLg6f6hTqZ_WhVsUPdHFOJXhuOxHybHAlXPFVU/edit?usp=sharing">Tracking Sheets</a></li>
                 </ul>
-            </div></div>
 
-    </div>
-    <!-- Other Items Section -->
-    <div class="other-items-container">
-        <div class="other-items-card">
-            <h2>⬇️ Other Items ⬇️</h2><br>
-            <div class="other-item">
-                <a href="https://example.com" target="_blank" title="Monarch">
-                    <img src="../pictures/monarchLogo.png" alt="Monarch Award List Grades K-3">
-                    Monarch Award List<br>Grades K-3
-                </a>
-            </div>
-            <div class="other-item">
-                <a href="https://example.com" target="_blank" title="Bluestem">
-                    <img src="../pictures/bluestemLogo.png" alt="Bluestem Award List Grades 4-5">
-                    Bluestem Award List<br>Grades 4-5
-                </a>
-            </div>
-            <div class="other-item">
-                <a href="https://docs.google.com/spreadsheets/d/1qJXgARJIykCFctkqhveEjXzjlUyNAS3H3lFRQDUgP_M/edit?usp=sharing" target="_blank" title="5th Grade Passwords">
-                    <img src="../pictures/passwordsPicture.png" alt="5th Grade Passwords">
-                    5th Grade Passwords<h3>image from pngtree.com</h3>
-                </a>
-            </div>
-            <div class="other-item">
-                <a href="https://docs.google.com/spreadsheets/d/1vmh0_TqeSGMvin15IUNrFVoSxqyUU-nNnntaE0EW61E/edit?usp=sharing" target="_blank" title="Staff Book Requests">
-                    <img src="../pictures/bookStack.png" alt="Staff Book Requests">
-                    Staff Requests <br>for LRC Purchases
-            </div>
-            <div class="other-item">
-                <a href="https://www.oswego.lib.il.us/kids/parent-teacher-resources/" target="_blank" title="Oswego Public Library">
-                    <img src="../pictures/oswegoPubLibLogo.png" alt="Oswego Public Library">
-                    Request Items from <br>Oswego Public Library
-            </div>
-        </div>
-    </div>
-    <script>
-        function toggleCard(card) {
-            card.classList.toggle('collapsed');
-            card.classList.toggle('expanded');
-        }
-    </script>
-</body>
-</html>
+
+
+
