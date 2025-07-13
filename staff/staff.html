@@ -12,7 +12,7 @@
   }
 
   body {
-    background-image: url('pictures/otherIcons/backgroundStaff.png');
+    background-image: url('../pictures/otherIcons/backgroundStaff.png');
     background-size: cover;
     background-position: center right;
     background-repeat: no-repeat;
@@ -26,7 +26,7 @@
     top: 40px;
     left: 250px;
     min-width: 400px;
-    max-width: 800px;
+    max-width: 900px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -44,7 +44,7 @@
     background: rgba(85, 107, 47, 0.6);
     border-radius: 16px;
     padding: 10px 15px;
-    max-width: 800px;
+    max-width: 900px;
     transition: width 0.3s ease-in-out, background 0.3s ease-in-out;
   }
 
@@ -65,7 +65,7 @@
 
   .card-columns .column {
     padding: 10px 15px;
-    border-left: 4px double #1b5e20; /* Bold double jungle green divider */
+    border-left: 5px double #1b5e20; /* Bold double jungle green divider */
   }
 
   .card-columns .column:first-child {
@@ -82,6 +82,24 @@
     display: block;
   }
 
+  /* Indent bulleted lists in card content */
+.toggle-card ul {
+  padding-left: 30px; /* Increase indent */
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+/* Style list items */
+.toggle-card li {
+  margin-bottom: 6px;
+}
+
+/* Style links inside cards */
+.toggle-card a {
+  color: #1e88e5;         /* Nice medium blue */
+  text-decoration: underline;
+  font-weight: normal;    /* Optional: removes bold if you want it softer */
+}
   .right-box {
     position: absolute;
     left: 50%;
@@ -132,16 +150,27 @@
   <div class="card-content">
     <div class="card-columns">
       <div class="column">
-        <p><b>Start-of-Year Chromebook Tips:</b><br></br>
-        Plug in your Chromebook 1–2 days before returning. 
-        </br> If fully drained, it may need hours of charging before turning on. 
-        </br></br>Click the clock in the lower right to check for system updates.</p>
+        <p><b>Start-of-Year Chromebook Tips:</b></br>
+          <ul>
+        <li>Plug in your Chromebook 1–2 days before returning. If fully drained, it may need hours of charging before turning on. </li>
+        <li>Click the clock in the lower right to check for system updates.</p></ul></li>
       </div>
       <div class="column">
-        <p><b>Password Reset:</b><br></br>
-        Visit <a href="https://mypassword.sd308.org" target="_blank">mypassword.sd308.org</a> to reset your password early. 
-        </br>Use your short username (e.g., malbrecht). 
-        </br></br>Password updates may take a few minutes across systems.</p>
+        <p><b>Password Reset:</b></br>
+          <ul>
+       <li>Visit <a href="https://mypassword.sd308.org" target="_blank">mypassword.sd308.org</a> to reset your password early. </li>
+        <li>Use your short username (e.g., malbrecht). </li>
+        <li>Password updates may take a few minutes across systems.</p></li>
+        </ul>
+      </div>
+ <div class="column">
+        <p><b>Tech Help Videos & Docs:</b></p>
+        <ul>
+          <li><a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU" target="_blank">Submit a Tech Ticket</a></li>
+          <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing" target="_blank">Project from Chromebook</a></li>
+          <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library" target="_blank">Google Calendar: Set Up Conferences</a></li>
+          <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing" target="_blank">Google Drive: Share Settings</a></li>
+        </ul>
       </div>
     </div>
   </div>
@@ -153,11 +182,9 @@
     <div class="card-columns">
       <div class="column">
         <p><b>Book Requests:</b><br>
-        You can request unlimited books through the <a href="../destiny.html" target="_blank">Destiny catalog</a>. Please allow one week for delivery.</p>
-
-        <p><b>Other Available Items:</b><br>
-        Cassette/CD players, monitors, DVD players, books on tape.<br>
-        <i>Email <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a> to request tech items.</i></p>
+          <ul>
+       <li> You can request unlimited books through the <a href="../destiny.html" target="_blank">Destiny catalog</a>. </li>
+       <li> Please allow one week for delivery.</p></li></ul>
       </div>
       <div class="column">
         <p><b>Catalog Help:</b></p>
@@ -165,6 +192,11 @@
           <iframe src="https://www.loom.com/embed/3ec5cea364f3443492344f2f4fae05c5?sid=86988d3e-060c-4c64-87ee-dd1c454f7bb1" 
           frameborder="0" allowfullscreen style="position:absolute; top:0; left:0; width:95%; height:95%;"></iframe>
         </div>
+      </div>
+      <div class="column">
+        <p><b>Other Available Items:</b><br>
+        <ul><li>Cassette/CD players, monitors, DVD players, books on tape.</li>
+        <li>Email <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a> to request these items.</li></p></ul>
       </div>
     </div>
   </div>
@@ -175,79 +207,94 @@
   <div class="card-content">
     <div class="card-columns">
       <div class="column">
-        <p><b>Book Checkout:</b><br>
-        • 2-book limit (3 for research)<br>
-        • Students must return or renew both books before getting new ones<br>
-        • Checkout starts Week 2</p>
+        <p><b>Book Checkout:</b>
+        <ul>
+        <li>2-book limit (3 for research)</li>
+        <li>Students must return or renew both books before getting new ones</li>
+        <li>Checkout starts Week 2</p></li>
+        </ul>
+      </div>
+            <div class="column">
+        <p><b>What to Bring:</b>
+        <ul>
+        <li>Students should always bring Chromebooks, headphones, and (optional) mice.</li>
 
-        <p><b>What to Bring:</b><br>
-        Students should always bring Chromebooks, headphones, and (optional) mice.</p>
+        </ul>
+      </p>
       </div>
       <div class="column">
-        <p><b>Arrival & Dismissal:</b><br>
-        • Drop off at the ramp near the art room<br>
-        • Pick up students from inside the LRC<br>
-        They will be lined up and ready</p>
+        <p><b>Arrival & Dismissal:</b>
+      <ul>
+        <li>Drop off at the ramp near the art room</li>
+        <li>Pick up students from inside the LMC</li>
+        <li>They will be lined up and ready</p></li>
+      </ul>
       </div>
     </div>
   </div>
 </div>
 
 <div class="toggle-card">
-  <h2 onclick="toggleCard(this)">⬇️ Tech Help & Event Resources</h2>
+  <h2 onclick="toggleCard(this)">⬇️ Event Resources</h2>
   <div class="card-content">
     <div class="card-columns">
       <div class="column">
-        <p><b>Tech Help Videos & Docs:</b></p>
-        <ul>
-          <li><a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU" target="_blank">Submit a Tech Ticket</a></li>
-          <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing" target="_blank">Project from Chromebook</a></li>
-          <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library" target="_blank">Google Calendar: Set Up Conferences</a></li>
-          <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing" target="_blank">Google Drive: Share Settings</a></li>
-        </ul>
+        <p><b>📚 Literacy Night 📚 </b></p>
       </div>
       <div class="column">
-        <p><b>Event Resources:</b></p>
-        <ul>
-          <li><a href="../eventsLinks/2024-09-30_Literacy Night_Flyer.pdf" target="_blank">📚 Literacy Night Flyer (PDF)</a></li>
-          <li><a href="pumpkin-patch.html" target="_blank">🎃 Pumpkin Contest Page</a></li>
-          <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing" target="_blank">📖 Read-A-Thon Intro & Calendar</a></li>
-        </ul>
+        <p><b> 🎃 Pumpkin Contest 🎃</b></p>
+      </div>
+      <div class="column">
+        <p><b>Read-A-Thon</b>
+      <ul>
+        <iframe src="https://www.youtube.com/embed/BuaV4XjeHKE" title="How to Sign in to your Teacher Read-a-Thon Dashboard" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></p>
+        <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing">Intro Letter & Calendar 24-25</a></li>
+        <li><a href="https://docs.google.com/presentation/d/1OpGv8hLg6f6hTqZ_WhVsUPdHFOJXhuOxHybHAlXPFVU/edit?usp=sharing">Tracking Sheets 24-25</a></li>
+      </ul>
       </div>
     </div>
   </div>
 </div>
 </div>
 
+   
+   
+
+
+
+
+
+
+
   <div class="right-box">
     <div class="quick-links-grid">
       <div class="quick-link">
         <a href="https://example.com" target="_blank" title="Monarch">
-          <img src="./pictures/monarchBluestemPictures/monarchLogo.png" alt="Monarch Award List Grades K-3">
+          <img src="../pictures/monarchBluestemPictures/monarchLogo.png" alt="Monarch Award List Grades K-3">
           Monarch Award List<br>Grades K-3
         </a>
       </div>
       <div class="quick-link">
         <a href="https://example.com" target="_blank" title="Bluestem">
-          <img src="./pictures/monarchBluestemPictures/bluestemLogo.png" alt="Bluestem Award List Grades 4-5">
+          <img src="../pictures/monarchBluestemPictures/bluestemLogo.png" alt="Bluestem Award List Grades 4-5">
           Bluestem Award List<br>Grades 4-5
         </a>
       </div>
       <div class="quick-link">
         <a href="https://docs.google.com/spreadsheets/d/1qJXgARJIykCFctkqhveEjXzjlUyNAS3H3lFRQDUgP_M/edit?usp=sharing" target="_blank" title="5th Grade Passwords">
-          <img src="./pictures/otherIcons/passwordsPicture.png" alt="5th Grade Passwords">
+          <img src="../pictures/otherIcons/passwordsPicture.png" alt="5th Grade Passwords">
           <br>5th Grade Passwords
         </a>
       </div>
       <div class="quick-link">
         <a href="https://docs.google.com/spreadsheets/d/1vmh0_TqeSGMvin15IUNrFVoSxqyUU-nNnntaE0EW61E/edit?usp=sharing" target="_blank" title="Staff Book Requests">
-          <img src="./pictures/otherIcons/bookStack.png" alt="Staff Book Requests">
+          <img src="../pictures/otherIcons/bookStack.png" alt="Staff Book Requests">
           <br>Staff Requests <br>for LRC Purchases
         </a>
       </div>
       <div class="quick-link">
         <a href="https://www.oswego.lib.il.us/kids/parent-teacher-resources/" target="_blank" title="Oswego Public Library">
-          <img src="./pictures/picturesForLinks/oswegoPubLibLogo.png" alt="Oswego Public Library">
+          <img src="../pictures/picturesForLinks/oswegoPubLibLogo.png" alt="Oswego Public Library">
           <br>Request Items from <br>Oswego Public Library
         </a>
       </div>
