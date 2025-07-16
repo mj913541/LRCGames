@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Research Treehouse</title>
+<style>
+  body {
+    margin: 0;
+    background-color: #f0f8e0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */
+    font-family: 'Comic Sans MS', sans-serif;
+    overflow: hidden; /* No scrollbars */
+  }
+
+  .background-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    max-width: 1920px;
+    max-height: 1080px;
+    background: url('./pictures/otherIcons/backgroundResearchTreehouse.png') no-repeat center top;
+    background-size: contain; /* Show entire image */
+  }
+
+  /* Keep the clickable zones relative to the container */
+  .click-zone {
+    position: absolute;
+    display: block;
+    cursor: pointer;
+    background: transparent;
+    text-indent: -9999px; /* Hide text */
+    border: 4px solid black ;
+  }
+
+  /* Positions based on original design in percentages */
+  /* Formula: (pixel_position / original_image_size) * 100 */
+  #pebblego    { top: 9.3%;  left: 4.2%;  width: 4.2%; height: 7.4%; }
+  #britannica  { top: 14.8%; left: 5.2%;  width: 4.2%; height: 7.4%; }
+  #kiddle      { top: 23.1%; left: 5.2%;  width: 4.2%; height: 7.4%; }
+  #natgeo      { top: 30.5%; left: 7.3%;  width: 4.2%; height: 7.4%; }
+  #sweetsearch { top: 9.3%;  left: 83.3%; width: 4.2%; height: 7.4%; }
+  #dkfindout   { top: 16.7%; left: 86%;   width: 4.2%; height: 7.4%; }
+  #factmonster { top: 24.1%; left: 88.5%; width: 4.2%; height: 7.4%; }
+  #safesearch  { top: 88%;   left: 66%;   width: 4.2%; height: 7.4%; }
+
+  /* Optional hover outline for debugging */
+  .click-zone:hover {
+    outline: 2px dashed rgba(0, 0, 0, 0.3);
+  }
+</style>
+</head>
+<body>
+  <div class="background-container">
+    <a id="pebblego" class="click-zone" href="https://www.pebblego.com/" target="_blank">PebbleGo</a>
+    <a id="britannica" class="click-zone" href="https://school.eb.com/" target="_blank">Britannica</a>
+    <a id="kiddle" class="click-zone" href="https://www.kiddle.co/" target="_blank">Kiddle</a>
+    <a id="natgeo" class="click-zone" href="https://kids.nationalgeographic.com/" target="_blank">Nat Geo</a>
+    <a id="sweetsearch" class="click-zone" href="https://www.sweetsearch.com/" target="_blank">SweetSearch</a>
+    <a id="dkfindout" class="click-zone" href="https://www.dkfindout.com/" target="_blank">DK Find Out</a>
+    <a id="factmonster" class="click-zone" href="https://www.factmonster.com/" target="_blank">Fact Monster</a>
+    <a id="safesearch" class="click-zone" href="https://www.safesearchkids.com/" target="_blank">Safe Search</a>
+  </div>
+</body>
+</html>

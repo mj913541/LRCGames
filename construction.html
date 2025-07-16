@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Under Construction</title>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background: #e9f7e4;
+        overflow: hidden;
+        text-align: center;
+        position: relative;
+    }
+
+    /* Animated Leaf Background */
+    .leaf {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        background: url('./pictures/otherIcons/leaves.png') no-repeat center/contain;
+        opacity: 0.7;
+        animation: floatLeaf 12s linear infinite;
+    }
+
+    .leaf:nth-child(1) { top: -10%; left: 10%; animation-delay: 0s; }
+    .leaf:nth-child(2) { top: -15%; left: 30%; animation-delay: 2s; }
+    .leaf:nth-child(3) { top: -20%; left: 50%; animation-delay: 4s; }
+    .leaf:nth-child(4) { top: -25%; left: 70%; animation-delay: 6s; }
+    .leaf:nth-child(5) { top: -30%; left: 85%; animation-delay: 8s; }
+
+    @keyframes floatLeaf {
+        0% { transform: translateY(0) rotate(0deg); }
+        100% { transform: translateY(120vh) rotate(360deg); }
+    }
+
+    /* Main Content */
+    h1 {
+        font-size: 3rem;
+        color: #4d7326;
+        margin-bottom: 10px;
+        z-index: 2;
+        position: relative;
+    }
+
+    p {
+        font-size: 1.2rem;
+        color: #705c2f;
+        margin-bottom: 20px;
+        z-index: 2;
+        position: relative;
+    }
+
+    img {
+        max-width: 280px;
+        margin-bottom: 30px;
+        z-index: 2;
+        position: relative;
+        border: 4px dashed black;
+        border-radius: 18%;
+    }
+
+    .button {
+        background-color: #f7c948;
+        color: #3b3b3b;
+        font-size: 1.2rem;
+        font-weight: bold;
+        padding: 12px 24px;
+        border-radius: 12px;
+        text-decoration: none;
+        transition: 0.3s ease;
+        z-index: 2;
+        position: relative;
+    }
+
+    .button:hover {
+        background-color: #ffde6b;
+        transform: scale(1.05);
+    }
+</style>
+</head>
+<body>
+    <!-- Falling Leaves -->
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+    <div class="leaf"></div>
+
+    <!-- Main Content -->
+    <h1>We're Building Something Awesome!</h1>
+    <p>This page is under construction. Please check back soon!</p>
+    <img src="./pictures/otherIcons/constructionLion.png" alt="Cute Lion Under Construction">
+    <a href="./index.html" class="button">Go Back to Homepage</a>
+</body>
+</html>

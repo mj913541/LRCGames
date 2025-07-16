@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Welcome to the Jungle</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Comic Sans MS", cursive, sans-serif;
+    background-color: #f9fdf6;
+    overflow-x: hidden;
+    text-align: center;
+  }
+
+  h1 {
+    margin-top: 15px;
+    color: #3b6e47;
+    font-size: 2rem;
+  }
+
+  .progress {
+    margin: 10px auto;
+    font-size: 1.2rem;
+    color: #444;
+  }
+
+  .game-container {
+    height: 90vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+  }
+
+  .game-board {
+    position: relative;
+    width: 768px; /* adjust to your image width */
+    height: 1850px; /* adjust to your image height */
+    background-image: url("jungle-game-board.png"); /* replace with your image */
+    background-size: cover;
+    background-repeat: no-repeat;
+    margin: 0 auto;
+  }
+
+  /* Lion token */
+  #lion-piece {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    transition: top 0.6s ease, left 0.6s ease;
+    z-index: 10;
+  }
+
+  /* Bounce animation on movement */
+  .bounce {
+    animation: bounce 0.6s;
+  }
+
+  @keyframes bounce {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.2); }
+    60% { transform: scale(0.9); }
+    100% { transform: scale(1); }
+  }
+
+  /* Steps (clickable zones) */
+  .step {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0);
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .step:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  }
+</style>
+</head>
+<body>
+
+<h1>🌿 Welcome to the Jungle!</h1>
+<div class="progress">You are on <span id="current-week">Week 1</span> of 30</div>
+
+<div class="game-container">
+  <div class="game-board">
+    <!-- Lion token -->
+    <img id="lion-piece" src="lion.png" alt="Lion">
+
+    <!-- Clickable steps -->
+    <!-- (Positions same as before) -->
+    <a class="step" style="top: 40px; left: 140px;" data-week="1"></a>
+    <a class="step" style="top: 90px; left: 220px;" data-week="2"></a>
+    <a class="step" style="top: 150px; left: 170px;" data-week="3"></a>
+    <a class="step" style="top: 210px; left: 240px;" data-week="4"></a>
+    <a class="step" style="top: 270px; left: 160px;" data-week="5"></a>
+    <a class="step" style="top: 330px; left: 230px;" data-week="6"></a>
+    <a class="step" style="top: 390px; left: 180px;" data-week="7"></a>
+    <a class="step" style="top: 450px; left: 250px;" data-week="8"></a>
+    <a class="step" style="top: 510px; left: 170px;" data-week="9"></a>
+    <a class="step" style="top: 570px; left: 240px;" data-week="10"></a>
+    <a class="step" style="top: 630px; left: 160px;" data-week="11"></a>
+    <a class="step" style="top: 690px; left: 230px;" data-week="12"></a>
+    <a class="step" style="top: 750px; left: 180px;" data-week="13"></a>
+    <a class="step" style="top: 810px; left: 250px;" data-week="14"></a>
+    <a class="step" style="top: 870px; left: 160px;" data-week="15"></a>
+    <a class="step" style="top: 930px; left: 220px;" data-week="16"></a>
+    <a class="step" style="top: 990px; left: 180px;" data-week="17"></a>
+    <a class="step" style="top: 1050px; left: 230px;" data-week="18"></a>
+    <a class="step" style="top: 1110px; left: 160px;" data-week="19"></a>
+    <a class="step" style="top: 1170px; left: 240px;" data-week="20"></a>
+    <a class="step" style="top: 1230px; left: 170px;" data-week="21"></a>
+    <a class="step" style="top: 1290px; left: 220px;" data-week="22"></a>
+    <a class="step" style="top: 1350px; left: 180px;" data-week="23"></a>
+    <a class="step" style="top: 1410px; left: 230px;" data-week="24"></a>
+    <a class="step" style="top: 1470px; left: 160px;" data-week="25"></a>
+    <a class="step" style="top: 1530px; left: 240px;" data-week="26"></a>
+    <a class="step" style="top: 1590px; left: 170px;" data-week="27"></a>
+    <a class="step" style="top: 1650px; left: 230px;" data-week="28"></a>
+    <a class="step" style="top: 1710px; left: 180px;" data-week="29"></a>
+    <a class="step" style="top: 1770px; left: 220px;" data-week="30"></a>
+  </div>
+</div>
+
+<audio id="click-sound" src="click.mp3" preload="auto"></audio>
+
+<script>
+  const lion = document.getElementById("lion-piece");
+  const currentWeekEl = document.getElementById("current-week");
+  const clickSound = document.getElementById("click-sound");
+
+  // Define exact dates & positions for all 30 steps
+  const steps = [
+    { date: "2025-08-25", top: 40, left: 140 },
+    { date: "2025-09-01", top: 90, left: 220 },
+    { date: "2025-09-08", top: 150, left: 170 },
+    { date: "2025-09-15", top: 210, left: 240 },
+    { date: "2025-09-22", top: 270, left: 160 },
+    { date: "2025-09-29", top: 330, left: 230 },
+    { date: "2025-10-06", top: 390, left: 180 },
+    { date: "2025-10-13", top: 450, left: 250 },
+    { date: "2025-10-20", top: 510, left: 170 },
+    { date: "2025-10-27", top: 570, left: 240 },
+    { date: "2025-11-03", top: 630, left: 160 },
+    { date: "2025-11-10", top: 690, left: 230 },
+    { date: "2025-11-17", top: 750, left: 180 },
+    { date: "2025-11-24", top: 810, left: 250 },
+    { date: "2025-12-01", top: 870, left: 160 },
+    { date: "2025-12-08", top: 930, left: 220 },
+    { date: "2025-12-15", top: 990, left: 180 },
+    { date: "2026-01-05", top: 1050, left: 230 },
+    { date: "2026-01-12", top: 1110, left: 160 },
+    { date: "2026-01-19", top: 1170, left: 240 },
+    { date: "2026-01-26", top: 1230, left: 170 },
+    { date: "2026-02-02", top: 1290, left: 220 },
+    { date: "2026-02-09", top: 1350, left: 180 },
+    { date: "2026-02-16", top: 1410, left: 230 },
+    { date: "2026-02-23", top: 1470, left: 160 },
+    { date: "2026-03-02", top: 1530, left: 240 },
+    { date: "2026-03-09", top: 1590, left: 170 },
+    { date: "2026-03-16", top: 1650, left: 230 },
+    { date: "2026-03-23", top: 1710, left: 180 },
+    { date: "2026-03-30", top: 1770, left: 220 }
+  ];
+
+  // Get today's date
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Find the most recent step
+  let currentStepIndex = 0;
+  for (let i = 0; i < steps.length; i++) {
+    const stepDate = new Date(steps[i].date);
+    if (stepDate <= today) {
+      currentStepIndex = i;
+    }
+  }
+
+  // Move the lion to current step
+  function moveLion(index) {
+    const pos = steps[index];
+    lion.classList.remove("bounce"); // reset animation
+    void lion.offsetWidth; // trigger reflow for restart
+    lion.classList.add("bounce");
+    lion.style.top = `${pos.top}px`;
+    lion.style.left = `${pos.left}px`;
+    currentWeekEl.textContent = `Week ${index + 1}`;
+  }
+
+  moveLion(currentStepIndex);
+
+  // Add click listeners for manual move
+  document.querySelectorAll(".step").forEach(step => {
+    step.addEventListener("click", e => {
+      clickSound.play();
+      const week = parseInt(step.getAttribute("data-week"));
+      moveLion(week - 1);
+    });
+  });
+</script>
+</body>
+</html>
