@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Banana Drag Basket</title>
+  <style>
+    body {
+      background: url('../../pictures/otherIcons/backgroundJungle.png') no-repeat center center;
+      background-size: cover;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', sans-serif;
+      color: white;
+    }
+
+    #score, #timer, #level {
+      position: absolute;
+      top: 20px;
+      font-size: 24px;
+      background: rgba(0,0,0,0.4);
+      padding: 10px;
+      border-radius: 10px;
+      display: none;
+    }
+    #score { left: 20px; }
+    #timer { left: 180px; }
+    #level { left: 320px; }
+
+    #startScreen, #endScreen, #levelUpScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      z-index: 10;
+    }
+    #endScreen, #levelUpScreen { display: none; }
+
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #ffd633;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ffcc00;
+    }
+
+    .banana {
+      position: absolute;
+      width: 80px;
+      cursor: grab;
+      animation: wiggle 1s infinite alternate;
+    }
+
+    @keyframes wiggle {
+      0% { transform: rotate(-10deg); }
+      100% { transform: rotate(10deg); }
+    }
+
+    #basket {
+      position: absolute;
+      bottom: 50px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 180px;
+      display: none; /* Hidden until game starts */
+    }
+
+    canvas#confettiCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 20;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <div id="timer">Time: 30</div>
+  <div id="level">Level: 1</div>
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <div>Welcome to <strong>Banana Drag Basket!</strong></div>
+    <img src="../../pictures/otherIcons/lion.png" style="width:120px;">
+    <div>Select Difficulty:</div>
+    <button onclick="setDifficulty('easy')">Easy</button>
+    <button onclick="setDifficulty('hard')">Hard</button>
+  </div>
+
+  <!-- Level Up Screen -->
+  <div id="levelUpScreen">
+    <div id="levelUpMessage"></div>
+  </div>
+
+  <!-- End Screen -->
+  <div id="endScreen">
+    <div id="finalScore"></div>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+
+  <!-- Basket -->
+  <img id="basket" src="../../pictures/otherIcons/basketEmpty.webp" draggable="false">
+
+  <!-- Confetti -->
+  <canvas id="confettiCanvas"></canvas>
+
+  <!-- Sound -->
+  <audio id="dropSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+  <script>
+    let score = 0;
+    let timeLeft = 30;
+    let countdown;
+    let bananas = [];
+    let level = 1;
+    let difficulty = 'easy';
+    const basket = document.getElementById('basket');
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let confetti = [];
+
+    const bananaImages = [
+      '../../pictures/otherIcons/banana.png',
+      '../../pictures/otherIcons/bananaBunch.png'
+    ];
+
+    const basketStages = [
+      '../../pictures/otherIcons/basketEmpty.png',
+      '../../pictures/otherIcons/basketFew.png',
+      '../../pictures/otherIcons/basketHalf.png',
+      '../../pictures/otherIcons/basketFull.png'
+    ];
+
+    function setDifficulty(mode) {
+      difficulty = mode;
+      basket.style.width = (difficulty === 'easy') ? '180px' : '120px';
+      startGame();
+    }
+
+    function startGame() {
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('score').style.display = 'block';
+      document.getElementById('timer').style.display = 'block';
+      document.getElementById('level').style.display = 'block';
+      basket.style.display = 'block'; // Show basket when game starts
+      score = 0;
+      level = 1;
+      updateUI();
+      loadLevel();
+    }
+
+    function loadLevel() {
+      clearBananas();
+      basket.src = basketStages[0]; // Reset basket image
+      timeLeft = (difficulty === 'easy') ? 30 : 25;
+      document.getElementById('timer').innerText = 'Time: ' + timeLeft;
+      const bananaCount = (level === 1) ? 10 : (level === 2) ? 15 : 20;
+      createBananas(bananaCount);
+      countdown = setInterval(updateTimer, 1000);
+    }
+
+    function createBananas(num) {
+      for (let i = 0; i < num; i++) {
+        const img = document.createElement('img');
+        img.src = bananaImages[Math.floor(Math.random() * bananaImages.length)];
+        img.className = 'banana';
+        img.style.top = Math.random() * (window.innerHeight - 200) + 'px';
+        img.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+        img.draggable = true;
+        img.ondragstart = dragStart;
+        document.body.appendChild(img);
+        bananas.push(img);
+      }
+      basket.ondragover = (e) => e.preventDefault();
+      basket.ondrop = dropBanana;
+    }
+
+    function dragStart(e) {
+      e.dataTransfer.setData('text/plain', e.target.src);
+      e.dataTransfer.setDragImage(e.target, 40, 40);
+      e.target.classList.add('dragging');
+    }
+
+    function dropBanana(e) {
+      const dragging = document.querySelector('.dragging');
+      if (dragging) {
+        dragging.remove();
+        bananas = bananas.filter(b => b !== dragging);
+        score++;
+        updateUI();
+        updateBasketImage();
+        document.getElementById('dropSound').play();
+        if (bananas.length === 0) {
+          clearInterval(countdown);
+          if (level < 3) {
+            level++;
+            showLevelUp();
+          } else {
+            playConfetti();
+            endGame(true);
+          }
+        }
+      }
+    }
+
+    function updateBasketImage() {
+      const total = level === 1 ? 10 : level === 2 ? 15 : 20;
+      const collected = total - bananas.length;
+      const progress = collected / total;
+
+      if (progress === 0) {
+        basket.src = basketStages[0];
+      } else if (progress <= 0.33) {
+        basket.src = basketStages[1];
+      } else if (progress <= 0.66) {
+        basket.src = basketStages[2];
+      } else {
+        basket.src = basketStages[3];
+      }
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById('timer').innerText = 'Time: ' + timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(countdown);
+        endGame(false);
+      }
+    }
+
+    function updateUI() {
+      document.getElementById('score').innerText = 'Score: ' + score;
+      document.getElementById('level').innerText = 'Level: ' + level;
+    }
+
+    function showLevelUp() {
+      document.getElementById('levelUpMessage').innerText = 'Level Complete! Get Ready for Level ' + level;
+      document.getElementById('levelUpScreen').style.display = 'flex';
+      setTimeout(() => {
+        document.getElementById('levelUpScreen').style.display = 'none';
+        loadLevel();
+      }, 2000);
+    }
+
+    function endGame(completedAll) {
+      clearBananas();
+      basket.style.display = 'none'; // Hide basket when game ends
+      document.getElementById('finalScore').innerText = completedAll 
+        ? 'You WON! All bananas collected! Total: ' + score 
+        : 'Game Over! Total bananas: ' + score;
+      document.getElementById('endScreen').style.display = 'flex';
+    }
+
+    function restartGame() {
+      document.getElementById('endScreen').style.display = 'none';
+      document.getElementById('startScreen').style.display = 'flex';
+      basket.style.display = 'none';
+    }
+
+    function clearBananas() {
+      bananas.forEach(b => b.remove());
+      bananas = [];
+    }
+
+    // Confetti Animation
+    function playConfetti() {
+      confetti = [];
+      for (let i = 0; i < 150; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+          size: Math.random() * 8 + 2,
+          speed: Math.random() * 4 + 2
+        });
+      }
+      animateConfetti();
+      setTimeout(() => {
+        confetti = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }, 3000);
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti.forEach(c => {
+        c.y += c.speed;
+        ctx.fillStyle = c.color;
+        ctx.fillRect(c.x, c.y, c.size, c.size);
+      });
+      if (confetti.length) requestAnimationFrame(animateConfetti);
+    }
+  </script>
+</body>
+</html>

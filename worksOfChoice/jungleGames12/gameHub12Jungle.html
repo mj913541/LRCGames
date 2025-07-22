@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Jungle Game Hub</title>
+  <style>
+    body {
+      margin: 0;
+      background: url('../../pictures/otherIcons/backgroundJungle.png') no-repeat center center;
+      background-size: cover;
+      font-family: 'Comic Sans MS', cursive;
+      color: white;
+      text-align: center;
+      overflow-x: hidden;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 60px;
+      text-shadow: 3px 3px 6px #000;
+      animation: bounce 1.5s infinite alternate;
+      z-index: 10;
+      position: relative;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-10px); }
+    }
+
+    .section-title {
+      font-size: 36px;
+      margin-top: 30px;
+      text-shadow: 2px 2px 5px black;
+    }
+
+    .game-grid {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      margin: 20px;
+    }
+
+    .game-card {
+      width: 250px;
+      height: 280px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 3px 3px 10px black;
+      position: relative;
+      transition: transform 0.3s;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .game-card:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 20px yellow;
+    }
+
+    .game-card img {
+      width: 120px;
+      margin-top: 20px;
+      animation: wiggle 1s infinite ease-in-out alternate;
+    }
+
+    @keyframes wiggle {
+      0% { transform: rotate(-5deg); }
+      100% { transform: rotate(5deg); }
+    }
+
+    .title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 15px;
+    }
+
+    .btn {
+      font-size: 18px;
+      padding: 8px 14px;
+      margin-top: 10px;
+      border: none;
+      border-radius: 10px;
+      background: #ffd633;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn:hover {
+      background: #ffcc00;
+    }
+
+    /* Instructions Modal */
+    #instructionsModal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 999;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: rgba(50,50,50,0.9);
+      padding: 20px;
+      border-radius: 15px;
+      max-width: 500px;
+      box-shadow: 0 0 15px black;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-title {
+      font-size: 28px;
+      margin-bottom: 15px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 25px;
+      font-size: 40px;
+      color: white;
+      cursor: pointer;
+    }
+
+    .play-btn {
+      background: #00cc66;
+      color: white;
+      font-size: 22px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+
+    .play-btn:hover {
+      background: #00aa55;
+    }
+
+    /* Animated vines */
+    .vines {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      height: 150px;
+      background: url('../../pictures/otherIcons/vinesHorizontal.png') repeat-x;
+      background-size: contain;
+      animation: sway 4s infinite alternate ease-in-out;
+      z-index: 1;
+    }
+
+    @keyframes sway {
+      0% { transform: rotate(1deg); }
+      100% { transform: rotate(-1deg); }
+    }
+
+    /* Flying parrot */
+    .parrot {
+      position: fixed;
+      top: 200px;
+      width: 120px;
+      animation: fly 15s linear infinite;
+      z-index: 1;
+    }
+
+    @keyframes fly {
+      0% { left: -150px; top: 180px; }
+      50% { top: 160px; }
+      100% { left: 110%; top: 200px; }
+    }
+
+    /* Swinging monkey */
+    .monkey-swing {
+      position: fixed;
+      right: 20px;
+      top: 215px;
+      width: 120px;
+      transform-origin: top center;
+      animation: swing 3s infinite ease-in-out alternate;
+      z-index: 1;
+    }
+
+    @keyframes swing {
+      0% { transform: rotate(10deg); }
+      100% { transform: rotate(-10deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Animated elements -->
+  <div class="vines"></div>
+  <img class="parrot" src="../../../parrot_files/parrot.png" alt="Parrot">
+  <img class="monkey-swing" src="../../pictures/otherIcons/monkey.png" alt="Monkey">
+
+  <h1>Jungle Game Hub</h1>
+
+  <!-- Keyboard Games -->
+  <div class="section-title">🖮 Keyboard Games</div>
+  <div class="game-grid">
+    <div class="game-card" onclick="showInstructions('Monkey Letter Catch','Catch falling letters by pressing the matching key! Build speed and accuracy.','keyboardGame1LetterCatchJungle.html')">
+      <img src="../../pictures/otherIcons/monkeyBanana.png" alt="Monkey">
+      <div class="title">Monkey Letter Catch</div>
+      <button class="btn">Instructions</button>
+    </div>
+    <div class="game-card" onclick="showInstructions('Lion Keyboard Hunt','Type the letters and words the lion asks for to help him reach the end of the trail!','lion.html')">
+      <img src="https://i.ibb.co/FnNPjPw/lion.png" alt="Lion">
+      <div class="title">Lion Keyboard Hunt</div>
+      <button class="btn">Instructions</button>
+    </div>
+    <div class="game-card" onclick="showInstructions('Jungle Typing Trail','Type short words to clear jungle obstacles and move forward on the path!','typingtrail.html')">
+      <img src="https://i.ibb.co/f15gFfQ/log.png" alt="Typing Trail">
+      <div class="title">Jungle Typing Trail</div>
+      <button class="btn">Instructions</button>
+    </div>
+  </div>
+
+  <!-- Mouse Games -->
+  <div class="section-title">🖱 Mouse / Trackpad Games</div>
+  <div class="game-grid">
+    <div class="game-card" onclick="showInstructions('Animal Click Chase','Click the animals as they appear on the screen before time runs out!','mouseGame1ClickAdventureJungle.html')">
+      <img src="../../pictures/otherIcons/elephant.png" alt="Click Game">
+      <div class="title">Animal Click Chase</div>
+      <button class="btn">Instructions</button>
+    </div>
+    <div class="game-card" onclick="showInstructions('Banana Drag Basket','Drag bananas into the basket as fast as you can!','mouseGame2DragAndDropJungle.html')">
+      <img src="../../pictures/otherIcons/basketFull.png" alt="Banana Drag">
+      <div class="title">Banana Drag Basket</div>
+      <button class="btn">Instructions</button>
+    </div>
+    <div class="game-card" onclick="showInstructions('Scroll to Explore','Scroll through the jungle to find hidden animals and objects!','mouseGame3ScrollJungle.html')">
+      <img src="../../pictures/otherIcons/parrot.webp" alt="Scroll">
+      <div class="title">Scroll to Explore</div>
+      <button class="btn">Instructions</button>
+    </div>
+    <div class="game-card" onclick="showInstructions('Jungle Puzzle','Drag puzzle pieces into the right spot to complete the jungle picture!','mouseGame4PuzzleJungle.html')">
+      <img src="../../pictures/otherIcons/lion.png" alt="Puzzle">
+      <div class="title">Jungle Puzzle</div>
+      <button class="btn">Instructions</button>
+    </div>
+  </div>
+
+  <footer>Made with love for the pride | Practice Trackpad & Keyboard Skills</footer>
+
+  <!-- Instructions Modal -->
+  <div id="instructionsModal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeInstructions()">&times;</span>
+      <div class="modal-title" id="gameTitle">Game Title</div>
+      <p id="gameDescription">Game description here...</p>
+      <button class="play-btn" id="playButton">Play Game</button>
+    </div>
+  </div>
+
+<script>
+  let gameLink = '';
+  let utterance;
+
+  function showInstructions(title, description, link) {
+    document.getElementById('gameTitle').innerText = title;
+    document.getElementById('gameDescription').innerText = description;
+    document.getElementById('instructionsModal').style.display = 'flex';
+    gameLink = link;
+
+    // Stop any previous speech
+    speechSynthesis.cancel();
+
+    // Speak the instructions
+    utterance = new SpeechSynthesisUtterance(`${title}. ${description}. Click Play Game to begin.`);
+    utterance.pitch = 1;
+    utterance.rate = 1; // Normal speed
+    utterance.volume = 1; // Full volume
+    speechSynthesis.speak(utterance);
+  }
+
+  function closeInstructions() {
+    document.getElementById('instructionsModal').style.display = 'none';
+    speechSynthesis.cancel(); // Stop speaking when closed
+  }
+
+  document.getElementById('playButton').onclick = function() {
+    speechSynthesis.cancel(); // Stop speaking before opening game
+    window.location.href = gameLink;
+  };
+
+  window.onclick = function(event) {
+    const modal = document.getElementById('instructionsModal');
+    if (event.target === modal) {
+      closeInstructions();
+    }
+  };
+</script>
+
+</body>
+</html>

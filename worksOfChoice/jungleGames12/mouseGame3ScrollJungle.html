@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Scroll to Explore - Ultimate</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Comic Sans MS', cursive;
+      overflow: scroll;
+      background-color: #2d5d34;
+      transition: transform 0.5s ease;
+    }
+
+    #gameArea {
+      position: relative;
+      background-size: cover;
+      background-repeat: no-repeat;
+    }
+
+    .item {
+      position: absolute;
+      width: 80px;
+      cursor: pointer;
+      animation: wiggle 1s infinite alternate;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+    }
+
+    .item.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .item.hide {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+
+    @keyframes wiggle {
+      0% { transform: rotate(-8deg) scale(1); }
+      100% { transform: rotate(8deg) scale(1); }
+    }
+
+    #score, #level {
+      position: fixed;
+      top: 20px;
+      font-size: 24px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      padding: 10px;
+      border-radius: 10px;
+      z-index: 1000;
+    }
+    #score { left: 20px; }
+    #level { left: 180px; }
+
+    /* Timer Progress Bar */
+    #timerBarContainer {
+      position: fixed;
+      top: 20px;
+      left: 320px;
+      width: 250px;
+      height: 24px;
+      background: rgba(255,255,255,0.3);
+      border-radius: 12px;
+      overflow: hidden;
+      z-index: 1000;
+    }
+    #timerBar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #ffcc00, #ff6600);
+      transition: width 1s linear;
+    }
+
+    #miniMap {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 150px;
+      height: 100px;
+      background: rgba(255,255,255,0.7);
+      border: 2px solid #444;
+      border-radius: 10px;
+      z-index: 1000;
+    }
+    .dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: red;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .dot:hover {
+      background: orange;
+      transform: scale(1.3);
+    }
+
+    .floating-score {
+      position: absolute;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ff0;
+      animation: floatUp 1s ease forwards;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-40px); }
+    }
+
+    #startScreen, #endScreen, #transitionScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+      color: white;
+      z-index: 2000;
+      text-align: center;
+      padding: 20px;
+    }
+    #endScreen { display: none; }
+    #transitionScreen { display: none; font-size: 48px; }
+
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #ffd633;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ffcc00;
+    }
+
+    /* Power-up Explanation Box */
+    #powerUpInfo {
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 20px;
+      font-size: 20px;
+      text-align: left;
+    }
+    #powerUpInfo div {
+      margin: 10px 0;
+      display: flex;
+      align-items: center;
+      font-size: 22px;
+    }
+    #powerUpInfo span.icon {
+      font-size: 30px;
+      margin-right: 10px;
+    }
+
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      background: gold;
+      animation: fall 2s linear infinite;
+      z-index: 3000;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-100px) rotate(0deg); }
+      100% { transform: translateY(100vh) rotate(360deg); }
+    }
+
+    /* Zoom effect */
+    body.zoom {
+      transform: scale(1.2);
+      transform-origin: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <div id="level">Level: 1</div>
+  <div id="timerBarContainer">
+    <div id="timerBar"></div>
+  </div>
+  <div id="miniMap"></div>
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <div>Welcome to <strong>Scroll to Explore!</strong></div>
+    <p>Scroll to find all the treasures before time runs out.</p>
+    <div id="powerUpInfo">
+      <h3>Power-ups:</h3>
+      <div><span class="icon">⏳</span> Extra Time: Adds 10 seconds</div>
+      <div><span class="icon">❄</span> Freeze: Stops movement for 5 seconds</div>
+      <div><span class="icon">✨</span> Double Points: 2x points for 5 seconds</div>
+    </div>
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <!-- Transition Screen -->
+  <div id="transitionScreen">Level Complete!</div>
+
+  <!-- End Screen -->
+  <div id="endScreen">
+    <div id="finalScore"></div>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+
+  <div id="gameArea"></div>
+
+  <audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+
+  <script>
+    let score = 0;
+    let timeLeft = 30;
+    let countdown;
+    let items = [];
+    let moveIntervals = [];
+    let level = 1;
+    const gameArea = document.getElementById('gameArea');
+    const miniMap = document.getElementById('miniMap');
+    const timerBar = document.getElementById('timerBar');
+    const backgrounds = [
+      '../../pictures/otherIcons/backgroundJungle.png',
+      '../../pictures/otherIcons/backgroundJungle2.png',
+      '../../pictures/otherIcons/backgroundJungle3.png'
+    ];
+
+    let freezeActive = false;
+    let doublePoints = false;
+
+    function startGame() {
+      document.getElementById('startScreen').style.display = 'none';
+      speakInstructions();
+      score = 0;
+      level = 1;
+      setupLevel();
+    }
+
+    function speakInstructions() {
+      const text = `Welcome to Scroll to Explore! 
+      Your goal is to find all treasures before time runs out. 
+      Look out for power-ups! 
+      The hourglass adds extra time, 
+      the snowflake freezes movement, 
+      and the sparkle gives double points for 5 seconds. 
+      Ready? Let’s go!`;
+      const speech = new SpeechSynthesisUtterance(text);
+      speech.lang = 'en-US';
+      speech.pitch = 1;
+      speech.rate = 1;
+      speechSynthesis.speak(speech);
+    }
+
+    function setupLevel() {
+      clearLevel();
+      let size = level === 1 ? {w: 1500, h: 1000} : level === 2 ? {w: 2000, h: 1500} : {w: 2500, h: 1800};
+      let itemCount = level === 1 ? 8 : level === 2 ? 12 : 15;
+
+      gameArea.style.width = size.w + 'px';
+      gameArea.style.height = size.h + 'px';
+      gameArea.style.backgroundImage = 'url(' + backgrounds[Math.floor(Math.random() * backgrounds.length)] + ')';
+      document.body.style.width = size.w + 'px';
+      document.body.style.height = size.h + 'px';
+
+      timeLeft = 30;
+      timerBar.style.width = '100%';
+      document.getElementById('score').innerText = 'Score: ' + score;
+      document.getElementById('level').innerText = 'Level: ' + level;
+
+      createItems(itemCount, size.w, size.h);
+      createPowerUps(size.w, size.h);
+      createMiniMapDots();
+
+      countdown = setInterval(updateTimer, 1000);
+    }
+
+    function createItems(num, maxW, maxH) {
+      const itemImages = [
+        '../../pictures/otherIcons/banana.png',
+        '../../pictures/otherIcons/monkey.png',
+        '../../pictures/otherIcons/parrot.webp'
+      ];
+      for (let i = 0; i < num; i++) {
+        const img = document.createElement('img');
+        img.src = itemImages[Math.floor(Math.random() * itemImages.length)];
+        img.className = 'item';
+        img.style.top = Math.random() * (maxH - 100) + 'px';
+        img.style.left = Math.random() * (maxW - 100) + 'px';
+        gameArea.appendChild(img);
+
+        setTimeout(() => img.classList.add('show'), 50);
+
+        img.onclick = function() {
+          let points = doublePoints ? 2 : 1;
+          score += points;
+          document.getElementById('score').innerText = 'Score: ' + score;
+          document.getElementById('clickSound').play();
+          showFloatingScore('+' + points, img.style.left, img.style.top);
+          img.classList.remove('show');
+          img.classList.add('hide');
+          setTimeout(() => img.remove(), 500);
+
+          items = items.filter(it => it !== img);
+          updateMiniMap();
+
+          if (items.length === 0) {
+            clearInterval(countdown);
+            launchConfetti();
+            if (level < 3) {
+              showTransition();
+              level++;
+              setTimeout(() => {
+                hideTransition();
+                setupLevel();
+              }, 2000);
+            } else {
+              endGame(true);
+            }
+          }
+        };
+
+        items.push(img);
+        moveItem(img, maxW, maxH);
+      }
+    }
+
+    function moveItem(img, maxW, maxH) {
+      const interval = setInterval(() => {
+        if (freezeActive || !document.body.contains(img)) return;
+        img.style.top = Math.random() * (maxH - 100) + 'px';
+        img.style.left = Math.random() * (maxW - 100) + 'px';
+        updateMiniMap();
+      }, 3000);
+      moveIntervals.push(interval);
+    }
+
+    function createMiniMapDots() {
+      miniMap.innerHTML = '';
+      items.forEach((item, index) => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.dataset.index = index;
+        dot.onclick = function() {
+          const targetItem = items[this.dataset.index];
+          if (targetItem) {
+            const scrollX = parseFloat(targetItem.style.left) - window.innerWidth / 2;
+            const scrollY = parseFloat(targetItem.style.top) - window.innerHeight / 2;
+            window.scrollTo({ left: scrollX, top: scrollY, behavior: 'smooth' });
+            bodyZoom();
+          }
+        };
+        miniMap.appendChild(dot);
+      });
+      updateMiniMap();
+    }
+
+    function updateMiniMap() {
+      const dots = miniMap.querySelectorAll('.dot');
+      items.forEach((it, index) => {
+        const gameW = parseInt(gameArea.style.width);
+        const gameH = parseInt(gameArea.style.height);
+        dots[index].style.left = (parseFloat(it.style.left) / gameW * 140) + 'px';
+        dots[index].style.top = (parseFloat(it.style.top) / gameH * 90) + 'px';
+      });
+    }
+
+    function createPowerUps(maxW, maxH) {
+      const powers = ['time', 'freeze', 'double'];
+      powers.forEach(type => {
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.style.width = '60px';
+        div.style.height = '60px';
+        div.style.top = Math.random() * (maxH - 100) + 'px';
+        div.style.left = Math.random() * (maxW - 100) + 'px';
+        div.style.background = type === 'time' ? 'blue' : type === 'freeze' ? 'cyan' : 'purple';
+        div.style.borderRadius = '50%';
+        div.style.display = 'flex';
+        div.style.justifyContent = 'center';
+        div.style.alignItems = 'center';
+        div.style.color = 'white';
+        div.innerText = type === 'time' ? '⏳' : type === 'freeze' ? '❄' : '✨';
+        gameArea.appendChild(div);
+
+        setTimeout(() => div.classList.add('show'), 50);
+
+        div.onclick = function() {
+          if (type === 'time') timeLeft += 10;
+          if (type === 'freeze') {
+            freezeActive = true;
+            setTimeout(() => freezeActive = false, 5000);
+          }
+          if (type === 'double') {
+            doublePoints = true;
+            setTimeout(() => doublePoints = false, 5000);
+          }
+          div.remove();
+        };
+      });
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      let percent = (timeLeft / 30) * 100;
+      timerBar.style.width = percent + '%';
+      if (timeLeft <= 0) {
+        clearInterval(countdown);
+        endGame(false);
+      }
+    }
+
+    function showFloatingScore(text, x, y) {
+      const float = document.createElement('div');
+      float.className = 'floating-score';
+      float.innerText = text;
+      float.style.left = x;
+      float.style.top = y;
+      gameArea.appendChild(float);
+      setTimeout(() => float.remove(), 1000);
+    }
+
+    function clearLevel() {
+      items.forEach(it => it.remove());
+      items = [];
+      moveIntervals.forEach(interval => clearInterval(interval));
+      moveIntervals = [];
+    }
+
+    function endGame(won) {
+      clearInterval(countdown);
+      document.getElementById('finalScore').innerText = won
+        ? 'You WON! All treasures found! Score: ' + score
+        : 'Time\'s up! You found ' + score + ' treasures!';
+      document.getElementById('endScreen').style.display = 'flex';
+    }
+
+    function restartGame() {
+      document.getElementById('endScreen').style.display = 'none';
+      startGame();
+    }
+
+    function showTransition() {
+      document.getElementById('transitionScreen').style.display = 'flex';
+    }
+
+    function hideTransition() {
+      document.getElementById('transitionScreen').style.display = 'none';
+    }
+
+    function launchConfetti() {
+      for (let i = 0; i < 40; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = Math.random() * window.innerWidth + 'px';
+        confetti.style.top = '-20px';
+        confetti.style.background = `hsl(${Math.random() * 360}, 80%, 60%)`;
+        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+        document.body.appendChild(confetti);
+
+        setTimeout(() => confetti.remove(), 4000);
+      }
+    }
+
+    function bodyZoom() {
+      document.body.classList.add('zoom');
+      setTimeout(() => document.body.classList.remove('zoom'), 800);
+    }
+  </script>
+</body>
+</html>

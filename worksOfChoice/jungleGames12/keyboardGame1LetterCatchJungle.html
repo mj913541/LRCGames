@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Monkey Letter Catch - LB Bonus & Label</title>
+  <style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+body {
+  background: url('../../pictures/otherIcons/backgroundJungle.png') no-repeat center center fixed;
+  background-size: cover;
+  font-family: 'Comic Sans MS', cursive;
+  color: white;
+}
+
+#score, #levelDisplay {
+  position: absolute;
+  font-size: 24px;
+  background: rgba(0,0,0,0.5);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+#score { top: 20px; left: 20px; }
+#levelDisplay { top: 20px; right: 20px; }
+
+#livesBar {
+  position: absolute;
+  top: 70px;
+  left: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.life-icon {
+  width: 40px;
+  height: 40px;
+}
+
+.item {
+  position: absolute;
+  font-size: 40px;
+  font-weight: bold;
+  color: yellow;
+  text-shadow: 2px 2px 5px black;
+}
+
+/* ✅ Automatic left-to-right moving monkey */
+#monkey {
+  position: absolute;
+  bottom: 20px;
+  width: 150px;
+  animation: moveMonkey 4s linear infinite alternate;
+}
+
+@keyframes moveMonkey {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: calc(100% - 150px); /* stay within screen */
+  }
+}
+
+#startScreen, #endScreen, #levelUpScreen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85);
+  color: white;
+  font-size: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  display: none;
+  text-align: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+button {
+  font-size: 24px;
+  padding: 10px 20px;
+  margin-top: 15px;
+  border: none;
+  border-radius: 10px;
+  background: #ffd633;
+  cursor: pointer;
+}
+
+canvas#confettiCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 3000;
+}
+
+.lb-label {
+  font-size: 20px;
+  font-weight: bold;
+  color: limegreen;
+  text-shadow: 2px 2px 4px black;
+  margin-bottom: 4px;
+}
+</style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <div id="levelDisplay">Level: 1</div>
+  
+  <!-- Lives Bar -->
+  <div id="livesBar"></div>
+
+  <img id="monkey" src="../../pictures/otherIcons/monkeyBanana.png">
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <h1>Monkey Letter Catch</h1>
+    <div id="instructions">
+      <p>🎯 Type letters and words before they hit the ground!</p>
+      <p>🍌 Bonus banana? Type <strong>lb</strong> (lowercase) for +2 points!</p>
+      <p>❤️ You have 5 bananas (lives). Each miss removes one.</p>
+    </div>
+    <button onclick="startGame()">Start Game</button>
+  </div>
+
+  <!-- End Screen -->
+  <div id="endScreen">
+    <div id="finalScore"></div>
+    <button onclick="startGame()">Play Again</button>
+  </div>
+
+  <div id="levelUpScreen">
+    <div id="levelUpText"></div>
+  </div>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <audio id="correctSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+  <audio id="bonusSound" src="https://actions.google.com/sounds/v1/cartoon/concussive_hit_guitar_boing.ogg"></audio>
+  <audio id="levelUpSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+
+  <script>
+    const alphabet = 'asdfjkl;';
+    const level2Words = ['a','s','d','f','j','k','l',';'];
+    const level3Words = ['a','s','d','f','j','k','l',';'];
+    const maxLives = 5;
+
+    let score = 0, currentLevel = 1, lives = maxLives;
+    let items = [];
+    let spawnRate = 2000;
+    let lastSpawn = 0;
+    let typedWord = '';
+    let gameRunning = false;
+
+    const canvas = document.getElementById('confettiCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    let confetti = [];
+
+    const livesBar = document.getElementById('livesBar');
+
+    document.getElementById('startScreen').style.display = 'flex';
+
+    window.addEventListener('keydown', handleTyping);
+
+    function startGame() {
+      score = 0; currentLevel = 1; lives = maxLives;
+      items.forEach(i => i.element.remove());
+      items = []; typedWord = '';
+      spawnRate = 2000;
+      gameRunning = true;
+      document.getElementById('score').innerText = 'Score: 0';
+      document.getElementById('levelDisplay').innerText = 'Level: 1';
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('endScreen').style.display = 'none';
+      renderLives();
+
+      // Speak instructions on every start
+      const msg = new SpeechSynthesisUtterance(
+        "Welcome to Monkey Letter Catch! Type letters before they hit the ground. If you see a bonus banana, type l b, lowercase, for two extra points. You have five bananas, each miss takes one away. Let's go!"
+      );
+      msg.rate = 1;
+      speechSynthesis.speak(msg);
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function renderLives() {
+      livesBar.innerHTML = '';
+      for (let i = 0; i < lives; i++) {
+        const img = document.createElement('img');
+        img.src = '../../pictures/otherIcons/banana.png';
+        img.className = 'life-icon';
+        livesBar.appendChild(img);
+      }
+    }
+
+    function spawnItem() {
+      const isBonus = Math.random() < 0.1; // 10% chance
+      if (isBonus) {
+        // Container for lb + banana
+        const container = document.createElement('div');
+        container.style.position = 'absolute';
+        container.style.top = '0px';
+        container.style.left = Math.random() * (window.innerWidth - 60) + 'px';
+        container.style.textAlign = 'center';
+
+        // Add "lb" label
+        const label = document.createElement('div');
+        label.innerText = 'lb';
+        label.className = 'lb-label';
+
+        // Add banana image
+        const img = document.createElement('img');
+        img.src = '../../pictures/otherIcons/banana.png';
+        img.style.width = '50px';
+        img.style.display = 'block';
+        img.style.margin = '0 auto';
+
+        container.appendChild(label);
+        container.appendChild(img);
+        document.body.appendChild(container);
+
+        items.push({
+          element: container,
+          text: 'lb',
+          y: 0,
+          speed: 2 + Math.random() * 2,
+          bonus: true
+        });
+      } else {
+        let text;
+        if (currentLevel === 1) text = alphabet[Math.floor(Math.random() * alphabet.length)];
+        else if (currentLevel === 2) text = level2Words[Math.floor(Math.random() * level2Words.length)];
+        else text = level3Words[Math.floor(Math.random() * level3Words.length)];
+
+        const div = document.createElement('div');
+        div.className = 'item';
+        div.innerText = text;
+        div.style.left = Math.random() * (window.innerWidth - 50) + 'px';
+        div.style.top = '0px';
+        document.body.appendChild(div);
+
+        items.push({
+          element: div,
+          text: text,
+          y: 0,
+          speed: 2 + Math.random() * 2,
+          bonus: false
+        });
+      }
+    }
+
+    function gameLoop(timestamp) {
+      if (!gameRunning) return;
+
+      moveItems();
+
+      if (timestamp - lastSpawn > spawnRate) {
+        spawnItem();
+        lastSpawn = timestamp;
+      }
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    function moveItems() {
+      items.forEach((i, idx) => {
+        i.y += i.speed;
+        i.element.style.top = i.y + 'px';
+        if (i.y > window.innerHeight) {
+          i.element.remove();
+          items.splice(idx, 1);
+          lives--;
+          renderLives();
+          if (lives <= 0) endGame();
+        }
+      });
+    }
+
+    function handleTyping(e) {
+      if (!gameRunning) return;
+      const key = e.key.toLowerCase();
+
+      // Accept letters and semicolon
+      if (/^[a-z;]$/.test(key)) {
+        typedWord += key;
+        typedWord = typedWord.slice(-2); // keep last 2 characters
+
+        // Bonus LB check
+        const bonusIdx = items.findIndex(i => i.bonus && typedWord === 'lb');
+        if (bonusIdx !== -1) {
+          correctAnswer(bonusIdx, true);
+          typedWord = '';
+          return;
+        }
+
+        // Normal items
+        const matchedIndex = items.findIndex(i => typedWord === i.text);
+        if (matchedIndex !== -1) {
+          correctAnswer(matchedIndex, false);
+          typedWord = '';
+        } else {
+          // Reset if no match
+          if (!items.some(i => i.text.startsWith(typedWord) || (i.bonus && 'lb'.startsWith(typedWord)))) {
+            typedWord = '';
+          }
+        }
+      }
+    }
+
+    function correctAnswer(index, isBonus) {
+      if (isBonus) {
+        score += 2;
+        specialMonkeyCelebrate();
+        document.getElementById('bonusSound').play();
+      } else {
+        score++;
+        animateMonkeyDance();
+        document.getElementById('correctSound').play();
+      }
+      document.getElementById('score').innerText = 'Score: ' + score;
+      items[index].element.remove();
+      items.splice(index, 1);
+      playConfetti();
+
+      // Increase difficulty
+      if (score % 10 === 0) levelUp();
+    }
+
+    function animateMonkeyDance() {
+      const monkey = document.getElementById('monkey');
+      monkey.style.transition = 'transform 0.1s';
+      let scale = 1.5;
+      let step = 0;
+      const danceInterval = setInterval(() => {
+        const direction = step % 2 === 0 ? 20 : -20;
+        monkey.style.transform = `translateX(-50%) rotate(${direction}deg) scale(${scale})`;
+        scale = scale === 1.5 ? 1.3 : 1.5;
+        step++;
+        if (step > 5) {
+          clearInterval(danceInterval);
+          monkey.style.transform = 'translateX(-50%) scale(1) rotate(0deg)';
+        }
+      }, 120);
+    }
+
+    function specialMonkeyCelebrate() {
+      const monkey = document.getElementById('monkey');
+      monkey.style.transition = 'transform 1s ease';
+      monkey.style.transform = 'translateX(-50%) scale(2) rotate(360deg)';
+      setTimeout(() => {
+        monkey.style.transform = 'translateX(-50%) scale(1) rotate(0deg)';
+      }, 1000);
+    }
+
+    function levelUp() {
+      currentLevel++;
+      spawnRate = Math.max(800, spawnRate - 300); // faster spawns
+      document.getElementById('levelDisplay').innerText = 'Level: ' + currentLevel;
+      document.getElementById('levelUpText').innerText = `Level Up! Now Level ${currentLevel}`;
+      document.getElementById('levelUpScreen').style.display = 'flex';
+      document.getElementById('levelUpSound').play();
+      setTimeout(() => {
+        document.getElementById('levelUpScreen').style.display = 'none';
+      }, 2000);
+    }
+
+    function endGame() {
+      gameRunning = false;
+      document.getElementById('finalScore').innerText = `Game Over! Score: ${score}`;
+      document.getElementById('endScreen').style.display = 'flex';
+      items.forEach(i => i.element.remove());
+      items = [];
+    }
+
+    function playConfetti() {
+      confetti = [];
+      for (let i = 0; i < 100; i++) {
+        confetti.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+          size: Math.random() * 8 + 2,
+          speed: Math.random() * 4 + 2
+        });
+      }
+      animateConfetti();
+      setTimeout(() => { confetti = []; ctx.clearRect(0, 0, canvas.width, canvas.height); }, 1500);
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confetti.forEach(c => {
+        c.y += c.speed;
+        ctx.fillStyle = c.color;
+        ctx.fillRect(c.x, c.y, c.size, c.size);
+      });
+      if (confetti.length) requestAnimationFrame(animateConfetti);
+    }
+  </script>
+</body>
+</html>
