@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lion Keyboard Hunt</title>
+<style>
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  background: url('../../pictures/otherIcons/backgroundSavannah.png') no-repeat center center fixed;
+  background-size: cover;
+  font-family: 'Comic Sans MS', cursive;
+  overflow: hidden;
+  color: white;
+  text-align: center;
+}
+
+  #instruction {
+    font-size: 40px;
+    margin-top: 20px;
+    background: rgba(0,0,0,0.5);
+    display: inline-block;
+    padding: 15px 30px;
+    border-radius: 15px;
+  }
+
+  #lion {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 150px;
+    transition: left 0.5s ease;
+  }
+
+  #progress, #score, #timerBar {
+    position: absolute;
+    top: 20px;
+    font-size: 24px;
+    background: rgba(0,0,0,0.5);
+    padding: 10px;
+    border-radius: 10px;
+  }
+  #progress { left: 20px; }
+  #score { right: 20px; }
+
+  #timerBar {
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: 20px;
+    border: 2px solid white;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #timerFill {
+    height: 100%;
+    width: 100%;
+    background: limegreen;
+  }
+
+  #startScreen, #endScreen, #levelUpScreen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 36px;
+    color: white;
+    z-index: 10;
+  }
+  #endScreen, #levelUpScreen { display: none; }
+
+  button {
+    font-size: 24px;
+    padding: 10px 20px;
+    margin: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #ffd633;
+    cursor: pointer;
+  }
+
+  canvas#confettiCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+  <div id="instruction">Type: a</div>
+  <div id="progress">Progress: 0/10</div>
+  <div id="score">Score: 0</div>
+
+  <div id="timerBar"><div id="timerFill"></div></div>
+  <img id="lion" src="../../pictures/otherIcons/lionRunning.gif">
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <div>Select Difficulty</div>
+    <button onclick="setDifficulty('easy')">Easy</button>
+    <button onclick="setDifficulty('medium')">Medium</button>
+    <button onclick="setDifficulty('hard')">Hard</button>
+  </div>
+
+  <div id="levelUpScreen">
+    <div id="levelUpText"></div>
+  </div>
+
+  <div id="endScreen">
+    <div id="finalMessage"></div>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+
+  <canvas id="confettiCanvas"></canvas>
+
+  <audio id="roarSound" src="https://actions.google.com/sounds/v1/animals/lion_roar.ogg"></audio>
+  <audio id="correctSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+
+<script>
+/* ===============================
+   GAME DATA
+================================ */
+const homeRow = ['a','s','d','f','j','k','l'];
+const level2Words = ['as','dad','sad','fad','ask','all'];
+const level3Words = ['fall','dad','flask','adds','lass'];
+
+let currentPrompt = '';
+let typedWord = '';
+let progress = 0;
+let totalSteps = 10;
+let score = 0;
+let currentLevel = 1;
+let maxLevel = 3;
+let timerInterval;
+let timeLeft;
+let difficulty = 'medium';
+
+const lion = document.getElementById('lion');
+const timerFill = document.getElementById('timerFill');
+const canvas = document.getElementById('confettiCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+let confetti = [];
+
+const baseTimes = {
+  easy: [40, 35, 30],
+  medium: [30, 25, 20],
+  hard: [20, 15, 12]
+};
+
+/* ===============================
+   START GAME
+================================ */
+function setDifficulty(mode) {
+  difficulty = mode;
+  document.getElementById('startScreen').style.display = 'none';
+  startGame();
+}
+
+function startGame() {
+  currentLevel = 1;
+  score = 0;
+  document.getElementById('endScreen').style.display = 'none';
+  updateScore();
+  startLevel();
+}
+
+function startLevel() {
+  clearInterval(timerInterval);
+  progress = 0;
+  typedWord = '';
+  document.getElementById('levelUpScreen').style.display = 'none';
+  nextPrompt();
+  startTimer(baseTimes[difficulty][currentLevel - 1]);
+}
+
+/* ===============================
+   TIMER
+================================ */
+function startTimer(seconds) {
+  timeLeft = seconds;
+  updateTimerBar();
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerBar();
+    if (timeLeft <= 0) {
+      clearInterval(timerInterval);
+      gameOver();
+    }
+  }, 1000);
+}
+
+function updateTimerBar() {
+  const percentage = (timeLeft / baseTimes[difficulty][currentLevel - 1]) * 100;
+  timerFill.style.width = percentage + '%';
+  timerFill.style.background = percentage > 50 ? 'limegreen' : (percentage > 20 ? 'orange' : 'red');
+}
+
+/* ===============================
+   PROMPTS & INPUT
+================================ */
+function nextPrompt() {
+  if (progress >= totalSteps) {
+    clearInterval(timerInterval);
+    if (currentLevel < maxLevel) {
+      currentLevel++;
+      showLevelUp();
+      return;
+    } else {
+      gameWon();
+      return;
+    }
+  }
+
+  if (currentLevel === 1) {
+    currentPrompt = homeRow[Math.floor(Math.random() * homeRow.length)];
+  } else if (currentLevel === 2) {
+    currentPrompt = level2Words[Math.floor(Math.random() * level2Words.length)];
+  } else {
+    currentPrompt = level3Words[Math.floor(Math.random() * level3Words.length)];
+  }
+
+  typedWord = '';
+  document.getElementById('instruction').innerText = `Type: ${currentPrompt}`;
+  document.getElementById('progress').innerText = `Progress: ${progress}/${totalSteps}`;
+}
+
+function checkKey(e) {
+  const key = e.key.toLowerCase(); // lowercase only
+  if (!/^[a-z]$/.test(key)) return; // letters only
+
+  typedWord += key;
+
+  if (typedWord === currentPrompt) {
+    progress++;
+    score += 10;
+    playSound('correctSound');
+    moveLion();
+    updateScore();
+    nextPrompt();
+  } else if (!currentPrompt.startsWith(typedWord)) {
+    typedWord = '';
+  }
+}
+
+/* ===============================
+   MOVEMENT
+================================ */
+function moveLion() {
+  const maxWidth = window.innerWidth - 200;
+  const newLeft = (progress / totalSteps) * maxWidth;
+  lion.style.left = newLeft + 'px';
+}
+
+function updateScore() {
+  document.getElementById('score').innerText = 'Score: ' + score;
+}
+
+/* ===============================
+   LEVEL UP & END
+================================ */
+function showLevelUp() {
+  playSound('roarSound');
+  document.getElementById('levelUpText').innerText = `Level Complete! Get ready for Level ${currentLevel}`;
+  document.getElementById('levelUpScreen').style.display = 'flex';
+  setTimeout(() => {
+    document.getElementById('levelUpScreen').style.display = 'none';
+    startLevel();
+  }, 2000);
+}
+
+function gameWon() {
+  playSound('roarSound');
+  document.getElementById('finalMessage').innerText = `You helped the lion! Final Score: ${score}`;
+  document.getElementById('endScreen').style.display = 'flex';
+  playConfetti();
+}
+
+function gameOver() {
+  document.getElementById('finalMessage').innerText = `Time's up! Final Score: ${score}`;
+  document.getElementById('endScreen').style.display = 'flex';
+}
+
+function restartGame() {
+  clearInterval(timerInterval);
+  document.getElementById('startScreen').style.display = 'flex';
+  document.getElementById('endScreen').style.display = 'none';
+}
+
+/* ===============================
+   SOUND & CONFETTI
+================================ */
+function playSound(id) {
+  const sound = document.getElementById(id);
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
+}
+
+function playConfetti() {
+  confetti = [];
+  for (let i = 0; i < 150; i++) {
+    confetti.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      color: `hsl(${Math.random() * 360}, 100%, 50%)`,
+      size: Math.random() * 8 + 2,
+      speed: Math.random() * 4 + 2
+    });
+  }
+  animateConfetti();
+  setTimeout(() => { confetti = []; ctx.clearRect(0, 0, canvas.width, canvas.height); }, 2500);
+}
+
+function animateConfetti() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  confetti.forEach(c => {
+    c.y += c.speed;
+    ctx.fillStyle = c.color;
+    ctx.fillRect(c.x, c.y, c.size, c.size);
+  });
+  if (confetti.length) requestAnimationFrame(animateConfetti);
+}
+
+/* ===============================
+   EVENTS
+================================ */
+window.addEventListener('keydown', checkKey);
+</script>
+</body>
+</html>
