@@ -5,12 +5,14 @@
   <style>
     body {
       margin: 0;
-      background: url('https://i.ibb.co/0n7s6Vg/jungle-bg.jpg') no-repeat center center;
+      background: url('../../pictures/otherIcons/backgroundSavannah.png') no-repeat center center fixed;
       background-size: cover;
       font-family: 'Comic Sans MS', cursive;
       overflow: hidden;
       color: white;
       text-align: center;
+      height: 100vh;
+      width: 100vw;
     }
 
     #instruction {
@@ -28,6 +30,14 @@
       left: 0;
       width: 150px;
       transition: left 0.5s ease;
+      z-index: 2;
+    }
+
+    .obstacle {
+      position: absolute;
+      bottom: 50px;
+      width: 100px;
+      z-index: 1;
     }
 
     #progress, #score {
@@ -41,9 +51,10 @@
     #progress { left: 20px; }
     #score { right: 20px; }
 
+    /* Timer moved down for better visibility */
     #timerBar {
       position: absolute;
-      top: 70px;
+      top: 120px; /* previously 70px */
       left: 50%;
       transform: translateX(-50%);
       width: 300px;
@@ -96,11 +107,11 @@
   </style>
 </head>
 <body>
-  <div id="instruction">Type: CAT</div>
+  <div id="instruction">Home Row Practice</div>
   <div id="progress">Obstacle: 0/5</div>
   <div id="score">Score: 0</div>
   <div id="timerBar"><div id="timerFill"></div></div>
-  <img id="animal" src="https://i.ibb.co/FnNPjPw/lion.png">
+  <img id="animal" src="../../pictures/otherIcons/lionRunning.gif">
 
   <!-- Start Screen -->
   <div id="startScreen">
@@ -125,9 +136,9 @@
   <audio id="roarSound" src="https://actions.google.com/sounds/v1/animals/lion_roar.ogg"></audio>
 
   <script>
-    const level1Words = ['cat','sun','hat','run','bug'];
-    const level2Words = ['jump','tree','frog','rain','boat','fish','milk'];
-    const level3Words = ['monkey','jungle','banana','parrot','rocket','forest','bridge','zebra','river','cloud'];
+    const level1Words = ['asdf', 'jkl;', 'asdfjkl;', 'jjff', 'aa;;', 'sldk'];
+    const level2Words = ['asdfgh', 'jkl;gh', 'fdsa', 'lkj;', 'ghjk', 'sajd'];
+    const level3Words = ['asdfghjk', 'lkjasdf;', 'gfdsa', 'hgjkl;', 'dfghj', 'asljk'];
 
     let currentWord = '';
     let typedWord = '';
@@ -166,6 +177,7 @@
       obstacleIndex = 0;
       animal.style.left = '0px';
       document.getElementById('endScreen').style.display = 'none';
+      clearObstacles();
       loadLevel();
     }
 
@@ -174,8 +186,34 @@
       if (currentLevel === 1) obstacles = level1Words.slice();
       if (currentLevel === 2) obstacles = level2Words.slice();
       if (currentLevel === 3) obstacles = level3Words.slice();
+      createObstacles();
       showNextWord();
       startTimer(baseTimes[difficulty][currentLevel - 1]);
+    }
+
+    function createObstacles() {
+      clearObstacles();
+
+      // Array of images for variety
+      const obstacleImages = [
+        '../../pictures/otherIcons/rocks.png',
+        '../../pictures/otherIcons/log1.png',
+        '../../pictures/otherIcons/bush.png',
+        '../../pictures/otherIcons/log2.png',
+        '../../pictures/otherIcons/jungleFlowers.png'
+      ];
+
+      for (let i = 0; i < obstacles.length; i++) {
+        const img = document.createElement('img');
+        img.src = obstacleImages[i % obstacleImages.length]; // Cycle through images
+        img.className = 'obstacle';
+        img.style.left = (i * (window.innerWidth / obstacles.length) + 200) + 'px';
+        document.body.appendChild(img);
+      }
+    }
+
+    function clearObstacles() {
+      document.querySelectorAll('.obstacle').forEach(el => el.remove());
     }
 
     function startTimer(seconds) {
@@ -212,13 +250,13 @@
 
       currentWord = obstacles[obstacleIndex];
       typedWord = '';
-      document.getElementById('instruction').innerText = `Type: ${currentWord.toUpperCase()}`;
+      document.getElementById('instruction').innerText = `Home Row: ${currentWord}`;
       document.getElementById('progress').innerText = `Obstacle: ${obstacleIndex}/${obstacles.length}`;
     }
 
     function checkKey(e) {
       const key = e.key.toLowerCase();
-      if (!/^[a-z]$/.test(key)) return;
+      if (!/^[a-z;]$/.test(key)) return;
 
       typedWord += key;
 
