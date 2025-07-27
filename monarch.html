@@ -48,17 +48,17 @@ header {
 }
 .round h3 {
     background: rgba(76, 175, 80, 0.85);
-    color: white;
+    color: black;
     padding: 8px;
     border-radius: 8px;
-    font-size: 1.1em;
+    font-size: 1.5em;
     margin-bottom: 8px;
     text-align: center;
 }
 
 #finalRound h3 {
     background: #4caf50;
-    color: white;
+    color: black;
 }
 #championRound h3 {
     background: gold;
@@ -66,27 +66,42 @@ header {
 }
 #championRound .match {
     background: rgba(255,215,0,0.95);
-    font-size: 1.2em;
+    font-size: 1.5em;
     font-weight: bold;
     text-align: center;
 }
 .match {
-    background: rgba(255,255,255,0.9);
-    border-radius: 12px;
-    padding: 10px;
-    margin: 10px 0;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px; /* Rounded corners for a soft look */
+    padding: 15px;
+    margin: 12px 0;
     text-align: center;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.15); /* Soft shadow */
+    border: 3px solid #a5d6a7; /* Light green border for jungle theme */
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.match:hover {
+    transform: scale(1.05); /* Slight zoom on hover */
+    box-shadow: 6px 6px 18px rgba(0, 0, 0, 0.25);
+    border-color: #66bb6a; /* Darker green on hover */
+}
+
 .match img {
-    width: 60px;
+    width: 80px; /* Slightly larger covers */
     height: auto;
-    border-radius: 6px;
-    margin: 4px;
+    border-radius: 12px; /* Rounded corners for covers */
+    margin: 8px;
+    border: 3px solid black; /* Green border around the image */
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.match img:hover {
+    transform: rotate(-2deg) scale(1.1); /* Playful tilt and zoom */
+    border-color: black; /* Dark green when hovered */
 }
 .match p {
     margin: 4px 0;
-    font-size: 0.9em;
+    font-size: 1.5em;
 }
 .btn {
     display: inline-block;
@@ -105,11 +120,41 @@ header {
     color: #333;
     display: none;
 }
+.vote-btn {
+    display: inline-block;
+    background: #4caf50;
+    color: white;
+    font-weight: bold;
+    padding: 8px 14px;
+    margin: 6px 0;
+    border-radius: 8px;
+    font-size: 2em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.vote-btn::before {
+    content: "🗳️ ";
+}
+
+.vote-btn:hover {
+    background: #45a049;
+    transform: scale(1.1);
+    box-shadow: 0 8px 12px rgba(0,0,0,0.3);
+    animation: pulse 0.6s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1.05); }
+    100% { transform: scale(1.15); }
+}
+
 .selected {
     border: 3px solid #4caf50;
     border-radius: 8px;
 }
-#voteModal, #passwordModal {
+#voteModal, #videoModal {
     display: none;
     position: fixed;
     z-index: 10000;
@@ -129,32 +174,74 @@ header {
 </head>
 <body>
 <header>🌟 Battle of the Monarch Books 2026! 🌟</header>
-<div style="text-align:center;margin-top:10px;">
-    <button class="btn" onclick="document.getElementById('passwordModal').style.display='block';">Admin Login</button>
-</div>
-
 
 <div class="bracket-wrapper">
     <div class="bracket">
-        <div class="round" id="round1L"><h3>Round 1</h3></div>
-        <div class="round" id="round2L"><h3>Quarterfinals</h3></div>
-        <div class="round" id="round3L"><h3>Semifinals</h3></div>
+        <!-- LEFT: ROUND 1 -->
+        <div class="round" id="round1L">
+            <h3>Round 1</h3>
+            <div class="match">
+                <a href="#" data-video="https://drive.google.com/file/d/VIDEO_ID/preview" onclick="openVideoModal(this)">
+                    <img src="pictures/monarchCovers/bathe-the-cat.jpg"></a><p>Bathe the Cat</p>
+                <a href="#" data-video="https://drive.google.com/file/d/VIDEO_ID/preview" onclick="openVideoModal(this)">
+                    <img src="pictures/monarchCovers/beneath.jpg"></a><p>Beneath</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSds8OTuH9LJvAnp-SRG3LxYG9OwB7TPWrlOXhl8cPOIgMTmqw/viewform?usp=header" data-date="2025-5-01">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Butt or Face?</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Claude</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSfOzrdZJmb1CajMjmo5QwL_M1yvlEaakS0SgoVvoaLEFgPTkA/viewform?usp=header" data-date="2025-10-02">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>The Flower Garden</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Friends Do Not Eat Friends</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSd5EyxtiO731udWPKrVjaJDSACCu6LHWrx8Jmhz97p5PThWlA/viewform?usp=header" data-date="2025-10-03">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Hamsters Make Terrible Roommates</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Home Is Calling</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSdrBYPbhbdVdbkyv1nwY-7blC0IL2XzKuDxAFN9bHMZswhiGg/viewform?usp=header" data-date="2025-10-04">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Homegrown</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Just Snow Already!</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSf5gIAfnkS6TwLka0yWY_UbAy_TsLgHCL3PddWFQHK4ecxfSg/viewform?usp=header" data-date="2025-10-05">Vote</button>
+            </div>
+        </div>
 
+        <!-- LEFT: QUARTERFINALS -->
+        <div class="round" id="qfL">
+            <h3>Quarterfinals</h3>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <button class="btn vote-btn" data-form="https://forms.gle/o6kuT6PFjUb8LJLA9" data-date="2025-10-15">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSdQSSLHGJuUvlsOiUOF6yY9Ms-2-WvRpbbPPTXln93MtT1AmQ/viewform?usp=header" data-date="2025-10-16">Vote</button>
+            </div>
+        </div>
+
+        <!-- LEFT: SEMIFINAL -->
+        <div class="round" id="sfL">
+            <h3>Semifinal</h3>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner QF</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner QF</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSdf2BeQi1r_tiXLf_KF2v-lBm-TUIu4TQeAwfzWUIHRNdNGMg/viewform?usp=header" data-date="2025-10-22">Vote</button>
+            </div>
+        </div>
+
+        <!-- CENTER -->
         <div class="round" id="centerColumn">
             <div id="finalRound">
                 <h3>Final</h3>
-                <div class="match" id="finalMatch">
-                    <div>
-                        <img src="pictures/otherIcons/monarchLogo.png">
-                        <p>Winner SF Left</p>
-                    </div>
-                    <div>
-                        <img src="pictures/otherIcons/monarchLogo.png">
-                        <p>Winner SF Right</p>
-                    </div>
-                    <button class="btn vote-btn" onclick="openVoteModal(15)">Vote</button>
-                    <button id="resetBtn" class="btn" style="display:none;" onclick="resetBracket()">Reset Bracket</button>
-                    <button class="btn advance-btn" onclick="advanceWinner('finalRound',0)">Advance Winner</button>
+                <div class="match">
+                    <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner SF Left</p>
+                    <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner SF Right</p>
+                    <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSehl8ayyupq3ItzFLyLcxPGg8TrlJZegF3Pet2TsqF5gDyXmQ/viewform?usp=header" data-date="2025-10-29">Vote</button>
                 </div>
             </div>
             <div id="championRound">
@@ -163,213 +250,99 @@ header {
             </div>
         </div>
 
-        <div class="round" id="round3R"><h3>Semifinals</h3></div>
-        <div class="round" id="round2R"><h3>Quarterfinals</h3></div>
-        <div class="round" id="round1R"><h3>Round 1</h3></div>
+        <!-- RIGHT: SEMIFINAL -->
+        <div class="round" id="sfR">
+            <h3>Semifinal</h3>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner QF</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner QF</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSdf2BeQi1r_tiXLf_KF2v-lBm-TUIu4TQeAwfzWUIHRNdNGMg/viewform?usp=header" data-date="2025-10-22">Vote</button>
+            </div>
+        </div>
+
+        <!-- RIGHT: QUARTERFINALS -->
+        <div class="round" id="qfR">
+            <h3>Quarterfinals</h3>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSclWG6ZJFi-VcmSV1Tw0CuvdY2wyoxVoviOz1hmfeg5JDNRtQ/viewform?usp=header" data-date="2025-10-17">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Winner R1</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSdTAtCxR7PFxlkCOSPoeHr5jlDWVTnnPELJ0hMbx2gz14Irdg/viewform?usp=header" data-date="2025-10-18">Vote</button>
+            </div>
+        </div>
+
+        <!-- RIGHT: ROUND 1 -->
+        <div class="round" id="round1R">
+            <h3>Round 1</h3>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Knight Owl</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Mr. S</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSe3rf2UG11p9tIFTTtb0fCZL90wnWlWOMST6gO-q-ubFLtWcw/viewform?usp=header" data-date="2025-10-06">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Negative Cat</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>The Red Jacket</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSe3rf2UG11p9tIFTTtb0fCZL90wnWlWOMST6gO-q-ubFLtWcw/viewform?usp=header" data-date="2025-10-07">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Sydney & Taylor Explore the Whole Wide World</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Time to Make Art</p>
+                <button class="btn vote-btn" data-form="https://docs.google.com/forms/d/e/1FAIpQLSdccDyH5L00R5Fxi0V-TB0SKYKxgpvIN1rovAHkVihjc3yuaw/viewform?usp=header" data-date="2025-10-08">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>We Are Definitely Human</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Who's Afraid of the Light?</p>
+                <button class="btn vote-btn" data-form="https://forms.gle/si82mgV3GyyJWpqH7" data-date="2025-10-09">Vote</button>
+            </div>
+            <div class="match">
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>The World's Best Class Plant</p>
+                <a href="#"><img src="pictures/otherIcons/monarchLogo.png"></a><p>Yoshi, Sea Turtle Genius</p>
+                <button class="btn vote-btn" data-form="https://forms.gle/Zkr4CfrBxT7NVZqL9" data-date="2025-10-10">Vote</button>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Vote Modal -->
+<!-- Voting Modal -->
 <div id="voteModal">
-    <div class="modal-content">
-        <h2>Vote for This Battle!</h2>
-        <iframe id="formFrame" src="" width="100%" height="500" frameborder="0"></iframe>
-        <br><button class="btn" onclick="closeVoteModal()">Close</button>
-    </div>
+  <div class="modal-content">
+    <h2>Vote for This Battle!</h2>
+    <iframe id="formFrame" src="" width="100%" height="600" frameborder="0"></iframe>
+    <br><button class="btn" onclick="closeVoteModal()">Close</button>
+  </div>
 </div>
 
-<!-- Password Modal -->
-<div id="passwordModal">
+<!-- Video Modal -->
+<div id="videoModal">
     <div class="modal-content">
-        <h2>Enter Admin Password</h2>
-        <input type="password" id="adminPassword" style="width:100%;padding:10px;font-size:1.2em;">
-        <br><br><button class="btn" onclick="checkPassword()">Submit</button>
+        <h2>Watch Book Trailer</h2>
+        <iframe id="videoFrame" src="" width="100%" height="400" frameborder="0" allowfullscreen></iframe>
+        <br><button class="btn" onclick="closeVideoModal()">Close</button>
     </div>
 </div>
 
 <script>
-const placeholderImg = "pictures/otherIcons/monarchLogo.png";
-
-// ======================== BOOKS & IMAGES ========================
-const books = [
-    "Bathe the Cat","Beneath","Butt or Face?","Claude","The Flower Garden","Friends Do Not Eat Friends",
-    "Hamsters Make Terrible Roommates","Home Is Calling","Homegrown","Just Snow Already!",
-    "Knight Owl","Mr. S","Negative Cat","The Red Jacket","Sydney & Taylor Explore the Whole Wide World",
-    "Time to Make Art","We Are Definitely Human","Who's Afraid of the Light?","The World's Best Class Plant","Yoshi, Sea Turtle Genius"
-];
-
-const imageMap = {
-    "Bathe the Cat": "pictures/monarchCovers/Bathe-the-Cat.jpg",
-    "Beneath": "pictures/monarchCovers/Beneath.jpg",
-    "Butt or Face?": "pictures/monarchCovers/Butt-or-Face.jpg",
-    "Claude": "pictures/monarchCovers/Claude.jpg",
-    "The Flower Garden": "pictures/monarchCovers/The-Flower-Garden.jpg",
-    "Friends Do Not Eat Friends": "pictures/monarchCovers/Friends-Do-Not-Eat-Friends.jpg",
-    "Hamsters Make Terrible Roommates": "pictures/monarchCovers/Hamsters-Make-Terrible-Roommates.jpg",
-    "Home Is Calling": "pictures/monarchCovers/Home-Is-Calling.jpg",
-    "Homegrown": "pictures/monarchCovers/Homegrown.jpg",
-    "Just Snow Already!": "pictures/monarchCovers/Just-Snow-Already.jpg",
-    "Knight Owl": "pictures/monarchCovers/Knight-Owl.jpg",
-    "Mr. S": "pictures/monarchCovers/Mr-S.jpg",
-    "Negative Cat": "pictures/monarchCovers/Negative-Cat.jpg",
-    "The Red Jacket": "pictures/monarchCovers/The-Red-Jacket.jpg",
-    "Sydney & Taylor Explore the Whole Wide World": "pictures/monarchCovers/Sydney-and-Taylor.jpg",
-    "Time to Make Art": "pictures/monarchCovers/Time-to-Make-Art.jpg",
-    "We Are Definitely Human": "pictures/monarchCovers/We-Are-Definitely-Human.jpg",
-    "Who's Afraid of the Light?": "pictures/monarchCovers/Whos-Afraid-of-the-Light.jpg",
-    "The World's Best Class Plant": "pictures/monarchCovers/Worlds-Best-Class-Plant.jpg",
-    "Yoshi, Sea Turtle Genius": "pictures/monarchCovers/Yoshi-Sea-Turtle-Genius.jpg"
-};
-
-// ======================== INITIAL MATCHES ========================
-const round1MatchesLeft = [[books[0], books[1]],[books[2], books[3]],[books[4], books[5]],[books[6], books[7]],[books[8], books[9]]];
-const round1MatchesRight = [[books[10], books[11]],[books[12], books[13]],[books[14], books[15]],[books[16], books[17]],[books[18], books[19]]];
-const qfL = [["Winner 1","Winner 2"],["Winner 3","Winner 4","Winner 5"]];
-const qfR = [["Winner 6","Winner 7"],["Winner 8","Winner 9","Winner 10"]];
-const sfL = [["Winner QF1","Winner QF2"]];
-const sfR = [["Winner QF3","Winner QF4"]];
-
-// ======================== STATE (Persistent) ========================
-let bracketState = JSON.parse(localStorage.getItem('bracketState')) || {
-    round1L: [], round1R: [],
-    round2L: [], round2R: [],
-    round3L: [], round3R: [],
-    final: [{name: "Winner SF Left", img: placeholderImg}, {name: "Winner SF Right", img: placeholderImg}],
-    champion: ''
-};
-
-// ======================== GLOBALS ========================
-let adminMode = false;
-let selectedWinner = null;
-
-// ======================== RENDER ROUND ========================
-function renderRound(containerId, matches, startIndex, stateKey) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = ""; // clear old content
-    matches.forEach((pair, i) => {
-        let currentWinner = bracketState[stateKey][i] || null;
-        let booksHTML = "";
-
-        if (currentWinner) {
-            // Show saved winner only
-            booksHTML = `
-                <div>
-                    <img src="${currentWinner.img}">
-                    <p>${currentWinner.name}</p>
-                </div>
-            `;
-        } else {
-            // Show clickable options
-            booksHTML = pair.map(b => `
-                <div onclick="selectWinner(this)">
-                    <img src="${imageMap[b] || placeholderImg}">
-                    <p>${b}</p>
-                </div>
-            `).join('');
-        }
-
-        container.innerHTML += `
-            <div class="match" data-match="${startIndex + i}">
-                ${booksHTML}
-                <button class="btn vote-btn" onclick="openVoteModal(${startIndex + i})">Vote</button>
-                <button class="btn advance-btn" style="display:none;" onclick="advanceWinner('${stateKey}',${i})">Advance Winner</button>
-            </div>`;
+document.addEventListener("DOMContentLoaded", function() {
+  const today = new Date();
+  document.querySelectorAll(".vote-btn").forEach(button => {
+    const voteDate = new Date(button.dataset.date);
+    if (voteDate <= today) {
+      button.style.display = "inline-block";
+    } else {
+      button.style.display = "none";
+    }
+    button.addEventListener("click", () => {
+      document.getElementById("formFrame").src = button.dataset.form;
+      document.getElementById("voteModal").style.display = "block";
     });
-}
+  });
+});
 
-// Render all rounds
-renderRound("round1L", round1MatchesLeft, 0, "round1L");
-renderRound("round1R", round1MatchesRight, 5, "round1R");
-renderRound("round2L", qfL, 10, "round2L");
-renderRound("round2R", qfR, 12, "round2R");
-renderRound("round3L", sfL, 14, "round3L");
-renderRound("round3R", sfR, 15, "round3R");
-
-// Render Final & Champion
-function renderFinal() {
-    const finalMatch = document.getElementById('finalMatch');
-    finalMatch.innerHTML = `
-        <div>
-            <img src="${bracketState.final[0].img}">
-            <p>${bracketState.final[0].name}</p>
-        </div>
-        <div>
-            <img src="${bracketState.final[1].img}">
-            <p>${bracketState.final[1].name}</p>
-        </div>
-        <button class="btn vote-btn" onclick="openVoteModal(15)">Vote</button>
-        <button id="resetBtn" class="btn" style="display:none;" onclick="resetBracket()">Reset Bracket</button>
-        <button class="btn advance-btn" style="display:none;" onclick="advanceWinner('final',0)">Advance Winner</button>
-    `;
-}
-renderFinal();
-
-if (bracketState.champion) {
-    document.getElementById('championName').innerText = bracketState.champion;
-}
-
-// ======================== SELECT WINNER ========================
-function selectWinner(bookDiv) {
-    const matchDiv = bookDiv.closest('.match');
-    matchDiv.querySelectorAll('div').forEach(d => d.classList.remove('selected'));
-    bookDiv.classList.add('selected');
-    selectedWinner = {
-        name: bookDiv.querySelector('p').innerText,
-        img: bookDiv.querySelector('img').src
-    };
-}
-
-// ======================== ADVANCE WINNER ========================
-function advanceWinner(stateKey, index) {
-    if (!adminMode) {
-        document.getElementById('passwordModal').style.display = 'block';
-        return;
-    }
-    if (!selectedWinner) {
-        alert("Click a book to select the winner first.");
-        return;
-    }
-
-    bracketState[stateKey][index] = { ...selectedWinner };
-
-    // Handle final and champion logic
-    if (stateKey === "final") {
-        bracketState.champion = selectedWinner.name;
-        document.getElementById('championName').innerText = selectedWinner.name;
-    }
-
-    saveBracketState();
-    refreshAll();
-    selectedWinner = null;
-}
-
-// ======================== SAVE & RESTORE ========================
-function saveBracketState() {
-    localStorage.setItem('bracketState', JSON.stringify(bracketState));
-}
-
-function refreshAll() {
-    renderRound("round1L", round1MatchesLeft, 0, "round1L");
-    renderRound("round1R", round1MatchesRight, 5, "round1R");
-    renderRound("round2L", qfL, 10, "round2L");
-    renderRound("round2R", qfR, 12, "round2R");
-    renderRound("round3L", sfL, 14, "round3L");
-    renderRound("round3R", sfR, 15, "round3R");
-    renderFinal();
-    if (bracketState.champion) {
-        document.getElementById('championName').innerText = bracketState.champion;
-    }
-}
-
-// ======================== RESET ========================
-function resetBracket() {
-    if (confirm("Are you sure you want to reset the entire bracket?")) {
-        localStorage.removeItem('bracketState');
-        location.reload();
-    }
-}
-
-// ======================== MODALS ========================
+// Vote Modal Functions
 function openVoteModal(index) {
     document.getElementById('formFrame').src = formLinks[index];
     document.getElementById('voteModal').style.display = 'block';
@@ -378,33 +351,29 @@ function closeVoteModal() {
     document.getElementById('voteModal').style.display = 'none';
     document.getElementById('formFrame').src = '';
 }
-function checkPassword() {
-    const input = document.getElementById('adminPassword').value;
-    if (input === "9134") {
-        adminMode = true;
-        document.getElementById('passwordModal').style.display = 'none';
-        document.querySelectorAll('.advance-btn').forEach(btn => btn.style.display = 'inline-block');
-        document.getElementById('resetBtn').style.display = 'inline-block';
-        alert("Admin mode enabled!");
-    } else {
-        alert("Incorrect password!");
-    }
+
+// Video Modal Functions
+function openVideoModal(el) {
+    const videoUrl = el.dataset.video;
+    document.getElementById('videoFrame').src = videoUrl;
+    document.getElementById('videoModal').style.display = 'block';
+}
+function closeVideoModal() {
+    document.getElementById('videoModal').style.display = 'none';
+    document.getElementById('videoFrame').src = '';
 }
 
-// ======================== FIX SCALE ========================
+// Scaling
 function scaleBracket() {
     const bracket = document.querySelector('.bracket');
     const wrapperWidth = document.querySelector('.bracket-wrapper').offsetWidth;
     const bracketWidth = bracket.scrollWidth;
-    const scale = wrapperWidth < bracketWidth ? wrapperWidth / bracketWidth : 1;
+    const scale = Math.min(wrapperWidth / bracketWidth, 1);
     bracket.style.transform = `scale(${scale})`;
 }
 window.addEventListener('resize', scaleBracket);
-window.addEventListener('load', () => {
-    setTimeout(scaleBracket, 100);
-});
+window.addEventListener('load', scaleBracket);
 </script>
-
 
 </body>
 </html>
