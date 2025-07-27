@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Battle of the Monarch Books 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Chewy&display=swap" rel="stylesheet">
+<style>
+body {
+    font-family: 'Chewy', sans-serif;
+    background: #f6fdf6 url('pictures/otherIcons/backgroundJungle.png') no-repeat center center fixed;
+    background-size: cover;
+    margin: 0; padding: 0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+header {
+    text-align: center;
+    background: rgba(76, 175, 80, 0.9);
+    color: white;
+    padding: 20px;
+    font-size: 2em;
+    text-shadow: 2px 2px #2e7d32;
+}
+.bracket-wrapper {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow-y: auto;
+    padding: 20px 0;
+}
+.bracket {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    transform-origin: top center;
+    transition: transform 0.3s ease;
+}
+.round {
+    flex: 0 0 auto;
+    width: 220px;
+    padding: 8px;
+    background: transparent;
+}
+.round h3 {
+    background: rgba(76, 175, 80, 0.85);
+    color: white;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+#finalRound h3 {
+    background: #4caf50;
+    color: white;
+}
+#championRound h3 {
+    background: gold;
+    color: #333;
+}
+#championRound .match {
+    background: rgba(255,215,0,0.95);
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+}
+.match {
+    background: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    padding: 10px;
+    margin: 10px 0;
+    text-align: center;
+    box-shadow: 2px 2px 6px rgba(0,0,0,0.2);
+}
+.match img {
+    width: 60px;
+    height: auto;
+    border-radius: 6px;
+    margin: 4px;
+}
+.match p {
+    margin: 4px 0;
+    font-size: 0.9em;
+}
+.btn {
+    display: inline-block;
+    background: #4caf50;
+    color: white;
+    padding: 6px 10px;
+    margin: 4px 2px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: bold;
+    cursor: pointer;
+}
+.btn:hover { background: #388e3c; }
+.advance-btn {
+    background: #ffd700;
+    color: #333;
+    display: none;
+}
+.selected {
+    border: 3px solid #4caf50;
+    border-radius: 8px;
+}
+#voteModal, #passwordModal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow-y: scroll;
+    background: rgba(0,0,0,0.6);
+}
+.modal-content {
+    background: #fff;
+    margin: 50px auto;
+    padding: 20px;
+    width: 90%; max-width: 700px;
+    border-radius: 12px;
+}
+</style>
+</head>
+<body>
+<header>🌟 Battle of the Monarch Books 2026! 🌟</header>
+<div style="text-align:center;margin-top:10px;">
+    <button class="btn" onclick="document.getElementById('passwordModal').style.display='block';">Admin Login</button>
+</div>
+
+
+<div class="bracket-wrapper">
+    <div class="bracket">
+        <div class="round" id="round1L"><h3>Round 1</h3></div>
+        <div class="round" id="round2L"><h3>Quarterfinals</h3></div>
+        <div class="round" id="round3L"><h3>Semifinals</h3></div>
+
+        <div class="round" id="centerColumn">
+            <div id="finalRound">
+                <h3>Final</h3>
+                <div class="match" id="finalMatch">
+                    <div>
+                        <img src="pictures/otherIcons/monarchLogo.png">
+                        <p>Winner SF Left</p>
+                    </div>
+                    <div>
+                        <img src="pictures/otherIcons/monarchLogo.png">
+                        <p>Winner SF Right</p>
+                    </div>
+                    <button class="btn vote-btn" onclick="openVoteModal(15)">Vote</button>
+                    <button id="resetBtn" class="btn" style="display:none;" onclick="resetBracket()">Reset Bracket</button>
+                    <button class="btn advance-btn" onclick="advanceWinner('finalRound',0)">Advance Winner</button>
+                </div>
+            </div>
+            <div id="championRound">
+                <h3>Champion</h3>
+                <div class="match">🏆 <span id="championName">TBD</span></div>
+            </div>
+        </div>
+
+        <div class="round" id="round3R"><h3>Semifinals</h3></div>
+        <div class="round" id="round2R"><h3>Quarterfinals</h3></div>
+        <div class="round" id="round1R"><h3>Round 1</h3></div>
+    </div>
+</div>
+
+<!-- Vote Modal -->
+<div id="voteModal">
+    <div class="modal-content">
+        <h2>Vote for This Battle!</h2>
+        <iframe id="formFrame" src="" width="100%" height="500" frameborder="0"></iframe>
+        <br><button class="btn" onclick="closeVoteModal()">Close</button>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div id="passwordModal">
+    <div class="modal-content">
+        <h2>Enter Admin Password</h2>
+        <input type="password" id="adminPassword" style="width:100%;padding:10px;font-size:1.2em;">
+        <br><br><button class="btn" onclick="checkPassword()">Submit</button>
+    </div>
+</div>
+
+<script>
+const placeholderImg = "pictures/otherIcons/monarchLogo.png";
+
+// ======================== BOOKS & IMAGES ========================
+const books = [
+    "Bathe the Cat","Beneath","Butt or Face?","Claude","The Flower Garden","Friends Do Not Eat Friends",
+    "Hamsters Make Terrible Roommates","Home Is Calling","Homegrown","Just Snow Already!",
+    "Knight Owl","Mr. S","Negative Cat","The Red Jacket","Sydney & Taylor Explore the Whole Wide World",
+    "Time to Make Art","We Are Definitely Human","Who's Afraid of the Light?","The World's Best Class Plant","Yoshi, Sea Turtle Genius"
+];
+
+const imageMap = {
+    "Bathe the Cat": "pictures/monarchCovers/Bathe-the-Cat.jpg",
+    "Beneath": "pictures/monarchCovers/Beneath.jpg",
+    "Butt or Face?": "pictures/monarchCovers/Butt-or-Face.jpg",
+    "Claude": "pictures/monarchCovers/Claude.jpg",
+    "The Flower Garden": "pictures/monarchCovers/The-Flower-Garden.jpg",
+    "Friends Do Not Eat Friends": "pictures/monarchCovers/Friends-Do-Not-Eat-Friends.jpg",
+    "Hamsters Make Terrible Roommates": "pictures/monarchCovers/Hamsters-Make-Terrible-Roommates.jpg",
+    "Home Is Calling": "pictures/monarchCovers/Home-Is-Calling.jpg",
+    "Homegrown": "pictures/monarchCovers/Homegrown.jpg",
+    "Just Snow Already!": "pictures/monarchCovers/Just-Snow-Already.jpg",
+    "Knight Owl": "pictures/monarchCovers/Knight-Owl.jpg",
+    "Mr. S": "pictures/monarchCovers/Mr-S.jpg",
+    "Negative Cat": "pictures/monarchCovers/Negative-Cat.jpg",
+    "The Red Jacket": "pictures/monarchCovers/The-Red-Jacket.jpg",
+    "Sydney & Taylor Explore the Whole Wide World": "pictures/monarchCovers/Sydney-and-Taylor.jpg",
+    "Time to Make Art": "pictures/monarchCovers/Time-to-Make-Art.jpg",
+    "We Are Definitely Human": "pictures/monarchCovers/We-Are-Definitely-Human.jpg",
+    "Who's Afraid of the Light?": "pictures/monarchCovers/Whos-Afraid-of-the-Light.jpg",
+    "The World's Best Class Plant": "pictures/monarchCovers/Worlds-Best-Class-Plant.jpg",
+    "Yoshi, Sea Turtle Genius": "pictures/monarchCovers/Yoshi-Sea-Turtle-Genius.jpg"
+};
+
+// ======================== MATCH SETUP ========================
+const round1MatchesLeft = [[books[0], books[1]],[books[2], books[3]],[books[4], books[5]],[books[6], books[7]],[books[8], books[9]]];
+const round1MatchesRight = [[books[10], books[11]],[books[12], books[13]],[books[14], books[15]],[books[16], books[17]],[books[18], books[19]]];
+const qfL = [["Winner 1","Winner 2"],["Winner 3","Winner 4","Winner 5"]];
+const qfR = [["Winner 6","Winner 7"],["Winner 8","Winner 9","Winner 10"]];
+const sfL = [["Winner QF1","Winner QF2"]];
+const sfR = [["Winner QF3","Winner QF4"]];
+
+// ======================== GOOGLE FORM LINKS ========================
+const formLinks = [
+    "https://docs.google.com/forms/d/e/1FAIpQLSds8OTuH9LJvAnp-SRG3LxYG9OwB7TPWrlOXhl8cPOIgMTmqw/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSfOzrdZJmb1CajMjmo5QwL_M1yvlEaakS0SgoVvoaLEFgPTkA/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSd5EyxtiO731udWPKrVjaJDSACCu6LHWrx8Jmhz97p5PThWlA/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSdrBYPbhbdVdbkyv1nwY-7blC0IL2XzKuDxAFN9bHMZswhiGg/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSf5gIAfnkS6TwLka0yWY_UbAy_TsLgHCL3PddWFQHK4ecxfSg/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSe3rf2UG11p9tIFTTtb0fCZL90wnWlWOMST6gO-q-ubFLtWcw/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSe3rf2UG11p9tIFTTtb0fCZL90wnWlWOMST6gO-q-ubFLtWcw/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSdccDyH5L00R5Fxi0V-TB0SKYKxgpvIN1rovAHkVihjc3yuaw/viewform?usp=header",
+    "https://forms.gle/si82mgV3GyyJWpqH7",
+    "https://forms.gle/Zkr4CfrBxT7NVZqL9",
+    "https://forms.gle/o6kuT6PFjUb8LJLA9",
+    "https://docs.google.com/forms/d/e/1FAIpQLSdQSSLHGJuUvlsOiUOF6yY9Ms-2-WvRpbbPPTXln93MtT1AmQ/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSclWG6ZJFi-VcmSV1Tw0CuvdY2wyoxVoviOz1hmfeg5JDNRtQ/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSdTAtCxR7PFxlkCOSPoeHr5jlDWVTnnPELJ0hMbx2gz14Irdg/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSdf2BeQi1r_tiXLf_KF2v-lBm-TUIu4TQeAwfzWUIHRNdNGMg/viewform?usp=header",
+    "https://docs.google.com/forms/d/e/1FAIpQLSehl8ayyupq3ItzFLyLcxPGg8TrlJZegF3Pet2TsqF5gDyXmQ/viewform?usp=header"
+];
+
+// ======================== STATE ========================
+let adminMode = false;
+let selectedWinner = null;
+let bracketState = JSON.parse(localStorage.getItem('bracketState')) || {
+    round2L: [], round2R: [],
+    round3L: [], round3R: [],
+    final: [], champion: ''
+};
+
+// ======================== RENDER MATCHES ========================
+function renderRound(containerId, matches, startIndex) {
+    const container = document.getElementById(containerId);
+    matches.forEach((pair, i) => {
+        let booksHTML = pair.map(b => `
+            <div onclick="selectWinner(this)">
+                <img src="${imageMap[b] || placeholderImg}">
+                <p>${b}</p>
+            </div>
+        `).join('');
+
+        const matchIndex = startIndex + i;
+        container.innerHTML += `
+            <div class="match" data-match="${matchIndex}">
+                ${booksHTML}
+                <button class="btn vote-btn" onclick="openVoteModal(${matchIndex})">Vote</button>
+                <button class="btn advance-btn" onclick="advanceWinner('${containerId}',${i})">Advance Winner</button>
+            </div>`;
+    });
+}
+
+// Render all rounds
+renderRound("round1L", round1MatchesLeft, 0);
+renderRound("round1R", round1MatchesRight, 5);
+renderRound("round2L", qfL, 10);
+renderRound("round2R", qfR, 12);
+renderRound("round3L", sfL, 14);
+renderRound("round3R", sfR, 15);
+
+// ======================== WINNER SELECTION ========================
+function selectWinner(bookDiv) {
+    const matchDiv = bookDiv.closest('.match');
+    matchDiv.querySelectorAll('div').forEach(d => d.classList.remove('selected'));
+    bookDiv.classList.add('selected');
+    selectedWinner = {
+        name: bookDiv.querySelector('p').innerText,
+        img: bookDiv.querySelector('img').src
+    };
+}
+
+// ======================== ADVANCE WINNER (with Save) ========================
+function advanceWinner(roundId, matchIndex) {
+    if (!adminMode) {
+        document.getElementById('passwordModal').style.display = 'block';
+        return;
+    }
+    if (!selectedWinner) {
+        alert("Click a book to select the winner first.");
+        return;
+    }
+
+    const { name, img } = selectedWinner;
+    let nextRoundId;
+
+    if (roundId.includes('round1')) {
+        nextRoundId = roundId.startsWith('round1L') ? 'round2L' : 'round2R';
+        bracketState[nextRoundId].push({ name, img });
+    } else if (roundId.includes('round2')) {
+        nextRoundId = roundId.startsWith('round2L') ? 'round3L' : 'round3R';
+        bracketState[nextRoundId].push({ name, img });
+    } else if (roundId.includes('round3')) {
+        nextRoundId = 'finalMatch';
+        bracketState.final.push({ name, img });
+    } else if (roundId.includes('finalRound')) {
+        document.getElementById('championName').innerText = name;
+        bracketState.champion = name;
+        saveBracketState();
+        return;
+    }
+
+    moveWinner(nextRoundId, name, img);
+    saveBracketState();
+    selectedWinner = null;
+}
+
+function moveWinner(nextId, name, img) {
+    const nextMatch = document.getElementById(nextId);
+    const slots = nextMatch.querySelectorAll('div > img');
+    for (let i = 0; i < slots.length; i++) {
+        if (slots[i].src.includes('monarchLogo') || slots[i].src.includes('placeholder')) {
+            slots[i].src = img;
+            slots[i].parentNode.querySelector('p').innerText = name;
+            break;
+        }
+    }
+}
+
+function saveBracketState() {
+    localStorage.setItem('bracketState', JSON.stringify(bracketState));
+}
+
+function restoreBracket() {
+    [...bracketState.round2L, ...bracketState.round2R, ...bracketState.round3L, ...bracketState.round3R, ...bracketState.final]
+        .forEach(winner => moveWinner('finalMatch', winner.name, winner.img));
+    if (bracketState.champion) {
+        document.getElementById('championName').innerText = bracketState.champion;
+    }
+}
+restoreBracket();
+
+// ======================== RESET BRACKET ========================
+function resetBracket() {
+    if (confirm("Are you sure you want to reset the entire bracket?")) {
+        localStorage.removeItem('bracketState');
+        location.reload();
+    }
+}
+
+// ======================== MODALS & PASSWORD ========================
+function openVoteModal(index) {
+    document.getElementById('formFrame').src = formLinks[index];
+    document.getElementById('voteModal').style.display = 'block';
+}
+function closeVoteModal() {
+    document.getElementById('voteModal').style.display = 'none';
+    document.getElementById('formFrame').src = '';
+}
+function checkPassword() {
+    const input = document.getElementById('adminPassword').value;
+    if (input === "9134") {
+        adminMode = true;
+        document.getElementById('passwordModal').style.display = 'none';
+        document.querySelectorAll('.advance-btn').forEach(btn => btn.style.display = 'inline-block');
+        document.getElementById('resetBtn').style.display = 'inline-block'; // ✅ Show Reset button
+        alert("Admin mode enabled!");
+    } else {
+        alert("Incorrect password!");
+    }
+}
+
+// ======================== SCALE BRACKET ========================
+function scaleBracket() {
+    const bracket = document.querySelector('.bracket');
+    const wrapperWidth = document.querySelector('.bracket-wrapper').offsetWidth;
+    const bracketWidth = bracket.scrollWidth;
+    const scale = Math.min(wrapperWidth / bracketWidth, 1);
+    bracket.style.transform = `scale(${scale})`;
+}
+window.addEventListener('resize', scaleBracket);
+window.addEventListener('load', scaleBracket);
+
+</script>
+
+</body>
+</html>
