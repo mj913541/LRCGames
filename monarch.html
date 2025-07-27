@@ -221,7 +221,7 @@ const imageMap = {
     "Yoshi, Sea Turtle Genius": "pictures/monarchCovers/Yoshi-Sea-Turtle-Genius.jpg"
 };
 
-// ======================== MATCH SETUP ========================
+// ======================== INITIAL MATCHES ========================
 const round1MatchesLeft = [[books[0], books[1]],[books[2], books[3]],[books[4], books[5]],[books[6], books[7]],[books[8], books[9]]];
 const round1MatchesRight = [[books[10], books[11]],[books[12], books[13]],[books[14], books[15]],[books[16], books[17]],[books[18], books[19]]];
 const qfL = [["Winner 1","Winner 2"],["Winner 3","Winner 4","Winner 5"]];
@@ -229,66 +229,86 @@ const qfR = [["Winner 6","Winner 7"],["Winner 8","Winner 9","Winner 10"]];
 const sfL = [["Winner QF1","Winner QF2"]];
 const sfR = [["Winner QF3","Winner QF4"]];
 
-// ======================== GOOGLE FORM LINKS ========================
-const formLinks = [
-    "https://docs.google.com/forms/d/e/1FAIpQLSds8OTuH9LJvAnp-SRG3LxYG9OwB7TPWrlOXhl8cPOIgMTmqw/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSfOzrdZJmb1CajMjmo5QwL_M1yvlEaakS0SgoVvoaLEFgPTkA/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSd5EyxtiO731udWPKrVjaJDSACCu6LHWrx8Jmhz97p5PThWlA/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSdrBYPbhbdVdbkyv1nwY-7blC0IL2XzKuDxAFN9bHMZswhiGg/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSf5gIAfnkS6TwLka0yWY_UbAy_TsLgHCL3PddWFQHK4ecxfSg/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSe3rf2UG11p9tIFTTtb0fCZL90wnWlWOMST6gO-q-ubFLtWcw/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSe3rf2UG11p9tIFTTtb0fCZL90wnWlWOMST6gO-q-ubFLtWcw/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSdccDyH5L00R5Fxi0V-TB0SKYKxgpvIN1rovAHkVihjc3yuaw/viewform?usp=header",
-    "https://forms.gle/si82mgV3GyyJWpqH7",
-    "https://forms.gle/Zkr4CfrBxT7NVZqL9",
-    "https://forms.gle/o6kuT6PFjUb8LJLA9",
-    "https://docs.google.com/forms/d/e/1FAIpQLSdQSSLHGJuUvlsOiUOF6yY9Ms-2-WvRpbbPPTXln93MtT1AmQ/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSclWG6ZJFi-VcmSV1Tw0CuvdY2wyoxVoviOz1hmfeg5JDNRtQ/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSdTAtCxR7PFxlkCOSPoeHr5jlDWVTnnPELJ0hMbx2gz14Irdg/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSdf2BeQi1r_tiXLf_KF2v-lBm-TUIu4TQeAwfzWUIHRNdNGMg/viewform?usp=header",
-    "https://docs.google.com/forms/d/e/1FAIpQLSehl8ayyupq3ItzFLyLcxPGg8TrlJZegF3Pet2TsqF5gDyXmQ/viewform?usp=header"
-];
-
-// ======================== STATE ========================
-let adminMode = false;
-let selectedWinner = null;
+// ======================== STATE (Persistent) ========================
 let bracketState = JSON.parse(localStorage.getItem('bracketState')) || {
+    round1L: [], round1R: [],
     round2L: [], round2R: [],
     round3L: [], round3R: [],
-    final: [{}, {}],
-    champion: {}
+    final: [{name: "Winner SF Left", img: placeholderImg}, {name: "Winner SF Right", img: placeholderImg}],
+    champion: ''
 };
 
-// ======================== RENDER MATCHES ========================
-function renderRound(containerId, matches, startIndex) {
-    const container = document.getElementById(containerId);
-    matches.forEach((pair, i) => {
-        let booksHTML = pair.map(b => `
-            <div onclick="selectWinner(this)">
-                <img src="${imageMap[b] || placeholderImg}">
-                <p>${b}</p>
-            </div>
-        `).join('');
+// ======================== GLOBALS ========================
+let adminMode = false;
+let selectedWinner = null;
 
-        const matchIndex = startIndex + i;
+// ======================== RENDER ROUND ========================
+function renderRound(containerId, matches, startIndex, stateKey) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = ""; // clear old content
+    matches.forEach((pair, i) => {
+        let currentWinner = bracketState[stateKey][i] || null;
+        let booksHTML = "";
+
+        if (currentWinner) {
+            // Show saved winner only
+            booksHTML = `
+                <div>
+                    <img src="${currentWinner.img}">
+                    <p>${currentWinner.name}</p>
+                </div>
+            `;
+        } else {
+            // Show clickable options
+            booksHTML = pair.map(b => `
+                <div onclick="selectWinner(this)">
+                    <img src="${imageMap[b] || placeholderImg}">
+                    <p>${b}</p>
+                </div>
+            `).join('');
+        }
+
         container.innerHTML += `
-            <div class="match" data-match="${matchIndex}">
+            <div class="match" data-match="${startIndex + i}">
                 ${booksHTML}
-                <button class="btn vote-btn" onclick="openVoteModal(${matchIndex})">Vote</button>
-                <button class="btn advance-btn" style="display:none;" onclick="advanceWinner('${containerId}',${i})">Advance Winner</button>
+                <button class="btn vote-btn" onclick="openVoteModal(${startIndex + i})">Vote</button>
+                <button class="btn advance-btn" style="display:none;" onclick="advanceWinner('${stateKey}',${i})">Advance Winner</button>
             </div>`;
     });
 }
 
 // Render all rounds
-renderRound("round1L", round1MatchesLeft, 0);
-renderRound("round1R", round1MatchesRight, 5);
-renderRound("round2L", qfL, 10);
-renderRound("round2R", qfR, 12);
-renderRound("round3L", sfL, 14);
-renderRound("round3R", sfR, 15);
+renderRound("round1L", round1MatchesLeft, 0, "round1L");
+renderRound("round1R", round1MatchesRight, 5, "round1R");
+renderRound("round2L", qfL, 10, "round2L");
+renderRound("round2R", qfR, 12, "round2R");
+renderRound("round3L", sfL, 14, "round3L");
+renderRound("round3R", sfR, 15, "round3R");
 
-// ======================== WINNER SELECTION ========================
+// Render Final & Champion
+function renderFinal() {
+    const finalMatch = document.getElementById('finalMatch');
+    finalMatch.innerHTML = `
+        <div>
+            <img src="${bracketState.final[0].img}">
+            <p>${bracketState.final[0].name}</p>
+        </div>
+        <div>
+            <img src="${bracketState.final[1].img}">
+            <p>${bracketState.final[1].name}</p>
+        </div>
+        <button class="btn vote-btn" onclick="openVoteModal(15)">Vote</button>
+        <button id="resetBtn" class="btn" style="display:none;" onclick="resetBracket()">Reset Bracket</button>
+        <button class="btn advance-btn" style="display:none;" onclick="advanceWinner('final',0)">Advance Winner</button>
+    `;
+}
+renderFinal();
+
+if (bracketState.champion) {
+    document.getElementById('championName').innerText = bracketState.champion;
+}
+
+// ======================== SELECT WINNER ========================
 function selectWinner(bookDiv) {
     const matchDiv = bookDiv.closest('.match');
     matchDiv.querySelectorAll('div').forEach(d => d.classList.remove('selected'));
@@ -299,8 +319,8 @@ function selectWinner(bookDiv) {
     };
 }
 
-// ======================== ADVANCE WINNER (Persistent) ========================
-function advanceWinner(roundId, matchIndex) {
+// ======================== ADVANCE WINNER ========================
+function advanceWinner(stateKey, index) {
     if (!adminMode) {
         document.getElementById('passwordModal').style.display = 'block';
         return;
@@ -310,97 +330,38 @@ function advanceWinner(roundId, matchIndex) {
         return;
     }
 
-    const { name, img } = selectedWinner;
-    let nextRoundId;
+    bracketState[stateKey][index] = { ...selectedWinner };
 
-    if (roundId.includes('round1')) {
-        nextRoundId = roundId.startsWith('round1L') ? 'round2L' : 'round2R';
-        bracketState[nextRoundId].push({ name, img });
-    } else if (roundId.includes('round2')) {
-        nextRoundId = roundId.startsWith('round2L') ? 'round3L' : 'round3R';
-        bracketState[nextRoundId].push({ name, img });
-    } else if (roundId.includes('round3')) {
-        nextRoundId = 'finalMatch';
-        bracketState.final[roundId === 'round3L' ? 0 : 1] = { name, img };
-    } else if (roundId.includes('finalRound')) {
-        document.getElementById('championName').innerText = name;
-        bracketState.champion = { name, img };
-        saveBracketState();
-        return;
+    // Handle final and champion logic
+    if (stateKey === "final") {
+        bracketState.champion = selectedWinner.name;
+        document.getElementById('championName').innerText = selectedWinner.name;
     }
 
-    moveWinner(nextRoundId, name, img);
     saveBracketState();
+    refreshAll();
     selectedWinner = null;
 }
 
-function moveWinner(nextId, name, img) {
-    const nextMatch = document.getElementById(nextId);
-    const slots = nextMatch.querySelectorAll('div > img');
-    for (let i = 0; i < slots.length; i++) {
-        if (slots[i].src.includes('monarchLogo') || slots[i].src.includes('placeholder')) {
-            slots[i].src = img;
-            slots[i].parentNode.querySelector('p').innerText = name;
-            break;
-        }
-    }
-}
-
+// ======================== SAVE & RESTORE ========================
 function saveBracketState() {
     localStorage.setItem('bracketState', JSON.stringify(bracketState));
 }
 
-// ======================== RESTORE BRACKET ========================
-function restoreBracket() {
-    // Quarterfinals
-    bracketState.round2L.forEach((winner, i) => {
-        if (winner.name) {
-            const match = document.getElementById("round2L").querySelectorAll(".match")[i];
-            match.querySelector("img").src = winner.img;
-            match.querySelector("p").innerText = winner.name;
-        }
-    });
-    bracketState.round2R.forEach((winner, i) => {
-        if (winner.name) {
-            const match = document.getElementById("round2R").querySelectorAll(".match")[i];
-            match.querySelector("img").src = winner.img;
-            match.querySelector("p").innerText = winner.name;
-        }
-    });
-
-    // Semifinals
-    bracketState.round3L.forEach((winner, i) => {
-        if (winner.name) {
-            const match = document.getElementById("round3L").querySelectorAll(".match")[i];
-            match.querySelector("img").src = winner.img;
-            match.querySelector("p").innerText = winner.name;
-        }
-    });
-    bracketState.round3R.forEach((winner, i) => {
-        if (winner.name) {
-            const match = document.getElementById("round3R").querySelectorAll(".match")[i];
-            match.querySelector("img").src = winner.img;
-            match.querySelector("p").innerText = winner.name;
-        }
-    });
-
-    // Final
-    const finalMatch = document.getElementById("finalMatch").querySelectorAll("div");
-    for (let i = 0; i < 2; i++) {
-        if (bracketState.final[i].name) {
-            finalMatch[i].querySelector("img").src = bracketState.final[i].img;
-            finalMatch[i].querySelector("p").innerText = bracketState.final[i].name;
-        }
-    }
-
-    // Champion
-    if (bracketState.champion.name) {
-        document.getElementById('championName').innerText = bracketState.champion.name;
+function refreshAll() {
+    renderRound("round1L", round1MatchesLeft, 0, "round1L");
+    renderRound("round1R", round1MatchesRight, 5, "round1R");
+    renderRound("round2L", qfL, 10, "round2L");
+    renderRound("round2R", qfR, 12, "round2R");
+    renderRound("round3L", sfL, 14, "round3L");
+    renderRound("round3R", sfR, 15, "round3R");
+    renderFinal();
+    if (bracketState.champion) {
+        document.getElementById('championName').innerText = bracketState.champion;
     }
 }
-restoreBracket();
 
-// ======================== RESET BRACKET ========================
+// ======================== RESET ========================
 function resetBracket() {
     if (confirm("Are you sure you want to reset the entire bracket?")) {
         localStorage.removeItem('bracketState');
@@ -408,7 +369,7 @@ function resetBracket() {
     }
 }
 
-// ======================== MODALS & PASSWORD ========================
+// ======================== MODALS ========================
 function openVoteModal(index) {
     document.getElementById('formFrame').src = formLinks[index];
     document.getElementById('voteModal').style.display = 'block';
@@ -430,17 +391,20 @@ function checkPassword() {
     }
 }
 
-// ======================== SCALE BRACKET ========================
+// ======================== FIX SCALE ========================
 function scaleBracket() {
     const bracket = document.querySelector('.bracket');
     const wrapperWidth = document.querySelector('.bracket-wrapper').offsetWidth;
     const bracketWidth = bracket.scrollWidth;
-    const scale = Math.min(wrapperWidth / bracketWidth, 1);
+    const scale = wrapperWidth < bracketWidth ? wrapperWidth / bracketWidth : 1;
     bracket.style.transform = `scale(${scale})`;
 }
 window.addEventListener('resize', scaleBracket);
-window.addEventListener('load', scaleBracket);
+window.addEventListener('load', () => {
+    setTimeout(scaleBracket, 100);
+});
 </script>
+
 
 </body>
 </html>
