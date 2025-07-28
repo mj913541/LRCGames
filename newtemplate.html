@@ -6,9 +6,10 @@
   <title>Grade [X] Weekly Tech Lesson</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to bottom right, #ff6b6b, #ffd6d6);
-      color: #333;
+      font-family: 'Comic Sans MS', cursive;
+      background: url('images/jungle_background.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: #2e3d2f;
       max-width: 1000px;
       margin: 0 auto;
       padding: 20px;
@@ -17,6 +18,10 @@
     header {
       text-align: center;
       margin-bottom: 30px;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
     }
 
     header .title-row {
@@ -34,26 +39,26 @@
 
     header h1 {
       font-size: 2.5em;
-      color: #fff;
+      color: #2e3d2f;
       margin: 0;
     }
 
     header h3 {
-      color: #fff;
+      color: #4f6f52;
       font-weight: normal;
       margin-top: 10px;
     }
 
     section {
-      background-color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.9);
       border-radius: 12px;
       box-shadow: 0 8px 16px rgba(0,0,0,0.15);
       padding: 20px;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
 
     h2 {
-      color: #c0392b;
+      color: #4f6f52;
       margin-bottom: 10px;
     }
 
@@ -64,12 +69,17 @@
 
     .button {
       display: inline-block;
-      background-color: #c0392b;
+      background-color: #7c9a63;
       color: white;
       padding: 10px 15px;
       text-decoration: none;
       border-radius: 6px;
       margin-top: 10px;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #65804f;
     }
 
     .objectives {
@@ -90,8 +100,13 @@
     }
 
     .divider-icon img {
-      width: 40px;
+      width: 50px;
       height: auto;
+    }
+
+    a img:hover {
+      transform: scale(1.05);
+      transition: transform 0.2s;
     }
   </style>
 </head>
@@ -147,13 +162,14 @@
       <li><a href="[ACTIVITY_LINK_2]" target="_blank">Activity 2 - [Name]</a></li>
     </ul>
   </section>
-<a href="https://typing-practice.mj913541.repl.co" target="_blank">
-  <img src="images/lion_typing_icon.png" alt="Typing Practice" width="200" />
-</a>
 
   <div class="divider-icon">
     <img src="[DOWN_ARROW_IMAGE_URL]" alt="Down Arrow Divider" />
   </div>
+
+  <a href="https://typing-practice.mj913541.repl.co" target="_blank">
+    <img src="images/lion_typing_icon.png" alt="Typing Practice" width="200" />
+  </a>
 
   <section>
     <h2>✅ All Done?</h2>

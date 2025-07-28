@@ -210,10 +210,8 @@ inputElement.addEventListener('input', () => {
 restartButton.addEventListener('click', restartGame);
 restartButtonCongrats.addEventListener('click', completeActivity);
 
-function completeActivity() {
-    window.opener.postMessage('stepCompleted', '*');  // Notify the main page
-    window.close();  // Close the activity tab
-}
+window.parent.postMessage('activityComplete', '*');
+
 
 restartGame();
 
