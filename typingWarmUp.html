@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Typing Game: Home Row + L and B</title>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      background-color: #f0f8ff;
+      text-align: center;
+    }
+
+    .game-container {
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 600px;
+      background: #ffcccb;
+      border-radius: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    .word {
+      font-size: 2em;
+      color: #4caf50;
+      margin: 20px;
+    }
+
+    .score {
+      font-size: 1.5em;
+      color: #ff5722;
+    }
+
+    .input-word {
+      font-size: 1.2em;
+      padding: 10px;
+      width: 60%;
+    }
+
+    .keyboard {
+      margin-top: 30px;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .key {
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      border-radius: 6px;
+      font-weight: bold;
+      box-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .red { background-color: #f88; }
+    .orange { background-color: #fca; }
+    .yellow { background-color: #ff0; }
+    .green { background-color: #cfc; }
+    .blue { background-color: #bbf; }
+    .purple { background-color: #e5b8ff; }
+    .brown { background-color: #deb887; }
+    .gray { background-color: #ccc; }
+    .special { border: 3px solid gold; background-color: #fffacd; }
+
+    button.repeat {
+      margin-top: 15px;
+      padding: 8px 12px;
+      background-color: #7c9a63;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button.repeat:hover {
+      background-color: #65804f;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="game-container">
+    <h2>🏝️ Home Row Typing Game</h2>
+    <p>Practice typing with A S D F J K L ; and focus on L + B</p>
+
+    <div id="word" class="word">...</div>
+    <input type="text" id="input" class="input-word" oninput="checkInput()" autocomplete="off" />
+    <div id="score" class="score">Score: 0</div>
+
+    <button class="repeat" onclick="readInstructions()">🔊 Repeat Instructions</button>
+
+    <div class="keyboard">
+      <div class="key red">A</div>
+      <div class="key orange">S</div>
+      <div class="key yellow">D</div>
+      <div class="key green">F</div>
+      <div class="key special">B</div>
+      <div class="key blue">J</div>
+      <div class="key purple">K</div>
+      <div class="key brown">L</div>
+      <div class="key gray">;</div>
+    </div>
+  </div>
+
+  <script>
+    const words = [
+      'ask', 'sad', 'dad', 'fall', 'lab', 'ball', 'lad', 'sass',
+      'all', 'flag', 'jab', 'slab', 'bald', 'bass', 'jazz', 'lash'
+    ];
+
+    let currentWord = '';
+    let score = 0;
+    const maxScore = 10;
+
+    function getRandomWord() {
+      return words[Math.floor(Math.random() * words.length)];
+    }
+
+    function setNewWord() {
+      currentWord = getRandomWord();
+      document.getElementById('word').textContent = currentWord;
+      document.getElementById('input').value = '';
+    }
+
+    function checkInput() {
+      const input = document.getElementById('input').value.trim().toLowerCase();
+      if (input === currentWord.toLowerCase()) {
+        score++;
+        document.getElementById('score').textContent = `Score: ${score}`;
+        if (score >= maxScore) {
+          endGame();
+        } else {
+          setNewWord();
+        }
+      }
+    }
+
+    function startGame() {
+      score = 0;
+      document.getElementById('score').textContent = 'Score: 0';
+      setNewWord();
+      readInstructions();
+    }
+
+    function endGame() {
+      window.parent.postMessage('activityComplete', '*');
+    }
+
+    function readInstructions() {
+      const message = new SpeechSynthesisUtterance(
+        "Welcome! Type the words using home row letters and the letters L and B. Let's go!"
+      );
+      message.rate = 0.95;
+      message.pitch = 1.1;
+      window.speechSynthesis.speak(message);
+    }
+
+    window.onload = startGame;
+  </script>
+
+</body>
+</html>
