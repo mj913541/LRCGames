@@ -87,85 +87,77 @@
 
   <!-- Quest Detail Modal -->
   <dialog id="questDialog">
-    <form method="dialog">
-      <div class="modal-header">
-        <h3 id="qdTitle">Quest</h3>
-        <button class="btn" value="close">✕</button>
-      </div>
-      <div id="qdBody"></div>
-      <div class="modal-actions">
-        <button class="btn" value="close">Close</button>
-        <button class="btn primary" id="qdCompleteBtn" type="button">Submit for Review</button>
-      </div>
-    </form>
+    <div class="modal-header">
+      <h3 id="qdTitle">Quest</h3>
+      <button class="btn" type="button" onclick="document.getElementById('questDialog').close()">✕</button>
+    </div>
+    <div id="qdBody"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" onclick="document.getElementById('questDialog').close()">Close</button>
+      <button class="btn primary" id="qdCompleteBtn" type="button">Submit for Review</button>
+    </div>
   </dialog>
 
   <!-- Teacher Review Modal -->
   <dialog id="teacherDialog">
-    <form method="dialog" id="teacherForm">
-      <div class="modal-header">
-        <h3>Teacher Review Queue</h3>
-        <button class="btn" value="close">✕</button>
-      </div>
-      <div class="field">
-        <label>Teacher PIN</label>
-        <input type="password" id="teacherPin" inputmode="numeric" minlength="4" maxlength="6" placeholder="****" required>
-      </div>
+    <div class="modal-header">
+      <h3>Teacher Review Queue</h3>
+      <button class="btn" type="button" onclick="document.getElementById('teacherDialog').close()">✕</button>
+    </div>
+    <div class="field">
+      <label>Teacher PIN</label>
+      <input type="password" id="teacherPin" inputmode="numeric" minlength="4" maxlength="6" placeholder="****" required>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" onclick="document.getElementById('teacherDialog').close()">Cancel</button>
+      <button class="btn primary" id="teacherEnterBtn" type="button">Enter</button>
+    </div>
+    <div id="teacherPanel" style="display:none">
+      <div class="small hint">Approve = add points • Return = no points (student can fix and resubmit)</div>
+      <div id="reviewList" class="grid"></div>
       <div class="modal-actions">
-        <button class="btn" value="close">Cancel</button>
-        <button class="btn primary" id="teacherEnterBtn" type="submit">Enter</button>
+        <button class="btn" type="button" onclick="document.getElementById('teacherDialog').close()">Close</button>
       </div>
-      <div id="teacherPanel" style="display:none">
-        <div class="small hint">Approve = add points • Return = no points (student can fix and resubmit)</div>
-        <div id="reviewList" class="grid"></div>
-        <div class="modal-actions">
-          <button class="btn" value="close">Close</button>
-        </div>
-      </div>
-    </form>
+    </div>
   </dialog>
 
   <!-- Login Modal -->
   <dialog id="loginDialog">
-    <form method="dialog" id="loginForm">
-      <div class="modal-header">
-        <h3>PIN Login</h3>
-        <button class="btn" value="close">✕</button>
-      </div>
-      <div class="field">
-        <label>Nickname (first name + last initial)</label>
-        <input type="text" id="loginName" placeholder="Mindy A" required>
-      </div>
-      <div class="field">
-        <label>Grade</label>
-        <select id="loginGrade">
-          <option value="4">4th Grade</option>
-          <option value="5">5th Grade</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>PIN <span class="hint">Ask Ms. A for your PIN</span></label>
-        <input type="password" id="loginPin" inputmode="numeric" minlength="4" maxlength="6" placeholder="****" required>
-      </div>
-      <div class="modal-actions">
-        <button class="btn" value="close">Cancel</button>
-        <button class="btn primary" id="loginSubmit" type="submit">Login</button>
-      </div>
-    </form>
+    <div class="modal-header">
+      <h3>PIN Login</h3>
+      <button class="btn" type="button" onclick="document.getElementById('loginDialog').close()">✕</button>
+    </div>
+    <div class="field">
+      <label>Nickname (first name + last initial)</label>
+      <input type="text" id="loginName" placeholder="Mindy A" required>
+    </div>
+    <div class="field">
+      <label>Grade</label>
+      <select id="loginGrade">
+        <option value="4">4th Grade</option>
+        <option value="5">5th Grade</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>PIN <span class="hint">Ask Ms. A for your PIN</span></label>
+      <input type="password" id="loginPin" inputmode="numeric" minlength="4" maxlength="6" placeholder="****" required>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" type="button" onclick="document.getElementById('loginDialog').close()">Cancel</button>
+      <button class="btn primary" id="loginSubmit" type="button">Login</button>
+    </div>
   </dialog>
 
   <!-- Badges Modal -->
   <dialog id="badgesDialog">
-    <form method="dialog">
-      <div class="modal-header">
-        <h3>🏅 Badges Earned</h3>
-        <button class="btn" value="close">✕</button>
-      </div>
-      <div id="badgesList" class="grid"></div>
-      <div class="modal-actions">
-        <button class="btn" value="close">Close</button>
-      </div>
-    </form>
+    <div class="modal-header">
+      <h3>🏅 Badges Earned</h3>
+      <button class="btn" type="button" onclick="document.getElementById('badgesDialog').close()">✕</button>
+    </div>
+    <div id="badgesList" class="grid"></div>
+    <div class="modal-actions">
+      <button class="btn" type="button" onclick="document.getElementById('badgesDialog').close()">Close</button>
+    </div>
   </dialog>
 
   <!-- Inline demo CSV; replace via Import with a published Google Sheets CSV link. -->
@@ -198,10 +190,8 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       submissions: 'jq_submissions_v1' // [ {id,title,category,points,badge,player,grade,evidence,ts} ]
     };
 
-    // Teacher PIN (you asked for 1987)
-    const ADMIN_PIN = '1987';
-
-    const DEFAULT_PIN_MAP = { 'Guest': '0000' };
+    const ADMIN_PIN = '1987'; // teacher PIN
+    const DEFAULT_PIN_MAP = { 'Guest': '0000' }; // demo student PINs
 
     let state = {
       grade: 4,
@@ -335,7 +325,7 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
         </div>
         ${isApproved?`<p class="hint">Approved on ${fmtDate(prog.ts)} • Points: ${prog.pointsAwarded||q.points}</p>`: pend?`<p class="hint">Submitted on ${fmtDate(pend.ts)} • Waiting for review</p>`:''}
       `;
-      EL('#questDialog').showModal();
+      document.getElementById('questDialog').showModal();
     }
 
     function submitForReview(q){
@@ -346,13 +336,18 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       if(subs.some(s=> s.player===state.player && s.id===q.id)){ alert('Already submitted. Ask Ms. A to review.'); return; }
       subs.push({ id:q.id, title:q.title, category:q.category, points:q.points, badge:q.badge||'', player:state.player, grade:state.grade, evidence:ev, ts:Date.now() });
       setSubmissions(subs);
-      EL('#questDialog')?.close(); renderEverything();
+      document.getElementById('questDialog')?.close(); renderEverything();
       alert('Submitted! Ms. A will review your work.');
     }
 
     /* ========= Teacher Mode ========= */
-    function openTeacher(){ EL('#teacherDialog').showModal(); EL('#teacherPanel').style.display='none'; }
-    function handleTeacherEnter(e){ e.preventDefault(); const pin = EL('#teacherPin').value.trim(); if(pin !== ADMIN_PIN){ alert('Wrong PIN'); return; } EL('#teacherPanel').style.display='block'; renderReviewList(); }
+    function openTeacher(){ document.getElementById('teacherDialog').showModal(); document.getElementById('teacherPanel').style.display='none'; }
+    function handleTeacherEnter(){
+      const pin = EL('#teacherPin').value.trim();
+      if(pin !== ADMIN_PIN){ alert('Wrong PIN'); return; }
+      document.getElementById('teacherPanel').style.display='block';
+      renderReviewList();
+    }
 
     function renderReviewList(){
       const list = EL('#reviewList'); list.innerHTML='';
@@ -405,7 +400,7 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       const b = getBadges(); const names = Object.keys(b).filter(k=>b[k]);
       if(names.length===0){ list.innerHTML = '<p>No badges yet — complete quests to earn some! 🏅</p>'; }
       names.forEach(name=>{ const div=document.createElement('div'); div.className='card'; div.innerHTML = `<h3>🏅 ${name}</h3><p class="small">Earned by ${state.player}</p>`; list.appendChild(div); });
-      EL('#badgesDialog').showModal();
+      document.getElementById('badgesDialog').showModal();
     }
 
     function download(filename, content){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content], {type:'text/plain'})); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2500); }
@@ -415,10 +410,11 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       const rows = [['quest_id','player','done','points','timestamp','evidence']];
       for(const [player, recs] of Object.entries(all)){
         for(const [id, p] of Object.entries(recs)){
-          rows.push([id, player, p.done?'yes':'no', p.pointsAwarded||0, new Date(p.ts).toISOString(), (p.evidence||'').replaceAll('\n',' ') ]);
+          const ev = String(p.evidence||'').replaceAll('\n',' ');
+          rows.push([id, player, p.done?'yes':'no', p.pointsAwarded||0, new Date(p.ts).toISOString(), ev]);
         }
       }
-      const csv = rows.map(r=> r.map(v=>(/[\,\n\"]/).test(String(v))?`"${String(v).replaceAll('"','""')}"`:String(v)).join(',')).join('\n');
+      const csv = rows.map(r=> r.map(v=>(/[",\n]/.test(String(v))?`"${String(v).replaceAll('"','""')}"`:String(v))).join(',')).join('\n');
       download(`jungle-quest-progress-${Date.now()}.csv`, csv);
     }
 
@@ -438,13 +434,21 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       EL('#exportBtn').onclick = exportProgressCsv;
       EL('#importCsvBtn').onclick = promptCsvUrlAndLoad;
       EL('#resetBtn').onclick = resetAll;
-      EL('#loginBtn').onclick = ()=> EL('#loginDialog').showModal();
+      EL('#loginBtn').onclick = ()=> document.getElementById('loginDialog').showModal();
       EL('#teacherBtn').onclick = openTeacher;
-      EL('#loginForm').addEventListener('submit', handleLoginSubmit);
-      EL('#teacherForm').addEventListener('submit', handleTeacherEnter);
+      EL('#loginSubmit').onclick = handleLoginSubmit;
+      EL('#teacherEnterBtn').onclick = handleTeacherEnter;
     }
 
-    function handleLoginSubmit(e){ e.preventDefault(); const name = EL('#loginName').value.trim(); const grade = +EL('#loginGrade').value; const pin = EL('#loginPin').value.trim(); const expect = state.pinMap[name] || state.pinMap['Guest']; if(state.pinRequired && pin !== expect){ alert('Incorrect PIN. Try again or ask Ms. A.'); return; } state.player = name; state.grade = grade; saveProfile(); EL('#loginDialog').close(); renderEverything(); }
+    function handleLoginSubmit(){
+      const name = EL('#loginName').value.trim();
+      const grade = +EL('#loginGrade').value;
+      const pin = EL('#loginPin').value.trim();
+      const expect = state.pinMap[name] || state.pinMap['Guest'];
+      if(state.pinRequired && pin !== expect){ alert('Incorrect PIN. Try again or ask Ms. A.'); return; }
+      state.player = name; state.grade = grade; saveProfile();
+      document.getElementById('loginDialog').close(); renderEverything();
+    }
 
     async function init(){
       attachEvents();
