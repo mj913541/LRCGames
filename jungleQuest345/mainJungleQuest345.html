@@ -187,7 +187,8 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       progress: 'jq_progress_v2', // { [player]: { [questId]: {...} } }
       badges: 'jq_badges_v1',
       csvUrl: 'jq_csv_url_v1',
-      submissions: 'jq_submissions_v1' // [ {id,title,category,points,badge,player,grade,evidence,ts} ]
+      submissions: 'jq_submissions_v1', // [ {id,title,category,points,badge,player,grade,evidence,ts} ]
+      returns: 'jq_returns_v1'       // { [player]: { [questId]: { note, ts } } }
     };
 
     const ADMIN_PIN = '1987'; // teacher PIN
@@ -215,6 +216,11 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
 
     function getSubmissions(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.submissions)||'[]'); }catch(_){ return []; } }
     function setSubmissions(arr){ localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(arr)); }
+
+    function getReturns(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.returns)||'{}'); }catch(_){ return {}; } }
+    function setReturns(map){ localStorage.setItem(STORAGE_KEYS.returns, JSON.stringify(map)); }
+    function setReturnFor(player, questId, note){ const map=getReturns(); map[player]=map[player]||{}; map[player][questId]={note, ts:Date.now()}; setReturns(map); }
+    function clearReturnFor(player, questId){ const map=getReturns(); if(map[player]){ delete map[player][questId]; setReturns(map); } }
 
     // one-time migration from v1 flat progress
     (function migrate(){ const oldRaw = localStorage.getItem('jq_progress_v1'); if(oldRaw){ try{ const old = JSON.parse(oldRaw); const all = getAllProgress(); all[state.player] = old; localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(all)); localStorage.removeItem('jq_progress_v1'); }catch(_){}} })();
@@ -259,6 +265,9 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       const prog = getProgress();
       const list = gradeFiltered();
       const pending = getSubmissions();
+      const returns = getReturns();
+      const myReturns = returns[state.player] || {};
+
       list.forEach(q=>{
         const card = document.createElement('div'); card.className='card';
         const row = document.createElement('div'); row.className='meta';
@@ -268,8 +277,9 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
 
         const isDone = !!prog[q.id]?.done;
         const isPending = pending.some(s => s.player===state.player && s.id===q.id);
+        const ret = myReturns[q.id];
 
-        const h=document.createElement('h3'); h.textContent = q.title + (isDone ? ' ✅' : isPending ? ' ⏳' : '');
+        const h=document.createElement('h3'); h.textContent = q.title + (isDone ? ' ✅' : isPending ? ' ⏳' : ret ? ' ↩' : '');
 
         const details = document.createElement('details'); details.className='instructions';
         const sum = document.createElement('summary'); sum.textContent='Instructions';
@@ -280,6 +290,7 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
         if(q.badge){const b=document.createElement('span'); b.className='chip'; b.textContent = `🏅 ${q.badge}`; chips.appendChild(b);}        
         if(q.deadline){const d=document.createElement('span'); d.className='chip'; d.textContent = `⏰ due ${q.deadline}`; chips.appendChild(d);}        
         if(isPending){const d=document.createElement('span'); d.className='chip'; d.textContent = '⏳ awaiting review'; chips.appendChild(d);}        
+        if(ret){ const d=document.createElement('span'); d.className='chip'; d.textContent = `↩ returned — ${truncate(ret.note, 40)}`; chips.appendChild(d);}        
 
         const foot = document.createElement('div'); foot.className='foot';
         const openBtn = document.createElement('button'); openBtn.className='btn'; openBtn.textContent='Open'; openBtn.onclick=()=> openQuest(q);
@@ -293,6 +304,7 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       })
     }
 
+    function truncate(s, n){ s=String(s||''); return s.length>n? s.slice(0,n-1)+'…' : s; }
     function gradeFiltered(){ const quests = gradeQuests(state.grade); if(state.filters.category && state.filters.category!=='All') return quests.filter(q=> q.category===state.filters.category); return quests; }
     function categoryEmoji(cat){ const map={'Typing Trail':'⌨️','Destiny Discover':'🧭','Digital Citizenship':'🛡️','Creative Tech':'🎨','Research & Inquiry':'🔎'}; return map[cat]||'📘'; }
     function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
@@ -302,6 +314,8 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       const prog = getProgress()[q.id]||{};
       const isApproved = !!prog.done;
       const pend = getSubmissions().find(s=> s.player===state.player && s.id===q.id);
+      const retMap = getReturns()[state.player] || {};
+      const ret = retMap[q.id];
       EL('#qdTitle').textContent = q.title;
       EL('#qdCompleteBtn').onclick = ()=> submitForReview(q);
       EL('#qdCompleteBtn').textContent = (isApproved? 'Approved' : pend? 'Submitted' : 'Submit for Review');
@@ -309,6 +323,7 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       EL('#qdBody').innerHTML = `
         <div class="meta"><span>${categoryEmoji(q.category)} ${q.category}</span><span class="badge">+${q.points} pts</span></div>
         ${q.badge?`<p><span class="chip">🏅 ${q.badge}</span></p>`:''}
+        ${ret?`<p><span class="chip">↩ Returned: ${escapeHtml(ret.note)}</span></p>`:''}
         <details class="instructions" open>
           <summary>Instructions</summary>
           <div><p>${escapeHtml(q.instructions)}</p>${q.resource_url?`<p><a class="link" target="_blank" href="${q.resource_url}">Open Resource ↗</a></p>`:''}</div>
@@ -334,6 +349,8 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       if(!ok1 || !ok2){ alert('Please check both self‑check boxes to finish.'); return; }
       const subs = getSubmissions();
       if(subs.some(s=> s.player===state.player && s.id===q.id)){ alert('Already submitted. Ask Ms. A to review.'); return; }
+      // clear any previous return note for this quest
+      clearReturnFor(state.player, q.id);
       subs.push({ id:q.id, title:q.title, category:q.category, points:q.points, badge:q.badge||'', player:state.player, grade:state.grade, evidence:ev, ts:Date.now() });
       setSubmissions(subs);
       document.getElementById('questDialog')?.close(); renderEverything();
@@ -382,6 +399,8 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       const entry = { done:true, ts:Date.now(), evidence: s.evidence, pointsAwarded: adj, by: s.player };
       setProgressFor(s.player, s.id, entry);
       if(s.badge){ const b=getBadges(); b[s.badge]=true; setBadges(b); }
+      // clear any prior return notes for this quest
+      clearReturnFor(s.player, s.id);
       subs.splice(idx,1); setSubmissions(subs);
       renderEverything(); renderReviewList();
     }
@@ -389,6 +408,8 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
     function returnSubmission(idx){
       const subs = getSubmissions(); const s = subs[idx]; if(!s) return;
       const note = EL(`#note-${idx}`).value.trim();
+      // save note so the student sees it next time they open the quest
+      setReturnFor(s.player, s.id, note || 'Please revise and resubmit.');
       alert(`Returned to ${s.player}. ${note?`Note: ${note}`:''}`);
       subs.splice(idx,1); setSubmissions(subs);
       renderEverything(); renderReviewList();
@@ -425,7 +446,7 @@ q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sou
       catch(err){ console.error(err); alert('Could not load CSV. Make sure the link is public and is CSV.'); }
     }
 
-    function resetAll(){ if(!confirm('Clear this device\'s saved player, progress, badges, and submissions?')) return; localStorage.removeItem(STORAGE_KEYS.profile); localStorage.removeItem(STORAGE_KEYS.progress); localStorage.removeItem(STORAGE_KEYS.badges); localStorage.removeItem(STORAGE_KEYS.submissions); renderEverything(); }
+    function resetAll(){ if(!confirm('Clear this device\'s saved player, progress, badges, and submissions?')) return; localStorage.removeItem(STORAGE_KEYS.profile); localStorage.removeItem(STORAGE_KEYS.progress); localStorage.removeItem(STORAGE_KEYS.badges); localStorage.removeItem(STORAGE_KEYS.submissions); localStorage.removeItem(STORAGE_KEYS.returns); renderEverything(); }
 
     /* ========= Events & Init ========= */
     function attachEvents(){
