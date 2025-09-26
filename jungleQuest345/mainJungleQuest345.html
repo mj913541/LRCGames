@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jungle Quest — 4th & 5th Grade (Teacher-Approval Build)</title>
+  <style>
+    :root{ --jungle:#0e7a57; --leaf:#19a974; --sand:#f9f5e7; --bark:#2f3a2f; --accent:#ffd23f; }
+    html,body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial; background:linear-gradient(180deg,#e9fff4 0%, #f8fff9 60%, #fff 100%)}
+    header{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--jungle);color:#fff;position:sticky;top:0;z-index:10;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.5px}
+    .brand .lion{font-size:28px;filter:drop-shadow(0 2px 0 rgba(0,0,0,.12))}
+    .pill{background:rgba(255,255,255,.15);padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.35)}
+    .wrap{max-width:1100px;margin:20px auto;padding:0 16px 64px}
+    .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:6px 0 14px}
+    .toolbar .group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .btn{border:1px solid #d0d0d0;background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-weight:600}
+    .btn.primary{background:var(--leaf);color:#fff;border-color:transparent}
+    .btn.warn{background:#ffe8e8;border-color:#ffc7c7;color:#a72626}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{border:1px dashed #bbb;background:#fff;border-radius:999px;padding:4px 10px;font-size:12px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+    .card{background:#fff;border-radius:14px;border:1px solid #e7e7e7;box-shadow:0 4px 16px rgba(0,0,0,.06);padding:14px;display:flex;flex-direction:column;gap:10px}
+    .card h3{margin:0;font-size:18px;color:#1d2a21}
+    .meta{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:#335}
+    .badge{background:var(--accent);padding:3px 8px;border-radius:8px;font-weight:700}
+    .category{font-weight:700}
+    .pts{margin-left:auto;font-weight:800}
+    details.instructions{border:1px dashed #d8d8d8;padding:8px;border-radius:10px;background:#fcfffa}
+    details.instructions>summary{cursor:pointer;font-weight:700}
+    .foot{display:flex;gap:10px;margin-top:auto}
+    .foot .btn{flex:1}
+    .progress{height:10px;background:#eee;border-radius:999px;overflow:hidden}
+    .progress>div{height:100%;background:var(--leaf)}
+    .tabbar{display:flex;gap:6px;flex-wrap:wrap}
+    .tab{padding:6px 10px;border-radius:10px;border:1px solid #bfe3d4;background:#f3fff9;cursor:pointer}
+    .tab.active{background:var(--leaf);color:#fff;border-color:transparent}
+    .kpi{display:flex;gap:14px;flex-wrap:wrap}
+    .kpi .tile{background:#fff;border:1px solid #eee;padding:12px 14px;border-radius:12px;min-width:150px}
+    .kpi .tile h4{margin:0 0 6px 0;color:#1d2a21;font-size:13px;text-transform:uppercase;letter-spacing:.5px}
+    .kpi .tile .big{font-weight:900;font-size:24px}
+    .right{margin-left:auto}
+    /* modal */
+    dialog{border:none;border-radius:16px;box-shadow:0 24px 80px rgba(0,0,0,.25);max-width:720px;width:clamp(320px,90vw,720px)}
+    dialog::backdrop{background:rgba(0,0,0,.35)}
+    .modal-header{display:flex;gap:10px;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;padding:8px 2px;margin-bottom:8px}
+    .modal-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end;border-top:1px solid #eee;padding-top:10px;margin-top:14px}
+    .field{display:grid;gap:6px;margin:8px 0}
+    input[type="text"],input[type="number"],input[type="password"],select,textarea{padding:10px;border-radius:10px;border:1px solid #d8d8d8}
+    textarea{min-height:90px}
+    .hint{font-size:12px;color:#596}
+    .small{font-size:12px}
+    .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+    .link{color:#0b6;font-weight:700;text-decoration:underline}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><span class="lion">🦁</span> Jungle Quest <span class="pill">4th & 5th</span></div>
+    <div class="group">
+      <button class="btn" id="switchGradeBtn" title="Toggle 4th/5th">Switch Grade</button>
+      <button class="btn" id="badgesBtn">Badges</button>
+      <button class="btn" id="importCsvBtn" title="Load Quests from Google Sheets CSV">Import Quests</button>
+      <button class="btn" id="exportBtn" title="Download class progress CSV">Export Progress</button>
+      <button class="btn warn" id="resetBtn" title="Clear this device's saved progress">Reset</button>
+      <button class="btn" id="teacherBtn" title="Review & approve submissions">Teacher Mode</button>
+      <button class="btn primary" id="loginBtn">PIN Login</button>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <div class="toolbar">
+      <div class="kpi">
+        <div class="tile"><h4>Player</h4><div class="big" id="kpiPlayer">Guest</div><div class="small" id="kpiGrade">Grade: 4</div></div>
+        <div class="tile"><h4>Total Points</h4><div class="big" id="kpiPoints">0</div><div class="progress"><div id="pointsProgress" style="width:0%"></div></div></div>
+        <div class="tile"><h4>Quests Done</h4><div class="big" id="kpiDone">0</div><div class="small" id="kpiTotal">of 0</div></div>
+      </div>
+      <div class="right tabbar" id="categoryTabs"></div>
+    </div>
+
+    <div class="chips" id="activeFilters"></div>
+
+    <div class="grid" id="questsGrid"></div>
+  </div>
+
+  <!-- Quest Detail Modal -->
+  <dialog id="questDialog">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3 id="qdTitle">Quest</h3>
+        <button class="btn" value="close">✕</button>
+      </div>
+      <div id="qdBody"></div>
+      <div class="modal-actions">
+        <button class="btn" value="close">Close</button>
+        <button class="btn primary" id="qdCompleteBtn" type="button">Submit for Review</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Teacher Review Modal -->
+  <dialog id="teacherDialog">
+    <form method="dialog" id="teacherForm">
+      <div class="modal-header">
+        <h3>Teacher Review Queue</h3>
+        <button class="btn" value="close">✕</button>
+      </div>
+      <div class="field">
+        <label>Teacher PIN</label>
+        <input type="password" id="teacherPin" inputmode="numeric" minlength="4" maxlength="6" placeholder="****" required>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" value="close">Cancel</button>
+        <button class="btn primary" id="teacherEnterBtn" type="submit">Enter</button>
+      </div>
+      <div id="teacherPanel" style="display:none">
+        <div class="small hint">Approve = add points • Return = no points (student can fix and resubmit)</div>
+        <div id="reviewList" class="grid"></div>
+        <div class="modal-actions">
+          <button class="btn" value="close">Close</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Login Modal -->
+  <dialog id="loginDialog">
+    <form method="dialog" id="loginForm">
+      <div class="modal-header">
+        <h3>PIN Login</h3>
+        <button class="btn" value="close">✕</button>
+      </div>
+      <div class="field">
+        <label>Nickname (first name + last initial)</label>
+        <input type="text" id="loginName" placeholder="Mindy A" required>
+      </div>
+      <div class="field">
+        <label>Grade</label>
+        <select id="loginGrade">
+          <option value="4">4th Grade</option>
+          <option value="5">5th Grade</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>PIN <span class="hint">Ask Ms. A for your PIN</span></label>
+        <input type="password" id="loginPin" inputmode="numeric" minlength="4" maxlength="6" placeholder="****" required>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" value="close">Cancel</button>
+        <button class="btn primary" id="loginSubmit" type="submit">Login</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Badges Modal -->
+  <dialog id="badgesDialog">
+    <form method="dialog">
+      <div class="modal-header">
+        <h3>🏅 Badges Earned</h3>
+        <button class="btn" value="close">✕</button>
+      </div>
+      <div id="badgesList" class="grid"></div>
+      <div class="modal-actions">
+        <button class="btn" value="close">Close</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Inline demo CSV; replace via Import with a published Google Sheets CSV link. -->
+  <script id="quests-csv" type="text/csv">
+id,title,grade,category,points,type,instructions,resource_url,answer_key,badge,deadline
+q4-typing-01,Home Row Sprint,4,Typing Trail,5,manual,"Open typing.com and complete Lesson: Home Row. Aim for 10 min focused typing. Screenshot your results.",https://www.typing.com/student/lessons,,Keyboard Cub,,
+q4-destiny-01,Find a Mystery Book,4,Destiny Discover,8,manual,"In Destiny, search for 'mystery'. Use filters: Format = Book, Status = In. Write down 1 call number + title.",https://search.follettsoftware.com/metasearch/ui/47893,,Catalog Scout,,
+q4-digcit-01,Strong Passwords,4,Digital Citizenship,6,auto,"Play the password game and score 6/8+. Take the quiz.",https://www.commonsense.org/education/digital-citizenship/lesson/strong-passwords,6+,Password Pal,,
+q4-creative-01,Slides Mini-Poster,4,Creative Tech,10,manual,"In Google Slides, make a one-slide poster recommending a book you love. Include title, author, genre color, and 1 image.",https://slides.new,,Design Jaguar,,
+q4-research-01,Animals vs. Habitat,4,Research & Inquiry,8,manual,"Use Britannica School to list 3 facts about how an animal survives in its habitat. Cite the article title.",https://school.eb.com/levels/elementary,,Fact Finder,,
+q5-typing-01,Accuracy Over Speed,5,Typing Trail,6,manual,"Typing.com 'Intermediate: Accuracy'. Focus on 95%+. Submit screenshot.",https://www.typing.com/student/lessons,,Steady Cheetah,,
+q5-destiny-01,Advanced Search Filters,5,Destiny Discover,10,manual,"Find a Science Fiction (green) book by publication year after 2018. Record title + call #.",https://search.follettsoftware.com/metasearch/ui/47893,,Destiny Ranger,,
+q5-digcit-01,Media Balance Exit Ticket,5,Digital Citizenship,6,auto,"Watch the short video on media balance then complete the 3‑question check.",https://www.commonsense.org/education/digital-citizenship/lesson/media-balance,,Balance Buddy,,
+q5-creative-01,Infographic in Drawings,5,Creative Tech,12,manual,"Use Google Drawings to make a mini‑infographic: 'How to Care for Chromebooks' with 4 icons, 4 tips.",https://drawings.google.com,,Tech Guardian,,
+q5-research-01,Database Triangulation,5,Research & Inquiry,12,manual,"Find 2 sources (Britannica + Newsela) about the same topic. Paraphrase 3 facts and cite both.",https://newsela.com,,Source Sleuth,,
+  </script>
+
+  <script>
+    /********************
+     * Jungle Quest — Teacher-Approval Build
+     ********************/
+    const EL = sel => document.querySelector(sel);
+    const ELS = sel => Array.from(document.querySelectorAll(sel));
+
+    const STORAGE_KEYS = {
+      profile: 'jq_profile_v1',
+      progress: 'jq_progress_v2', // { [player]: { [questId]: {...} } }
+      badges: 'jq_badges_v1',
+      csvUrl: 'jq_csv_url_v1',
+      submissions: 'jq_submissions_v1' // [ {id,title,category,points,badge,player,grade,evidence,ts} ]
+    };
+
+    // Teacher PIN (you asked for 1987)
+    const ADMIN_PIN = '1987';
+
+    const DEFAULT_PIN_MAP = { 'Guest': '0000' };
+
+    let state = {
+      grade: 4,
+      player: 'Guest',
+      pinRequired: true,
+      pinMap: { ...DEFAULT_PIN_MAP },
+      quests: [],
+      filters: { category: 'All' }
+    };
+
+    /* ========= Storage helpers ========= */
+    function saveProfile(){ localStorage.setItem(STORAGE_KEYS.profile, JSON.stringify({player:state.player, grade:state.grade})); }
+    function loadProfile(){ try{ const p = JSON.parse(localStorage.getItem(STORAGE_KEYS.profile)||'{}'); if(p.player) state.player=p.player; if(p.grade) state.grade=+p.grade; }catch(_){} }
+
+    function getAllProgress(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.progress)||'{}'); }catch(_){ return {}; } }
+    function getProgress(player = state.player){ const all = getAllProgress(); return all[player] || {}; }
+    function setProgressFor(player, questId, entry){ const all = getAllProgress(); all[player] = all[player] || {}; all[player][questId] = entry; localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(all)); }
+
+    function getBadges(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.badges)||'{}'); }catch(_){ return {}; } }
+    function setBadges(next){ localStorage.setItem(STORAGE_KEYS.badges, JSON.stringify(next)); }
+
+    function getSubmissions(){ try{ return JSON.parse(localStorage.getItem(STORAGE_KEYS.submissions)||'[]'); }catch(_){ return []; } }
+    function setSubmissions(arr){ localStorage.setItem(STORAGE_KEYS.submissions, JSON.stringify(arr)); }
+
+    // one-time migration from v1 flat progress
+    (function migrate(){ const oldRaw = localStorage.getItem('jq_progress_v1'); if(oldRaw){ try{ const old = JSON.parse(oldRaw); const all = getAllProgress(); all[state.player] = old; localStorage.setItem(STORAGE_KEYS.progress, JSON.stringify(all)); localStorage.removeItem('jq_progress_v1'); }catch(_){}} })();
+
+    function pointsTotal(player = state.player){ const prog = getProgress(player); return Object.values(prog).reduce((sum,p)=> sum + (p.pointsAwarded||0), 0); }
+    function gradeQuests(grade){ return state.quests.filter(q => String(q.grade)===String(grade)); }
+    function uniqueCategories(list){ return ['All', ...new Set(list.map(q=>q.category))]; }
+    function fmtDate(ts){ const d=new Date(ts); return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
+
+    /* ========= CSV ========= */
+    async function loadQuestsFromCsvUrl(url){ const res = await fetch(url); if(!res.ok) throw new Error('Failed to fetch CSV'); const csv = await res.text(); state.quests = parseCsv(csv); renderEverything(); localStorage.setItem(STORAGE_KEYS.csvUrl, url); }
+    function parseCsv(text){
+      const lines = text.trim().split(/\r?\n/);
+      const headers = lines.shift().split(',').map(h=>h.trim());
+      return lines.map(line=>{ let cells=[],cur='',inQ=false; for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='"'){ inQ=!inQ; continue; } if(ch===',' && !inQ){ cells.push(cur); cur=''; continue; } cur+=ch; } cells.push(cur); const obj={}; headers.forEach((h,i)=> obj[h]= (cells[i]||'').trim()); obj.points=Number(obj.points||0); obj.grade=Number(obj.grade||0); return obj; });
+    }
+    function loadInlineCsv(){ const node = EL('#quests-csv'); return node? parseCsv(node.textContent) : []; }
+
+    /* ========= Render ========= */
+    function renderEverything(){
+      EL('#kpiPlayer').textContent = state.player || 'Guest';
+      EL('#kpiGrade').textContent = `Grade: ${state.grade}`;
+
+      const quests = gradeQuests(state.grade);
+      const totalPts = pointsTotal();
+      EL('#kpiPoints').textContent = totalPts;
+      EL('#pointsProgress').style.width = Math.min(100, (totalPts/100)*100) + '%';
+      const prog = getProgress();
+      const doneCount = quests.filter(q=> prog[q.id]?.done).length;
+      EL('#kpiDone').textContent = doneCount;
+      EL('#kpiTotal').textContent = `of ${quests.length}`;
+
+      const tabs = uniqueCategories(quests);
+      const tabsNode = EL('#categoryTabs'); tabsNode.innerHTML='';
+      tabs.forEach(cat=>{ const b=document.createElement('button'); b.className='tab'+(state.filters.category===cat?' active':''); b.textContent=cat; b.onclick=()=>{state.filters.category=cat; renderGrid();}; tabsNode.appendChild(b); });
+
+      renderGrid();
+    }
+
+    function renderGrid(){
+      const grid = EL('#questsGrid'); grid.innerHTML='';
+      const prog = getProgress();
+      const list = gradeFiltered();
+      const pending = getSubmissions();
+      list.forEach(q=>{
+        const card = document.createElement('div'); card.className='card';
+        const row = document.createElement('div'); row.className='meta';
+        const cat = document.createElement('span'); cat.className='category'; cat.textContent = categoryEmoji(q.category)+ ' ' + q.category;
+        const pts = document.createElement('span'); pts.className='pts'; pts.textContent = `+${q.points} pts`;
+        row.appendChild(cat); row.appendChild(pts);
+
+        const isDone = !!prog[q.id]?.done;
+        const isPending = pending.some(s => s.player===state.player && s.id===q.id);
+
+        const h=document.createElement('h3'); h.textContent = q.title + (isDone ? ' ✅' : isPending ? ' ⏳' : '');
+
+        const details = document.createElement('details'); details.className='instructions';
+        const sum = document.createElement('summary'); sum.textContent='Instructions';
+        const p = document.createElement('div'); p.innerHTML = `<p>${escapeHtml(q.instructions)}</p>` + (q.resource_url?`<p><a class="link" target="_blank" href="${q.resource_url}">Open Resource ↗</a></p>`:'');
+        details.appendChild(sum); details.appendChild(p);
+
+        const chips = document.createElement('div'); chips.className='chips';
+        if(q.badge){const b=document.createElement('span'); b.className='chip'; b.textContent = `🏅 ${q.badge}`; chips.appendChild(b);}        
+        if(q.deadline){const d=document.createElement('span'); d.className='chip'; d.textContent = `⏰ due ${q.deadline}`; chips.appendChild(d);}        
+        if(isPending){const d=document.createElement('span'); d.className='chip'; d.textContent = '⏳ awaiting review'; chips.appendChild(d);}        
+
+        const foot = document.createElement('div'); foot.className='foot';
+        const openBtn = document.createElement('button'); openBtn.className='btn'; openBtn.textContent='Open'; openBtn.onclick=()=> openQuest(q);
+        const doneBtn = document.createElement('button'); doneBtn.className='btn primary'; doneBtn.textContent = isDone? 'Approved' : isPending ? 'Submitted' : 'Submit for Review';
+        doneBtn.disabled = isDone || isPending;
+        doneBtn.onclick=()=> submitForReview(q);
+        foot.appendChild(openBtn); foot.appendChild(doneBtn);
+
+        card.appendChild(h); card.appendChild(row); card.appendChild(chips); card.appendChild(details); card.appendChild(foot);
+        grid.appendChild(card);
+      })
+    }
+
+    function gradeFiltered(){ const quests = gradeQuests(state.grade); if(state.filters.category && state.filters.category!=='All') return quests.filter(q=> q.category===state.filters.category); return quests; }
+    function categoryEmoji(cat){ const map={'Typing Trail':'⌨️','Destiny Discover':'🧭','Digital Citizenship':'🛡️','Creative Tech':'🎨','Research & Inquiry':'🔎'}; return map[cat]||'📘'; }
+    function escapeHtml(s){ return (s||'').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+
+    /* ========= Quest modal & submission ========= */
+    function openQuest(q){
+      const prog = getProgress()[q.id]||{};
+      const isApproved = !!prog.done;
+      const pend = getSubmissions().find(s=> s.player===state.player && s.id===q.id);
+      EL('#qdTitle').textContent = q.title;
+      EL('#qdCompleteBtn').onclick = ()=> submitForReview(q);
+      EL('#qdCompleteBtn').textContent = (isApproved? 'Approved' : pend? 'Submitted' : 'Submit for Review');
+      EL('#qdCompleteBtn').disabled = isApproved || !!pend;
+      EL('#qdBody').innerHTML = `
+        <div class="meta"><span>${categoryEmoji(q.category)} ${q.category}</span><span class="badge">+${q.points} pts</span></div>
+        ${q.badge?`<p><span class="chip">🏅 ${q.badge}</span></p>`:''}
+        <details class="instructions" open>
+          <summary>Instructions</summary>
+          <div><p>${escapeHtml(q.instructions)}</p>${q.resource_url?`<p><a class="link" target="_blank" href="${q.resource_url}">Open Resource ↗</a></p>`:''}</div>
+        </details>
+        <div class="field">
+          <label>Evidence (paste link or notes for Ms. A)</label>
+          <textarea id="qdEvidence" placeholder="e.g., Slides link, screenshot link, call # & title...">${pend?.evidence||prog.evidence||''}</textarea>
+          <div class="hint">When you submit, it goes to Ms. A for approval. Points show after she says yes.</div>
+        </div>
+        <div class="field">
+          <label>Self‑check</label>
+          <label class="small"><input type="checkbox" id="qdChecklist1"> I followed all instructions</label>
+          <label class="small"><input type="checkbox" id="qdChecklist2"> I did my best work</label>
+        </div>
+        ${isApproved?`<p class="hint">Approved on ${fmtDate(prog.ts)} • Points: ${prog.pointsAwarded||q.points}</p>`: pend?`<p class="hint">Submitted on ${fmtDate(pend.ts)} • Waiting for review</p>`:''}
+      `;
+      EL('#questDialog').showModal();
+    }
+
+    function submitForReview(q){
+      const ev = EL('#qdEvidence')?.value?.trim()||'';
+      const ok1 = EL('#qdChecklist1')?.checked; const ok2 = EL('#qdChecklist2')?.checked;
+      if(!ok1 || !ok2){ alert('Please check both self‑check boxes to finish.'); return; }
+      const subs = getSubmissions();
+      if(subs.some(s=> s.player===state.player && s.id===q.id)){ alert('Already submitted. Ask Ms. A to review.'); return; }
+      subs.push({ id:q.id, title:q.title, category:q.category, points:q.points, badge:q.badge||'', player:state.player, grade:state.grade, evidence:ev, ts:Date.now() });
+      setSubmissions(subs);
+      EL('#questDialog')?.close(); renderEverything();
+      alert('Submitted! Ms. A will review your work.');
+    }
+
+    /* ========= Teacher Mode ========= */
+    function openTeacher(){ EL('#teacherDialog').showModal(); EL('#teacherPanel').style.display='none'; }
+    function handleTeacherEnter(e){ e.preventDefault(); const pin = EL('#teacherPin').value.trim(); if(pin !== ADMIN_PIN){ alert('Wrong PIN'); return; } EL('#teacherPanel').style.display='block'; renderReviewList(); }
+
+    function renderReviewList(){
+      const list = EL('#reviewList'); list.innerHTML='';
+      const subs = getSubmissions().sort((a,b)=> a.ts-b.ts);
+      if(subs.length===0){ list.innerHTML='<p>No submissions yet. 🎉</p>'; return; }
+      subs.forEach((s, idx)=>{
+        const card=document.createElement('div'); card.className='card';
+        card.innerHTML = `
+          <h3>${s.title} <span class="badge">+${s.points} pts</span></h3>
+          <div class="meta">👤 ${s.player} • Grade ${s.grade} • ${categoryEmoji(s.category)} ${s.category} • ${fmtDate(s.ts)}</div>
+          ${s.badge?`<div class="chips"><span class="chip">🏅 ${s.badge}</span></div>`:''}
+          <details class="instructions" open>
+            <summary>Evidence</summary>
+            <div><p class="mono">${escapeHtml(s.evidence||'(none)')}</p></div>
+          </details>
+          <div class="field"><label>Adjust Points (optional)</label><input type="number" id="adj-${idx}" min="0" step="1" value="${s.points}"></div>
+          <div class="field"><label>Return Note (optional)</label><input type="text" id="note-${idx}" placeholder="What to fix..."></div>
+          <div class="foot">
+            <button class="btn" id="ret-${idx}">Return</button>
+            <button class="btn primary" id="app-${idx}">Approve</button>
+          </div>
+        `;
+        list.appendChild(card);
+        EL(`#app-${idx}`).onclick = ()=> approveSubmission(idx);
+        EL(`#ret-${idx}`).onclick = ()=> returnSubmission(idx);
+      });
+    }
+
+    function approveSubmission(idx){
+      const subs = getSubmissions(); const s = subs[idx]; if(!s) return;
+      const adj = Number(EL(`#adj-${idx}`).value||s.points);
+      const entry = { done:true, ts:Date.now(), evidence: s.evidence, pointsAwarded: adj, by: s.player };
+      setProgressFor(s.player, s.id, entry);
+      if(s.badge){ const b=getBadges(); b[s.badge]=true; setBadges(b); }
+      subs.splice(idx,1); setSubmissions(subs);
+      renderEverything(); renderReviewList();
+    }
+
+    function returnSubmission(idx){
+      const subs = getSubmissions(); const s = subs[idx]; if(!s) return;
+      const note = EL(`#note-${idx}`).value.trim();
+      alert(`Returned to ${s.player}. ${note?`Note: ${note}`:''}`);
+      subs.splice(idx,1); setSubmissions(subs);
+      renderEverything(); renderReviewList();
+    }
+
+    /* ========= Badges / Export / Import / Reset ========= */
+    function openBadges(){
+      const list = EL('#badgesList'); list.innerHTML='';
+      const b = getBadges(); const names = Object.keys(b).filter(k=>b[k]);
+      if(names.length===0){ list.innerHTML = '<p>No badges yet — complete quests to earn some! 🏅</p>'; }
+      names.forEach(name=>{ const div=document.createElement('div'); div.className='card'; div.innerHTML = `<h3>🏅 ${name}</h3><p class="small">Earned by ${state.player}</p>`; list.appendChild(div); });
+      EL('#badgesDialog').showModal();
+    }
+
+    function download(filename, content){ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([content], {type:'text/plain'})); a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2500); }
+
+    function exportProgressCsv(){
+      const all = getAllProgress();
+      const rows = [['quest_id','player','done','points','timestamp','evidence']];
+      for(const [player, recs] of Object.entries(all)){
+        for(const [id, p] of Object.entries(recs)){
+          rows.push([id, player, p.done?'yes':'no', p.pointsAwarded||0, new Date(p.ts).toISOString(), (p.evidence||'').replaceAll('\n',' ') ]);
+        }
+      }
+      const csv = rows.map(r=> r.map(v=>(/[\,\n\"]/).test(String(v))?`"${String(v).replaceAll('"','""')}"`:String(v)).join(',')).join('\n');
+      download(`jungle-quest-progress-${Date.now()}.csv`, csv);
+    }
+
+    async function promptCsvUrlAndLoad(){
+      const url = prompt('Paste a Google Sheets "Publish to the web" CSV URL (or any CSV URL).\n\nHeaders required: id,title,grade,category,points,type,instructions,resource_url,answer_key,badge,deadline');
+      if(!url) return;
+      try{ await loadQuestsFromCsvUrl(url); alert('Quests loaded!'); }
+      catch(err){ console.error(err); alert('Could not load CSV. Make sure the link is public and is CSV.'); }
+    }
+
+    function resetAll(){ if(!confirm('Clear this device\'s saved player, progress, badges, and submissions?')) return; localStorage.removeItem(STORAGE_KEYS.profile); localStorage.removeItem(STORAGE_KEYS.progress); localStorage.removeItem(STORAGE_KEYS.badges); localStorage.removeItem(STORAGE_KEYS.submissions); renderEverything(); }
+
+    /* ========= Events & Init ========= */
+    function attachEvents(){
+      EL('#switchGradeBtn').onclick = ()=>{ state.grade = state.grade===4?5:4; saveProfile(); renderEverything(); };
+      EL('#badgesBtn').onclick = openBadges;
+      EL('#exportBtn').onclick = exportProgressCsv;
+      EL('#importCsvBtn').onclick = promptCsvUrlAndLoad;
+      EL('#resetBtn').onclick = resetAll;
+      EL('#loginBtn').onclick = ()=> EL('#loginDialog').showModal();
+      EL('#teacherBtn').onclick = openTeacher;
+      EL('#loginForm').addEventListener('submit', handleLoginSubmit);
+      EL('#teacherForm').addEventListener('submit', handleTeacherEnter);
+    }
+
+    function handleLoginSubmit(e){ e.preventDefault(); const name = EL('#loginName').value.trim(); const grade = +EL('#loginGrade').value; const pin = EL('#loginPin').value.trim(); const expect = state.pinMap[name] || state.pinMap['Guest']; if(state.pinRequired && pin !== expect){ alert('Incorrect PIN. Try again or ask Ms. A.'); return; } state.player = name; state.grade = grade; saveProfile(); EL('#loginDialog').close(); renderEverything(); }
+
+    async function init(){
+      attachEvents();
+      loadProfile();
+      const saved = localStorage.getItem(STORAGE_KEYS.csvUrl);
+      if(saved){ try{ await loadQuestsFromCsvUrl(saved); } catch(e){ state.quests = loadInlineCsv(); } }
+      else { state.quests = loadInlineCsv(); }
+      renderEverything();
+    }
+
+    init();
+  </script>
+</body>
+</html>

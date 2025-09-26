@@ -1,265 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Staff Page" />
-    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Staff Page" />
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
   <title>Staff - Lions' Den</title>
   <style>
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  body {
-    background-image: url('../pictures/otherIcons/backgroundStaff.png');
-    background-size: cover;
-    background-position: center right;
-    background-repeat: no-repeat;
-    height: 100vh;
-    font-family: 'Segoe UI', sans-serif;
-    color: white;
-  }
+    body {
+      background-image: url('../pictures/otherIcons/backgroundStaff.png');
+      background-size: cover;
+      background-position: center right;
+      background-repeat: no-repeat;
+      height: 100vh;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+    }
 
-  .overlay {
-    position: absolute;
-    top: 40px;
-    left: 250px;
-    min-width: 400px;
-    max-width: 900px;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    z-index: 10;
-  }
+    .overlay {
+      position: absolute;
+      top: 40px;
+      left: 250px;
+      min-width: 400px;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 10;
+    }
 
-  .overlay h1 {
-    font-size: 3rem;
-    margin-bottom: 10px;
-    color: #e8f5e9;
-    text-shadow: 2px 2px 6px #1b5e20;
-  }
+    .overlay h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      color: #e8f5e9;
+      text-shadow: 2px 2px 6px #1b5e20;
+    }
 
-  .toggle-card {
-    background: rgba(85, 107, 47, 0.6);
-    border-radius: 16px;
-    padding: 10px 15px;
-    max-width: 900px;
-    transition: width 0.3s ease-in-out, background 0.3s ease-in-out;
-  }
+    .toggle-card {
+      background: rgba(85, 107, 47, 0.6);
+      border-radius: 16px;
+      padding: 10px 15px;
+      max-width: 900px;
+      transition: width 0.3s ease-in-out, background 0.3s ease-in-out;
+    }
+    .toggle-card.open { background: rgba(85, 107, 47, 1); }
 
-  .toggle-card.open {
-    background: rgba(85, 107, 47, 1);
-  }
+    .toggle-card h2 {
+      cursor: pointer;
+      font-size: 1.2rem;
+      margin-bottom: 5px;
+    }
 
-  .toggle-card h2 {
-    cursor: pointer;
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-  }
+    .card-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .card-columns .column {
+      padding: 10px 15px;
+      border-left: 5px double #1b5e20;
+    }
+    .card-columns .column:first-child { border-left: none; }
 
-  .card-columns {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Change to 4 for 4 columns */
-  }
+    .card-content { display: none; font-size: 1rem; padding-top: 5px; }
+    .card-content.show { display: block; }
 
-  .card-columns .column {
-    padding: 10px 15px;
-    border-left: 5px double #1b5e20; /* Bold double jungle green divider */
-  }
+    /* List + link styles inside cards */
+    .toggle-card ul { padding-left: 30px; margin: 10px 0; }
+    .toggle-card li { margin-bottom: 6px; }
+    .toggle-card a { color: #1e88e5; text-decoration: underline; font-weight: normal; }
 
-  .card-columns .column:first-child {
-    border-left: none; /* Remove divider on first column */
-  }
+    .right-box {
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      bottom: 30px;
+      padding: 16px;
+      border-radius: 14px;
+      width: 70vw;
+    }
+    .quick-links-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 30px;
+      justify-items: center;
+    }
+    .quick-link { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .quick-link img { width: 100px; height: 100px; border-radius: 18px; margin-bottom: 4px; }
+    .quick-link a {
+      color: #2e7d32; text-decoration: none; font-weight: bold;
+      font-size: 1rem; line-height: 1.1rem;
+    }
 
-  .card-content {
-    display: none;
-    font-size: 1rem;
-    padding-top: 5px;
-  }
+    /* ---------- Pumpkin Patch CTA + matching flyer pill ---------- */
+    .event-cta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #ffb347 0%, #ff7a59 50%, #ffa94d 100%);
+      color: #2e3d2f;
+      font-weight: 800;
+      text-decoration: none !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      border: 2px solid rgba(27, 94, 32, 0.35);
+      transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+    }
+    .event-cta:hover {
+      transform: translateY(-2px) scale(1.01);
+      box-shadow: 0 12px 26px rgba(0,0,0,0.35);
+      filter: saturate(1.05);
+    }
+    .event-cta:focus-visible { outline: 3px solid #1e88e5; outline-offset: 3px; border-radius: 18px; }
 
-  .card-content.show {
-    display: block;
-  }
+    .event-cta .thumb {
+      width: 56px; height: 56px; border-radius: 12px; flex-shrink: 0;
+      background: #fff;
+      display: grid; place-items: center;
+      box-shadow: inset 0 0 0 2px rgba(27, 94, 32, 0.15);
+      position: relative;
+    }
+    /* Use your pumpkin asset if preferred: */
+    /* .event-cta .thumb { background: url('../pictures/otherIcons/pumpkin.png') center/contain no-repeat, #fff; } */
 
-  /* Indent bulleted lists in card content */
-.toggle-card ul {
-  padding-left: 30px; /* Increase indent */
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
+    .event-cta .thumb::after { content: "🎃"; font-size: 28px; line-height: 1; }
 
-/* Style list items */
-.toggle-card li {
-  margin-bottom: 6px;
-}
+    .event-cta .text { display: flex; flex-direction: column; align-items: flex-start; }
+    .event-cta .title { font-size: 1.05rem; line-height: 1.15; color: #2e3d2f; text-shadow: 0 1px 0 rgba(255,255,255,0.25); }
+    .event-cta .sub { font-weight: 600; font-size: 0.9rem; opacity: 0.95; color: #1b5e20; }
+    .event-cta .badge {
+      margin-left: auto; background: #1b5e20; color: #e8f5e9;
+      padding: 4px 8px; border-radius: 999px; font-size: 0.8rem;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    }
 
-/* Style links inside cards */
-.toggle-card a {
-  color: #1e88e5;         /* Nice medium blue */
-  text-decoration: underline;
-  font-weight: normal;    /* Optional: removes bold if you want it softer */
-}
-  .right-box {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 30px;
-    padding: 16px;
-    border-radius: 14px;
-    width: 70vw;
-  }
+    .event-cta-glow { position: relative; }
+    .event-cta-glow::before {
+      content: ""; position: absolute; inset: -3px; border-radius: 18px;
+      background: conic-gradient(from 0deg, #ffb347, #ff7a59, #ffa94d, #ffb347);
+      filter: blur(10px); opacity: 0.35; z-index: -1;
+      animation: spin 6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-  .quick-links-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 30px;
-    justify-items: center;
-  }
+    /* Flyer pill (smaller button with icon) */
+    .pill-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 8px 12px; border-radius: 999px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #e8f5e9; text-decoration: none; font-weight: 700;
+      border: 1.5px solid rgba(255,255,255,0.35);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+    }
+    .pill-btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255, 255, 255, 0.22);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+    }
+    .pill-icon { width: 18px; height: 18px; display: inline-grid; place-items: center; }
+    .pill-icon::before { content: "📄"; }
 
-  .quick-link {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
-
-  .quick-link img {
-    width: 100px;
-    height: 100px;
-    border-radius: 18px;
-    margin-bottom: 4px;
-  }
-
-  .quick-link a {
-    color: #2e7d32;
-    text-decoration: none;
-    font-weight: bold;
-    font-size: 1rem;
-    line-height: 1.1rem;
-  }
-</style>
-
+    /* Keep default link rules from card, but don't override CTA/pill */
+    .toggle-card a.event-cta,
+    .toggle-card a.pill-btn { color: inherit; text-decoration: none; }
+    
+    @media (prefers-reduced-motion: reduce) {
+      .event-cta, .event-cta:hover, .pill-btn, .pill-btn:hover {
+        transition: none; transform: none;
+      }
+      .event-cta-glow::before { animation: none; }
+    }
+  </style>
 </head>
 <body>
   <div class="overlay">
-<h1>Lion Staff Den</h1>
+    <h1>Lion Staff Den</h1>
 
-<div class="toggle-card">
-  <h2 onclick="toggleCard(this)">⬇️ Tech Prep & Troubleshooting</h2>
-  <div class="card-content">
-    <div class="card-columns">
-      <div class="column">
-        <p><b>Start-of-Year Chromebook Tips:</b></br>
-          <ul>
-        <li>Plug in your Chromebook 1–2 days before returning. If fully drained, it may need hours of charging before turning on. </li>
-        <li>Click the clock in the lower right to check for system updates.</p></ul></li>
-      </div>
-      <div class="column">
-        <p><b>Password Reset:</b></br>
-          <ul>
-       <li>Visit <a href="https://mypassword.sd308.org" target="_blank">mypassword.sd308.org</a> to reset your password early. </li>
-        <li>Use your short username (e.g., malbrecht). </li>
-        <li>Password updates may take a few minutes across systems.</p></li>
-        </ul>
-      </div>
- <div class="column">
-        <p><b>Tech Help Videos & Docs:</b></p>
-        <ul>
-          <li><a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU" target="_blank">Submit a Tech Ticket</a></li>
-          <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing" target="_blank">Project from Chromebook</a></li>
-          <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library" target="_blank">Google Calendar: Set Up Conferences</a></li>
-          <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing" target="_blank">Google Drive: Share Settings</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="toggle-card">
-  <h2 onclick="toggleCard(this)">⬇️ LRC Materials & Requests</h2>
-  <div class="card-content">
-    <div class="card-columns">
-      <div class="column">
-        <p><b>Book Requests:</b><br>
-          <ul>
-       <li> You can request unlimited books through the <a href="../destiny.html" target="_blank">Destiny catalog</a>. </li>
-       <li> Please allow one week for delivery.</p></li></ul>
-      </div>
-      <div class="column">
-        <p><b>Catalog Help:</b></p>
-        <div style="position:relative; padding-bottom:52%; height:0;">
-          <iframe src="https://www.loom.com/embed/3ec5cea364f3443492344f2f4fae05c5?sid=86988d3e-060c-4c64-87ee-dd1c454f7bb1" 
-          frameborder="0" allowfullscreen style="position:absolute; top:0; left:0; width:95%; height:95%;"></iframe>
+    <div class="toggle-card">
+      <h2 onclick="toggleCard(this)">⬇️ Tech Prep & Troubleshooting</h2>
+      <div class="card-content">
+        <div class="card-columns">
+          <div class="column">
+            <p><b>Start-of-Year Chromebook Tips:</b></p>
+            <ul>
+              <li>Plug in your Chromebook 1–2 days before returning. If fully drained, it may need hours of charging before turning on.</li>
+              <li>Click the clock in the lower right to check for system updates.</li>
+            </ul>
+          </div>
+          <div class="column">
+            <p><b>Password Reset:</b></p>
+            <ul>
+              <li>Visit <a href="https://mypassword.sd308.org" target="_blank">mypassword.sd308.org</a> to reset your password early.</li>
+              <li>Use your short username (e.g., malbrecht).</li>
+              <li>Password updates may take a few minutes across systems.</li>
+            </ul>
+          </div>
+          <div class="column">
+            <p><b>Tech Help Videos & Docs:</b></p>
+            <ul>
+              <li><a href="https://watch.screencastify.com/v/kjnAPtmZJQUPPDufdJwU" target="_blank">Submit a Tech Ticket</a></li>
+              <li><a href="https://drive.google.com/file/d/1qeKMNBPLLSOHrM5h-buoOssLdCj3nIQB/view?usp=sharing" target="_blank">Project from Chromebook</a></li>
+              <li><a href="https://www.loom.com/share/7c1a0481f5b34ef798bde68129da889a?sharedAppSource=personal_library" target="_blank">Google Calendar: Set Up Conferences</a></li>
+              <li><a href="https://drive.google.com/file/d/1C_ZoIunr-Tb-HaFsAxP4d1IkAjcZZNDe/view?usp=sharing" target="_blank">Google Drive: Share Settings</a></li>
+            </ul>
+          </div>
         </div>
       </div>
-      <div class="column">
-        <p><b>Other Available Items:</b><br>
-        <ul><li>Cassette/CD players, monitors, DVD players, books on tape.</li>
-        <li>Email <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a> to request these items.</li></p></ul>
+    </div>
+
+    <div class="toggle-card">
+      <h2 onclick="toggleCard(this)">⬇️ LRC Materials & Requests</h2>
+      <div class="card-content">
+        <div class="card-columns">
+          <div class="column">
+            <p><b>Book Requests:</b></p>
+            <ul>
+              <li>You can request unlimited books through the <a href="../destiny.html" target="_blank">Destiny catalog</a>.</li>
+              <li>Please allow one week for delivery.</li>
+            </ul>
+          </div>
+          <div class="column">
+            <p><b>Catalog Help:</b></p>
+            <div style="position:relative; padding-bottom:52%; height:0;">
+              <iframe src="https://www.loom.com/embed/3ec5cea364f3443492344f2f4fae05c5?sid=86988d3e-060c-4c64-87ee-dd1c454f7bb1"
+                      frameborder="0" allowfullscreen
+                      style="position:absolute; top:0; left:0; width:95%; height:95%;">
+              </iframe>
+            </div>
+          </div>
+          <div class="column">
+            <p><b>Other Available Items:</b></p>
+            <ul>
+              <li>Cassette/CD players, monitors, DVD players, books on tape.</li>
+              <li>Email <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a> to request these items.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toggle-card">
+      <h2 onclick="toggleCard(this)">⬇️ LRC Class Expectations</h2>
+      <div class="card-content">
+        <div class="card-columns">
+          <div class="column">
+            <p><b>Book Checkout:</b></p>
+            <ul>
+              <li>2-book limit (3 for research)</li>
+              <li>Students must return or renew both books before getting new ones</li>
+              <li>Checkout starts Week 2</li>
+            </ul>
+          </div>
+          <div class="column">
+            <p><b>What to Bring:</b></p>
+            <ul>
+              <li>Students should always bring Chromebooks, headphones, and (optional) mice.</li>
+            </ul>
+          </div>
+          <div class="column">
+            <p><b>Arrival & Dismissal:</b></p>
+            <ul>
+              <li>Drop off at the ramp near the art room</li>
+              <li>Pick up students from inside the LMC</li>
+              <li>They will be lined up and ready</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toggle-card">
+      <h2 onclick="toggleCard(this)">⬇️ Event Resources</h2>
+      <div class="card-content">
+        <div class="card-columns">
+          <!-- Column 1: Pumpkin Contest -->
+          <div class="column">
+            <p><b> 🎃 Pumpkin Contest 🎃</b></p>
+            <ul style="list-style: none; padding-left: 0;">
+              <li style="margin: 5px 0;">
+                <a
+                  class="event-cta event-cta-glow"
+                  href="../events/pumpkinPatch.html"
+                  target="_blank"
+                  aria-label="Open the Pumpkin Patch main page"
+                >
+                  <span class="thumb" aria-hidden="true"></span>
+                  <span class="text">
+                    <span class="title">Pumpkin Patch</span>
+                    <span class="sub">Gallery • Voting • Rules • Winners</span>
+                  </span>
+                  <span class="badge">Open</span>
+                </a>
+              </li>
+
+              <li style="margin: 6px 0;">
+                <a
+                  class="pill-btn"
+                  href="../events/2025_PumpkinContestFlyer.pdf"
+                  target="_blank"
+                  aria-label="Open Pumpkin Contest Informational Flyer 2025"
+                >
+                  <span class="pill-icon" aria-hidden="true"></span>
+                  Informational Flyer 2025
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Column 2: Literacy Night -->
+          <div class="column">
+            <p><b>📚 Literacy Night 📚</b></p>
+            <!-- Add links/pills here when ready -->
+          </div>
+
+          <!-- Column 3: Read-A-Thon -->
+          <div class="column">
+            <p><b>Read-A-Thon</b></p>
+            <ul>
+              <li style="list-style: none;">
+                <iframe src="https://www.youtube.com/embed/BuaV4XjeHKE"
+                        title="How to Sign in to your Teacher Read-a-Thon Dashboard"
+                        frameborder="0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        allowfullscreen
+                        style="width: 100%; aspect-ratio: 16/9; border-radius: 12px;">
+                </iframe>
+              </li>
+              <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing" target="_blank">Intro Letter & Calendar 24-25</a></li>
+              <li><a href="https://docs.google.com/presentation/d/1OpGv8hLg6f6hTqZ_WhVsUPdHFOJXhuOxHybHAlXPFVU/edit?usp=sharing" target="_blank">Tracking Sheets 24-25</a></li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<div class="toggle-card">
-  <h2 onclick="toggleCard(this)">⬇️ LRC Class Expectations</h2>
-  <div class="card-content">
-    <div class="card-columns">
-      <div class="column">
-        <p><b>Book Checkout:</b>
-        <ul>
-        <li>2-book limit (3 for research)</li>
-        <li>Students must return or renew both books before getting new ones</li>
-        <li>Checkout starts Week 2</p></li>
-        </ul>
-      </div>
-            <div class="column">
-        <p><b>What to Bring:</b>
-        <ul>
-        <li>Students should always bring Chromebooks, headphones, and (optional) mice.</li>
-
-        </ul>
-      </p>
-      </div>
-      <div class="column">
-        <p><b>Arrival & Dismissal:</b>
-      <ul>
-        <li>Drop off at the ramp near the art room</li>
-        <li>Pick up students from inside the LMC</li>
-        <li>They will be lined up and ready</p></li>
-      </ul>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="toggle-card">
-  <h2 onclick="toggleCard(this)">⬇️ Event Resources</h2>
-  <div class="card-content">
-    <div class="card-columns">
-      <div class="column">
-        <p><b>📚 Literacy Night 📚 </b></p>
-      </div>
-      <div class="column">
-        <p><b> 🎃 Pumpkin Contest 🎃</b></p>
-      </div>
-      <div class="column">
-        <p><b>Read-A-Thon</b>
-      <ul>
-        <iframe src="https://www.youtube.com/embed/BuaV4XjeHKE" title="How to Sign in to your Teacher Read-a-Thon Dashboard" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></p>
-        <li><a href="https://docs.google.com/presentation/d/1-KHRGPz1WVchRlbB0MIhptUTqiGJoOISCSdKbNZJfDA/edit?usp=sharing">Intro Letter & Calendar 24-25</a></li>
-        <li><a href="https://docs.google.com/presentation/d/1OpGv8hLg6f6hTqZ_WhVsUPdHFOJXhuOxHybHAlXPFVU/edit?usp=sharing">Tracking Sheets 24-25</a></li>
-      </ul>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-   
 
   <div class="right-box">
     <div class="quick-links-grid">
@@ -297,27 +373,20 @@
   </div>
 
   <script>
-  function toggleCard(header) {
-    const allCards = document.querySelectorAll('.toggle-card');
-
-    allCards.forEach(card => {
-      const content = card.querySelector('.card-content');
-      
-      // Close all other cards
-      if (card !== header.parentElement) {
-        content.classList.remove('show');
-        card.classList.remove('open');
-      }
-    });
-
-    // Toggle current card
-    const currentCard = header.parentElement;
-    const currentContent = header.nextElementSibling;
-
-    currentContent.classList.toggle('show');
-    currentCard.classList.toggle('open');
-  }
-</script>
-
+    function toggleCard(header) {
+      const allCards = document.querySelectorAll('.toggle-card');
+      allCards.forEach(card => {
+        const content = card.querySelector('.card-content');
+        if (card !== header.parentElement) {
+          content.classList.remove('show');
+          card.classList.remove('open');
+        }
+      });
+      const currentCard = header.parentElement;
+      const currentContent = header.nextElementSibling;
+      currentContent.classList.toggle('show');
+      currentCard.classList.toggle('open');
+    }
+  </script>
 </body>
 </html>
