@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Genre Jungle — Quests</title>
+  <style>
+    :root{
+      --bg:#08261d;--leaf:#1a936f;--leaf2:#136f63;--vine:#2fbf71;--sand:#efe6cf;--card:#f7fff9;--ink:#11372b;
+      --gold:#f4c95d;--amber:#ffcc66;--lock:#a1b5a8;--ring:#9ad1a4;--shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;background:
+      radial-gradient(1000px 500px at 50% 10%, #144f3d, #0b2e24 55%, #08261d 100%);color:#e9fff4}
+    .wrap{max-width:1100px;margin:0 auto;padding:22px}
+
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .crumbs a{color:#d9fff0;text-decoration:none;border-bottom:1px dashed rgba(255,255,255,.35)}
+    h1{margin:.25rem 0 .5rem;font-size:clamp(22px,3.2vw,34px)}
+    .meta{opacity:.9}
+    .controls{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.22);color:#eafff6;padding:8px 12px;border-radius:12px;cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.16)}
+
+    .board{position:relative;margin-top:18px;border-radius:24px;border:1px solid rgba(255,255,255,.14);box-shadow:var(--shadow);
+      background:linear-gradient(180deg, rgba(239,230,207,.08), rgba(239,230,207,.02));overflow:hidden}
+
+    /* Map canvas */
+    .map{position:relative;min-height:640px}
+    svg{position:absolute;inset:0;width:100%;height:100%}
+
+    /* Quest nodes */
+    .node{position:absolute;transform:translate(-50%, -50%);width:170px;max-width:26vw}
+    .card{background:var(--card);color:var(--ink);border:2px solid #dcf3e7;border-radius:18px;box-shadow:var(--shadow);overflow:hidden}
+    .card .icon{display:grid;place-items:center;font-size:40px;padding-top:8px}
+    .card .label{padding:10px 12px;border-top:1px solid #e6f6ef;font-weight:800;text-align:center}
+    .locked{filter:grayscale(.8) brightness(.9);opacity:.85}
+
+    .badge{position:absolute;top:-10px;right:-10px;background:var(--gold);color:#5a4308;font-weight:800;border:2px solid #e3b84f;border-radius:999px;width:34px;height:34px;display:grid;place-items:center;box-shadow:0 8px 16px rgba(0,0,0,.25)}
+
+    .node.complete .card{box-shadow:0 0 0 4px #8fd694 inset, var(--shadow)}
+    .node.complete .label::after{content:" ✔";color:#1d6a3b}
+
+    /* Node hover pulse */
+    .card:hover{outline:3px solid #3cff90;outline-offset:2px}
+
+    /* Layout positions (desktop) */
+    .n1{left:15%;top:18%}
+    .n2{left:35%;top:45%}
+    .n3{left:55%;top:25%}
+    .n4{left:72%;top:55%}
+    .n5{left:52%;top:82%}
+
+    /* XP Bar */
+    .xpbar{display:flex;align-items:center;gap:10px;padding:10px 14px;border-top:1px solid rgba(255,255,255,.12);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02))}
+    .bar{flex:1;height:12px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
+    .fill{height:100%;background:linear-gradient(90deg, #3cff90, #8fd694);width:0%}
+
+    /* Modal */
+    dialog{border:none;border-radius:16px;padding:0;width:min(720px,92vw);box-shadow:0 30px 60px rgba(0,0,0,.45)}
+    dialog::backdrop{background:rgba(0,0,0,.55)}
+    .modal{background:#ffffff;border:1px solid #e8f4ee;border-radius:16px;overflow:hidden}
+    .modal header{padding:14px 16px;background:#f4fff9;border-bottom:1px solid #e2f3ea;color:#0f2d22}
+    .modal .content{padding:16px;color:#17362a}
+    .modal .actions{display:flex;justify-content:space-between;gap:8px;padding:14px 16px;border-top:1px solid #e2f3ea;background:#f9fffc}
+    .close{background:#e9f7f0;border:1px solid #d5ecdf}
+    .do{background:#1a936f;color:white;border:1px solid #147457}
+
+    /* Grade level tabs */
+    .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+    .tab{padding:6px 10px;border-radius:999px;border:1px solid #d7efe4;background:#f8fffb;color:#124233;cursor:pointer}
+    .tab.active{background:#1a936f;color:#fff;border-color:#147457}
+    .task{display:none}
+    .task.active{display:block}
+
+    @media (max-width:780px){.node{width:140px}.n1{left:18%;top:22%}.n2{left:38%;top:48%}.n3{left:58%;top:28%}.n4{left:75%;top:58%}.n5{left:55%;top:84%}}
+      /* Student ID input */
+    .idbox{display:flex;gap:8px;align-items:center}
+    .idbox input{background:#f8fffb;border:1px solid #d7efe4;border-radius:10px;padding:8px 10px;color:#124233;min-width:180px}
+    .idbox small{opacity:.9}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="crumbs"><a href="../index.html">🦁 Lions’ Den</a> › <strong>Genre Jungle</strong></div>
+        <h1>Genre Jungle — Quest Path</h1>
+        <div class="meta">Complete each quest in order to earn your <strong>Genre Master</strong> badge.</div>
+      </div>
+      <div class="controls">
+        <div class="idbox">
+          <label for="studentId" style="display:none">Student ID</label>
+          <input id="studentId" placeholder="Student code or email" />
+          <button class="btn" id="saveId">Save</button>
+          <small id="idStatus"></small>
+        </div>
+        <button class="btn" id="unlockAll">Unlock all</button>
+        <button class="btn" id="reset">Reset</button>
+      </div>
+    </header>
+
+    <section class="board">
+      <div class="map" aria-label="Genre Jungle Map">
+        <!-- SVG vine path -->
+        <svg viewBox="0 0 1100 650" aria-hidden="true">
+          <defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <path d="M160,120 C280,160 360,240 420,300 S600,270 690,340 820,470 700,560 600,590 540,610" 
+                fill="none" stroke="url(#grad)" stroke-width="10" filter="url(#glow)"/>
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2fbf71"/>
+              <stop offset="100%" stop-color="#9ad1a4"/>
+            </linearGradient>
+          </defs>
+          <!-- Leaves along the vine -->
+          <g fill="#1a936f" opacity="0.9">
+            <ellipse cx="240" cy="150" rx="10" ry="22"/>
+            <ellipse cx="260" cy="175" rx="8" ry="18"/>
+            <ellipse cx="520" cy="290" rx="9" ry="20"/>
+            <ellipse cx="760" cy="360" rx="10" ry="22"/>
+            <ellipse cx="720" cy="520" rx="8" ry="18"/>
+          </g>
+        </svg>
+
+        <!-- Quest Nodes -->
+        <button class="node n1" data-q="1" aria-label="Quest 1: Enter the Jungle">
+          <span class="badge">Q1</span>
+          <div class="card">
+            <div class="icon">📚🌿</div>
+            <div class="label">Quest 1: Enter the Jungle</div>
+          </div>
+        </button>
+
+        <button class="node n2 locked" data-q="2" aria-label="Quest 2: Story Element Safari" disabled>
+          <span class="badge">Q2</span>
+          <div class="card">
+            <div class="icon">🦁📖</div>
+            <div class="label">Quest 2: Story Element Safari</div>
+          </div>
+        </button>
+
+        <button class="node n3 locked" data-q="3" aria-label="Quest 3: Genre Comparison Vines" disabled>
+          <span class="badge">Q3</span>
+          <div class="card">
+            <div class="icon">🌿⚖️</div>
+            <div class="label">Quest 3: Comparison Vines</div>
+          </div>
+        </button>
+
+        <button class="node n4 locked" data-q="4" aria-label="Quest 4: Themed Treasure Hunt" disabled>
+          <span class="badge">Q4</span>
+          <div class="card">
+            <div class="icon">💎🗺️</div>
+            <div class="label">Quest 4: Themed Treasure Hunt</div>
+          </div>
+        </button>
+
+        <button class="node n5 locked" data-q="5" aria-label="Boss Quest 5: Lion’s Lore" disabled>
+          <span class="badge">BOSS</span>
+          <div class="card">
+            <div class="icon">🦁✨</div>
+            <div class="label">Boss Quest: Lion’s Lore</div>
+          </div>
+        </button>
+      </div>
+
+      <div class="xpbar" role="status" aria-live="polite">
+        <strong>XP:</strong>
+        <div class="bar"><div class="fill" id="xpFill"></div></div>
+        <span id="xpText">0 / 500</span>
+        <span id="badgeStatus" style="margin-left:8px"></span>
+      </div>
+    </section>
+  </div>
+
+  <!-- Modal Template -->
+  <dialog id="questModal">
+    <div class="modal">
+      <header>
+        <h3 id="modalTitle" style="margin:0">Quest</h3>
+      </header>
+      <div class="content">
+        <p id="modalIntro" style="margin-top:0"></p>
+        <div class="tabs">
+          <button class="tab" data-level="3">Level 3</button>
+          <button class="tab" data-level="4">Level 4</button>
+          <button class="tab active" data-level="5">Level 5</button>
+        </div>
+        <div class="task" id="task3"></div>
+        <div class="task" id="task4"></div>
+        <div class="task active" id="task5"></div>
+      </div>
+      <div class="actions">
+        <button class="btn close" id="closeModal">Close</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="questReward" style="color:#0f2d22;font-weight:700"></span>
+          <button class="btn do" id="submitToSheets">Submit to Gradebook</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    // ---------- Progress Model ----------
+    const KEY = 'lionsden.world.genre.v1';
+    const CONFIG = {
+      classId: '5th-2025',
+      world: 'genre-jungle',
+      useWebhook: true,
+      // TODO: Replace with your Apps Script Web App URL
+      webhookUrl: 'https://script.google.com/macros/s/AKfycbxOlisPj-YAA2N7ELOyZObbO34vvpesL68jzEVwMRjnRAHo1hXHINJWPn_vORwM-e1Wzw/exec',
+      readUrl: 'https://script.google.com/macros/s/AKfycbxV-9LjwvKXKd96u3HvCeYX_MB26RpY3piwWFP510hDk_uTlgtruSJlMHwK9iJF4ZKAHA/exec'
+    };
+    const DEFAULT = {
+      xp: 0,
+      completeBadge: false,
+      studentId: '',
+      quests: { 1:{done:false,xp:100}, 2:{done:false,xp:100}, 3:{done:false,xp:100}, 4:{done:false,xp:100}, 5:{done:false,xp:100} }
+    };
+
+    function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || structuredClone(DEFAULT) }catch{ return structuredClone(DEFAULT) } }
+    function save(v){ localStorage.setItem(KEY, JSON.stringify(v)) }
+
+    // ---------- Quest Definitions ----------
+    const QUESTS = {
+      1:{
+        title:'Quest 1: Enter the Jungle',
+        intro:'Match books to the right genre and explain your choice.',
+        tasks:{
+          3:`• Drag each title to a broad genre (fiction / nonfiction / poetry).<br>• Exit ticket: one sentence why you chose a genre.`,
+          4:`• Sort 8 titles into sub-genres (fantasy, mystery, historical, realistic).<br>• Explain 1 choice using a story element.`,
+          5:`• Defend a book\'s genre with two pieces of text evidence (summary, character, setting).`
+        }
+      },
+      2:{
+        title:'Quest 2: Story Element Safari',
+        intro:'Explore characters, setting, and problem/solution across genres.',
+        tasks:{
+          3:`• Identify characters, setting, problem/solution in a read-aloud or short text.`,
+          4:`• Compare story elements in two genres (fantasy vs realistic).`,
+          5:`• Analyze how author\'s craft (POV, pacing, word choice) affects a story element.`
+        }
+      },
+      3:{
+        title:'Quest 3: Comparison Vines',
+        intro:'Compare two genres for purpose and audience.',
+        tasks:{
+          3:`• List two differences between fantasy and realistic fiction.`,
+          4:`• Create a Venn diagram of two genres (Slides template).`,
+          5:`• Evaluate two genres for purpose & audience with cited examples.`
+        }
+      },
+      4:{
+        title:'Quest 4: Themed Treasure Hunt',
+        intro:'Pick a book and write a mini-review anchored to genre features.',
+        tasks:{
+          3:`• Share one thing you liked and name the genre.`,
+          4:`• Write a short review citing 2 genre traits.`,
+          5:`• Publish a multimedia review (image/audio) with evidence; cite source of images.`
+        }
+      },
+      5:{
+        title:`Boss Quest: Lion's Lore`,
+        intro:'Prove mastery by connecting genre, theme, and author intent.',
+        tasks:{
+          3:`• Match 10 books to correct genre (game/quiz).`,
+          4:`• Present a 1-slide compare/contrast of two genres.`,
+          5:`• Short essay: argue author intent & genre choice using text evidence.`
+        }
+      }
+    };
+
+    // ---------- UI Wiring ----------
+    const xpFill = document.getElementById('xpFill');
+    const xpText = document.getElementById('xpText');
+    const badgeStatus = document.getElementById('badgeStatus');
+    const studentIdInput = document.getElementById('studentId');
+    const saveIdBtn = document.getElementById('saveId');
+    const idStatus = document.getElementById('idStatus');
+
+    function render(){
+      const state = load();
+      // hydrate ID box
+      studentIdInput.value = state.studentId || '';
+      idStatus.textContent = state.studentId ? '✅ Saved' : '↳ enter student email/code';
+      // gates
+      for(let i=1;i<=5;i++){
+        const node = document.querySelector(`.node[data-q="${i}"]`);
+        const prevDone = i===1 ? true : state.quests[i-1].done;
+        node.disabled = !prevDone;
+        node.classList.toggle('locked', !prevDone);
+        node.classList.toggle('complete', state.quests[i].done);
+      }
+      // xp
+      const maxXP = Object.values(state.quests).reduce((a,q)=>a+q.xp,0);
+      const pct = Math.min(100, Math.round((state.xp/maxXP)*100));
+      xpFill.style.width = pct + '%';
+      xpText.textContent = `${state.xp} / ${maxXP}`;
+      badgeStatus.textContent = state.completeBadge ? '🏅 Genre Master unlocked!' : '';
+    }
+
+    async function completeQuest(q){
+      const state = load();
+      if(state.quests[q].done) return; // idempotent
+      // if webhook enabled and studentId present, send to Sheets
+      if(CONFIG.useWebhook && CONFIG.webhookUrl && state.studentId){
+        try{
+          const level = document.querySelector('.tab.active')?.dataset.level || '5';
+          const payload = {
+            timestamp: new Date().toISOString(),
+            classId: CONFIG.classId,
+            world: CONFIG.world,
+            quest: q,
+            level: level,
+            xp: state.quests[q].xp,
+            studentId: state.studentId
+          };
+          const res = await fetch(CONFIG.webhookUrl, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)
+          });
+          // optional: read response JSON
+          await res.text();
+        }catch(err){ console.warn('Webhook failed, saving locally.', err); }
+      }
+      // local commit
+      state.quests[q].done = true;
+      state.xp += state.quests[q].xp;
+      if(Object.values(state.quests).every(q=>q.done)) state.completeBadge = true;
+      save(state); render();
+    }
+
+    // Node clicks -> open modal
+    document.querySelectorAll('.node').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const q = +btn.dataset.q;
+        openQuest(q);
+      })
+    })
+
+    // Modal wiring
+    const dlg = document.getElementById('questModal');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalIntro = document.getElementById('modalIntro');
+    const reward = document.getElementById('questReward');
+    const btnClose = document.getElementById('closeModal');
+    const btnSubmitSheets = document.getElementById('submitToSheets');
+
+    function openQuest(q){
+      const state = load();
+      const def = QUESTS[q];
+      modalTitle.textContent = def.title;
+      modalIntro.textContent = def.intro;
+      reward.textContent = `Reward: +${state.quests[q].xp} XP`;
+      document.getElementById('task3').innerHTML = def.tasks[3];
+      document.getElementById('task4').innerHTML = def.tasks[4];
+      document.getElementById('task5').innerHTML = def.tasks[5];
+      setActiveTab('5');
+      btnSubmitSheets.onclick = async ()=>{ await completeQuest(q); dlg.close(); };
+      dlg.showModal();
+    }
+
+    btnClose?.addEventListener('click', ()=>dlg.close());
+
+    // Save student ID
+    saveIdBtn.addEventListener('click', ()=>{
+      const s = load(); s.studentId = studentIdInput.value.trim(); save(s); render(); syncFromSheets();
+    }); s.studentId = studentIdInput.value.trim(); save(s); render();
+    });
+
+    // Tabs
+    document.querySelectorAll('.tab').forEach(t=>{
+      t.addEventListener('click', ()=> setActiveTab(t.dataset.level));
+    })
+    function setActiveTab(level){
+      document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.level===level));
+      document.querySelectorAll('.task').forEach(el=>el.classList.remove('active'));
+      document.getElementById('task'+level).classList.add('active');
+    }
+
+    // Controls
+    document.getElementById('unlockAll').addEventListener('click', ()=>{
+      const s = load(); for(let i=1;i<=5;i++){ s.quests[i].done = true } s.xp = 500; s.completeBadge = true; if(!s.studentId) s.studentId = prompt('Optional: enter student email/code for Sheets:')||''; save(s); render();
+    })
+    document.getElementById('reset').addEventListener('click', ()=>{ if(confirm('Reset Genre Jungle progress?')){ save(structuredClone(DEFAULT)); render(); } })
+    document.getElementById('export').addEventListener('click', (e)=>{
+      e.preventDefault(); const blob = new Blob([JSON.stringify(load(), null, 2)], {type:'application/json'});
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'genre-jungle-progress.json'; a.click(); URL.revokeObjectURL(a.href);
+    })
+    document.getElementById('importFile').addEventListener('change', (e)=>{
+      const f = e.target.files?.[0]; if(!f) return; const r = new FileReader();
+      r.onload = ()=>{ try{ save(JSON.parse(r.result)); render(); }catch{ alert('Invalid file'); } };
+      r.readAsText(f);
+    })
+
+    // Sync from Sheets
+    async function syncFromSheets(){
+      const s = load();
+      if(!CONFIG.readUrl || !s.studentId) return;
+      try{
+        const url = new URL(CONFIG.readUrl);
+        url.searchParams.set('studentId', s.studentId);
+        url.searchParams.set('classId', CONFIG.classId);
+        url.searchParams.set('world', CONFIG.world);
+        const res = await fetch(url.toString());
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+        if(Array.isArray(data.questsDone)){
+          data.questsDone.forEach(q=>{ if(s.quests[q] && !s.quests[q].done){ s.quests[q].done = true; s.xp += s.quests[q].xp; } });
+        }
+        if(data.completeBadge) s.completeBadge = true;
+        save(s); render();
+      }catch(err){ console.warn('Sync failed', err); }
+    }
+
+    // Init
+    if(!localStorage.getItem(KEY)) save(structuredClone(DEFAULT));
+    render();
+    syncFromSheets();
+
+    // Optional: poll for updates from Sheets (teacher can publish a JSON via Apps Script)
+    // fetch('https://script.google.com/macros/s/YOUR_READ_ENDPOINT/exec?studentId='+encodeURIComponent(load().studentId))
+    //   .then(r=>r.json()).then(data=>{/* merge remote status into local and render() */}).catch(()=>{});
+  </script>
+</body>
+</html>
