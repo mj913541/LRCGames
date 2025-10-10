@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lions' Den – LRC Hub M0 (Standalone)</title>
+  <style>
+    :root{
+      --bgA:#ecfdf5; /* emerald-50 */
+      --bgB:#d1fae5; /* emerald-100 */
+      --ink:#0f172a; /* slate-900 */
+      --muted:#475569; /* slate-600 */
+      --brand:#10b981; /* emerald-500 */
+      --brandDark:#059669; /* emerald-600 */
+      --accent:#f59e0b; /* amber-500 */
+      --danger:#ef4444; /* red-500 */
+      --border:#e2e8f0; /* slate-200 */
+    }
+    html, body{height:100%}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:linear-gradient(to bottom,var(--bgA),var(--bgB));}
+    .container{max-width:1100px;margin:0 auto;padding:24px}
+    .row{display:flex;gap:12px;align-items:center}
+    .space{height:12px}
+    h1{font-size:24px;margin:0}
+    h2{font-size:20px;margin:0 0 8px}
+    h3{font-size:16px;margin:0 0 6px}
+    p{margin:8px 0}
+    .card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 4px 16px rgba(15,23,42,.06)}
+    .card>.content{padding:16px}
+    .btn{appearance:none;border:1px solid transparent;background:var(--brand);color:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
+    .btn:hover{background:var(--brandDark)}
+    .btn.secondary{background:#fff;border-color:var(--border);color:var(--ink)}
+    .btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+    .input, select{width:100%;height:40px;border:1px solid var(--border);border-radius:8px;padding:0 12px}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    .grid{display:grid;gap:16px}
+    .grid2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #fde68a;background:#fef3c7;color:#92400e;border-radius:999px;padding:4px 10px;font-size:12px}
+    .progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .progress>div{height:100%;background:linear-gradient(90deg,var(--brand),#34d399);}
+    .zone{background:linear-gradient(135deg,#bbf7d0,#86efac);}
+    .zoneB{background:linear-gradient(135deg,#d9f99d,#bef264);}
+    .zoneTitle{display:flex;align-items:center;justify-content:space-between}
+    .kbd{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;border:1px solid var(--border);background:#f8fafc;border-radius:6px;padding:2px 6px;font-size:12px}
+    .center{display:flex;align-items:center;justify-content:center}
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;padding:16px}
+    .modal.open{display:flex}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    /* Play pads */
+    .pad{position:relative;border:1px solid var(--border);background:#f8fafc;border-radius:12px;min-height:170px;overflow:hidden}
+    .target{width:90px;height:90px;border-radius:50%;background:#fde68a;border:2px solid #f59e0b;cursor:pointer}
+    .basket{position:absolute;right:16px;top:16px;width:140px;height:90px;border-radius:12px;background:#d1fae5;border:2px solid var(--brand)}
+    .token{position:absolute;width:44px;height:44px;border-radius:50%;background:#fcd34d;border:2px solid #f59e0b;cursor:grab}
+    .ghost{position:absolute;left:16px;top:8px;font-size:12px;color:var(--muted)}
+    .link{color:#0ea5e9;text-decoration:underline;cursor:pointer}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="row" style="justify-content:space-between; margin-bottom:16px">
+      <div class="row" style="gap:8px">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2l2.39 4.84L20 8l-4 3.89L17 18l-5-2.62L7 18l1-6.11L4 8l5.61-1.16L12 2z" fill="#10b981"/></svg>
+        <h1>Lions' Den — M0 Preview (Standalone)</h1>
+      </div>
+      <div class="row" style="gap:8px">
+        <button id="teacherBtn" class="btn secondary" aria-haspopup="dialog">Teacher PIN</button>
+        <button id="resetBtn" class="btn ghost">Reset</button>
+      </div>
+    </header>
+
+    <!-- Screens -->
+    <div id="screen-login" class="card"><div class="content">
+      <h2>Login</h2>
+      <p class="muted">Enter a nickname and choose your <b>Level</b>. Most students start at <b>Level 1 (Start Here)</b>. Progress saves in this browser.</p>
+      <div class="grid grid2">
+        <div>
+          <label for="nickname">Nickname</label>
+          <input id="nickname" class="input" placeholder="e.g., L1-Tiger-07" />
+        </div>
+        <div>
+          <label for="level">Level</label>
+          <select id="level"></select>
+        </div>
+      </div>
+      <div class="space"></div>
+      <button id="enterBtn" class="btn">Enter</button>
+    </div></div>
+
+    <div id="screen-hub" class="card" style="display:none"><div class="content">
+      <h2>Hub</h2>
+      <div class="row" style="gap:8px;align-items:center">
+        <div style="min-width:120px">Overall Progress</div>
+        <div class="progress" style="flex:1"><div id="progressBar" style="width:0%"></div></div>
+        <div id="progressLabel" class="kbd">0%</div>
+      </div>
+      <div id="badgeRow" class="row" style="gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+      <div class="space"></div>
+      <div class="grid grid2">
+        <div class="card zone"><div class="content">
+          <div class="zoneTitle"><div>
+            <h3>Zone A — Destiny Discover + Genre</h3>
+            <p class="muted">Quest A1: Find It Fast</p>
+          </div><div id="doneA1"></div></div>
+          <div class="space"></div>
+          <button id="goA1" class="btn">Enter</button>
+        </div></div>
+        <div class="card zoneB"><div class="content">
+          <div class="zoneTitle"><div>
+            <h3>Zone B — Chromebook Care + Trackpad</h3>
+            <p class="muted">Quest B2: Trackpad Trail 1</p>
+          </div><div id="doneB2"></div></div>
+          <div class="space"></div>
+          <button id="goB2" class="btn">Enter</button>
+        </div></div>
+      </div>
+    </div></div>
+
+    <!-- A1 Quest -->
+    <div id="screen-A1" class="card" style="display:none"><div class="content">
+      <h2>A1: Find It Fast</h2>
+      <p class="muted">I can use Destiny Discover search and filters to find a specific book and its call number.</p>
+      <div id="a1Stage"></div>
+    </div></div>
+
+    <!-- B2 Quest -->
+    <div id="screen-B2" class="card" style="display:none"><div class="content">
+      <h2>B2: Trackpad Trail 1</h2>
+      <p class="muted">I can move the cursor, click, and click‑and‑drag to place items accurately.</p>
+      <div id="b2Stage"></div>
+    </div></div>
+
+    <!-- Teacher Modal -->
+    <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="card" style="max-width:680px;width:100%"><div class="content">
+        <div class="row" style="justify-content:space-between;align-items:center">
+          <h3 id="modalTitle">Teacher View</h3>
+          <button id="closeModal" class="btn ghost">Close</button>
+        </div>
+        <div id="pinGate">
+          <label for="pinInput">Enter PIN</label>
+          <input id="pinInput" class="input" placeholder="9134" inputmode="numeric" />
+          <div class="space"></div>
+          <button id="pinBtn" class="btn secondary">Unlock</button>
+          <p class="muted">PIN: 9134</p>
+        </div>
+        <div id="teacherPanel" style="display:none">
+          <div class="grid grid3">
+            <div class="card"><div class="content">
+              <h4>Profile</h4>
+              <div id="tProfile"></div>
+            </div></div>
+            <div class="card"><div class="content">
+              <h4>Completed</h4>
+              <div id="tCompleted"></div>
+            </div></div>
+            <div class="card"><div class="content">
+              <h4>Badges</h4>
+              <ul id="tBadges" style="margin:0 0 0 18px"></ul>
+            </div></div>
+          </div>
+        </div>
+      </div></div>
+    </div>
+  </div>
+
+  <script>
+    // ---------------------------
+    // Data Layer
+    // ---------------------------
+    const STORAGE_KEY = 'lrc_m0_state_v1_html';
+    const LEVELS = [
+      'Level 1 (Start Here)',
+      'Level 2','Level 3','Level 4','Level 5'
+    ];
+    const BADGES = {
+      'BAD-A1-C': { title: 'Finder', desc: 'Completed Find It Fast' },
+      'BAD-A-BRZ': { title: 'Jungle Researcher (Bronze)', desc: '1 quest in Zone A' },
+      'BAD-B2-C': { title: 'Trailblazer', desc: 'Completed Trackpad Trail 1' },
+      'BAD-B-BRZ': { title: 'Device Defender (Bronze)', desc: '1 quest in Zone B' },
+    };
+
+    const SEARCH_SCENARIOS = [
+      { id:'S-001', prompt:'Find a print book about recycling that is available now.', mc:{ q:'Best starting approach?', options:["Type 'recycling' and filter to Book + In","Search 'reduce reuse' and open first eBook","Sort by author first"], correct:0 } },
+      { id:'S-003', prompt:'Find a biography of Mae Jemison.', mc:{ q:'Call number likely looks like…', options:["B JEMISON","FIC JEM","398.2 JEM"], correct:0 } },
+      { id:'S-004', prompt:'Get an eBook on volcanoes.', mc:{ q:'Which filter speeds this up?', options:["Availability:In","Format:eBook","Collection:Biography"], correct:1 } },
+    ];
+
+    function loadState(){
+      try{ const raw = localStorage.getItem(STORAGE_KEY); return raw? JSON.parse(raw): null; }catch(e){ return null; }
+    }
+    function saveState(s){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){} }
+    function initialState(){
+      const s = loadState();
+      if(s){
+        // migrate any old class_code -> level
+        if(s.profile && s.profile.class_code && !s.profile.level){ s.profile.level = LEVELS[0]; delete s.profile.class_code; }
+        return s;
+      }
+      return { profile:{ nickname:'', level: LEVELS[0] }, progress:{}, badges:[] };
+    }
+    let state = initialState();
+
+    // ---------------------------
+    // Helpers
+    // ---------------------------
+    function qs(id){ return document.getElementById(id); }
+    function show(id){ qs(id).style.display=''; }
+    function hide(id){ qs(id).style.display='none'; }
+    function setScreen(name){ ['screen-login','screen-hub','screen-A1','screen-B2'].forEach(s=>hide(s)); show('screen-'+name); }
+    function pctProgress(){ const done=['A1','B2'].filter(q=>state.progress[q]); return Math.round(done.length/2*100); }
+    function awardBadge(id){ if(!state.badges.includes(id)){ state.badges.push(id); saveState(state); } }
+    function upsertProgress(qid,payload){ state.progress[qid] = Object.assign({}, state.progress[qid]||{}, payload); saveState(state); }
+
+    // ---------------------------
+    // Login
+    // ---------------------------
+    function initLogin(){
+      const levelSel = qs('level');
+      levelSel.innerHTML = LEVELS.map(l=>`<option value="${l}">${l}</option>`).join('');
+      qs('nickname').value = state.profile.nickname || '';
+      levelSel.value = state.profile.level || LEVELS[0];
+      qs('enterBtn').onclick = ()=>{
+        const nickname = qs('nickname').value.trim();
+        const level = levelSel.value;
+        if(!nickname){ alert('Please enter a nickname'); return; }
+        state.profile.nickname = nickname; state.profile.level = level; saveState(state);
+        renderHub(); setScreen('hub');
+      };
+    }
+
+    // ---------------------------
+    // Hub
+    // ---------------------------
+    function renderHub(){
+      const pct = pctProgress();
+      qs('progressBar').style.width = pct+'%';
+      qs('progressLabel').textContent = pct+'%';
+      // badges
+      const row = qs('badgeRow'); row.innerHTML='';
+      state.badges.forEach(b=>{
+        const span = document.createElement('span');
+        span.className = 'pill'; span.textContent = BADGES[b]?.title || b; row.appendChild(span);
+      });
+      // done flags
+      qs('doneA1').innerHTML = state.progress.A1? '<span class="pill">Done</span>': '';
+      qs('doneB2').innerHTML = state.progress.B2? '<span class="pill">Done</span>': '';
+      qs('goA1').onclick = ()=>{ renderA1(); setScreen('A1'); };
+      qs('goB2').onclick = ()=>{ renderB2(); setScreen('B2'); };
+    }
+
+    // ---------------------------
+    // A1 Quest (MC flow)
+    // ---------------------------
+    function renderA1(){
+      let step = 0; // 0 warmup,1 learn,2 guided,3 independent,4 exit
+      let correct = 0; let idx = 0;
+      const stage = qs('a1Stage');
+
+      function draw(){
+        if(step===0){
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Warm‑Up</h3>
+              <p>Which filter would speed this search the most?</p>
+              <div class="row" style="flex-wrap:wrap;gap:8px">
+                <span class="pill">Format:Book</span>
+                <span class="pill">Availability:In</span>
+                <span class="pill">Collection:Biography</span>
+              </div>
+              <div class="space"></div>
+              <button class="btn" id="next">Next</button>
+            </div></div>`;
+          qs('next').onclick=()=>{ step=1; draw(); };
+          return;
+        }
+        if(step===1){
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Learn</h3>
+              <ul>
+                <li><b>Keyword vs. Subject:</b> keywords match anywhere; subjects are librarian tags.</li>
+                <li><b>Filters:</b> format (Book/eBook), availability, collection (Biography).</li>
+                <li><b>Call Number:</b> use it to find the shelf location.</li>
+              </ul>
+              <div class="space"></div>
+              <button class="btn" id="toGuided">Guided Practice</button>
+            </div></div>`;
+          qs('toGuided').onclick=()=>{ step=2; draw(); };
+          return;
+        }
+        if(step===2){
+          const s = SEARCH_SCENARIOS[0];
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Guided Practice</h3>
+              <p>Scenario: ${s.prompt}</p>
+              <p class="muted">Hint: try <span class="kbd">recycling</span> then set <span class="kbd">Format:Book</span> + <span class="kbd">Availability:In</span>.</p>
+              <div class="space"></div>
+              <button class="btn" id="toInd">Start Independent</button>
+            </div></div>`;
+          qs('toInd').onclick=()=>{ step=3; draw(); };
+          return;
+        }
+        if(step===3){
+          const s = SEARCH_SCENARIOS[idx % SEARCH_SCENARIOS.length];
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Independent</h3>
+              <p>${s.prompt}</p>
+              <p><b>Question:</b> ${s.mc.q}</p>
+              <div class="grid" id="opts"></div>
+            </div></div>`;
+          const opts = qs('opts');
+          s.mc.options.forEach((text,i)=>{
+            const b = document.createElement('button');
+            b.className='btn secondary'; b.style.textAlign='left'; b.textContent=text;
+            b.onclick=()=>{
+              if(i===s.mc.correct) correct++;
+              idx++;
+              if(idx>=3){ step=4; draw(); } else { draw(); }
+            }
+            opts.appendChild(b);
+          });
+          return;
+        }
+        if(step===4){
+          const status = (correct===3)?'On Track':(correct===2)?'Grow':'Reteach';
+          upsertProgress('A1',{ exit:correct, max:3, status });
+          awardBadge('BAD-A1-C'); if(!state.progress.A1) awardBadge('BAD-A-BRZ');
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Exit Ticket</h3>
+              <p>Score: ${correct}/3 · Mastery: <b>${status}</b></p>
+              <div class="space"></div>
+              <button class="btn" id="backHub">Save & Return to Hub</button>
+            </div></div>`;
+          qs('backHub').onclick=()=>{ renderHub(); setScreen('hub'); };
+        }
+      }
+      draw();
+    }
+
+    // ---------------------------
+    // B2 Quest (click + drag)
+    // ---------------------------
+    function renderB2(){
+      let step = 0; // 0 warmup,1 learn,2 guided,3 independent,4 exit
+      let hits=0, misses=0, remaining=8; let startTime=0;
+      const stage = qs('b2Stage');
+
+      function draw(){
+        if(step===0){
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Warm‑Up</h3>
+              <p>Click the big target <b>3</b> times.</p>
+              <div class="pad center" style="height:160px">
+                <button id="clickTarget" class="target" aria-label="click target"></button>
+                <div id="clicks" class="kbd" style="position:absolute;bottom:8px;right:8px">0/3</div>
+              </div>
+            </div></div>`;
+          let c=0; const btn=qs('clickTarget'); const label=qs('clicks');
+          btn.onclick=()=>{ c++; label.textContent=c+'/3'; if(c>=3){ step=1; draw(); } };
+          return;
+        }
+        if(step===1){
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Learn</h3>
+              <ul>
+                <li><b>Click</b> = press and release once.</li>
+                <li><b>Drag</b> = press, move, then release inside the basket.</li>
+              </ul>
+              <div class="space"></div>
+              <button class="btn" id="toGuided">Guided</button>
+            </div></div>`;
+          qs('toGuided').onclick=()=>{ step=2; draw(); };
+          return;
+        }
+        if(step===2){
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Guided</h3>
+              <p>Drag the circle into the basket 3 times. A ghost path shows where to go.</p>
+              <div class="pad" id="gpad" style="height:170px">
+                <div class="ghost">Ghost path → drag into basket</div>
+                <div id="gtoken" class="token" style="left:16px;top:60px" role="button" aria-label="drag token"></div>
+                <div class="basket" id="gbasket"></div>
+                <div id="gcount" class="kbd" style="position:absolute;bottom:8px;right:8px">0/3</div>
+              </div>
+            </div></div>`;
+          makeDragPad('gtoken','gbasket','gcount',3,()=>{ step=3; draw(); },()=>{});
+          return;
+        }
+        if(step===3){
+          startTime = Date.now();
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Independent</h3>
+              <p>Drag all <b>8</b> tokens into the basket. Misses are okay—do your best!</p>
+              <div class="pad" id="ipad" style="height:170px">
+                <div id="itoken" class="token" style="left:16px;top:60px" role="button" aria-label="drag token"></div>
+                <div class="basket" id="ibasket"></div>
+                <div id="icount" class="kbd" style="position:absolute;bottom:8px;right:8px">0/8</div>
+              </div>
+              <p class="muted">Hits: <span id="ihits">0</span> · Misses: <span id="imisses">0</span> · Left: <span id="ileft">8</span></p>
+            </div></div>`;
+          makeDragPad('itoken','ibasket','icount',8,()=>{ step=4; draw(); },(ok)=>{
+            if(ok) hits++; else misses++; remaining--; qs('ihits').textContent=hits; qs('imisses').textContent=misses; qs('ileft').textContent=remaining; });
+          return;
+        }
+        if(step===4){
+          const timeSec = Math.round((Date.now()-startTime)/1000);
+          const status = (hits>=7 && timeSec<=60)? 'On Track' : (hits>=5? 'Grow':'Reteach');
+          // simple exit: 2 points (1 for MC, 1 for completion)
+          stage.innerHTML = `
+            <div class="card"><div class="content">
+              <h3>Exit Ticket</h3>
+              <p>Which action selects a whole word?</p>
+              <div class="grid" id="b2opts"></div>
+            </div></div>`;
+          const opts = ['Single‑click','Double‑click','Right‑click'];
+          const wrap = qs('b2opts');
+          opts.forEach((t,i)=>{
+            const b=document.createElement('button'); b.className='btn secondary'; b.textContent=t;
+            b.onclick=()=>{
+              const exit = (i===1)? 2: 1; // 2/2 if correct, else 1/2
+              upsertProgress('B2',{ exit, max:2, status, hits, misses, timeSec });
+              awardBadge('BAD-B2-C'); if(!state.progress.B2) awardBadge('BAD-B-BRZ');
+              renderHub(); setScreen('hub');
+            };
+            wrap.appendChild(b);
+          });
+        }
+      }
+      draw();
+    }
+
+    function makeDragPad(tokenId,basketId,countId,n,onComplete,onEach){
+      const token = qs(tokenId), basket=qs(basketId), label=qs(countId);
+      let dragging=false; let offset=[0,0]; let count=0;
+      token.addEventListener('mousedown',e=>{ dragging=true; offset=[e.offsetX,e.offsetY]; token.style.cursor='grabbing'; });
+      window.addEventListener('mousemove',e=>{
+        if(!dragging) return; const pad = token.parentElement.getBoundingClientRect();
+        const x = e.clientX - pad.left - offset[0];
+        const y = e.clientY - pad.top  - offset[1];
+        token.style.left = Math.max(0, Math.min(pad.width-44, x))+'px';
+        token.style.top  = Math.max(0, Math.min(pad.height-44, y))+'px';
+      });
+      window.addEventListener('mouseup',()=>{
+        if(!dragging) return; dragging=false; token.style.cursor='grab';
+        const tb = token.getBoundingClientRect(); const bb=basket.getBoundingClientRect();
+        const ok = !(tb.right < bb.left || tb.left > bb.right || tb.bottom < bb.top || tb.top > bb.bottom);
+        onEach && onEach(ok);
+        // reset token to start
+        token.style.left='16px'; token.style.top='60px';
+        count++; label.textContent = count+'/'+n;
+        if(count>=n){ onComplete && onComplete(); }
+      });
+    }
+
+    // ---------------------------
+    // Teacher Modal
+    // ---------------------------
+    function openModal(){ qs('modal').classList.add('open'); qs('pinInput').value=''; qs('teacherPanel').style.display='none'; qs('pinGate').style.display=''; }
+    function closeModal(){ qs('modal').classList.remove('open'); }
+
+    function unlockIfPin(){
+      const pin = qs('pinInput').value.trim();
+      if(pin==='9134'){
+        qs('pinGate').style.display='none';
+        qs('teacherPanel').style.display='';
+        // Fill snapshot
+        qs('tProfile').innerHTML = `
+          Nickname: <span class="kbd">${state.profile.nickname || '—'}</span><br>
+          Level: <span class="kbd">${state.profile.level || LEVELS[0]}</span>`;
+        qs('tCompleted').innerHTML = `A1: ${state.progress.A1? 'Yes':'No'}<br>B2: ${state.progress.B2? 'Yes':'No'}`;
+        const ul = qs('tBadges'); ul.innerHTML='';
+        (state.badges.length? state.badges : ['—']).forEach(b=>{
+          const li=document.createElement('li'); li.textContent = BADGES[b]?.title || b; ul.appendChild(li);
+        });
+        // Share to Classroom buttons
+        const shareWrap = document.createElement('div');
+        shareWrap.style.marginTop = '12px';
+        shareWrap.innerHTML = `
+          <h4>Share to Google Classroom</h4>
+          <p class="muted">Post the hub or a direct quest link.</p>
+          <div class="row" style="gap:10px; flex-wrap:wrap">
+            <div class="gsharetoclassroom" data-size="standard" data-url="${location.origin + location.pathname}" data-title="🌴 LRC Game Hub — Start Here"></div>
+            <div class="gsharetoclassroom" data-size="standard" data-url="${location.origin + location.pathname + '?quest=A1'}" data-title="A1 · Find It Fast (Catalog)"></div>
+            <div class="gsharetoclassroom" data-size="standard" data-url="${location.origin + location.pathname + '?quest=B2'}" data-title="B2 · Trackpad Trail 1"></div>
+          </div>`;
+        qs('teacherPanel').appendChild(shareWrap);
+        if (window.gapi && window.gapi.sharetoclassroom) { window.gapi.sharetoclassroom.go(); }
+      } else {
+        alert('Incorrect PIN');
+      }
+    });
+      } else {
+        alert('Incorrect PIN');
+      }
+    }
+
+    // ---------------------------
+    // Deep Links (Classroom)
+    // ---------------------------
+    function getQuery() {
+      const q = {}; const s = location.search.replace(/^\?/,''); if(!s) return q;
+      s.split('&').forEach(p=>{ if(!p) return; const [k,v] = p.split('='); q[decodeURIComponent(k)] = decodeURIComponent((v||'').replace(/\+/g,' ')); });
+      return q;
+    }
+    function handleDeepLink(){
+      const q = getQuery();
+      if(q.level){ state.profile.level = q.level; saveState(state); }
+      if(q.quest){
+        if(!state.profile.nickname){
+          // preselect level on login
+          const levelSel = qs('level'); if(levelSel){ levelSel.value = state.profile.level || LEVELS[0]; }
+          const orig = qs('enterBtn').onclick;
+          qs('enterBtn').onclick = ()=>{ orig(); if(q.quest==='A1'){ renderA1(); setScreen('A1'); window.__dlNavigated=true; } if(q.quest==='B2'){ renderB2(); setScreen('B2'); window.__dlNavigated=true; } };
+        } else {
+          if(q.quest==='A1'){ renderA1(); setScreen('A1'); window.__dlNavigated=true; return; }
+          if(q.quest==='B2'){ renderB2(); setScreen('B2'); window.__dlNavigated=true; return; }
+        }
+      }
+    }
+
+    // ---------------------------
+    // Wiring
+    // ---------------------------
+    initLogin();
+    qs('resetBtn').onclick = ()=>{ localStorage.removeItem(STORAGE_KEY); state = initialState(); initLogin(); setScreen('login'); };
+    qs('teacherBtn').onclick = openModal; qs('closeModal').onclick = closeModal; qs('pinBtn').onclick = unlockIfPin;
+
+    // Handle Classroom deep links
+    handleDeepLink();
+
+    // If user previously logged in and no deep link target, go to hub
+    if(state.profile.nickname && !window.__dlNavigated){ renderHub(); setScreen('hub'); }
+  </script>
+<script src="https://www.gstatic.com/classroom/share_button.js"></script>
+</body>
+</html>

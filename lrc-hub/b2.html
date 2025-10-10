@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRC — B2 Trackpad Trail 1</title>
+<style>
+  :root{ --bgA:#ecfdf5; --bgB:#d1fae5; --ink:#0f172a; --muted:#475569; --brand:#10b981; --brandDark:#059669; --border:#e2e8f0; --amber:#f59e0b; }
+  html,body{height:100%} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Ubuntu,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:linear-gradient(to bottom,var(--bgA),var(--bgB))}
+  .container{max-width:1100px;margin:0 auto;padding:24px}
+  .row{display:flex;gap:12px;align-items:center}
+  .card{background:#fff;border:1px solid var(--border);border-radius:16px;box-shadow:0 4px 16px rgba(15,23,42,.06)}
+  .card>.content{padding:16px}
+  .btn{appearance:none;border:1px solid transparent;background:var(--brand);color:#fff;border-radius:10px;padding:10px 14px;cursor:pointer;font-weight:600}
+  .btn:hover{background:var(--brandDark)} .btn.secondary{background:#fff;border-color:var(--border);color:var(--ink)}
+  .kbd{font-family:ui-monospace,Menlo,Consolas,monospace;border:1px solid var(--border);background:#f8fafc;border-radius:6px;padding:2px 6px;font-size:12px}
+  .muted{color:var(--muted)}
+  .pad{position:relative;border:1px solid var(--border);background:#f8fafc;border-radius:12px;min-height:170px;overflow:hidden}
+  .target{width:90px;height:90px;border-radius:50%;background:#fde68a;border:2px solid var(--amber);cursor:pointer}
+  .basket{position:absolute;right:16px;top:16px;width:140px;height:90px;border-radius:12px;background:#d1fae5;border:2px solid var(--brand)}
+  .token{position:absolute;width:44px;height:44px;border-radius:50%;background:#fcd34d;border:2px solid var(--amber);cursor:grab;left:16px;top:60px}
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="row" style="justify-content:space-between;margin-bottom:16px">
+    <a class="btn secondary" href="jungleQuestHub.html">← Hub</a>
+    <h1>B2: Trackpad Trail 1</h1>
+    <span class="kbd" id="who">…</span>
+  </header>
+
+  <div class="card"><div class="content" id="stage">
+    <!-- lesson stages render here -->
+  </div></div>
+</div>
+
+<script>
+  // ---- Shared state (same key as hub) ----
+  const STORAGE_KEY = 'lrc_m0_state_v2';
+  const LEVELS = ['Level 1 (Start Here)','Level 2','Level 3','Level 4','Level 5'];
+  function loadState(){ try{ const raw=localStorage.getItem(STORAGE_KEY); return raw? JSON.parse(raw):null; }catch(e){ return null; } }
+  function saveState(s){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){} }
+  function initialState(){
+    const s = loadState();
+    if(s){ if(s.profile && s.profile.class_code && !s.profile.level){ s.profile.level=LEVELS[0]; delete s.profile.class_code; saveState(s); } return s; }
+    return { profile:{ nickname:'', level: LEVELS[0] }, progress:{}, badges:[] };
+  }
+  let HUB = initialState();
+
+  // Require nickname; if missing, bounce to hub to log in
+  if(!HUB.profile.nickname){
+    location.href = 'jungleQuestHub.html?next=' + encodeURIComponent(location.pathname + location.search);
+  }
+
+  // Show who is logged in
+  document.getElementById('who').textContent = `${HUB.profile.nickname} · ${HUB.profile.level}`;
+
+  // ---- B2 lesson flow ----
+  const stage = document.getElementById('stage');
+  let step = 0; // 0 warmup,1 learn,2 guided,3 independent,4 exit
+  let hits=0, misses=0, remaining=8, startTime=0;
+
+  function draw(){
+    if(step===0){
+      stage.innerHTML = `
+        <h3>Warm-Up</h3>
+        <p>Click the big target <b>3</b> times.</p>
+        <div class="pad" style="height:160px; display:flex; align-items:center; justify-content:center">
+          <button id="clickTarget" class="target" aria-label="click target"></button>
+          <div id="clicks" class="kbd" style="position:absolute;bottom:8px;right:8px">0/3</div>
+        </div>`;
+      let c=0; const btn=$('clickTarget'), lab=$('clicks');
+      btn.onclick=()=>{ c++; lab.textContent=c+'/3'; if(c>=3){ step=1; draw(); } };
+      return;
+    }
+
+    if(step===1){
+      stage.innerHTML = `
+        <h3>Learn</h3>
+        <ul>
+          <li><b>Click</b> = press and release once.</li>
+          <li><b>Drag</b> = press, move, then release inside the basket.</li>
+        </ul>
+        <div style="height:12px"></div>
+        <button id="toGuided" class="btn">Guided</button>`;
+      $('toGuided').onclick = ()=>{ step=2; draw(); };
+      return;
+    }
+
+    if(step===2){
+      stage.innerHTML = `
+        <h3>Guided</h3>
+        <p>Drag the circle into the basket <b>3</b> times. A ghost hint shows where to go.</p>
+        <div class="pad" id="gpad" style="height:170px">
+          <div style="position:absolute;left:16px;top:8px;font-size:12px;color:#475569">Ghost path → drag into basket</div>
+          <div id="gtoken" class="token" role="button" aria-label="drag token"></div>
+          <div class="basket" id="gbasket"></div>
+          <div id="gcount" class="kbd" style="position:absolute;bottom:8px;right:8px">0/3</div>
+        </div>`;
+      makeDrag('gtoken','gbasket','gcount',3,()=>{ step=3; draw(); },()=>{});
+      return;
+    }
+
+    if(step===3){
+      startTime = Date.now();
+      stage.innerHTML = `
+        <h3>Independent</h3>
+        <p>Drag all <b>8</b> tokens into the basket. Misses are okay—do your best!</p>
+        <div class="pad" id="ipad" style="height:170px">
+          <div id="itoken" class="token" role="button" aria-label="drag token"></div>
+          <div class="basket" id="ibasket"></div>
+          <div id="icount" class="kbd" style="position:absolute;bottom:8px;right:8px">0/8</div>
+        </div>
+        <p class="muted">Hits: <span id="ih">0</span> · Misses: <span id="im">0</span> · Left: <span id="il">8</span></p>`;
+      makeDrag('itoken','ibasket','icount',8,()=>{ step=4; draw(); },(ok)=>{
+        if(ok) hits++; else misses++; remaining--;
+        $('ih').textContent=hits; $('im').textContent=misses; $('il').textContent=remaining;
+      });
+      return;
+    }
+
+    if(step===4){
+      const timeSec = Math.round((Date.now()-startTime)/1000);
+      const status = (hits>=7 && timeSec<=60)? 'On Track' : (hits>=5? 'Grow':'Reteach');
+      stage.innerHTML = `
+        <h3>Exit Ticket</h3>
+        <p>Which action selects a whole word?</p>
+        <div id="opts"></div>`;
+      ['Single-click','Double-click','Right-click'].forEach((t,i)=>{
+        const b=document.createElement('button'); b.className='btn secondary'; b.style.display='block'; b.style.margin='6px 0'; b.textContent=t;
+        b.onclick=()=>{
+          const exit = (i===1)? 2 : 1; // 2/2 if correct
+          HUB.progress.B2 = { exit, max: 2, status, hits, misses, timeSec };
+          try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(HUB)); }catch(e){}
+          location.href='jungleQuestHub.html?done=1';
+        };
+        $('opts').appendChild(b);
+      });
+      return;
+    }
+  }
+
+  function makeDrag(tokenId,basketId,countId,n,onComplete,onEach){
+    const token=$(tokenId), basket=$(basketId), label=$(countId);
+    let dragging=false, offset=[0,0], count=0;
+    token.addEventListener('mousedown',e=>{ dragging=true; offset=[e.offsetX,e.offsetY]; token.style.cursor='grabbing'; });
+    window.addEventListener('mousemove',e=>{
+      if(!dragging) return;
+      const pad = token.parentElement.getBoundingClientRect();
+      const x = e.clientX - pad.left - offset[0];
+      const y = e.clientY - pad.top  - offset[1];
+      token.style.left = Math.max(0, Math.min(pad.width-44, x))+'px';
+      token.style.top  = Math.max(0, Math.min(pad.height-44, y))+'px';
+    });
+    window.addEventListener('mouseup',()=>{
+      if(!dragging) return; dragging=false; token.style.cursor='grab';
+      const tb = token.getBoundingClientRect(); const bb = basket.getBoundingClientRect();
+      const ok = !(tb.right < bb.left || tb.left > bb.right || tb.bottom < bb.top || tb.top > bb.bottom);
+      onEach && onEach(ok);
+      // reset and count
+      token.style.left='16px'; token.style.top='60px';
+      count++; label.textContent = count+'/'+n;
+      if(count>=n) onComplete && onComplete();
+    });
+  }
+
+  // tiny helper
+  function $(id){ return document.getElementById(id); }
+
+  draw();
+</script>
+</body>
+</html>
