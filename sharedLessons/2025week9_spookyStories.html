@@ -338,22 +338,13 @@
   </div>
 
   <!-- Works of Choice -->
-  <div id="modal5" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal5-title" data-duration="600">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal5-title">🎉 Works of Choice</h3>
-        <div class="timer-wrap">
-          <div class="timer-label"><span id="time-modal5">10:00</span></div>
-          <div class="timer-bar"><div id="bar-modal5" class="timer-fill"></div></div>
-        </div>
-        <span class="close" onclick="closeModal('modal5')" aria-label="Close">&times;</span>
-      </div>
-      <div class="modal-body" style="flex-direction:column; padding:16px; gap:16px;">
-        <p>Pick an activity from the Works of Choice board! 🎨🎮📖</p>
-        <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTw3jGeCiIxt4sfi2XnDB3HBziqw2IaSz392_Es-gT8sYIitloQ__Bd5rejBv9REgA550ZZ1_E-d6rY/pubembed?start=true&loop=true&delayms=3000" frameborder="0" width="1440" height="839" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
-        <img src="./pictures/otherIcons/worksChoice.png" alt="Works of Choice" style="max-width:320px; margin:auto; display:block;">
-      </div>
-    </div>
+ <!-- Works of Choice (open in new tab) -->
+<a id="works-of-choice-link"
+   href="https://docs.google.com/presentation/d/e/2PACX-1vTw3jGeCiIxt4sfi2XnDB3HBziqw2IaSz392_Es-gT8sYIitloQ__Bd5rejBv9REgA550ZZ1_E-d6rY/pub?start=true&loop=true&delayms=3000"
+   target="_blank"
+   rel="noopener noreferrer"
+   style="display:none;">Works of Choice</a>
+
   </div>
 
   <section class="hidden">
@@ -494,18 +485,29 @@
       });
     }
 
-    function openModalFromTask(taskId) {
-      const order = ['task-1','task-2'];
-      const idx = order.indexOf(taskId);
-      if (idx < 0) return;
+function openModalFromTask(taskId) {
+  const order = ['task-1','task-2'];
+  const idx = order.indexOf(taskId);
+  if (idx < 0) return;
 
-      const btn = document.getElementById(taskId);
-      if (!btn || btn.classList.contains('locked')) return; // enforce sequence
+  const btn = document.getElementById(taskId);
+  if (!btn || btn.classList.contains('locked')) return;
 
-      const modalId = btn.getAttribute('data-modal');
-      window.lastOpenedTaskId = taskId;
-      openModal(modalId);
-    }
+  // For Works of Choice, open in new tab
+  if (taskId === 'task-2') {
+    window.open(
+      'https://docs.google.com/presentation/d/e/2PACX-1vTw3jGeCiIxt4sfi2XnDB3HBziqw2IaSz392_Es-gT8sYIitloQ__Bd5rejBv9REgA550ZZ1_E-d6rY/pub?start=true&loop=true&delayms=6000',
+      '_blank'
+    );
+    markCompleted('task-2');
+    return;
+  }
+
+  // Default modal behavior for the first lock
+  const modalId = btn.getAttribute('data-modal');
+  window.lastOpenedTaskId = taskId;
+  openModal(modalId);
+}
 
     function markCompleted(taskId) {
       const btn = document.getElementById(taskId);
