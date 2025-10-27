@@ -183,7 +183,6 @@
       font-size: 0.95rem;
     }
 
-
     /* ===== Modal ===== */
     .modal {
       display: none; position: fixed; z-index: 1000; inset: 0;
@@ -193,7 +192,6 @@
       position: absolute; inset: 0; background-color: #fefefe;
       border: 2px solid #7c9a63; border-radius: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.3);
       display: flex; flex-direction: column; box-sizing: border-box;
-      
     }
     .modal-header {
       display: flex; align-items: center; justify-content: space-between;
@@ -212,50 +210,89 @@
     .timer-fill { height: 100%; width: 0%; background: #7c9a63; transition: width 1s linear; }
 
     /* ===== Modal Button Style Upgrade ===== */
-.modal-body button,
-.modal-body a.button {
-  display: inline-block;
-  background-color: #58b86d; /* jungle green */
-  color: #fff;
-  font-family: 'Comic Sans MS', Arial, sans-serif;
-  font-size: 1.2rem;
-  font-weight: bold;
-  padding: 14px 28px;
-  border: none;
-  border-radius: 16px;
-  box-shadow: 0 5px 12px rgba(0,0,0,0.2);
-  cursor: pointer;
-  transition: all 0.2s ease-in-out;
-  text-align: center;
-}
+    .modal-body button,
+    .modal-body a.button {
+      display: inline-block;
+      background-color: #58b86d; /* jungle green */
+      color: #fff;
+      font-family: 'Comic Sans MS', Arial, sans-serif;
+      font-size: 1.2rem;
+      font-weight: bold;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 5px 12px rgba(0,0,0,0.2);
+      cursor: pointer;
+      transition: all 0.2s ease-in-out;
+      text-align: center;
+    }
 
-.modal-body button:hover,
-.modal-body a.button:hover {
-  background-color: #3fa35b; /* darker hover green */
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.25);
-}
+    .modal-body button:hover,
+    .modal-body a.button:hover {
+      background-color: #3fa35b; /* darker hover green */
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    }
 
-.modal-body button:active {
-  transform: scale(0.97);
-}
+    .modal-body button:active { transform: scale(0.97); }
 
-/* Optional: make any icon or emoji slightly bigger inside */
-.modal-body button span, 
-.modal-body button img {
-  vertical-align: middle;
-  margin-right: 6px;
-  font-size: 1.3em;
-}
+    .modal-body button span, 
+    .modal-body button img {
+      vertical-align: middle;
+      margin-right: 6px;
+      font-size: 1.3em;
+    }
+
+<style>
+  /* Compact lock sizing (hard overrides) */
+  .locks-grid{
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .locks-grid .lock-btn{
+    --lock-size: 56px;   /* dial this to taste */
+    --ring: 2px;
+    width: var(--lock-size) !important;     /* key: constrain the button box */
+    padding: 4px 0 !important;
+    gap: 4px !important;
+    justify-self: center;
+  }
+
+  .locks-grid .lock-btn::before{
+    font-size: 1rem !important;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.18) !important;
+  }
+
+  /* tie the SVG lock graphic to the circle size instead of % of button */
+  .locks-grid .lock-btn::after{
+    width: calc(var(--lock-size) * 0.62) !important;
+    height: calc(var(--lock-size) * 0.62) !important;
+    top: calc(var(--lock-size) * 0.20) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .locks-grid .lock-btn .lock-label{
+    font-size: 0.8rem !important;
+    padding: 3px 6px !important;
+  }
+
+  /* tiny on phones */
+  @media (max-width: 480px){
+    .locks-grid .lock-btn{ --lock-size: 50px; }
+  }
+</style>
+
   </style>
 </head>
 <body>
 
   <header>
     <div class="title-row">
-      <img src="./pictures/lionClipArt/lionBook.png" alt="Lion Icon 1" />
-      <h1>LRC Week 9 - Spooky Stories!
-      <img src="./pictures/lionClipArt/lionLaptop.png" alt="Lion Icon 2" />
+      <img src="../pictures/lionClipArt/pumpkinLion.png" alt="Lion Icon 1" />
+      <h1>LRC Week 9 - Spooky Stories!</h1>
+      <img src="../pictures/lionClipArt/pumpkinLion.png" alt="Lion Icon 2" />
     </div>
   </header>
 
@@ -267,93 +304,23 @@
     </label>
   </div>
 
-  <!-- ===== Must Do as locks ===== -->
+  <!-- ===== Must Do as locks (ONLY TWO) ===== -->
   <section>
     <h2>📌 Must Do</h2>
     <div class="locks-grid" id="locksGrid" aria-label="Must Do steps">
-      <!-- 🔁 swapped here: Step 1 now opens Instructions, Step 3 opens Typing -->
-      <button id="task-1" class="lock-btn locked" data-step="1" data-modal="modal2" aria-label="Step 1: Instructions (locked)">
-        <span class="lock-label">Instructions</span>
+      <button id="task-1" class="lock-btn locked" data-step="1" data-modal="modal3" aria-label="Step 1: Main Activity (locked)">
+        <span class="lock-label">Main Activity</span>
       </button>
-      <button id="task-2" class="lock-btn locked" data-step="2" data-modal="modal4" aria-label="Step 2: Book Checkout (locked)">
-        <span class="lock-label">Book Checkout</span>
-      </button>
-      <button id="task-3" class="lock-btn locked" data-step="3" data-modal="modal1" aria-label="Step 3: Typing Warm-Up (locked)">
-        <span class="lock-label">Typing Warm-Up</span>
-      </button>
-      <button id="task-4" class="lock-btn locked" data-step="4" data-modal="modal3" aria-label="Step 4: Pumpkin Voting (locked)">
-        <span class="lock-label">Pumpkin Voting</span>
-      </button>
-      <button id="task-5" class="lock-btn locked" data-step="5" data-modal="modal5" aria-label="Step 5: Fun Rooms (locked)">
-        <span class="lock-label">Fun Rooms</span>
+      <button id="task-2" class="lock-btn locked" data-step="2" data-modal="modal5" aria-label="Step 2: Works of Choice (locked)">
+        <span class="lock-label">Works of Choice</span>
       </button>
     </div>
     <p class="locks-hint">Complete steps in order. Click a green lock to begin.</p>
   </section>
 
-  <!-- ===== MODALS ===== -->
+  <!-- ===== MODALS (ONLY THE TWO YOU WANTED) ===== -->
 
-  <!-- 1️⃣ Typing Warm-Up (now Step 3) -->
-  <div id="modal1" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal1-title" data-duration="300">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal1-title">Typing Warm-Up</h3>
-        <div class="timer-wrap">
-          <div class="timer-label"><span id="time-modal1">5:00</span></div>
-          <div class="timer-bar"><div id="bar-modal1" class="timer-fill"></div></div>
-        </div>
-        <span class="close" onclick="closeModal('modal1')" aria-label="Close">&times;</span>
-      </div>
-      <div class="modal-body">
-        <iframe src="../typingWarmUp.html" allowfullscreen></iframe>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2️⃣ Book Checkout (unchanged) -->
-  <div id="modal4" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal4-title" data-duration="420">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal4-title">📚 Book Checkout</h3>
-        <div class="timer-wrap">
-          <div class="timer-label"><span id="time-modal4">7:00</span></div>
-          <div class="timer-bar"><div id="bar-modal4" class="timer-fill"></div></div>
-        </div>
-        <span class="close" onclick="closeModal('modal4')" aria-label="Close">&times;</span>
-      </div>
-      <div class="modal-body" style="flex-direction:column; padding:16px; gap:16px;">
-        <ol>
-          <li>Quietly choose <strong>1–2 books</strong> you’re excited to read.</li>
-          <li>Use <em>Destiny Discover</em> if you need help finding a book.</li>
-          <li>Treat books with care!</li>
-        </ol>
-        <iframe src="../destiny.html" style="flex:1;"></iframe>
-        <button onclick="markCompleted('task-2'); closeModal('modal4')">I’m done!</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 3️⃣ Instructions (now Step 1) -->
-  <div id="modal2" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal2-title" data-duration="180">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="modal2-title">Instructions</h3>
-        <div class="timer-wrap">
-          <div class="timer-label"><span id="time-modal2">3:00</span></div>
-          <div class="timer-bar"><div id="bar-modal2" class="timer-fill"></div></div>
-        </div>
-        <span class="close" onclick="closeModal('modal2')" aria-label="Close">&times;</span>
-      </div>
-      <div class="modal-body" style="flex-direction:column; padding:16px; gap:16px;">
-        <p><strong>Watch this quick guide, then click “I’m ready.”</strong></p>
-        <iframe src="https://www.youtube.com/embed/yourVideoID" allowfullscreen></iframe>
-        <!-- ✅ mark Step 1 complete now that Instructions is first -->
-        <button onclick="markCompleted('task-1'); closeModal('modal2')">I’m ready — I understand</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 4️⃣ Main Activity (unchanged) -->
+  <!-- Main Activity -->
   <div id="modal3" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal3-title" data-duration="900">
     <div class="modal-content">
       <div class="modal-header">
@@ -370,7 +337,7 @@
     </div>
   </div>
 
-  <!-- 5️⃣ Works of Choice (unchanged) -->
+  <!-- Works of Choice -->
   <div id="modal5" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal5-title" data-duration="600">
     <div class="modal-content">
       <div class="modal-header">
@@ -384,8 +351,7 @@
       <div class="modal-body" style="flex-direction:column; padding:16px; gap:16px;">
         <p>Pick an activity from the Works of Choice board! 🎨🎮📖</p>
         <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vTw3jGeCiIxt4sfi2XnDB3HBziqw2IaSz392_Es-gT8sYIitloQ__Bd5rejBv9REgA550ZZ1_E-d6rY/pubembed?start=true&loop=true&delayms=3000" frameborder="0" width="1440" height="839" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
-          <img src="./pictures/otherIcons/worksChoice.png" alt="Works of Choice" style="max-width:320px; margin:auto; display:block;">
-        </a>
+        <img src="./pictures/otherIcons/worksChoice.png" alt="Works of Choice" style="max-width:320px; margin:auto; display:block;">
       </div>
     </div>
   </div>
@@ -409,9 +375,6 @@
       </div>
     </div>
   </section>
-
-
-
 
   <script>
     // ===== Config =====
@@ -505,9 +468,9 @@
       stopTimer(id);
     }
 
-    // ===== Locks logic =====
+    // ===== Locks logic (ONLY TWO TASKS) =====
     function updateTaskLocks() {
-      const order = ['task-1','task-2','task-3','task-4','task-5'];
+      const order = ['task-1','task-2'];
       order.forEach((id, idx) => {
         const btn = document.getElementById(id);
         if (!btn) return;
@@ -532,7 +495,7 @@
     }
 
     function openModalFromTask(taskId) {
-      const order = ['task-1','task-2','task-3','task-4','task-5'];
+      const order = ['task-1','task-2'];
       const idx = order.indexOf(taskId);
       if (idx < 0) return;
 
