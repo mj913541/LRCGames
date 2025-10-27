@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pick Your Top 5 Pumpkins</title>
+  <style>
+    :root{ --green:#58b86d; --green-dark:#3fa35b; --ring:#cfead6; }
+    body{ margin:0; font-family:'Comic Sans MS', Arial, sans-serif; background:#f6fbf6; color:#2e3d2f; }
+    .wrap{ max-width:920px; margin:0 auto; padding:16px; }
+    h1{ font-size:1.4rem; margin:12px 0 8px; text-align:center; }
+    p.hint{ text-align:center; color:#4f6f52; margin-top:0; }
+
+    form{ background:#fff; border-radius:14px; padding:16px; box-shadow:0 6px 18px rgba(0,0,0,.12); }
+
+    .topbar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:10px; flex-wrap:wrap;}
+    .count{ font-weight:bold; color:#3fa35b; }
+    .name-row{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .name-row input{
+      padding:10px 12px; border:1px solid #dfe9d6; border-radius:10px; background:#fbfdf8; font-size:1rem;
+    }
+
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:14px; }
+    .card{
+      border:2px solid #e6eddc; border-radius:14px; overflow:hidden; background:#ffffff;
+      cursor:pointer; transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+      display:flex; flex-direction:column; position:relative;
+    }
+    .card:hover{ transform:translateY(-2px); box-shadow:0 8px 18px rgba(0,0,0,.12); }
+    .card input{ display:none; }
+.pic{
+  aspect-ratio: 1/1;
+  display:grid;
+  place-items:center;
+  background:#f8fff9;
+  overflow:hidden;
+  padding:6px;             /* small padding so contain looks nice */
+  border-radius: 10px;      /* optional: soften inner corners */
+}
+.pic img{
+  width:100%;
+  height:100%;
+  object-fit:contain;       /* 👈 key change: no cropping, no distortion */
+  display:block;
+}
+
+    .cap{ padding:8px; text-align:center; font-weight:bold; color:#315c3d; font-size:.95rem; }
+
+    .card.selected{ border-color:var(--green); box-shadow:0 0 0 4px var(--ring); }
+    .badge{
+      position:absolute; top:8px; left:8px; background:var(--green); color:#fff; font-weight:900;
+      border-radius:999px; padding:6px 10px; font-size:.9rem; box-shadow:0 4px 12px rgba(0,0,0,.18); display:none;
+    }
+    .card.selected .badge{ display:inline-block; }
+
+    .actions{ text-align:center; margin-top:16px; }
+    button{
+      background:var(--green); color:#fff; border:0; border-radius:16px; padding:14px 28px;
+      font-weight:bold; font-size:1.15rem; cursor:pointer; box-shadow:0 5px 12px rgba(0,0,0,.2);
+      transition:transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+    }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    button:hover:not(:disabled){ background:var(--green-dark); transform:scale(1.04); box-shadow:0 7px 16px rgba(0,0,0,.24); }
+
+    .toast{
+      position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
+      background:#2e3d2f; color:#fff; padding:10px 14px; border-radius:12px; font-size:.95rem;
+      opacity:0; pointer-events:none; transition:opacity .18s ease;
+    }
+    .toast.show{ opacity:1; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Pick Your Top 5 Pumpkins 🎃</h1>
+    <p class="hint">Tap your favorites (exactly five). Tap again to unselect. Then submit.</p>
+
+    <!-- Replace ACTION_URL_HERE with your Apps Script Web App URL -->
+    <form method="post" action="ACTION_URL_HERE">
+      <div class="topbar">
+        <div class="count" id="counter">0 / 5 selected</div>
+        <div class="name-row">
+          <label for="studentName">Name (optional):</label>
+          <input id="studentName" name="studentName" type="text" placeholder="First name only" />
+        </div>
+      </div>
+
+      <div class="grid" id="pumpkinGrid">
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Belle">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/belle.jpeg" alt="Belle"></div>
+          <div class="cap">Belle</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Cat in the Hat">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/catinthehat.jpeg" alt="Cat in the Hat"></div>
+          <div class="cap">Cat in the Hat</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="DogMan & CatKid">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/dogman.jpeg" alt="DogMan & CatKid"></div>
+          <div class="cap">DogMan & Catkid</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="The Grinch">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/grinch.jpeg" alt="The Grinch"></div>
+          <div class="cap">The Grinch</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="The Grouchy Ladybug">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/grouchyladybug.jpeg" alt="The Grouchy Ladybug"></div>
+          <div class="cap">The Grouchy Ladybug</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Harry Potter">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/harrypotter.jpeg" alt="Harry Potter"></div>
+          <div class="cap">Harry Potter</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Investigators">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/investigators.jpeg" alt="Investigators"></div>
+          <div class="cap">Investigators</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Pig the Monster">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/pigthemonster.jpeg" alt="Pig the Monster"></div>
+          <div class="cap">Pig the Monster</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Sofia">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/sofia.jpeg" alt="Sofia"></div>
+          <div class="cap">Sofia</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Spiderman">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/spiderman.jpeg" alt="Spiderman"></div>
+          <div class="cap">Spiderman</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Stitch">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/stitch.jpeg" alt="Stitch"></div>
+          <div class="cap">Stitch</div>
+        </label>
+
+        <label class="card">
+          <input type="checkbox" name="pumpkins" value="Sugar Skull">
+          <div class="pic"><span class="badge"></span><img src="../../pictures/pumpkinPatchPhotos/sugarskull.jpeg" alt="Sugar Skull"></div>
+          <div class="cap">Sugar Skull</div>
+        </label>
+
+      </div>
+
+      <div class="actions">
+        <button id="submitBtn" type="submit" disabled>Submit My Top 5</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast" id="toast">Pick exactly 5 pumpkins.</div>
+
+  <script>
+    // shuffle pumpkin cards before showing them
+    const gridEl = document.getElementById('pumpkinGrid');
+    if (gridEl) {
+      const cards = Array.from(gridEl.children);
+      for (let i = cards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [cards[i], cards[j]] = [cards[j], cards[i]];
+      }
+      gridEl.innerHTML = '';
+      cards.forEach(c => gridEl.appendChild(c));
+    }
+
+    const MAX = 5;
+    const grid = document.getElementById('pumpkinGrid');
+    const counter = document.getElementById('counter');
+    const submitBtn = document.getElementById('submitBtn');
+    const toast = document.getElementById('toast');
+
+    function updateUI() {
+      const cards = [...grid.querySelectorAll('.card')];
+      const checked = cards.filter(c => c.querySelector('input').checked);
+
+      // update selected styling + order badges
+      cards.forEach(c => {
+        const inp = c.querySelector('input');
+        const badge = c.querySelector('.badge');
+        if (inp.checked) {
+          c.classList.add('selected');
+          const idx = checked.indexOf(c);
+          badge.textContent = (idx + 1);
+        } else {
+          c.classList.remove('selected');
+          badge.textContent = '';
+        }
+      });
+
+      counter.textContent = `${checked.length} / ${MAX} selected`;
+      submitBtn.disabled = (checked.length !== MAX);
+
+      // if at max, disable unchecked checkboxes
+      const disableOthers = checked.length >= MAX;
+      cards.forEach(c => {
+        const inp = c.querySelector('input');
+        if (!inp.checked) {
+          inp.disabled = disableOthers;
+          c.style.opacity = disableOthers ? 0.85 : 1;
+        } else {
+          inp.disabled = false;
+          c.style.opacity = 1;
+        }
+      });
+    }
+
+    // click anywhere on card to toggle checkbox
+    grid.addEventListener('click', (e) => {
+      const card = e.target.closest('.card');
+      if (!card) return;
+      const inp = card.querySelector('input');
+      if (!inp.checked) {
+        const currently = grid.querySelectorAll('input[name="pumpkins"]:checked').length;
+        if (currently >= MAX) {
+          toast.classList.add('show');
+          setTimeout(()=>toast.classList.remove('show'), 900);
+          return;
+        }
+      }
+      inp.checked = !inp.checked;
+      updateUI();
+    });
+
+    // initial
+    updateUI();
+  </script>
+  <noscript>This page requires JavaScript.</noscript>
+</body>
+</html>

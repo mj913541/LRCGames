@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JungleQuestHub • Picture Tap Attendance (Email Export)</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --card:#111827;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --accent:#22c55e;
+      --danger:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#0b1226,#0f172a);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:var(--text)}
+    .wrap{max-width:1100px;margin:40px auto;padding:24px}
+    .card{background:linear-gradient(180deg,#0f172a,#0b1226);border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:20px;box-shadow:var(--shadow)}
+    h1{margin:0 0 6px;font-size:28px}
+    p.lead{margin:0 0 18px;color:var(--muted)}
+    .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:14px}
+    .col-6{grid-column:span 6}
+    .col-12{grid-column:span 12}
+    label{display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:8px}
+    select,button{border-radius:12px;border:1px solid rgba(255,255,255,.08);background:#0b1226;color:var(--text)}
+    select{width:100%;padding:12px 14px;font-size:16px}
+    .row{margin-bottom:14px}
+    .btn{cursor:pointer;padding:12px 16px;font-weight:700;letter-spacing:.3px}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#16a34a);border-color:transparent}
+    .btn.warn{background:linear-gradient(90deg,var(--danger),#dc2626);border-color:transparent}
+    .btn.dim{opacity:.6;pointer-events:none}
+    .table{width:100%;border-collapse:collapse;margin-top:6px}
+    .table th,.table td{border-bottom:1px solid rgba(255,255,255,.06);padding:10px 8px;text-align:left}
+    .photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+    .tile{position:relative;border:1px solid rgba(255,255,255,.08);background:#0a0f1f;border-radius:14px;overflow:hidden;cursor:pointer;box-shadow:var(--shadow)}
+    .tile img{width:100%;height:100px;object-fit:cover;display:block}
+    .tile .name{padding:8px 10px;font-weight:700;font-size:13px}
+    .check{position:absolute;top:6px;right:6px;background:linear-gradient(90deg,var(--accent),#16a34a);color:#001b0f;border-radius:999px;padding:4px 6px;font-weight:800;font-size:12px;display:none}
+    .tile.present .check{display:block}
+    .toast{position:fixed;bottom:20px;right:20px;background:#0b1226;border:1px solid rgba(255,255,255,.08);padding:12px 14px;border-radius:12px;box-shadow:var(--shadow);display:none}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Attendance</h1>
+      <div class="grid">
+        <div class="col-6">
+          <div class="row">
+            <label for="classSelect">Select your class</label>
+            <select id="classSelect"></select>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="row">
+            <label>Tap your picture to check in</label>
+            <div id="photoGrid" class="photo-grid"></div>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="row" style="display:flex;gap:10px;align-items:center;">
+            <button class="btn" id="emailCsv">Email Attendance</button>
+            <button class="btn warn" id="resetDay">Reset Attendance</button>
+          </div>
+        </div>
+
+        <div class="col-12">
+          <div class="card" style="border-radius:14px">
+            <strong>Present Today</strong>
+            <table class="table" id="logTable">
+              <thead><tr><th>Time</th><th>Class</th><th>Name</th><th>Status</th></tr></thead>
+              <tbody id="logBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script>
+    // ======== CONFIG ========
+    const CONFIG={
+      TIMEZONE:"America/Chicago",
+      ADMIN_PASS:"9134",
+      EMAIL_TO:"malbrecht@sd308.org", // change if needed
+      APPS_SCRIPT_WEBAPP_URL:"", // REQUIRED for email export (paste your deployed Web App URL)
+CLASSES: {
+"1st Rogers": [
+{ name: "Aiden R.", photo: "photos/aidenr.jpg" },
+{ name: "Bella S.", photo: "photos/bellas.jpg" },
+{ name: "Cameron T.", photo: "photos/cameront.jpg" },
+{ name: "Diana M.", photo: "photos/dianam.jpg" }
+],
+"1st Wilson": [
+{ name: "Liam P.", photo: "photos/liamp.jpg" },
+{ name: "Mia K.", photo: "photos/miak.jpg" },
+{ name: "Ethan L.", photo: "photos/ethanl.jpg" },
+{ name: "Olivia D.", photo: "photos/oliviad.jpg" }
+]
+}
+};
+
+
+    // ======== Helpers ========
+    const $=s=>document.querySelector(s);
+    const fmt=d=>new Intl.DateTimeFormat('en-US',{hour:'2-digit',minute:'2-digit',hour12:true,timeZone:CONFIG.TIMEZONE}).format(d);
+    const todayKey=()=>new Date().toISOString().slice(0,10);
+    const storeKey=k=>`attendance_${k||todayKey()}`;
+    const toast=m=>{const t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(()=>t.style.display='none',2200)};
+
+    function getList(){return JSON.parse(localStorage.getItem(storeKey())||'[]');}
+    function saveList(r){localStorage.setItem(storeKey(),JSON.stringify(r));}
+    function isPresent(c,n){return getList().some(r=>r.class===c&&r.name===n);}
+    function addPresent(c,n){const now=new Date();const r=getList();r.push({time:fmt(now),class:c,name:n,status:'Present'});saveList(r);}    
+    function removePresent(c,n){const r=getList().filter(x=>!(x.class===c&&x.name===n));saveList(r);}    
+
+    function renderTable(){const b=$('#logBody');const r=getList();b.innerHTML=r.map(v=>`<tr><td>${v.time}</td><td>${v.class}</td><td>${v.name}</td><td>${v.status}</td></tr>`).join('');}
+
+    function init(){
+      initClasses();
+      $('#classSelect').addEventListener('change',renderPhotos);
+      $('#resetDay').addEventListener('click',resetWithPassword);
+      $('#emailCsv').addEventListener('click',emailWithPassword);
+      if(!CONFIG.APPS_SCRIPT_WEBAPP_URL){ $('#emailCsv').classList.add('dim'); $('#emailHint').style.display='inline'; } else { $('#emailHint').style.display='none'; }
+      renderTable();
+    }
+    function initClasses(){const s=$('#classSelect');s.innerHTML='<option value="" disabled selected>Select a class</option>'+Object.keys(CONFIG.CLASSES).map(c=>`<option>${c}</option>`).join('');}
+    function renderPhotos(){const c=$('#classSelect').value,l=CONFIG.CLASSES[c]||[],g=$('#photoGrid');g.innerHTML='';l.forEach(stu=>{const t=document.createElement('button');t.className='tile';t.dataset.name=stu.name;t.innerHTML=`<img src="${stu.photo}" alt="${stu.name}"><div class="name">${stu.name}</div><span class="check">✓</span>`;t.addEventListener('click',()=>tapPhoto(c,stu.name,t));g.appendChild(t);});updateChecks();}
+    function updateChecks(){const c=$('#classSelect').value;document.querySelectorAll('.tile').forEach(t=>{isPresent(c,t.dataset.name)?t.classList.add('present'):t.classList.remove('present');});}
+    function tapPhoto(c,n){if(!c){toast('Select your class first');return;}if(isPresent(c,n)){removePresent(c,n);toast(n+' marked absent');}else{addPresent(c,n);toast(n+' checked in!');}renderTable();updateChecks();}
+    function resetWithPassword(){const p=prompt('Enter admin password to reset:');if(p===CONFIG.ADMIN_PASS){localStorage.removeItem(storeKey());renderTable();updateChecks();toast('Attendance cleared');}else if(p!==null){toast('Incorrect password');}}
+
+    async function emailWithPassword(){
+      if(!CONFIG.APPS_SCRIPT_WEBAPP_URL){ toast('Add your Apps Script URL in CONFIG to enable email.'); return; }
+      const p=prompt('Enter admin password to email attendance:');
+      if(p!==CONFIG.ADMIN_PASS){ if(p!==null) toast('Incorrect password'); return; }
+      const rows=getList();
+      if(rows.length===0){ toast('No attendance to email yet.'); return; }
+      try{
+        const payload={ action:'email_csv', to:CONFIG.EMAIL_TO, date:todayKey(), rows:rows };
+        const btn=$('#emailCsv'); btn.classList.add('dim');
+        const res=await fetch(CONFIG.APPS_SCRIPT_WEBAPP_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        btn.classList.remove('dim');
+        if(res.ok){ toast('Email sent!'); } else { toast('Email failed. Check Apps Script.'); }
+      }catch(e){ toast('Offline or blocked. Email not sent.'); }
+    }
+
+    window.addEventListener('DOMContentLoaded',init);
+  </script>
+
+</body>
+</html>

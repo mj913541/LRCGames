@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📚 Easy Chapter Book Scavenger Hunt</title>
+  <style>
+    body{font-family:system-ui,Roboto,sans-serif;margin:0;padding:0;background:#fffaf3;color:#333}
+    header{background:#f4b183;color:#2e1e00;padding:1rem;text-align:center;border-bottom:4px solid #c47f00}
+    h1{margin:0;font-size:1.75rem}
+    main{max-width:900px;margin:auto;padding:1rem}
+    .question{background:#fff;border:1px solid #ddd;border-radius:12px;padding:1rem;margin:1rem 0;box-shadow:0 4px 10px rgba(0,0,0,.05)}
+    .tag{background:#fdebd0;color:#6e2c00;padding:.2rem .5rem;border-radius:999px;font-size:.85rem;margin-right:.5rem}
+    button{padding:.6rem 1rem;border:none;border-radius:999px;font-weight:600;cursor:pointer;background:#c47f00;color:white;margin-top:.5rem}
+    .feedback{margin-top:.5rem;font-weight:700}
+    .feedback.ok{color:green}
+    .feedback.no{color:red}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>📚 Easy Chapter Book Scavenger Hunt</h1>
+    <p>Find the books listed below in <strong>Destiny Discover</strong>. Type the <strong>call number</strong> exactly as it appears in the catalog!</p>
+  </header>
+  <main>
+    <div id="quiz"></div>
+    <div id="results" style="font-weight:bold;font-size:1.2rem;margin-top:1rem"></div>
+  </main>
+
+  <script>
+    const QUESTIONS = [
+      {title:'Junie B. Jones', validator:{regex:"^FIC\s?PAR"}, hint:'Hint: Author Barbara Park → Call number starts with FIC PAR'},
+      {title:'Magic Tree House', validator:{regex:"^FIC\s?OSB"}, hint:'Hint: Author Mary Pope Osborne'},
+      {title:'Ivy and Bean', validator:{regex:"^FIC\s?BAR"}, hint:'Hint: Author Annie Barrows'},
+      {title:'Nancy Clancy', validator:{regex:"^FIC\s?OCO"}, hint:'Hint: Author Jane O'Connor'},
+      {title:'Mercy Watson', validator:{regex:"^FIC\s?DIC"}, hint:'Hint: Author Kate DiCamillo'},
+      {title:'Ready Freddy', validator:{regex:"^FIC\s?KLE"}, hint:'Hint: Author Abby Klein'},
+      {title:'Owl Diaries', validator:{regex:"^FIC\s?ELL"}, hint:'Hint: Author Rebecca Elliott'},
+      {title:'Notebook of Doom', validator:{regex:"^FIC\s?CUS"}, hint:'Hint: Author Troy Cummings'},
+      {title:'Horrible Harry', validator:{regex:"^FIC\s?KLI"}, hint:'Hint: Author Suzy Kline'},
+      {title:'My Weird School', validator:{regex:"^FIC\s?GUT"}, hint:'Hint: Author Dan Gutman'},
+      {title:'Princess in Black', validator:{regex:"^FIC\s?HALE"}, hint:'Hint: Author Shannon Hale'},
+      {title:'Dragon Masters', validator:{regex:"^FIC\s?WES"}, hint:'Hint: Author Tracey West'},
+      {title:'The Bad Guys', validator:{regex:"^FIC\s?BLA"}, hint:'Hint: Author Aaron Blabey'},
+      {title:'Stink', validator:{regex:"^FIC\s?MCD"}, hint:'Hint: Author Megan McDonald'}
+    ];
+
+    const quizDiv=document.getElementById('quiz');
+
+    QUESTIONS.forEach((q,i)=>{
+      const div=document.createElement('div');
+      div.className='question';
+      div.innerHTML=`<div><span class='tag'>Q${i+1}</span>Find <strong>${q.title}</strong>. Type the call number:</div>
+      <input type='text' id='q${i}' placeholder='e.g., FIC PAR' style='width:100%;margin-top:.5rem;padding:.5rem;border-radius:8px;border:1px solid #ccc'/>
+      <div class='muted'>${q.hint}</div>
+      <div class='feedback' id='f${i}'></div>`;
+      quizDiv.appendChild(div);
+    });
+
+    const results=document.getElementById('results');
+    
+    function validate(val,validator){
+      if(validator.regex){return new RegExp(validator.regex,'i').test(val.trim());}
+      return false;
+    }
+
+    function grade(){
+      let total=0;
+      QUESTIONS.forEach((q,i)=>{
+        const val=document.getElementById(`q${i}`).value;
+        const ok=validate(val,q.validator);
+        const feedback=document.getElementById(`f${i}`);
+        if(ok){feedback.textContent='✅ Correct!';feedback.className='feedback ok';total++;}
+        else{feedback.textContent='❌ Try again.';feedback.className='feedback no';}
+      });
+      results.textContent=`Score: ${total} / ${QUESTIONS.length}`;
+    }
+
+    // Auto-grade when pressing Enter or leaving the field
+    quizDiv.addEventListener('input', grade);
+  </script>
+</body>
+</html>

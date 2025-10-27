@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📚 Easy Chapter Book Scavenger Hunt — One‑at‑a‑Time + Read Aloud</title>
+  <style>
+    :root{--bg:#fffaf3;--ink:#2b2b2b;--accent:#c47f00;--card:#fff;--muted:#6f6f6f;--ok:#1e8449;--bad:#c0392b}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--ink);background:var(--bg)}
+    header{background:#f4b183;border-bottom:4px solid var(--accent);padding:1rem}
+    header .wrap{max-width:960px;margin:0 auto}
+    h1{margin:0 0 .25rem;font-size:1.8rem}
+    .wrap{max-width:960px;margin:0 auto;padding:1rem}
+    .card{background:var(--card);border:1px solid #eee;border-radius:16px;box-shadow:0 8px 20px rgba(0,0,0,.05);padding:1rem}
+    .row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+    button{appearance:none;border:none;border-radius:999px;padding:.7rem 1rem;font-weight:700;cursor:pointer;background:linear-gradient(180deg,#d58a00 0%,#b07200 100%);color:#fff;box-shadow:0 6px 16px rgba(176,114,0,.25)}
+    button.ghost{background:#f5efe6;color:#6e2c00;border:1px solid #e3d7c6;box-shadow:none}
+    .muted{color:var(--muted)}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;z-index:10}
+    .modal.show{display:flex}
+    .modal-card{width:min(760px,94vw);background:#fff;border-radius:18px;box-shadow:0 18px 60px rgba(0,0,0,.28);padding:1rem 1rem 1.25rem;border:3px solid #d58a00}
+    .q-title{font-weight:800}
+    .q-meta{display:flex;gap:.5rem;align-items:center}
+    .pill{padding:.25rem .6rem;border-radius:999px;border:1px solid #ffe2bf;background:#fff7ea}
+    .feedback{font-weight:800;margin-top:.35rem}
+    .ok{color:var(--ok)}.bad{color:var(--bad)}
+    input[type="text"]{width:100%;padding:.7rem .8rem;border-radius:12px;border:1px solid #ddd;font-size:1rem}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1>📚 Easy Chapter Book Scavenger Hunt</h1>
+      <p class="muted">Find the series in <strong>Destiny Discover</strong>. Answer with the <strong>genre color</strong> and the <strong>call number</strong> (e.g., <em>Blue FIC PAR</em>). One question at a time. Tap 🔊 to have it read aloud.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="card">
+      <div class="row" style="justify-content:space-between">
+        <div>
+          <div><strong>Student:</strong> <input id="studentName" placeholder="Optional name" style="padding:.4rem .6rem;border-radius:8px;border:1px solid #ddd"/></div>
+        </div>
+        <div class="row">
+          <button id="startBtn">Start Hunt</button>
+          <button id="exportBtn" class="ghost">Export Attempts (CSV)</button>
+        </div>
+      </div>
+      <div id="results" style="margin-top:1rem"></div>
+    </section>
+  </main>
+
+  <!-- Modal for one-at-a-time flow -->
+  <div class="modal" id="quizModal" aria-hidden="true" role="dialog" aria-label="Scavenger Hunt Question">
+    <div class="modal-card">
+      <div class="row" style="justify-content:space-between;align-items:center">
+        <div class="q-meta"><span class="pill" id="mStep">Q1</span> <span class="q-title" id="mSeries">Series</span></div>
+        <div class="row">
+          <button id="speakBtn" class="ghost" title="Read this out loud">🔊 Read</button>
+        </div>
+      </div>
+      <div id="mPrompt" style="margin:.5rem 0 .25rem"></div>
+      <div class="muted" id="mHint" style="margin-bottom:.5rem"></div>
+      <input id="mInput" type="text" placeholder="e.g., Blue FIC PAR" />
+      <div id="mFeedback" class="feedback"></div>
+      <div class="row" style="justify-content:space-between;margin-top:.75rem">
+        <button id="mNext" disabled>Correct! Next ➜</button>
+        <button id="giveUpBtn" class="ghost">I need a hint</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ==========================
+    // Data & configuration
+    // ==========================
+    const COLORS = [
+      'Red','Blue','Green','Purple','Yellow','Orange','Black','White','Brown','Pink','Teal','Neon Green'
+    ];
+
+    // Each question requires: a color word + the correct call number (FIC XXX or J FIC XXX)
+    // We'll accept color anywhere in the line (before/after), extra spaces, and upper/lower case.
+    const SERIES = [
+      { title:'Junie B. Jones',      cutter:'PAR', hint:"Genre color + call number. Author Barbara Park → FIC PAR" },
+      { title:'Magic Tree House',    cutter:'OSB', hint:"Mary Pope Osborne → FIC OSB" },
+      { title:'Ivy and Bean',        cutter:'BAR', hint:"Annie Barrows → FIC BAR" },
+      { title:'Nancy Clancy',        cutter:'OCO', hint:"Jane O'Connor → FIC OCO" },
+      { title:'Mercy Watson',        cutter:'DIC', hint:"Kate DiCamillo → FIC DIC" },
+      { title:'Ready Freddy',        cutter:'KLE', hint:"Abby Klein → FIC KLE" },
+      { title:'Owl Diaries',         cutter:'ELL', hint:"Rebecca Elliott → FIC ELL" },
+      { title:'Notebook of Doom',    cutter:'CUS', hint:"Troy Cummings → FIC CUS" },
+      { title:'Horrible Harry',      cutter:'KLI', hint:"Suzy Kline → FIC KLI" },
+      { title:'My Weird School',     cutter:'GUT', hint:"Dan Gutman → FIC GUT" },
+      { title:'Princess in Black',   cutter:'HAL', hint:"Shannon Hale → FIC HAL" },
+      { title:'Dragon Masters',      cutter:'WES', hint:"Tracey West → FIC WES" },
+      { title:'The Bad Guys',        cutter:'BLA', hint:"Aaron Blabey → FIC BLA" },
+      { title:'Stink',               cutter:'MCD', hint:"Megan McDonald → FIC MCD" }
+    ];
+
+    const state = { i:0, attempts: JSON.parse(localStorage.getItem('ecb_attempts')||'[]') };
+
+    const $ = (s,root=document)=>root.querySelector(s);
+    const $$ = (s,root=document)=>Array.from(root.querySelectorAll(s));
+
+    function speak(text){
+      try{
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.rate = 1; u.pitch = 1; u.lang = 'en-US';
+        window.speechSynthesis.speak(u);
+      }catch(e){ /* no-op */ }
+    }
+
+    function needsColorAndCall(answer, cutter){
+      const a=(answer||'').trim().toUpperCase();
+      // must contain any approved color name (case-insensitive)
+      const hasColor = COLORS.some(c=> a.includes(c.toUpperCase()));
+      // call number: optional J, then FIC, then spaces, then the 3-letter cutter
+      const callRe = new RegExp(String.raw`\b(J\s*)?FIC\s*${cutter}\b`, 'i');
+      const hasCall = callRe.test(answer||'');
+      return {ok: hasColor && hasCall, hasColor, hasCall};
+    }
+
+    function openModal(i){
+      const q = SERIES[i]; if(!q){ return finish(); }
+      $('#quizModal').classList.add('show');
+      $('#mStep').textContent = `Q${i+1}`;
+      $('#mSeries').textContent = q.title;
+      $('#mPrompt').innerHTML = `Find <strong>${q.title}</strong> in Destiny Discover. Type the <strong>genre color</strong> and the <strong>call number</strong> (e.g., <em>Blue FIC ${q.cutter}</em>).`;
+      $('#mHint').textContent = q.hint + ' • Include the color!';
+      $('#mInput').value = '';
+      $('#mFeedback').textContent = '';
+      $('#mNext').disabled = true;
+      $('#mInput').focus();
+      // Read aloud support
+      $('#speakBtn').onclick = ()=> speak(`Question ${i+1}. ${q.title}. Type the genre color and the call number. For example: Blue FIC ${q.cutter}. Hint: ${q.hint}`);
+
+      $('#mInput').oninput = ()=>{
+        const {ok,hasColor,hasCall} = needsColorAndCall($('#mInput').value, q.cutter);
+        if(ok){ $('#mFeedback').textContent='Great! That has a color and the right call number.'; $('#mFeedback').className='feedback ok'; $('#mNext').disabled=false; }
+        else{
+          let msg='';
+          if(!hasColor && !hasCall) msg='Include a color and a call number like FIC ' + q.cutter + '.';
+          else if(!hasColor) msg='Add the genre color (e.g., Blue).';
+          else if(!hasCall) msg=`Make sure the call number matches FIC ${q.cutter}.`;
+          $('#mFeedback').textContent=msg; $('#mFeedback').className='feedback bad'; $('#mNext').disabled=true;
+        }
+      };
+
+      $('#mNext').onclick = ()=>{ state.i = i+1; openModal(state.i); };
+      $('#giveUpBtn').onclick = ()=>{
+        const sample = COLORS[1] || 'Blue';
+        $('#mInput').value = `${sample} FIC ${q.cutter}`; $('#mInput').dispatchEvent(new Event('input'));
+      };
+    }
+
+    function finish(){
+      $('#quizModal').classList.remove('show');
+      const name = ($('#studentName').value||'').trim();
+      const attempt = { ts: Date.now(), name, total: SERIES.length };
+      state.attempts.push(attempt);
+      localStorage.setItem('ecb_attempts', JSON.stringify(state.attempts));
+      $('#results').innerHTML = `<div class="row" style="align-items:center;gap:.5rem"><span>🎉</span><strong>All done!</strong> You completed ${SERIES.length} questions.</div>`;
+    }
+
+    function exportCSV(){
+      if(!state.attempts.length){ alert('No attempts on this device yet.'); return; }
+      const header=['timestamp','name','total'];
+      const lines=[header.join(',')];
+      for(const a of state.attempts){
+        lines.push([new Date(a.ts).toLocaleString(), '"'+(a.name||'')+'"', a.total].join(','));
+      }
+      const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download='easy_chapter_book_attempts.csv'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // Wire up
+    window.addEventListener('DOMContentLoaded',()=>{
+      $('#startBtn').onclick = ()=>{ state.i=0; openModal(0); };
+      $('#exportBtn').onclick = exportCSV;
+    });
+  </script>
+</body>
+</html>
