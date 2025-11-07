@@ -1,0 +1,88 @@
+<!-- November Choice Board: Venn Diagram Genre Comparison Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Venn Diagram: Compare Genres | November Choice Board</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { background: linear-gradient(to bottom, #fffaf0, #fef3c7); font-family: 'Poppins', sans-serif; }
+    .back-btn { background-color: #92400e; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; transition: 0.3s; }
+    .back-btn:hover { background-color: #b45309; }
+    .activity-card { background-color: #fff7ed; border: 2px solid #f59e0b; border-radius: 1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); padding: 1.5rem; max-width: 900px; margin: 2rem auto; text-align: left; }
+    .step { display: flex; gap: .75rem; align-items: flex-start; margin: .5rem 0; }
+    .step span { background:#f59e0b; color:white; font-weight:700; font-size: 1rem; width:1.8rem; height:1.8rem; display:flex; align-items:center; justify-content:center; border-radius:.4rem; flex-shrink: 0; }
+    .badge { display:inline-block; background:#fde68a; border:1px solid #f59e0b; color:#7c2d12; padding:.2rem .5rem; border-radius:.5rem; font-size:.85rem; margin-right:.4rem; }
+    .list-dot li { margin-left: 1rem; list-style: disc; }
+    .link { color:#b45309; text-decoration: underline; }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    @media (max-width: 768px){ .grid2{ grid-template-columns: 1fr; } }
+    .note { background:#fffbeb; border-left:4px solid #f59e0b; padding:.75rem 1rem; border-radius:.5rem; }
+    .classroom-btn { background: linear-gradient(145deg, #d97706, #b45309); color: white; padding: 0.75rem 1.25rem; border-radius: 0.75rem; font-weight: 600; text-shadow: 0 1px 2px rgba(0,0,0,0.25); box-shadow: 0 3px 6px rgba(0,0,0,0.2); transition: 0.3s; display: inline-block; }
+    .classroom-btn:hover { background: linear-gradient(145deg, #f59e0b, #92400e); transform: scale(1.03); }
+    .pill { display:inline-block; padding:.15rem .6rem; border-radius:9999px; border:1px dashed #eab308; background:#fffbeb; color:#7c2d12; font-size:.8rem; }
+  </style>
+</head>
+<body>
+  <header class="py-6 bg-yellow-200 shadow-md text-center">
+    <h1 class="text-3xl font-bold text-amber-800">🔍 Venn Diagram: Compare Genres</h1>
+  </header>
+
+  <main class="activity-card">
+    <div class="grid2">
+      <div>
+        <img src="./novemberPictures/novemberCompareGenres.png" alt="Compare Genres Venn Diagram" class="rounded-lg mb-4 shadow-md w-full">
+      </div>
+      <div>
+        <h2 class="text-2xl font-semibold text-amber-700 mb-2">Your Challenge</h2>
+        <p class="text-gray-800 mb-2">
+          Compare and contrast <strong>two genres</strong> using a Venn diagram. You will use the
+          <span class="pill">Google Slides Venn template</span> attached to the Classroom assignment.
+        </p>
+
+        <div class="step"><span>1</span><p>Open the Classroom assignment and your <strong>Slides copy</strong> of the Venn Diagram template.</p></div>
+        <div class="step"><span>2</span><p>Choose <strong>two genres</strong> (e.g., <em>Fantasy & Mystery</em>, <em>Realistic Fiction & Historical Fiction</em>, <em>Fiction & Nonfiction</em>).</p></div>
+        <div class="step"><span>3</span><p>List at least <strong>3 differences</strong> in the outer circles and <strong>3 similarities</strong> in the middle.</p></div>
+        <div class="step"><span>4</span><p>Add <strong>one book example</strong> for each genre. (Title + author is enough.)</p></div>
+        <div class="step"><span>5</span><p>Check spelling and clarity, then <strong>Turn it in</strong> on Classroom.</p></div>
+
+        <div class="mt-6 text-center">
+          <a href="https://classroom.google.com/c/YOUR_CLASS_ID/a/YOUR_ASSIGNMENT_ID/details" target="_blank" class="classroom-btn" aria-label="Open Venn Diagram Classroom Assignment">🧾 Open the Classroom Assignment</a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-6 border-amber-300">
+
+    <h3 class="text-xl font-semibold text-amber-700 mb-2">Genre Ideas</h3>
+    <ul class="list-dot text-gray-800 space-y-1">
+      <li><span class="badge">🧙</span>Fantasy</li>
+      <li><span class="badge">🕵️</span>Mystery</li>
+      <li><span class="badge">🏫</span>Realistic Fiction</li>
+      <li><span class="badge">📜</span>Historical Fiction</li>
+      <li><span class="badge">🔬</span>Science Fiction</li>
+      <li><span class="badge">📘</span>Nonfiction</li>
+      <li><span class="badge">💀</span>Horror</li>
+      <li><span class="badge">🏀</span>Sports</li>
+    </ul>
+
+    <h3 class="title text-xl mt-4">Success Checklist</h3>
+    <ul class="list-dot text-gray-800 space-y-1">
+      <li>Both genres are clearly labeled</li>
+      <li>At least <strong>3 similarities</strong> and <strong>3 differences</strong></li>
+      <li>One <strong>book example</strong> for each genre (title + author)</li>
+      <li>Ideas are in the correct sections of the Venn diagram</li>
+      <li>Spelling, capitalization, and neat layout</li>
+    </ul>
+
+    <div class="note mt-4 text-sm text-gray-700">
+      <p><strong>Tip:</strong> Think about <em>story elements</em> (characters, setting, problem/solution) for fiction and <em>text features</em> (headings, captions, diagrams) for nonfiction when comparing.</p>
+    </div>
+  </main>
+
+  <footer class="mt-10 text-center">
+    <a href="./novemberChoiceBoard.html" class="back-btn">⬅️ Back to Choice Board</a>
+  </footer>
+</body>
+</html>

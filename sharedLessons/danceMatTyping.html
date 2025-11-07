@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dance Mat Typing</title>
+  <style>
+    :root{
+      --bg:#0f172a;          /* slate-900 */
+      --card:#111827;        /* gray-900 */
+      --text:#e5e7eb;        /* gray-200 */
+      --muted:#9ca3af;       /* gray-400 */
+      --accent:#22c55e;      /* green-500 */
+      --accent-2:#06b6d4;    /* cyan-500 */
+      --danger:#ef4444;      /* red-500 */
+    }
+    html,body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      color:var(--text); background: radial-gradient(1200px 600px at 70% -10%, #1f2937 0%, var(--bg) 50%);
+      display:flex; flex-direction:column; gap:1.25rem;
+    }
+    header{
+      position:sticky; top:0; z-index:20; backdrop-filter: blur(8px);
+      background: linear-gradient(180deg, rgba(15,23,42,.9) 0%, rgba(15,23,42,.7) 100%);
+      border-bottom:1px solid rgba(255,255,255,.06);
+    }
+    .wrap{max-width:1100px; margin-inline:auto; padding:1rem;}
+
+    /* TIMER */
+    .timer{
+      display:grid; grid-template-columns: 1fr auto; gap:.75rem; align-items:center;
+    }
+    .time{
+      font-variant-numeric: tabular-nums; font-size:clamp(1.25rem, 2.5vw + 1rem, 2.25rem);
+      letter-spacing:.03em; font-weight:700;
+    }
+    .bar{height:10px; background:#1f2937; border-radius:999px; overflow:hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06)}
+    .fill{height:100%; width:100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .25s linear}
+    .controls{display:flex; flex-wrap:wrap; gap:.5rem}
+    .btn{
+      cursor:pointer; user-select:none; border:1px solid rgba(255,255,255,.12);
+      padding:.55rem .9rem; border-radius:.75rem; background: #0b1220; color:var(--text);
+      font-weight:600; letter-spacing:.01em; transition: transform .06s ease, opacity .2s ease;
+    }
+    .btn:active{ transform: translateY(1px) }
+    .btn--danger{ border-color: rgba(239,68,68,.3); color:#fee2e2; background: #1b0e10 }
+
+    main.wrap{padding-top:0}
+
+    /* GRID of GIANT LINKS */
+    .grid{
+      display:grid; gap:1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .card{
+      position:relative; border-radius:1rem; overflow:hidden; background:var(--card);
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      isolation:isolate; outline:1px solid rgba(255,255,255,.06);
+    }
+    .card a{ display:block; color:inherit; text-decoration:none }
+    .img{
+      aspect-ratio: 16/10; width:100%; object-fit:cover; display:block; filter:saturate(1.05) contrast(1.05);
+      transform: scale(1.02); transition: transform .35s ease;
+    }
+    .card:hover .img{ transform: scale(1.06) }
+    .card .label{
+      position:absolute; inset:auto 0 0 0; padding:1rem; background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.75) 80%);
+    }
+    .card h2{ margin:0; font-size: clamp(1.1rem, 1.3rem + .5vw, 1.6rem) }
+    .card p{ margin:.25rem 0 0; color:var(--muted) }
+
+    footer{margin-top:auto; border-top:1px solid rgba(255,255,255,.08)}
+    .back-link{ display:inline-flex; align-items:center; gap:.5rem; padding:.75rem 1rem; border-radius:.75rem; text-decoration:none; color:var(--text);
+      outline:1px solid rgba(255,255,255,.08); background: #0b1220; font-weight:600 }
+    .back-link span{opacity:.8}
+
+    .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="timer" role="region" aria-label="Twenty-minute timer">
+        <div>
+          <div class="time" id="time" aria-live="polite">20:00</div>
+          <div class="bar" aria-hidden="true"><div id="fill" class="fill" style="width:100%"></div></div>
+        </div>
+        <div class="controls">
+          <button class="btn" id="startPauseBtn" aria-pressed="false">Start</button>
+          <button class="btn btn--danger" id="resetBtn">Reset</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <h1 style="margin:.25rem 0 1rem">Choose Your Dance Mat Typing Level</h1>
+    <p style="margin-top:0; color:var(--muted)">Click a big picture to open the level in a new tab.</p>
+
+    <section class="grid" aria-label="Typing Levels">
+      <!--
+        🔗 Replace the href values with the exact Dance Mat Typing URLs your students should use.
+        You can also point these to local HTML pages if you prefer.
+        🖼️ Replace src with your own large image files in /images.
+      -->
+      <article class="card">
+        <a href="https://www.bbc.co.uk/games/interactive/activity-dance-mat-typing?exitGameUrl/http%3A%2F%2Fwww.bbc.co.uk%2Fguides%2Fz3c6tfr" target="_blank" rel="noopener" aria-label="Open Level 1 in a new tab">
+          <img class="img" src="../pictures/picturesForLinks/danceMatLevelOne.png" alt="Level 1 – Home row: f j" />
+          <div class="label"><h2>Level 1</h2><p>Home row (f & j)</p></div>
+        </a>
+      </article>
+
+      <article class="card">
+        <a href="https://www.bbc.co.uk/games/interactive/activity-dance-mat-typing-level2?exitGameUrl/http%3A%2F%2Fwww.bbc.co.uk%2Fguides%2Fz3c6tfr" target="_blank" rel="noopener" aria-label="Open Level 2 in a new tab">
+          <img class="img" src="../pictures/picturesForLinks/danceMatLevelTwo.png" alt="Level 2 – Top row keys" />
+          <div class="label"><h2>Level 2</h2><p>Top row</p></div>
+        </a>
+      </article>
+
+      <article class="card">
+        <a href="https://www.bbc.co.uk/games/interactive/activity-dance-mat-typing-level3?exitGameUrl/http%3A%2F%2Fwww.bbc.co.uk%2Fguides%2Fz3c6tfr" target="_blank" rel="noopener" aria-label="Open Level 3 in a new tab">
+          <img class="img" src="../pictures/picturesForLinks/danceMatLevelThree.png" alt="Level 3 – Bottom row keys" />
+          <div class="label"><h2>Level 3</h2><p>Bottom row</p></div>
+        </a>
+      </article>
+
+      <article class="card">
+        <a href="https://www.bbc.co.uk/games/interactive/activity-dance-mat-typing-level4?exitGameUrl/http%3A%2F%2Fwww.bbc.co.uk%2Fguides%2Fz3c6tfr" target="_blank" rel="noopener" aria-label="Open Level 4 in a new tab">
+          <img class="img" src="../pictures/picturesForLinks/danceMatLevelFour.png" alt="Level 4 – Numbers and symbols" />
+          <div class="label"><h2>Level 4</h2><p>Numbers & symbols</p></div>
+        </a>
+      </article>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap" style="display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap">
+      <a class="back-link" href="../novemberChoiceBoard.html/novemberChoiceBoard.html">
+        <!-- simple back chevron -->
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Back to November Choice Board</span>
+      </a>
+      <small style="color:var(--muted)">Tip: Press <kbd>Space</kbd> to start/pause the timer.</small>
+    </div>
+  </footer>
+
+  <script>
+    // ======= 20:00 Visual Timer (Start/Pause/Reset) =======
+    const TOTAL_SECONDS = 20 * 60; // 20 minutes
+    let remaining = TOTAL_SECONDS;
+    let running = false;
+    let rafId = null;
+    let lastTick = null;
+
+    const $time = document.getElementById('time');
+    const $fill = document.getElementById('fill');
+    const $startPauseBtn = document.getElementById('startPauseBtn');
+    const $resetBtn = document.getElementById('resetBtn');
+
+    function format(s){
+      const m = Math.floor(s/60).toString().padStart(2,'0');
+      const sec = Math.floor(s%60).toString().padStart(2,'0');
+      return `${m}:${sec}`;
+    }
+
+    function render(){
+      $time.textContent = format(remaining);
+      const pct = Math.max(0, Math.min(1, remaining / TOTAL_SECONDS));
+      $fill.style.width = (pct*100).toFixed(2) + '%';
+      document.title = `${format(remaining)} – Typing Practice`;
+    }
+
+    function loop(ts){
+      if(!running){ return; }
+      if(lastTick==null){ lastTick = ts; }
+      const dt = (ts - lastTick)/1000; // seconds
+      lastTick = ts;
+      remaining -= dt;
+      if(remaining <= 0){
+        remaining = 0; running = false; cancelAnimationFrame(rafId); rafId=null;
+        $startPauseBtn.textContent = 'Start';
+        $startPauseBtn.setAttribute('aria-pressed','false');
+        // brief vibration on supported devices
+        if(navigator.vibrate){ navigator.vibrate([200,100,200]); }
+      } else {
+        rafId = requestAnimationFrame(loop);
+      }
+      render();
+    }
+
+    function start(){
+      if(running) return;
+      running = true; lastTick = null;
+      $startPauseBtn.textContent = 'Pause';
+      $startPauseBtn.setAttribute('aria-pressed','true');
+      rafId = requestAnimationFrame(loop);
+    }
+
+    function pause(){
+      running = false;
+      if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+      $startPauseBtn.textContent = 'Start';
+      $startPauseBtn.setAttribute('aria-pressed','false');
+    }
+
+    function reset(){
+      pause(); remaining = TOTAL_SECONDS; render();
+    }
+
+    $startPauseBtn.addEventListener('click', ()=> running ? pause() : start());
+    $resetBtn.addEventListener('click', reset);
+    window.addEventListener('keydown', (e)=>{
+      if(e.code === 'Space'){ e.preventDefault(); running ? pause() : start(); }
+    });
+
+    // initialize
+    render();
+  </script>
+</body>
+</html>

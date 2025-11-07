@@ -1,0 +1,143 @@
+<!-- November Choice Board: Research Activity Page -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔍 Mini Quest: 3 Facts About a November Holiday</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body { 
+      background: linear-gradient(to bottom, #fffaf0, #fef3c7); 
+      font-family: 'Poppins', sans-serif; 
+    }
+    .back-btn { 
+      background-color: #92400e; 
+      color: white; 
+      padding: 0.5rem 1rem; 
+      border-radius: 0.5rem; 
+      transition: 0.3s; 
+    }
+    .back-btn:hover { background-color: #b45309; }
+    .activity-card { 
+      background-color: #fff7ed; 
+      border: 2px solid #f59e0b; 
+      border-radius: 1rem; 
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+      padding: 1.5rem; 
+      max-width: 850px; 
+      margin: 2rem auto; 
+      text-align: left; 
+    }
+    .step { 
+      display: flex; 
+      gap: .75rem; 
+      align-items: flex-start; 
+      margin: .5rem 0; 
+    }
+    .step span { 
+      background:#f59e0b; 
+      color:white; 
+      font-weight:700; 
+      font-size: 1rem;
+      width:1.8rem; 
+      height:1.8rem; 
+      display:flex; 
+      align-items:center; 
+      justify-content:center; 
+      border-radius:.4rem; 
+      flex-shrink: 0;
+    }
+    .badge { 
+      display:inline-block; 
+      background:#fde68a; 
+      border:1px solid #f59e0b; 
+      color:#7c2d12; 
+      padding:.2rem .5rem; 
+      border-radius:.5rem; 
+      font-size:.85rem; 
+      margin-right:.4rem; 
+    }
+    .list-dot li { margin-left: 1rem; list-style: disc; }
+    .link { color:#b45309; text-decoration: underline; }
+    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:1rem; }
+    @media (max-width: 768px){ .grid2{ grid-template-columns: 1fr; } }
+    .note { 
+      background:#fffbeb; 
+      border-left:4px solid #f59e0b; 
+      padding:.75rem 1rem; 
+      border-radius:.5rem; 
+    }
+    .classroom-btn {
+      background: linear-gradient(145deg, #d97706, #b45309);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.25);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+      transition: 0.3s;
+      display: inline-block;
+    }
+    .classroom-btn:hover {
+      background: linear-gradient(145deg, #f59e0b, #92400e);
+      transform: scale(1.03);
+    }
+  </style>
+</head>
+<body>
+  <header class="py-6 bg-yellow-200 shadow-md text-center">
+    <h1 class="text-3xl font-bold text-amber-800">🔎 Mini Quest: 3 Facts About a November Holiday</h1>
+  </header>
+
+  <main class="activity-card">
+    <div class="grid2">
+      <div>
+        <img src="./novemberPictures/novemberResearch.png" alt="Research Activity Image" class="rounded-lg mb-4 shadow-md w-full">
+      </div>
+      <div>
+        <h2 class="text-2xl font-semibold text-amber-700 mb-2">Your Challenge</h2>
+        <p class="text-gray-800 mb-2">Choose <strong>one November holiday</strong> and find <strong>three facts</strong> about it using Britannica. Put your facts in your Google Classroom assignment using your own words.</p>
+        
+        <div class="step"><span>1</span><p>Pick a holiday from the examples below (or another teacher-approved November holiday).</p></div>
+        <div class="step"><span>2</span><p>Open <a class="link" href="https://school.eb.com" target="_blank" rel="noopener">Britannica School</a> or <a class="link" href="https://kids.britannica.com" target="_blank" rel="noopener">Britannica Kids</a>.</p></div>
+        <div class="step"><span>3</span><p>Read an article and record <strong>3 facts</strong> with your own words. Add the article title to your work.</p></div>
+        <div class="step"><span>4</span><p>Turn it in on Google Classroom.</p></div>
+
+        <div class="mt-6 text-center">
+          <a href="https://classroom.google.com/c/Nzc0MjExNzg1NzY2/a/ODIyOTYyNzIwNDk0/details" 
+             target="_blank" 
+             class="classroom-btn">
+            🧾 Open the Classroom Assignment
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-6 border-amber-300">
+
+    <h3 class="text-xl font-semibold text-amber-700 mb-2">Holiday Examples (pick one)</h3>
+    <ul class="list-dot text-gray-800 space-y-1">
+      <li><span class="badge">&#x1F1FA;&#x1F1F8;</span>Veterans Day</li>
+      <li><span class="badge">🦃</span>Thanksgiving</li>
+      <li><span class="badge">🪔</span>Diwali</li>
+      <li><span class="badge">💀</span>Día de los Muertos</li>
+      <li><span class="badge">🌺</span>Remembrance Day</li>
+      <li><span class="badge">🪶</span>Native American Heritage Day</li>
+      <li><span class="badge">🎆</span>Guy Fawkes Day</li>
+    </ul>
+
+    <div class="note mt-6 text-sm text-gray-700">
+      <p><strong>Tip for stronger facts:</strong> Prefer dates, names, places, and definitions. Start sentences with: “I learned that…”, “One important tradition is…”, “This holiday is celebrated because…”.</p>
+    </div>
+
+    <div class="mt-6 text-sm text-gray-600">
+      <p><strong>Citations:</strong> Add the article title and Britannica as your source at the bottom of your work. Example: <em>“Thanksgiving.” Britannica School.</em></p>
+    </div>
+  </main>
+
+  <footer class="mt-10 text-center">
+    <a href="novemberChoiceBoard.html" class="back-btn">⬅️ Back to Choice Board</a>
+  </footer>
+</body>
+</html>
