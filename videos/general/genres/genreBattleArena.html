@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Genre Battle Arena | Genre Arcade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #dbeafe, #fef9c3);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+    .arena {
+      background: #f9fafb;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      max-width: 1000px;
+      width: 100%;
+      padding: 1.25rem 1.5rem 1.75rem;
+    }
+    .arena-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      align-items: baseline;
+    }
+    .arena-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+    .arena-subtitle {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.85rem;
+    }
+    .pill {
+      background: #e5e7eb;
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .scenario-card {
+      background: white;
+      border-radius: 1rem;
+      border: 2px solid #e5e7eb;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+    .scenario-label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #6b7280;
+      margin-bottom: 0.25rem;
+    }
+    .scenario-text {
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+    }
+    .scenario-icons {
+      font-size: 1.4rem;
+      margin-bottom: 0.25rem;
+    }
+    .genre-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .genre-btn {
+      border-radius: 0.9rem;
+      border: none;
+      padding: 0.6rem 0.5rem;
+      background: #e0f2fe;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.1rem;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.15s ease;
+    }
+    .genre-btn span.icon {
+      font-size: 1.4rem;
+    }
+    .genre-btn span.name {
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .genre-btn:hover {
+      background: #bfdbfe;
+    }
+    .genre-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+    }
+    .feedback2 {
+      min-height: 1.3rem;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .feedback2.correct {
+      color: #16a34a;
+    }
+    .feedback2.incorrect {
+      color: #b91c1c;
+    }
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .small-btn2 {
+      border: none;
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #0f172a;
+      color: white;
+    }
+    @media (max-width: 640px) {
+      .arena { padding: 1rem 1rem 1.3rem; }
+      .arena-title { font-size: 1.4rem; }
+      .scenario-text { font-size: 0.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="arena" role="main" aria-label="Genre Battle Arena Game">
+    <div class="arena-header">
+      <div>
+        <div class="arena-title">⚔️ Genre Battle Arena</div>
+        <div class="arena-subtitle">
+          Read the mini-story. Choose the <strong>best genre</strong>. Beat your high score!
+        </div>
+      </div>
+      <div class="pill">🎯 Target: Realistic, Historical, Mystery, Fantasy, Horror, Sci-Fi, Nonfiction</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="pill">⭐ Score: <span id="score2">0</span></div>
+      <div class="pill">🔥 Streak: <span id="streak2">0</span></div>
+      <div class="pill">✅ Correct: <span id="correct2">0</span> / <span id="total2">0</span></div>
+      <div class="pill">🏆 Best Score (this device): <span id="best2">0</span></div>
+    </div>
+
+    <div class="scenario-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.5rem;">
+        <div>
+          <div class="scenario-label">Battle Prompt</div>
+          <div class="scenario-icons" id="scenario-icons">📚</div>
+        </div>
+        <button id="read2" class="small-btn2" type="button">🔊 Read</button>
+      </div>
+      <div class="scenario-text" id="scenario-text">
+        Loading scenario...
+      </div>
+    </div>
+
+    <div class="genre-grid" id="genre-grid">
+      <!-- buttons inserted by JS -->
+    </div>
+
+    <div class="feedback2" id="feedback2"></div>
+
+    <div class="controls">
+      <button class="small-btn2" id="next2" type="button">➡️ Next Battle</button>
+      <button class="small-btn2" id="reset2" type="button">🔁 New Match (20 Rounds)</button>
+      <div>Teacher tip: log class scores on the board by table / house!</div>
+    </div>
+  </div>
+
+  <script>
+    const GENRES = [
+      { id: "realistic",  label: "Realistic Fiction", icon: "🙂" },
+      { id: "historical", label: "Historical Fiction", icon: "🏰" },
+      { id: "mystery",    label: "Mystery",           icon: "🕵️" },
+      { id: "fantasy",    label: "Fantasy",           icon: "🧙" },
+      { id: "horror",     label: "Horror",            icon: "👻" },
+      { id: "scifi",      label: "Science Fiction",   icon: "🚀" },
+      { id: "nonfiction", label: "Nonfiction",        icon: "📘" }
+    ];
+
+    // Example scenarios – you can add tons more
+    const SCENARIOS = [
+      {
+        text: "A girl moves to a new school, makes friends, and tries out for the real soccer team.",
+        genre: "realistic",
+        icons: "⚽🙂"
+      },
+      {
+        text: "A boy finds a secret code that leads him to clues around his town to solve who stole the trophy.",
+        genre: "mystery",
+        icons: "🕵️🏆"
+      },
+      {
+        text: "A kid wakes up on a spaceship headed to a new planet where robots are in charge.",
+        genre: "scifi",
+        icons: "🚀🤖"
+      },
+      {
+        text: "A brave knight and a talking dragon team up to save a magical forest.",
+        genre: "fantasy",
+        icons: "🐉🌳"
+      },
+      {
+        text: "Facts and photos explain how tornadoes form and how scientists measure them.",
+        genre: "nonfiction",
+        icons: "🌪️📊"
+      },
+      {
+        text: "A child in 1863 writes letters about life during the Civil War.",
+        genre: "historical",
+        icons: "📜⚔️"
+      },
+      {
+        text: "A haunted carnival appears in town only at midnight, and strange whispers follow the main character home.",
+        genre: "horror",
+        icons: "🎪👻"
+      },
+      {
+        text: "Charts and diagrams show how plants make their own food using sunlight.",
+        genre: "nonfiction",
+        icons: "🌱☀️"
+      },
+      {
+        text: "A girl in the present day trains her service dog to help her little brother.",
+        genre: "realistic",
+        icons: "🐕‍🦺❤️"
+      },
+      {
+        text: "A prince discovers a door to a hidden world filled with giants and invisible castles.",
+        genre: "fantasy",
+        icons: "🚪🏰"
+      }
+    ];
+
+    // State
+    let current = null;
+    let score = 0;
+    let streak = 0;
+    let correct = 0;
+    let total = 0;
+    let remaining = 20;
+    let bestScore = 0;
+
+    // DOM
+    const scoreEl2 = document.getElementById("score2");
+    const streakEl2 = document.getElementById("streak2");
+    const correctEl2 = document.getElementById("correct2");
+    const totalEl2 = document.getElementById("total2");
+    const bestEl2 = document.getElementById("best2");
+    const scenarioTextEl = document.getElementById("scenario-text");
+    const scenarioIconsEl = document.getElementById("scenario-icons");
+    const feedbackEl2 = document.getElementById("feedback2");
+    const gridEl = document.getElementById("genre-grid");
+    const nextBtn2 = document.getElementById("next2");
+    const resetBtn2 = document.getElementById("reset2");
+    const readBtn2 = document.getElementById("read2");
+
+    // localStorage for light competition
+    try {
+      const stored = localStorage.getItem("genreArenaBest");
+      if (stored) {
+        bestScore = parseInt(stored, 10) || 0;
+        bestEl2.textContent = bestScore;
+      }
+    } catch (e) {}
+
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    let scenarioPool = shuffle(SCENARIOS);
+
+    function pickScenario() {
+      if (remaining <= 0) {
+        scenarioTextEl.textContent = "Match finished! Press New Match to play again.";
+        scenarioIconsEl.textContent = "🏁";
+        feedbackEl2.textContent = "";
+        current = null;
+        return;
+      }
+      if (scenarioPool.length === 0) {
+        scenarioPool = shuffle(SCENARIOS);
+      }
+      current = scenarioPool.pop();
+      scenarioTextEl.textContent = current.text;
+      scenarioIconsEl.textContent = current.icons || "📚";
+      feedbackEl2.textContent = "";
+      feedbackEl2.className = "feedback2";
+      total++;
+      totalEl2.textContent = total;
+      remaining--;
+    }
+
+    function renderGenreButtons() {
+      gridEl.innerHTML = "";
+      GENRES.forEach(g => {
+        const btn = document.createElement("button");
+        btn.className = "genre-btn";
+        btn.setAttribute("data-genre", g.id);
+        btn.innerHTML = `
+          <span class="icon">${g.icon}</span>
+          <span class="name">${g.label}</span>
+        `;
+        btn.addEventListener("click", () => handleGuess(g.id));
+        gridEl.appendChild(btn);
+      });
+    }
+
+    function handleGuess(genreId) {
+      if (!current) return;
+      const isCorrect = genreId === current.genre;
+      if (isCorrect) {
+        score += 15;
+        streak += 1;
+        correct += 1;
+        feedbackEl2.textContent = "✅ Yes! That’s " + labelForGenre(current.genre) + ".";
+        feedbackEl2.className = "feedback2 correct";
+      } else {
+        feedbackEl2.textContent = "❌ Not quite. Best answer: " + labelForGenre(current.genre) + ".";
+        feedbackEl2.className = "feedback2 incorrect";
+        streak = 0;
+      }
+      scoreEl2.textContent = score;
+      streakEl2.textContent = streak;
+      correctEl2.textContent = correct;
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestEl2.textContent = bestScore;
+        try {
+          localStorage.setItem("genreArenaBest", String(bestScore));
+        } catch (e) {}
+      }
+    }
+
+    function labelForGenre(id) {
+      const g = GENRES.find(x => x.id === id);
+      return g ? g.label : id;
+    }
+
+    function resetMatch() {
+      score = 0;
+      streak = 0;
+      correct = 0;
+      total = 0;
+      remaining = 20;
+      scoreEl2.textContent = score;
+      streakEl2.textContent = streak;
+      correctEl2.textContent = correct;
+      totalEl2.textContent = total;
+      feedbackEl2.textContent = "";
+      feedbackEl2.className = "feedback2";
+      scenarioPool = shuffle(SCENARIOS);
+      pickScenario();
+    }
+
+    function speakScenario() {
+      if (!("speechSynthesis" in window)) {
+        alert("Reading aloud is not supported on this browser.");
+        return;
+      }
+      if (!current) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(current.text);
+      utterance.rate = 0.95;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    nextBtn2.addEventListener("click", pickScenario);
+    resetBtn2.addEventListener("click", resetMatch);
+    readBtn2.addEventListener("click", speakScenario);
+
+    renderGenreButtons();
+    resetMatch();
+  </script>
+</body>
+</html>

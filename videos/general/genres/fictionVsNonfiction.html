@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fact or Make-Believe? | Genre Arcade</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom, #fefce8, #e0f2fe);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .game-wrapper {
+      max-width: 900px;
+      width: 100%;
+      padding: 1.5rem;
+    }
+    .card {
+      background: white;
+      border-radius: 1.5rem;
+      padding: 1.5rem 1.5rem 2rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+    h1 {
+      font-size: 1.6rem;
+      margin: 0 0 0.25rem;
+      text-align: center;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 1rem;
+      color: #4b5563;
+    }
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.9rem;
+      color: #111827;
+    }
+    .status-pill {
+      background: #eff6ff;
+      border-radius: 999px;
+      padding: 0.25rem 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .prompt-card {
+      background: #f9fafb;
+      border-radius: 1rem;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border: 2px dashed #e5e7eb;
+      text-align: center;
+      position: relative;
+    }
+    .prompt-text {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .prompt-tag {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+    .prompt-emoji {
+      font-size: 2.1rem;
+      margin-bottom: 0.25rem;
+    }
+    .read-btn {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      border: none;
+      border-radius: 999px;
+      padding: 0.2rem 0.6rem;
+      font-size: 0.8rem;
+      background: #1d4ed8;
+      color: #fff;
+      cursor: pointer;
+    }
+    .read-btn:active {
+      transform: scale(0.97);
+    }
+    .buttons-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    .choice-btn {
+      border: none;
+      border-radius: 1rem;
+      padding: 0.9rem 0.75rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.2s ease;
+      text-align: center;
+    }
+    .choice-btn span.emoji {
+      font-size: 1.8rem;
+    }
+    .choice-btn span.label {
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .choice-fiction {
+      background: #fee2e2;
+    }
+    .choice-nonfiction {
+      background: #dcfce7;
+    }
+    .choice-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    }
+    .feedback {
+      min-height: 1.4rem;
+      text-align: center;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .feedback.correct {
+      color: #16a34a;
+    }
+    .feedback.incorrect {
+      color: #b91c1c;
+    }
+    .controls-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+      font-size: 0.8rem;
+    }
+    .small-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 0.35rem 0.8rem;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #0f172a;
+      color: white;
+    }
+    .timer-bar {
+      margin-top: 0.5rem;
+      width: 100%;
+      height: 0.35rem;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+    .timer-fill {
+      height: 100%;
+      width: 100%;
+      background: #22c55e;
+      transform-origin: left;
+      transform: scaleX(1);
+      transition: transform 0.1s linear;
+    }
+    @media (max-width: 640px) {
+      .card { padding: 1rem 1rem 1.5rem; }
+      h1 { font-size: 1.4rem; }
+      .prompt-text { font-size: 1.05rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-wrapper">
+    <div class="card" role="main" aria-label="Fact or Make-Believe Game">
+      <h1>🧠 Fact or Make-Believe?</h1>
+      <p class="subtitle">
+        Tap <strong>Fiction</strong> for made-up stories. Tap <strong>Nonfiction</strong> for real facts.
+      </p>
+
+      <div class="status-bar">
+        <div class="status-pill" id="score-pill">⭐ Score: <span id="score">0</span></div>
+        <div class="status-pill" id="streak-pill">🔥 Streak: <span id="streak">0</span></div>
+        <div class="status-pill">✅ Correct: <span id="correct">0</span> / <span id="total">0</span></div>
+      </div>
+
+      <div class="prompt-card">
+        <button class="read-btn" id="read-btn" type="button">🔊 Read</button>
+        <div class="prompt-emoji" id="prompt-emoji">📚</div>
+        <div class="prompt-text" id="prompt-text">
+          Loading question...
+        </div>
+        <div class="prompt-tag" id="prompt-tag">
+          Is this <strong>Fiction</strong> or <strong>Nonfiction</strong>?
+        </div>
+      </div>
+
+      <div class="buttons-row">
+        <button class="choice-btn choice-fiction" data-answer="fiction">
+          <span class="emoji">🦄</span>
+          <span class="label">Fiction</span>
+          <span style="font-size: 0.7rem;">Make-believe story</span>
+        </button>
+        <button class="choice-btn choice-nonfiction" data-answer="nonfiction">
+          <span class="emoji">📘</span>
+          <span class="label">Nonfiction</span>
+          <span style="font-size: 0.7rem;">Real facts</span>
+        </button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <div class="controls-row">
+        <button class="small-btn" id="new-game-btn" type="button">🔁 New Round (10 Questions)</button>
+        <div>Teacher tip: record top scores on the board!</div>
+      </div>
+
+      <div class="timer-bar" aria-hidden="true">
+        <div class="timer-fill" id="timer-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Simple data set: you can edit / expand these
+    const QUESTIONS = [
+      {
+        text: "Elephants live in groups and can weigh more than a car.",
+        type: "nonfiction",
+        emoji: "🐘"
+      },
+      {
+        text: "A tiny dragon lives in my backpack and helps me with homework.",
+        type: "fiction",
+        emoji: "🐉"
+      },
+      {
+        text: "A spider can spin silk to build a web.",
+        type: "nonfiction",
+        emoji: "🕷️"
+      },
+      {
+        text: "A girl finds a talking puppy that grants three wishes.",
+        type: "fiction",
+        emoji: "🐶"
+      },
+      {
+        text: "Penguins are birds that cannot fly.",
+        type: "nonfiction",
+        emoji: "🐧"
+      },
+      {
+        text: "A boy rides a cloud like a skateboard to school.",
+        type: "fiction",
+        emoji: "☁️"
+      },
+      {
+        text: "Bees help flowers grow by moving pollen.",
+        type: "nonfiction",
+        emoji: "🐝"
+      },
+      {
+        text: "A haunted pencil writes spooky stories all by itself.",
+        type: "fiction",
+        emoji: "✏️"
+      }
+    ];
+
+    const promptTextEl = document.getElementById("prompt-text");
+    const promptEmojiEl = document.getElementById("prompt-emoji");
+    const feedbackEl = document.getElementById("feedback");
+    const scoreEl = document.getElementById("score");
+    const streakEl = document.getElementById("streak");
+    const correctEl = document.getElementById("correct");
+    const totalEl = document.getElementById("total");
+    const timerFillEl = document.getElementById("timer-fill");
+    const readBtn = document.getElementById("read-btn");
+
+    let currentQuestion = null;
+    let score = 0;
+    let streak = 0;
+    let correct = 0;
+    let total = 0;
+    let remaining = 10; // questions per round
+    let timerInterval = null;
+    const ROUND_TIME = 16000; // 16 seconds each (adjust if needed)
+
+    function shuffle(array) {
+      const arr = array.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    let questionPool = shuffle(QUESTIONS);
+
+    function pickQuestion() {
+      if (remaining <= 0) {
+        promptTextEl.textContent = "Round complete! Press New Round for more questions.";
+        promptEmojiEl.textContent = "🏁";
+        stopTimer();
+        return;
+      }
+      if (questionPool.length === 0) {
+        questionPool = shuffle(QUESTIONS);
+      }
+      currentQuestion = questionPool.pop();
+      promptTextEl.textContent = currentQuestion.text;
+      promptEmojiEl.textContent = currentQuestion.emoji || "📚";
+      feedbackEl.textContent = "";
+      feedbackEl.className = "feedback";
+      total++;
+      totalEl.textContent = total;
+      remaining--;
+      startTimer();
+    }
+
+    function handleAnswer(answer) {
+      if (!currentQuestion) return;
+      stopTimer();
+      const isCorrect = answer === currentQuestion.type;
+      if (isCorrect) {
+        score += 10;
+        streak += 1;
+        correct += 1;
+        feedbackEl.textContent = "✅ Nice! That's " + (currentQuestion.type === "fiction" ? "Fiction." : "Nonfiction.");
+        feedbackEl.className = "feedback correct";
+      } else {
+        streak = 0;
+        feedbackEl.textContent = "❌ Try again! That was " + (currentQuestion.type === "fiction" ? "Fiction." : "Nonfiction.");
+        feedbackEl.className = "feedback incorrect";
+      }
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      correctEl.textContent = correct;
+
+      // brief delay, then next question
+      setTimeout(pickQuestion, 900);
+    }
+
+    function startNewRound() {
+      score = 0;
+      streak = 0;
+      correct = 0;
+      total = 0;
+      remaining = 10;
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      correctEl.textContent = correct;
+      totalEl.textContent = total;
+      questionPool = shuffle(QUESTIONS);
+      pickQuestion();
+    }
+
+    function startTimer() {
+      stopTimer();
+      const startTime = performance.now();
+      function tick(now) {
+        const elapsed = now - startTime;
+        const ratio = Math.max(0, 1 - elapsed / ROUND_TIME);
+        timerFillEl.style.transform = `scaleX(${ratio})`;
+        if (ratio > 0) {
+          timerInterval = requestAnimationFrame(tick);
+        } else {
+          // Time up: treat as incorrect, move on
+          feedbackEl.textContent = "⏰ Time's up! Next question...";
+          feedbackEl.className = "feedback incorrect";
+          streak = 0;
+          streakEl.textContent = streak;
+          setTimeout(pickQuestion, 900);
+        }
+      }
+      timerInterval = requestAnimationFrame(tick);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        cancelAnimationFrame(timerInterval);
+        timerInterval = null;
+      }
+      timerFillEl.style.transform = "scaleX(1)";
+    }
+
+    // Text-to-speech
+    function speakPrompt() {
+      if (!("speechSynthesis" in window)) {
+        alert("Reading aloud is not supported on this browser.");
+        return;
+      }
+      if (!currentQuestion) return;
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(currentQuestion.text);
+      utterance.rate = 0.9;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    document.querySelectorAll(".choice-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const answer = btn.getAttribute("data-answer");
+        handleAnswer(answer);
+      });
+    });
+
+    document.getElementById("new-game-btn").addEventListener("click", startNewRound);
+    readBtn.addEventListener("click", speakPrompt);
+
+    // Auto-start first round
+    startNewRound();
+  </script>
+</body>
+</html>

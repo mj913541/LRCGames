@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🦁 Read-a-Thon Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom, #eff6ff, #e0f2fe);
+      min-height: 100vh;
+      margin: 0;
+      padding: 1.5rem;
+      box-sizing: border-box;
+    }
+    .wrapper {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 1.8rem;
+    }
+    .student-tag {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+    .subtitle {
+      font-size: 0.9rem;
+      color: #4b5563;
+    }
+    #logout-btn {
+      padding: 0.6rem 1rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #6b7280;
+      color: white;
+      white-space: nowrap;
+    }
+    #logout-btn:hover {
+      opacity: 0.9;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .card {
+      background: white;
+      padding: 1rem;
+      border-radius: 1rem;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.06);
+    }
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #6b7280;
+      margin: 0.3rem 0 0;
+    }
+    .stat {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0.1rem 0 0.4rem;
+    }
+    .stat-note {
+      font-size: 0.85rem;
+      color: #4b5563;
+      margin-top: 0.25rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+    input[type="number"], select, input[type="text"] {
+      width: 100%;
+      padding: 0.55rem 0.7rem;
+      border-radius: 0.5rem;
+      border: 1px solid #d1d5db;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      margin-top: 0.25rem;
+    }
+    button, .btn-link {
+      display: inline-block;
+      padding: 0.6rem 0.9rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #2563eb;
+      color: white;
+      margin-top: 0.4rem;
+      text-decoration: none;
+      text-align: center;
+    }
+    button:hover, .btn-link:hover {
+      opacity: 0.9;
+    }
+    .small-note {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-top: 0.4rem;
+    }
+    #status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <header>
+      <div class="title-block">
+        <h1>🦁 Read-a-Thon Portal</h1>
+        <div class="student-tag" id="student-label">
+          <!-- Filled in by JavaScript with "Hi, NAME from CLASS!" -->
+        </div>
+        <div class="subtitle">
+          Check your points, make online donations, send sabotage, and request prizes!
+        </div>
+      </div>
+      <button id="logout-btn" type="button">Log Out</button>
+    </header>
+
+    <div class="grid">
+      <!-- Totals card (view only) -->
+      <section class="card">
+        <h2>Your Reading Points</h2>
+        <p class="stat-label">Minutes Read</p>
+        <p class="stat" id="minutes-total">–</p>
+        <p class="stat-note">Your teacher updates this based on your reading logs.</p>
+
+        <p class="stat-label">Coins / Donations</p>
+        <p class="stat" id="coins-total">–</p>
+        <p class="stat-note">Total coins or online donations given in your name.</p>
+
+        <p class="stat-label">Total Points (Minutes + Coins)</p>
+        <p class="stat" id="points-total">–</p>
+        <p class="stat-note">These are the points you can use to sabotage or shop!</p>
+
+        <button id="refresh-btn" type="button">Refresh Totals</button>
+      </section>
+
+      <!-- Omella donations -->
+      <section class="card">
+        <h2>Donate Online</h2>
+        <p>
+          Grown-ups can make secure online donations that count toward your
+          Read-a-Thon points.
+        </p>
+        <a
+          href="YOUR_OMELLA_LINK_HERE"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-link"
+        >
+          Donate with Omella
+        </a>
+        <p class="small-note">
+          Make sure they enter your name / class so we can add the points to you!
+        </p>
+      </section>
+
+      <!-- Sabotage -->
+      <section class="card">
+        <h2>Use Minutes to Sabotage 😈</h2>
+        <p class="small-note">
+          Use your <strong>reading minutes</strong> to send sabotage to another classroom.
+          (Your teacher will approve and apply the sabotage.)
+        </p>
+        <form id="sabotage-form">
+          <label>
+            Choose a class to sabotage
+            <select id="sabotage-target" required>
+              <option value="">-- Pick a class --</option>
+              <option value="1st Rogers">1st Rogers</option>
+              <option value="1st Wilson">1st Wilson</option>
+              <option value="1st Day">1st Day</option>
+              <option value="2nd Peterson">2nd Peterson</option>
+              <option value="2nd Schmidt">2nd Schmidt</option>
+              <option value="2nd Adams">2nd Adams</option>
+              <option value="3rd Cocco">3rd Cocco</option>
+              <option value="3rd Carroll">3rd Carroll</option>
+              <option value="3rd Hossain">3rd Hossain</option>
+              <option value="4th Tomter">4th Tomter</option>
+              <option value="4th Cavello">4th Cavello</option>
+              <option value="4th Rosenthal">4th Rosenthal</option>
+              <option value="5th Isibindi">5th Isibindi</option>
+              <option value="5th Reveur">5th Reveur</option>
+              <option value="5th Amistad">5th Amistad</option>
+              <option value="5th Altruismo">5th Altruismo</option>
+            </select>
+          </label>
+
+          <label>
+            Minutes you want to spend on sabotage
+            <input type="number" id="sabotage-amount" min="1" required>
+          </label>
+
+          <button type="submit">Send Sabotage Request</button>
+        </form>
+      </section>
+
+      <!-- Prize store -->
+      <section class="card">
+        <h2>Prize Store Requests 🎁</h2>
+        <p class="small-note">
+          Use your <strong>donation points</strong> to request prizes from the LRC prize store.
+          (Your teacher will check your points and deliver prizes later.)
+        </p>
+        <form id="prize-form">
+          <label>
+            What prize would you like?
+            <select id="prize-item" required>
+              <option value="">-- Pick a prize --</option>
+              <option value="Fuzzy pen">Fuzzy pen</option>
+              <option value="Fun notebook / journal">Fun notebook / journal</option>
+              <option value="Novelty eraser / toy">Novelty eraser / toy</option>
+              <option value="Extra LRC read time pass">Extra LRC read time pass</option>
+              <option value="Mystery prize from prize box">Mystery prize from prize box</option>
+            </select>
+          </label>
+
+          <label>
+            Points you want to spend on this prize
+            <input type="number" id="prize-points" min="1" required>
+          </label>
+
+          <button type="submit">Send Prize Request</button>
+        </form>
+      </section>
+    </div>
+
+    <div id="status"></div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🦁 Read-a-Thon Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom, #fffaf0, #fef3c7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: white;
+      padding: 1.75rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      max-width: 420px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-top: 0;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ddd;
+      font-size: 0.95rem;
+      box-sizing: border-box;
+      margin-top: 0.25rem;
+    }
+    button {
+      width: 100%;
+      padding: 0.7rem;
+      border-radius: 999px;
+      border: none;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 0.75rem;
+      background: #f97316;
+      color: white;
+    }
+    button:hover {
+      opacity: 0.9;
+    }
+    .note {
+      font-size: 0.8rem;
+      color: #555;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+    #login-message {
+      margin-top: 0.75rem;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🦁 Read-a-Thon Login</h1>
+    <form id="login-form">
+      <label>
+        Student ID  
+        <input type="text" id="student_id" required>
+      </label>
+
+      <label>
+        Your Name  
+        <input type="text" id="name" required>
+      </label>
+
+      <label>
+        Class / Teacher  
+        <input type="text" id="className" placeholder="e.g., 4th Cavello" required>
+      </label>
+
+      <button type="submit">Enter Portal</button>
+    </form>
+
+    <div id="login-message"></div>
+
+    <p class="note">
+      Use the same Student ID each time so your minutes and coins stay together.
+    </p>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
