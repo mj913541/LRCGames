@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LRC Slideshow Showcase</title>
+  <title>Coding Choices</title>
 
   <!-- Optional: nice, simple styling -->
   <style>
@@ -84,9 +84,9 @@
 </head>
 <body>
   <div class="container">
-    <h1>Library Slideshow</h1>
+    <h1>Coding Choices</h1>
     <p class="subtitle">
-      Enjoy our presentation! Use the arrows in the slideshow to move between slides.
+
     </p>
 
     <div class="slides-wrapper">
@@ -94,9 +94,7 @@
 <iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQOpbwf2SIS4mmh65UBPLLZBva1XcTOc2QxoWywqTCubHS8_u0YY-hW9HV58F0XPxhV6ahobhkJHcYT/pubembed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
     </div>
 
-    <p class="note">
-      Tip: To update the slideshow, just edit the Google Slides file – this page will always show the latest version.
-    </p>
+
   </div>
 </body>
 </html>
