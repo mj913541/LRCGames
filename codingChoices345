@@ -84,24 +84,17 @@
 </head>
 <body>
   <div class="container">
-    <h1>Library Slideshow</h1>
+    <h1>Coding Choices</h1>
     <p class="subtitle">
-      Enjoy our presentation! Use the arrows in the slideshow to move between slides.
+
     </p>
 
     <div class="slides-wrapper">
       <!-- Replace the src URL below with your own published Google Slides embed link -->
-      <iframe 
-        src="<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vRV9sd1uzXUl5fs2WEkBjAw6ax8_ctEe8OUdfuRVPfJH7xR_6mftA5b_GmynC4lE3yvajZcegY2YN3EN/pubembed?start=tru4e&loop=true&delayms=3000" frameborder="0" width="1440" height="839"
-        allowfullscreen="true"
-        mozallowfullscreen="true"
-        webkitallowfullscreen="true"
-      ></iframe>
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vRV9sd1uzXUl5fs2WEkBjAw6ax8_ctEe8OUdfuRVPfJH7xR_6mftA5b_GmynClE3yvajZcegY2YN3EN/pubembed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
     </div>
 
-    <p class="note">
-      Tip: To update the slideshow, just edit the Google Slides file – this page will always show the latest version.
-    </p>
+
   </div>
 </body>
 </html>
