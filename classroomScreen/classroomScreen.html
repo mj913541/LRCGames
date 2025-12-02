@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="../favicon.ico">
   <title>LRC Classroom Screen</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 
   <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,8 +83,11 @@
     </section>
   </main>
 
-  <script>
-    /* CLOCK */
+ <script>
+
+    /* -----------------------------------------
+       DIGITAL CLOCK + DATE
+    ----------------------------------------- */
     function updateClock() {
       const now = new Date();
 
@@ -104,12 +109,16 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    /* SEGMENTS */
+
+
+    /* -----------------------------------------
+       TIMETABLE CONFIG
+    ----------------------------------------- */
     const SEGMENTS = [
-      { key: "welcome", label: "👋 Welcome – 5 min", duration: 5 },
+      { key: "welcome",  label: "👋 Welcome – 5 min",  duration: 5 },
       { key: "checkout", label: "📚 Checkout – 5 min", duration: 5 },
       { key: "worktime", label: "✏️ Worktime – 30 min", duration: 30 },
-      { key: "cleanup", label: "🧹 Clean Up – 5 min", duration: 5 }
+      { key: "cleanup",  label: "🧹 Clean Up – 5 min",   duration: 5 }
     ];
 
     const GRADE_TIMES = {
@@ -123,26 +132,35 @@
     const CLASS_LENGTH_MIN = 45;
 
     const rowsContainer = document.getElementById("timetableRows");
-    const startInput = document.getElementById("startTime");
-    const gradeSelect = document.getElementById("gradeSelect");
-    const STORAGE_KEY = "lrc_start_time";
+    const startInput     = document.getElementById("startTime");
+    const gradeSelect    = document.getElementById("gradeSelect");
+    const STORAGE_KEY    = "lrc_start_time";
 
     let lastActiveSegment = null;
 
+
+
+    /* -----------------------------------------
+       TIME UTILITIES
+    ----------------------------------------- */
     function timeToMin(t){
       if(!t) return null;
       const [h,m] = t.split(":").map(Number);
       return h*60+m;
     }
 
-    function saveStart(v){ localStorage.setItem(STORAGE_KEY,v); }
+    function saveStart(v){ localStorage.setItem(STORAGE_KEY, v); }
     function loadStart(){ return localStorage.getItem(STORAGE_KEY) || "09:05"; }
 
-    /* Build rows */
+
+
+    /* -----------------------------------------
+       BUILD TIMETABLE ROWS
+    ----------------------------------------- */
     function buildRows(){
       rowsContainer.innerHTML = "";
 
-      SEGMENTS.forEach(seg=>{
+      SEGMENTS.forEach(seg => {
         const row = document.createElement("div");
         row.className = "segment-row panel-row";
         row.dataset.key = seg.key;
@@ -167,17 +185,21 @@
       updateProgress();
     }
 
-    /* Auto-detect class or next class */
+
+
+    /* -----------------------------------------
+       AUTO-DETECT CLASS OR NEXT CLASS
+    ----------------------------------------- */
     function detectAndSetCurrentClass() {
       const now = new Date();
-      const nowMin = now.getHours() * 60 + now.getMinutes();
+      const nowMin = now.getHours()*60 + now.getMinutes();
 
       let currentGrade = null;
 
-      // IN class window?
+      // 1) Are we in a class block?
       for (const [grade, timeStr] of Object.entries(GRADE_TIMES)) {
         const start = timeToMin(timeStr);
-        const end = start + CLASS_LENGTH_MIN;
+        const end   = start + CLASS_LENGTH_MIN;
 
         if (nowMin >= start && nowMin < end) {
           currentGrade = grade;
@@ -185,7 +207,7 @@
         }
       }
 
-      // If not in class, snap to NEXT class
+      // 2) If not, choose next upcoming class
       if (!currentGrade) {
         let soonestStart = Infinity;
         let soonestGrade = null;
@@ -197,24 +219,26 @@
             soonestGrade = grade;
           }
         }
-
-        if (soonestGrade) {
-          currentGrade = soonestGrade;
-        }
+        if (soonestGrade) currentGrade = soonestGrade;
       }
 
+      // 3) Apply detected grade
       if (currentGrade) {
         const desiredStart = GRADE_TIMES[currentGrade];
-
         gradeSelect.value = currentGrade;
-        startInput.value = desiredStart;
+        startInput.value  = desiredStart;
         saveStart(desiredStart);
       }
     }
 
+
+
+    /* -----------------------------------------
+       UPDATE PROGRESS BARS + COUNTDOWN
+    ----------------------------------------- */
     function updateProgress(){
       const now = new Date();
-      const nowMin = now.getHours()*60 + now.getMinutes();
+      const nowMin   = now.getHours()*60 + now.getMinutes();
       const startMin = timeToMin(startInput.value);
 
       rowsContainer.querySelectorAll(".panel-row").forEach(row=>{
@@ -226,21 +250,22 @@
       let pointer = startMin;
       let currentActiveSegment = null;
 
-      SEGMENTS.forEach(seg=>{
-        const row = rowsContainer.querySelector(`[data-key="${seg.key}"]`);
-        const bar = row.querySelector(".progress-layer");
+      SEGMENTS.forEach(seg => {
+        const row       = rowsContainer.querySelector(`[data-key="${seg.key}"]`);
+        const bar       = row.querySelector(".progress-layer");
         const countdown = row.querySelector(".countdown");
 
         const segStart = pointer;
-        const segEnd = pointer + seg.duration;
+        const segEnd   = pointer + seg.duration;
 
         let pct = 0;
-        if(nowMin >= segEnd){ pct = 100; }
-        else if(nowMin > segStart){ pct = ((nowMin - segStart)/(seg.duration))*100; }
-        bar.style.width = pct+"%";
+        if (nowMin >= segEnd)      pct = 100;
+        else if (nowMin > segStart) pct = ((nowMin - segStart) / seg.duration) * 100;
 
-        if (nowMin < segStart) countdown.textContent = `${seg.duration} min`;
-        else if (nowMin >= segEnd) countdown.textContent = "Done";
+        bar.style.width = pct + "%";
+
+        if (nowMin < segStart)         countdown.textContent = `${seg.duration} min`;
+        else if (nowMin >= segEnd)     countdown.textContent = "Done";
         else {
           const remain = segEnd - nowMin;
           countdown.textContent = remain === 1 ? "1 min left" : `${remain} min left`;
@@ -254,7 +279,7 @@
         pointer = segEnd;
       });
 
-      // ding when segment changes
+      // Ding when switching segments
       if (currentActiveSegment && currentActiveSegment !== lastActiveSegment) {
         const ding = document.getElementById("dingSound");
         ding.volume = 0.25;
@@ -263,6 +288,11 @@
       lastActiveSegment = currentActiveSegment;
     }
 
+
+
+    /* -----------------------------------------
+       UI EVENT HANDLERS
+    ----------------------------------------- */
     gradeSelect.addEventListener("change", () => {
       const gradeVal = gradeSelect.value;
       if (GRADE_TIMES[gradeVal]) {
@@ -278,51 +308,76 @@
       updateProgress();
     });
 
-    /* Init */
-    startInput.value = loadStart();
-    buildRows();
-    detectAndSetCurrentClass();
-    updateProgress();
+
+
+    /* -----------------------------------------
+       SLIDE OF THE DAY FROM GOOGLE SHEET
+    ----------------------------------------- */
+    async function loadTodaySlide() {
+      const apiURL = "https://script.google.com/macros/s/AKfycbxJaLtX_mPXktsBBmxGcou6tXpahUqM6HCNC6UwMmHh1OLpWd5slhWE7GFpm8swhF9iiA/exec";
+      const iframe = document.getElementById("embedFrame");
+
+      if (!iframe) {
+        console.error("No iframe with id='embedFrame'.");
+        return;
+      }
+
+      try {
+        const response = await fetch(apiURL, { cache: "no-store" });
+        const raw = await response.text();
+        console.log("Slide API raw response:", raw);
+
+        let data;
+        try {
+          data = JSON.parse(raw);
+        } catch (err) {
+          console.error("JSON parse error:", err);
+          iframe.src =
+            "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed?start=true&loop=true&delayms=60000";
+          return;
+        }
+
+        if (data.slideUrl && data.slideUrl.trim()) {
+          let url = data.slideUrl.trim();
+
+          // Auto-convert edit links to embed links if needed
+          if (url.includes("/edit")) url = url.replace("/edit", "/embed");
+
+          iframe.src = url;
+          console.log("Loaded slide:", url);
+        } else {
+          console.warn("No slideUrl found for today. Using fallback.");
+          iframe.src =
+            "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed?start=true&loop=true&delayms=60000";
+        }
+
+      } catch (err) {
+        console.error("Error loading slide:", err);
+        iframe.src =
+          "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed?start=true&loop=true&delayms=60000";
+      }
+    }
+
+
+
+    /* -----------------------------------------
+       INITIALIZE EVERYTHING
+    ----------------------------------------- */
+    document.addEventListener("DOMContentLoaded", () => {
+      startInput.value = loadStart();
+      buildRows();
+      detectAndSetCurrentClass();
+      updateProgress();
+      loadTodaySlide();
+    });
 
     setInterval(() => {
       detectAndSetCurrentClass();
       updateProgress();
     }, 30000);
 
+</script>
 
-
-    /* -----------------------------------------
-   LOAD SLIDE OF THE DAY FROM GOOGLE SHEET
------------------------------------------ */
-async function loadTodaySlide() {
-  const apiURL = "https://script.google.com/macros/s/AKfycbxJaLtX_mPXktsBBmxGcou6tXpahUqM6HCNC6UwMmHh1OLpWd5slhWE7GFpm8swhF9iiA/exec"; // your deployed Apps Script endpoint
-
-  try {
-    const response = await fetch(apiURL);
-    const data = await response.json();
-
-    // If slide exists for today, load it
-    if (data.slideUrl) {
-      document.getElementById("embedFrame").src = data.slideUrl;
-    } else {
-      // fallback — optional
-      document.getElementById("embedFrame").src =
-        "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed";
-    }
-  } catch (err) {
-    console.error("Error loading slide of the day:", err);
-
-    // fallback — optional
-    document.getElementById("embedFrame").src =
-      "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed";
-  }
-}
-
-// Load on page start
-loadTodaySlide();
-
-
-  </script>
 
 </body>
 </html>
