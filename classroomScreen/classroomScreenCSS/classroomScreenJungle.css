@@ -1,0 +1,123 @@
+/* GLOBAL LOOK */
+body {
+  background: radial-gradient(circle at top, #ecfccb, #e0f2fe);
+  font-family: "Fredoka", system-ui, sans-serif;
+}
+
+.panel {
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.96);
+  border: 2px solid rgba(34, 197, 94, 0.12);
+}
+
+.page-title {
+  font-size: 2.1rem;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.page-date {
+  font-size: 1rem;
+  color: #065f46;
+  margin-top: 2px;
+}
+
+/* 🌿 VINE BORDER */
+.vine-border {
+  width: 100%;
+  height: 32px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='32' viewBox='0 0 200 32'><path d='M0 16 Q20 0 40 16 T80 16 T120 16 T160 16 T200 16' stroke='%23016633' stroke-width='3' fill='transparent'/><circle cx='30' cy='8' r='4' fill='%230FAF4B'/><circle cx='70' cy='24' r='4' fill='%230FAF4B'/><circle cx='110' cy='6' r='4' fill='%230FAF4B'/><circle cx='150' cy='24' r='4' fill='%230FAF4B'/></svg>");
+  background-size: 200px 32px;
+  background-repeat: repeat-x;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+/* SLIDE FRAME */
+.slide-frame {
+  border: 2px solid #cdf4d3;
+  background: linear-gradient(to bottom right, #fafafa, #eafff4);
+  border-radius: 20px;
+  overflow: hidden;
+  flex: 1;
+}
+
+/* TIMER CLOCK */
+#floatingClock {
+  position: fixed;
+  top: 90px;
+  right: 30px;
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: rgba(6, 47, 24, 0.92);
+  padding: 10px 20px;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  z-index: 9999;
+}
+
+/* TIMETABLE TITLES */
+.timetable-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.timetable-flow {
+  font-size: 0.9rem;
+  color: #444;
+}
+
+/* INPUTS */
+.grade-select, .start-time-input {
+  border: 1px solid #bbf7d0;
+  border-radius: 9999px;
+  padding: 4px 10px;
+}
+
+/* SEGMENT ROWS */
+.panel-row {
+  position: relative;
+  background: white;
+  border-radius: 9999px;
+  padding: 16px 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #bbf7d0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  font-size: 1.2rem;
+  color: #065f46;
+}
+
+/* Active row outline */
+.active-row {
+  outline: 3px solid #22c55e;
+}
+
+/* Progress fill */
+.progress-layer {
+  position: absolute;
+  inset: 0;
+  width: 0%;
+  border-radius: 9999px;
+  background: linear-gradient(to right,
+    rgba(187, 247, 208, 0.85),
+    rgba(34, 197, 94, 0.9)
+  );
+  z-index: 0;
+  transition: width 0.5s linear;
+}
+
+/* Text inside row */
+.segment-label {
+  z-index: 2;
+  font-weight: 600;
+}
+
+.countdown {
+  z-index: 2;
+  font-size: 1rem;
+  opacity: 0.8;
+}

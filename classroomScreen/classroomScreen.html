@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>LRC Classroom Screen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 🌿 External Jungle Theme Styles -->
+  <link rel="stylesheet" href="./classroomScreenCSS/classroomScreenJungle.css">
+
+</head>
+
+<body class="min-h-screen flex flex-col p-4 gap-4 relative">
+
+  <!-- 🎵 Ding Sound -->
+  <audio id="dingSound" src="https://assets.mixkit.co/active_storage/sfx/2865/2865-preview.mp3"></audio>
+
+  <!-- Floating Clock -->
+  <div id="floatingClock"></div>
+
+  <!-- HEADER -->
+  <header class="panel rounded-2xl shadow px-6 py-2 text-center">
+    <h1 class="page-title">🦁 Welcome to LRC!</h1>
+    <p id="dateTop" class="page-date"></p>
+    <div class="vine-border"></div>
+  </header>
+
+  <!-- LAYOUT -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-4">
+
+    <!-- SLIDES -->
+    <section class="panel rounded-2xl shadow p-2 md:p-4 flex flex-col">
+      <div class="slide-frame">
+        <iframe
+          id="embedFrame"
+          src="https://docs.google.com/presentation/d/YOUR_SLIDES_ID_HERE/embed?start=true&loop=true&delayms=60000"
+          class="w-full h-full"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
+
+    <!-- TIMETABLE -->
+    <section class="panel rounded-2xl shadow p-4 flex flex-col">
+
+      <div class="flex flex-wrap items-center justify-between mb-4 gap-3">
+        <h2 class="timetable-title">What are we doing today?</h2>
+
+        <div class="flex items-center gap-2 text-sm">
+          <label class="font-semibold text-gray-600">Grade:</label>
+          <select id="gradeSelect" class="grade-select">
+            <option value="">—</option>
+            <option value="4">4th</option>
+            <option value="2">2nd</option>
+            <option value="3">3rd</option>
+            <option value="5">5th</option>
+            <option value="1">1st</option>
+          </select>
+
+          <span class="mx-1 text-gray-400">|</span>
+
+          <label class="font-semibold text-gray-600">Start:</label>
+          <input id="startTime" type="time" class="start-time-input">
+        </div>
+      </div>
+
+      <!-- Timetable Rows -->
+      <div id="timetableRows" class="flex flex-col gap-3 mb-4"></div>
+
+
+
+    </section>
+  </main>
+
+  <script>
+    /* CLOCK */
+    function updateClock() {
+      const now = new Date();
+
+      document.getElementById("floatingClock").textContent =
+        now.toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        });
+
+      document.getElementById("dateTop").textContent =
+        now.toLocaleDateString(undefined, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric"
+        });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* SEGMENTS */
+    const SEGMENTS = [
+      { key: "welcome", label: "👋 Welcome – 5 min", duration: 5 },
+      { key: "checkout", label: "📚 Checkout – 5 min", duration: 5 },
+      { key: "worktime", label: "✏️ Worktime – 30 min", duration: 30 },
+      { key: "cleanup", label: "🧹 Clean Up – 5 min", duration: 5 }
+    ];
+
+    const GRADE_TIMES = {
+      "4": "09:05",
+      "2": "10:05",
+      "3": "11:05",
+      "5": "13:45",
+      "1": "14:45"
+    };
+
+    const CLASS_LENGTH_MIN = 45;
+
+    const rowsContainer = document.getElementById("timetableRows");
+    const startInput = document.getElementById("startTime");
+    const gradeSelect = document.getElementById("gradeSelect");
+    const STORAGE_KEY = "lrc_start_time";
+
+    let lastActiveSegment = null;
+
+    function timeToMin(t){
+      if(!t) return null;
+      const [h,m] = t.split(":").map(Number);
+      return h*60+m;
+    }
+
+    function saveStart(v){ localStorage.setItem(STORAGE_KEY,v); }
+    function loadStart(){ return localStorage.getItem(STORAGE_KEY) || "09:05"; }
+
+    /* Build rows */
+    function buildRows(){
+      rowsContainer.innerHTML = "";
+
+      SEGMENTS.forEach(seg=>{
+        const row = document.createElement("div");
+        row.className = "segment-row panel-row";
+        row.dataset.key = seg.key;
+
+        const bar = document.createElement("div");
+        bar.className = "progress-layer";
+        row.appendChild(bar);
+
+        const label = document.createElement("div");
+        label.className = "segment-label";
+        label.textContent = seg.label;
+
+        const countdown = document.createElement("div");
+        countdown.className = "countdown";
+
+        row.appendChild(label);
+        row.appendChild(countdown);
+
+        rowsContainer.appendChild(row);
+      });
+
+      updateProgress();
+    }
+
+    /* Auto-detect class or next class */
+    function detectAndSetCurrentClass() {
+      const now = new Date();
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+
+      let currentGrade = null;
+
+      // IN class window?
+      for (const [grade, timeStr] of Object.entries(GRADE_TIMES)) {
+        const start = timeToMin(timeStr);
+        const end = start + CLASS_LENGTH_MIN;
+
+        if (nowMin >= start && nowMin < end) {
+          currentGrade = grade;
+          break;
+        }
+      }
+
+      // If not in class, snap to NEXT class
+      if (!currentGrade) {
+        let soonestStart = Infinity;
+        let soonestGrade = null;
+
+        for (const [grade, timeStr] of Object.entries(GRADE_TIMES)) {
+          const start = timeToMin(timeStr);
+          if (start > nowMin && start < soonestStart) {
+            soonestStart = start;
+            soonestGrade = grade;
+          }
+        }
+
+        if (soonestGrade) {
+          currentGrade = soonestGrade;
+        }
+      }
+
+      if (currentGrade) {
+        const desiredStart = GRADE_TIMES[currentGrade];
+
+        gradeSelect.value = currentGrade;
+        startInput.value = desiredStart;
+        saveStart(desiredStart);
+      }
+    }
+
+    function updateProgress(){
+      const now = new Date();
+      const nowMin = now.getHours()*60 + now.getMinutes();
+      const startMin = timeToMin(startInput.value);
+
+      rowsContainer.querySelectorAll(".panel-row").forEach(row=>{
+        row.classList.remove("active-row");
+        row.querySelector(".progress-layer").style.width = "0%";
+        row.querySelector(".countdown").textContent = "";
+      });
+
+      let pointer = startMin;
+      let currentActiveSegment = null;
+
+      SEGMENTS.forEach(seg=>{
+        const row = rowsContainer.querySelector(`[data-key="${seg.key}"]`);
+        const bar = row.querySelector(".progress-layer");
+        const countdown = row.querySelector(".countdown");
+
+        const segStart = pointer;
+        const segEnd = pointer + seg.duration;
+
+        let pct = 0;
+        if(nowMin >= segEnd){ pct = 100; }
+        else if(nowMin > segStart){ pct = ((nowMin - segStart)/(seg.duration))*100; }
+        bar.style.width = pct+"%";
+
+        if (nowMin < segStart) countdown.textContent = `${seg.duration} min`;
+        else if (nowMin >= segEnd) countdown.textContent = "Done";
+        else {
+          const remain = segEnd - nowMin;
+          countdown.textContent = remain === 1 ? "1 min left" : `${remain} min left`;
+          currentActiveSegment = seg.key;
+        }
+
+        if(nowMin >= segStart && nowMin < segEnd){
+          row.classList.add("active-row");
+        }
+
+        pointer = segEnd;
+      });
+
+      // ding when segment changes
+      if (currentActiveSegment && currentActiveSegment !== lastActiveSegment) {
+        const ding = document.getElementById("dingSound");
+        ding.volume = 0.25;
+        ding.play().catch(()=>{});
+      }
+      lastActiveSegment = currentActiveSegment;
+    }
+
+    gradeSelect.addEventListener("change", () => {
+      const gradeVal = gradeSelect.value;
+      if (GRADE_TIMES[gradeVal]) {
+        startInput.value = GRADE_TIMES[gradeVal];
+        saveStart(startInput.value);
+        updateProgress();
+      }
+    });
+
+    startInput.addEventListener("change", () => {
+      saveStart(startInput.value);
+      gradeSelect.value = "";
+      updateProgress();
+    });
+
+    /* Init */
+    startInput.value = loadStart();
+    buildRows();
+    detectAndSetCurrentClass();
+    updateProgress();
+
+    setInterval(() => {
+      detectAndSetCurrentClass();
+      updateProgress();
+    }, 30000);
+
+  </script>
+
+</body>
+</html>
