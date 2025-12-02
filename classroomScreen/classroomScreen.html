@@ -14,7 +14,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- 🌿 External Jungle Theme Styles -->
-  <link rel="stylesheet" href="./classroomScreenCSS/classroomScreenJungle.css">
+  <link rel="stylesheet" href="./classroomScreenCSS/classroomScreenWinter.css">
 
 </head>
 
@@ -39,12 +39,13 @@
     <!-- SLIDES -->
     <section class="panel rounded-2xl shadow p-2 md:p-4 flex flex-col">
       <div class="slide-frame">
-        <iframe
-          id="embedFrame"
-          src="https://docs.google.com/presentation/d/YOUR_SLIDES_ID_HERE/embed?start=true&loop=true&delayms=60000"
-          class="w-full h-full"
-          allowfullscreen
-        ></iframe>
+<iframe
+  id="embedFrame"
+  src=""
+  class="w-full h-full"
+  allowfullscreen
+></iframe>
+
       </div>
     </section>
 
@@ -287,6 +288,39 @@
       detectAndSetCurrentClass();
       updateProgress();
     }, 30000);
+
+
+
+    /* -----------------------------------------
+   LOAD SLIDE OF THE DAY FROM GOOGLE SHEET
+----------------------------------------- */
+async function loadTodaySlide() {
+  const apiURL = "https://script.google.com/macros/s/AKfycbxJaLtX_mPXktsBBmxGcou6tXpahUqM6HCNC6UwMmHh1OLpWd5slhWE7GFpm8swhF9iiA/exec"; // your deployed Apps Script endpoint
+
+  try {
+    const response = await fetch(apiURL);
+    const data = await response.json();
+
+    // If slide exists for today, load it
+    if (data.slideUrl) {
+      document.getElementById("embedFrame").src = data.slideUrl;
+    } else {
+      // fallback — optional
+      document.getElementById("embedFrame").src =
+        "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed";
+    }
+  } catch (err) {
+    console.error("Error loading slide of the day:", err);
+
+    // fallback — optional
+    document.getElementById("embedFrame").src =
+      "https://docs.google.com/presentation/d/DEFAULT_SLIDE_DECK_ID/embed";
+  }
+}
+
+// Load on page start
+loadTodaySlide();
+
 
   </script>
 
