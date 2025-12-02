@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Slideshow Showcase</title>
+
+  <!-- Optional: nice, simple styling -->
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(to bottom, #f9fafb, #e5e7eb);
+      color: #111827;
+      display: flex;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .container {
+      max-width: 1000px;
+      width: 100%;
+      background: white;
+      border-radius: 1rem;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.75rem;
+      text-align: center;
+    }
+
+    p.subtitle {
+      margin: 0 0 1.5rem;
+      text-align: center;
+      color: #4b5563;
+      font-size: 0.95rem;
+    }
+
+    /* Responsive 16:9 iframe wrapper */
+    .slides-wrapper {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%; /* 16:9 aspect ratio */
+      overflow: hidden;
+      border-radius: 0.75rem;
+      border: 2px solid #e5e7eb;
+      background: #111827;
+    }
+
+    .slides-wrapper iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .note {
+      margin-top: 1rem;
+      font-size: 0.85rem;
+      color: #6b7280;
+      text-align: center;
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 1rem;
+      }
+      h1 {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Coding Choices</h1>
+    <p class="subtitle">
+
+    </p>
+
+    <div class="slides-wrapper">
+      <!-- Replace the src URL below with your own published Google Slides embed link -->
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSTzEIEPiyUPl4QaXcDka88QtwqbvUK6ERqVOdCBbXpMHJkXCFvqhDPJHtv48gnQJQu9NhIYrwzJ_OV/pubembed?start=true&loop=true&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>    </div>
+
+
+  </div>
+</body>
+</html>
