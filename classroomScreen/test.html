@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Monarch Battle of the Books</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Tailwind for quick styling -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: radial-gradient(circle at top, #fef3c7, #ecfeff);
+      font-family: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .book-cover {
+      max-height: 150px;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-6">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-extrabold text-green-700">Monarch Battle of the Books</h1>
+        <p class="text-sm text-gray-700">Round 1: Choose your favorites in each battle!</p>
+      </div>
+      <div id="user-info" class="text-right text-sm text-gray-700 hidden">
+        Logged in as <span id="user-name" class="font-semibold"></span><br>
+        <button id="logout-btn" class="mt-1 px-3 py-1 rounded bg-red-500 text-white text-xs">Log out</button>
+      </div>
+    </header>
+
+    <!-- Login card -->
+    <section id="login-section" class="max-w-md mx-auto mb-6">
+      <div class="bg-white shadow rounded-xl p-4 border border-yellow-100">
+        <h2 class="text-xl font-bold mb-3 text-gray-800">Student Login</h2>
+        <label class="block text-sm mb-1">Username</label>
+        <input id="login-username" type="text" class="w-full border rounded px-2 py-1 mb-3" autocomplete="off">
+
+        <label class="block text-sm mb-1">PIN</label>
+        <input id="login-pin" type="password" class="w-full border rounded px-2 py-1 mb-3" autocomplete="off">
+
+        <button id="login-btn" class="w-full py-2 rounded bg-green-600 text-white font-semibold hover:bg-green-700">
+          Log in
+        </button>
+        <p id="login-error" class="text-sm text-red-500 mt-2 hidden"></p>
+      </div>
+    </section>
+
+    <!-- Bracket section -->
+    <section id="bracket-section" class="hidden">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4">Round 1 Battles</h2>
+      <div id="matches-container" class="grid gap-4 md:grid-cols-2">
+        <!-- matches injected here -->
+      </div>
+      <p class="text-xs text-gray-500 mt-4">
+        You can vote once per battle. Winners from these battles will move on to the next round.
+      </p>
+    </section>
+  </div>
+
+  <script>
+    // REPLACE with your actual Apps Script web app URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxrpPUu7QOtIt2BUgbPKFdIRghUwRM4huD5liWHNNwALGn4SiPk-pyYu94QtLhpvuo4HA/exec';
+
+    let currentStudent = null;
+    let currentBracket = null;
+
+    const loginSection = document.getElementById('login-section');
+    const bracketSection = document.getElementById('bracket-section');
+    const matchesContainer = document.getElementById('matches-container');
+    const loginError = document.getElementById('login-error');
+    const userInfo = document.getElementById('user-info');
+    const userNameSpan = document.getElementById('user-name');
+    const logoutBtn = document.getElementById('logout-btn');
+
+    document.getElementById('login-btn').addEventListener('click', login);
+    logoutBtn.addEventListener('click', () => {
+      currentStudent = null;
+      currentBracket = null;
+      matchesContainer.innerHTML = '';
+      userInfo.classList.add('hidden');
+      bracketSection.classList.add('hidden');
+      loginSection.classList.remove('hidden');
+    });
+
+    async function login() {
+      const username = document.getElementById('login-username').value.trim();
+      const pin = document.getElementById('login-pin').value.trim();
+
+      loginError.classList.add('hidden');
+      loginError.textContent = '';
+
+      if (!username || !pin) {
+        loginError.textContent = 'Please enter both username and PIN.';
+        loginError.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'login',
+            username,
+            pin
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          loginError.textContent = data.error || 'Login failed.';
+          loginError.classList.remove('hidden');
+          return;
+        }
+
+        currentStudent = data.student;
+        userNameSpan.textContent = currentStudent.username;
+        userInfo.classList.remove('hidden');
+        loginSection.classList.add('hidden');
+
+        await loadBracket();
+
+      } catch (err) {
+        console.error(err);
+        loginError.textContent = 'Error connecting to server.';
+        loginError.classList.remove('hidden');
+      }
+    }
+
+    async function loadBracket() {
+      matchesContainer.innerHTML = '<p class="col-span-full text-center text-gray-600">Loading battles...</p>';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'getBracket' })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          matchesContainer.innerHTML = '<p class="text-red-500">Error loading bracket.</p>';
+          return;
+        }
+
+        currentBracket = data;
+        renderMatches(data.matches);
+
+        bracketSection.classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        matchesContainer.innerHTML = '<p class="text-red-500">Error talking to server.</p>';
+      }
+    }
+
+    function renderMatches(matches) {
+      matchesContainer.innerHTML = '';
+      matches.forEach(match => {
+        const card = document.createElement('div');
+        card.className = 'bg-white border border-gray-200 shadow-sm rounded-xl p-3 flex flex-col gap-3';
+
+        const header = document.createElement('div');
+        header.className = 'flex items-center justify-between mb-1';
+        header.innerHTML = `
+          <span class="text-xs font-semibold text-gray-500 uppercase">${match.matchId.replace('_', ' ')}</span>
+          <span class="text-xs text-gray-400">Round 1</span>
+        `;
+        card.appendChild(header);
+
+        const vsRow = document.createElement('div');
+        vsRow.className = 'grid grid-cols-2 gap-2 items-stretch';
+
+        const b1 = createBookCard(match, match.book1);
+        const b2 = createBookCard(match, match.book2);
+
+        vsRow.appendChild(b1);
+        vsRow.appendChild(b2);
+
+        card.appendChild(vsRow);
+
+        // Optional: small vote tally (no counts if zero)
+        const votes = match.votes || {};
+        const totalVotes = (votes[match.book1.id] || 0) + (votes[match.book2.id] || 0);
+        const footer = document.createElement('div');
+        footer.className = 'mt-2 text-xs text-gray-500';
+        footer.textContent = totalVotes > 0
+          ? `Total votes so far: ${totalVotes}`
+          : `No votes yet. Be the first!`;
+        card.appendChild(footer);
+
+        matchesContainer.appendChild(card);
+      });
+    }
+
+    function createBookCard(match, book) {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'border border-gray-100 rounded-lg p-2 flex flex-col items-center text-center';
+
+      const img = document.createElement('img');
+      img.src = book.coverImageURL || '';
+      img.alt = book.title;
+      img.className = 'book-cover mb-2 w-full';
+      img.onerror = () => { img.style.display = 'none'; };
+
+      const title = document.createElement('div');
+      title.className = 'text-sm font-semibold text-gray-800';
+      title.textContent = book.title;
+
+      const author = document.createElement('div');
+      author.className = 'text-xs text-gray-500 mb-1';
+      author.textContent = book.author || '';
+
+      const btn = document.createElement('button');
+      btn.className = 'mt-2 px-3 py-1 text-xs font-semibold rounded-full bg-blue-500 text-white hover:bg-blue-600';
+      btn.textContent = 'Vote for this book';
+
+      btn.addEventListener('click', () => {
+        handleVote(match.matchId, book.id, btn);
+      });
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(title);
+      wrapper.appendChild(author);
+      wrapper.appendChild(btn);
+
+      if (book.trailerURL) {
+        const trailerLink = document.createElement('a');
+        trailerLink.href = book.trailerURL;
+        trailerLink.target = '_blank';
+        trailerLink.className = 'mt-1 text-xs text-indigo-600 underline';
+        trailerLink.textContent = 'Watch trailer';
+        wrapper.appendChild(trailerLink);
+      }
+
+      return wrapper;
+    }
+
+    async function handleVote(matchId, bookId, buttonEl) {
+      if (!currentStudent) {
+        alert('Please log in first.');
+        return;
+      }
+
+      buttonEl.disabled = true;
+      const originalText = buttonEl.textContent;
+      buttonEl.textContent = 'Submitting...';
+
+      try {
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'vote',
+            studentId: currentStudent.studentId,
+            username: currentStudent.username,
+            matchId,
+            chosenBookId: bookId
+          })
+        });
+
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.error || 'Error submitting vote.');
+        } else {
+          alert('Your vote has been recorded!');
+          // Reload the bracket so you see updated totals
+          await loadBracket();
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert('Error connecting to server.');
+      } finally {
+        buttonEl.disabled = false;
+        buttonEl.textContent = originalText;
+      }
+    }
+  </script>
+</body>
+</html>
