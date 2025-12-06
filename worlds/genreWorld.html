@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📚 Genre World | LRC Quest</title>
+
+  <!-- Tailwind CDN for quick styling -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+    rel="stylesheet"
+  />
+
+  <style>
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #fef3c7 0, #bbf7d0 40%, #047857 100%);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .jungle-card {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      border: 2px solid rgba(34, 197, 94, 0.4);
+      backdrop-filter: blur(6px);
+    }
+
+    .badge-pill {
+      border-radius: 999px;
+    }
+  </style>
+</head>
+<body class="text-gray-900">
+  <div class="max-w-5xl mx-auto px-4 py-6 sm:py-10">
+    <!-- Top bar -->
+    <header class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <p class="text-sm uppercase tracking-wide text-green-900 font-semibold flex items-center gap-1">
+          <span>🍃 LRC Quest</span> <span class="opacity-70">· Genre World</span>
+        </p>
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-white drop-shadow-md mt-1">
+          Genre World
+        </h1>
+        <p class="text-sm sm:text-base text-emerald-50 mt-1 max-w-xl">
+          Explore story types, compare genres, and become a Master of Many Worlds.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex flex-col items-end">
+          <span id="gw-greeting" class="text-sm text-emerald-50 font-semibold">
+            Loading adventurer…
+          </span>
+          <span id="gw-tier" class="text-xs text-emerald-100">
+            Tier: —
+          </span>
+        </div>
+        <a
+          href="../questHub.html"
+          class="inline-flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-full bg-white/90 hover:bg-white shadow-lg border border-emerald-200 transition"
+        >
+          ⬅️ Back to Quest Hub
+        </a>
+      </div>
+    </header>
+
+    <!-- Progress summary card -->
+    <section class="jungle-card p-4 sm:p-6 mb-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-lg sm:text-xl font-bold text-emerald-900 flex items-center gap-2">
+            🌿 Genre World Path
+          </h2>
+          <p class="text-sm text-gray-700 mt-1">
+            Each level has three mini-quests. As you complete each mini-game, your
+            progress saves to your LRC Quest account.
+          </p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs uppercase tracking-wide text-gray-500 mb-1">
+            Overall progress
+          </p>
+          <div class="flex items-center gap-2">
+            <div class="w-32 bg-emerald-100 rounded-full h-3 overflow-hidden">
+              <div
+                id="gw-progress-bar"
+                class="h-3 rounded-full bg-emerald-500 transition-all"
+                style="width: 0%"
+              ></div>
+            </div>
+            <span
+              id="gw-progress-label"
+              class="text-sm font-semibold text-emerald-800 min-w-[3rem] text-right"
+            >
+              0%
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Level cards with sub-games -->
+    <section class="grid gap-5 sm:grid-cols-2">
+      <!-- Level 1 -->
+      <article class="jungle-card p-5 flex flex-col justify-between" data-level="1">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="badge-pill px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800">
+              Level 1
+            </span>
+            <span
+              id="gw-status-1"
+              class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full"
+            >
+              Not started
+            </span>
+          </div>
+          <h3 class="text-xl font-bold text-emerald-900 flex items-center gap-2 mb-1">
+            🪵 Fact or Fiction
+          </h3>
+          <p class="text-sm text-gray-700 mb-3">
+            Decide if a story could really happen or if it’s made-up. Practice sorting
+            books, blurbs, and covers into <strong>fiction</strong> vs.
+            <strong>nonfiction</strong>.
+          </p>
+
+          <ul class="space-y-2 text-sm">
+            <!-- Sub-game 1 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  📘 Fact or Fiction Sort
+                </p>
+                <p class="text-xs text-gray-600">
+                  Drag or sort examples into "Fact" or "Fiction" piles.
+                </p>
+                <p
+                  id="gw-substatus-1-1"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <!-- TODO: change # to your real sub-game link later -->
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="1"
+                  data-game="1"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 2 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🏷️ Signal Word Detective
+                </p>
+                <p class="text-xs text-gray-600">
+                  Highlight clue words that show the text is giving facts.
+                </p>
+                <p
+                  id="gw-substatus-1-2"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="1"
+                  data-game="2"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 3 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🗣️ Prove It Partner Challenge
+                </p>
+                <p class="text-xs text-gray-600">
+                  Explain to a partner why a text is fiction or nonfiction.
+                </p>
+                <p
+                  id="gw-substatus-1-3"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="1"
+                  data-game="3"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Level 2 -->
+      <article class="jungle-card p-5 flex flex-col justify-between" data-level="2">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="badge-pill px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800">
+              Level 2
+            </span>
+            <span
+              id="gw-status-2"
+              class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full"
+            >
+              Not started
+            </span>
+          </div>
+          <h3 class="text-xl font-bold text-emerald-900 flex items-center gap-2 mb-1">
+            🌱 Paths of the Story Jungle
+          </h3>
+          <p class="text-sm text-gray-700 mb-3">
+            Compare and contrast genres like <strong>realistic fiction</strong>,
+            <strong>mystery</strong>, <strong>fantasy</strong>,
+            <strong>historical fiction</strong>, and more.
+          </p>
+
+          <ul class="space-y-2 text-sm">
+            <!-- Sub-game 1 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🧭 Genre Trail Sort
+                </p>
+                <p class="text-xs text-gray-600">
+                  Sort story cards onto the correct genre paths.
+                </p>
+                <p
+                  id="gw-substatus-2-1"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="2"
+                  data-game="1"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 2 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  ⚖️ Venn Diagram Match
+                </p>
+                <p class="text-xs text-gray-600">
+                  Compare two genres and place traits in the right section.
+                </p>
+                <p
+                  id="gw-substatus-2-2"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="2"
+                  data-game="2"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 3 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🔍 Cover & Blurb Detectives
+                </p>
+                <p class="text-xs text-gray-600">
+                  Use covers and blurbs to predict each book’s genre.
+                </p>
+                <p
+                  id="gw-substatus-2-3"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="2"
+                  data-game="3"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Level 3 -->
+      <article class="jungle-card p-5 flex flex-col justify-between" data-level="3">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="badge-pill px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800">
+              Level 3
+            </span>
+            <span
+              id="gw-status-3"
+              class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full"
+            >
+              Not started
+            </span>
+          </div>
+          <h3 class="text-xl font-bold text-emerald-900 flex items-center gap-2 mb-1">
+            🔍 Discover the Author’s Path
+          </h3>
+          <p class="text-sm text-gray-700 mb-3">
+            Look closely at the author’s <strong>purpose, tone, and structure</strong>.
+            Decide why they chose a certain genre to tell this story or share these facts.
+          </p>
+
+          <ul class="space-y-2 text-sm">
+            <!-- Sub-game 1 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🎯 Purpose Picker
+                </p>
+                <p class="text-xs text-gray-600">
+                  Choose whether each text is to inform, entertain, or persuade.
+                </p>
+                <p
+                  id="gw-substatus-3-1"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="3"
+                  data-game="1"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 2 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🧱 Text Feature Builder
+                </p>
+                <p class="text-xs text-gray-600">
+                  Match text features (headings, captions, diagrams) to their purpose.
+                </p>
+                <p
+                  id="gw-substatus-3-2"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="3"
+                  data-game="2"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 3 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  📝 Why This Genre?
+                </p>
+                <p class="text-xs text-gray-600">
+                  Decide which genre fits an author’s goal and explain why.
+                </p>
+                <p
+                  id="gw-substatus-3-3"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="3"
+                  data-game="3"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </article>
+
+      <!-- Level 4 -->
+      <article class="jungle-card p-5 flex flex-col justify-between" data-level="4">
+        <div>
+          <div class="flex items-center justify-between mb-2">
+            <span class="badge-pill px-3 py-1 text-xs font-semibold bg-emerald-100 text-emerald-800">
+              Level 4
+            </span>
+            <span
+              id="gw-status-4"
+              class="text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full"
+            >
+              Not started
+            </span>
+          </div>
+          <h3 class="text-xl font-bold text-emerald-900 flex items-center gap-2 mb-1">
+            🌀 Master of Many Worlds
+          </h3>
+          <p class="text-sm text-gray-700 mb-3">
+            Use everything you’ve learned! Create, combine, or curate genres in a
+            project that shows off your genre powers.
+          </p>
+
+          <ul class="space-y-2 text-sm">
+            <!-- Sub-game 1 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  ✍️ Create a Genre Story
+                </p>
+                <p class="text-xs text-gray-600">
+                  Write or storyboard a short piece in one chosen genre.
+                </p>
+                <p
+                  id="gw-substatus-4-1"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="4"
+                  data-game="1"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 2 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  🧬 Hybrid Genre Lab
+                </p>
+                <p class="text-xs text-gray-600">
+                  Combine two genres and design a new “hybrid” idea.
+                </p>
+                <p
+                  id="gw-substatus-4-2"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="4"
+                  data-game="2"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+
+            <!-- Sub-game 3 -->
+            <li class="flex items-center justify-between gap-2 border rounded-lg px-3 py-2 bg-emerald-50">
+              <div>
+                <p class="font-semibold text-emerald-900 text-sm">
+                  📚 Curator’s Shelf
+                </p>
+                <p class="text-xs text-gray-600">
+                  Build a mini-collection of books by genre and explain your picks.
+                </p>
+                <p
+                  id="gw-substatus-4-3"
+                  class="text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold"
+                >
+                  Not started
+                </p>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <a
+                  href="#"
+                  class="text-[11px] px-3 py-1 rounded-full border border-emerald-300 bg-white hover:bg-emerald-50 font-semibold"
+                >
+                  Play
+                </a>
+                <button
+                  class="gw-sub-toggle text-[11px] px-3 py-1 rounded-full bg-emerald-600 text-white hover:bg-emerald-700 font-semibold"
+                  data-level="4"
+                  data-game="3"
+                >
+                  Mark Complete
+                </button>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <!-- Tiny debug/status message (optional) -->
+    <p id="gw-save-status" class="mt-6 text-xs text-emerald-50 text-right">
+      Progress ready.
+    </p>
+  </div>
+
+  <!-- Logic: connect to lrcQuestCore.js -->
+  <script type="module">
+    import * as LRC from "../scripts/lrcQuestCore.js";
+
+    // Default in-memory progress for this page: 4 levels x 3 mini-games each
+    let genreWorldProgress = {
+      level1: { game1: false, game2: false, game3: false },
+      level2: { game1: false, game2: false, game3: false },
+      level3: { game1: false, game2: false, game3: false },
+      level4: { game1: false, game2: false, game3: false },
+    };
+
+    function isLevelComplete(levelKey) {
+      const level = genreWorldProgress[levelKey];
+      return level && Object.values(level).every(Boolean);
+    }
+
+    function updateLevelUI() {
+      // Update each mini-game pill + level badge
+      for (let level = 1; level <= 4; level++) {
+        const levelKey = "level" + level;
+
+        // Level badge
+        const levelStatusEl = document.getElementById("gw-status-" + level);
+        if (levelStatusEl) {
+          if (isLevelComplete(levelKey)) {
+            levelStatusEl.textContent = "Level complete";
+            levelStatusEl.className =
+              "text-xs font-semibold text-emerald-900 bg-emerald-100 px-2 py-1 rounded-full";
+          } else {
+            // Check if any mini-games are started
+            const anyStarted = Object.values(genreWorldProgress[levelKey]).some(Boolean);
+            levelStatusEl.textContent = anyStarted ? "In progress" : "Not started";
+            levelStatusEl.className =
+              "text-xs font-semibold text-amber-700 bg-amber-100 px-2 py-1 rounded-full";
+          }
+        }
+
+        // Mini-game pills
+        for (let game = 1; game <= 3; game++) {
+          const subKey = "game" + game;
+          const done = !!genreWorldProgress[levelKey][subKey];
+          const pill = document.getElementById(`gw-substatus-${level}-${game}`);
+          if (!pill) continue;
+
+          if (done) {
+            pill.textContent = "Complete";
+            pill.className =
+              "text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-900 font-semibold";
+          } else {
+            pill.textContent = "Not started";
+            pill.className =
+              "text-[11px] mt-1 inline-block px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-semibold";
+          }
+        }
+      }
+
+      // Update overall progress bar (12 mini-games total)
+      const totalMiniGames = 4 * 3;
+      let completed = 0;
+      Object.values(genreWorldProgress).forEach((levelObj) => {
+        Object.values(levelObj).forEach((done) => {
+          if (done) completed++;
+        });
+      });
+
+      const percent = Math.round((completed / totalMiniGames) * 100);
+      const bar = document.getElementById("gw-progress-bar");
+      const label = document.getElementById("gw-progress-label");
+
+      if (bar) bar.style.width = percent + "%";
+      if (label) label.textContent = percent + "%";
+    }
+
+    async function saveGenreWorldProgress() {
+      const statusEl = document.getElementById("gw-save-status");
+      if (statusEl) {
+        statusEl.textContent = "Saving…";
+      }
+
+      try {
+        if (LRC.saveUserProgress) {
+          // Merge this under a "genreWorld" key in the user's progress doc
+          await LRC.saveUserProgress({
+            genreWorld: genreWorldProgress,
+          });
+        }
+
+        if (statusEl) {
+          statusEl.textContent = "Progress saved to your LRC Quest account.";
+        }
+      } catch (error) {
+        console.error("Error saving Genre World progress:", error);
+        if (statusEl) {
+          statusEl.textContent = "⚠️ Could not save progress. Please tell Mrs. A.";
+        }
+      }
+    }
+
+    async function initGenreWorld() {
+      // Greeting & tier
+      const user = LRC.getCurrentUser ? LRC.getCurrentUser() : null;
+      const greetingEl = document.getElementById("gw-greeting");
+      const tierEl = document.getElementById("gw-tier");
+
+      if (user && greetingEl) {
+        const name = user.displayName || user.email || "Adventurer";
+        greetingEl.textContent = `Welcome, ${name}!`;
+      } else if (greetingEl) {
+        greetingEl.textContent = "Welcome, Adventurer!";
+      }
+
+      // Load saved progress if available
+      try {
+        if (LRC.loadUserProgress) {
+          const progress = (await LRC.loadUserProgress()) || {};
+
+          if (progress.genreWorld) {
+            // Shallow merge into default structure to be safe
+            for (let level = 1; level <= 4; level++) {
+              const levelKey = "level" + level;
+              if (progress.genreWorld[levelKey]) {
+                genreWorldProgress[levelKey] = {
+                  ...genreWorldProgress[levelKey],
+                  ...progress.genreWorld[levelKey],
+                };
+              }
+            }
+          }
+
+          if (tierEl && progress.tier) {
+            tierEl.textContent = `Tier: ${progress.tier}`;
+          }
+        }
+      } catch (error) {
+        console.error("Error loading Genre World progress:", error);
+      }
+
+      wireButtons();
+      updateLevelUI();
+    }
+
+    function wireButtons() {
+      // Toggle mini-game completion
+      document.querySelectorAll(".gw-sub-toggle").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const level = btn.getAttribute("data-level");
+          const game = btn.getAttribute("data-game");
+          const levelKey = "level" + level;
+          const gameKey = "game" + game;
+
+          const current = !!genreWorldProgress[levelKey][gameKey];
+          // toggle: if done, set false; if not, set true
+          genreWorldProgress[levelKey][gameKey] = !current;
+
+          // Update button text for fun
+          btn.textContent = genreWorldProgress[levelKey][gameKey]
+            ? "Mark Not Done"
+            : "Mark Complete";
+
+          updateLevelUI();
+          await saveGenreWorldProgress();
+        });
+      });
+    }
+
+    // Protect the page and then initialize
+    if (LRC.requireLogin) {
+      LRC.requireLogin(initGenreWorld);
+    } else {
+      initGenreWorld();
+    }
+  </script>
+</body>
+</html>
