@@ -4,17 +4,17 @@
 
 // Firebase imports (modular v12)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { 
-  getAuth, 
-  onAuthStateChanged, 
-  signOut 
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-import { 
-  getFirestore, 
-  doc, 
-  getDoc, 
-  setDoc 
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 // -------------------------------------------------------------
@@ -34,6 +34,14 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// -------------------------------------------------------------
+// Expose Auth Instance
+// -------------------------------------------------------------
+
+export function getAuthInstance() {
+  return auth;
+}
 
 // -------------------------------------------------------------
 // Local Storage Helpers
@@ -78,8 +86,8 @@ export function setLocalTier(tier) {
 export function requireLogin(callback) {
   onAuthStateChanged(auth, (user) => {
     if (!user) {
-      // Not logged in → send to login page
-      window.location.href = "/login.html";
+      // Not logged in → send to login page (relative path for GitHub Pages)
+      window.location.href = "login.html";
       return;
     }
     callback(user);
@@ -154,5 +162,5 @@ export async function logOut() {
   localStorage.removeItem("lrcQuestStudent");
   localStorage.removeItem("lrcQuestProgress");
   localStorage.removeItem("lrcQuestTier");
-  window.location.href = "/login.html";
+  window.location.href = "login.html";
 }
