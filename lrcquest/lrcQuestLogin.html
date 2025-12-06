@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Quest – Login</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to bottom, #ecfeff, #d1fae5);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .card {
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.14);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem 1.75rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1 class="text-2xl font-bold mb-2">
+      🦁 Welcome to <span class="text-green-700">LRC Quest</span>
+    </h1>
+
+    <p class="text-gray-600 mb-4 text-sm">
+      Sign in with your school Google account to enter the jungle.
+    </p>
+
+    <button
+      id="googleLoginBtn"
+      class="w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition"
+    >
+      Continue with Google
+    </button>
+
+    <p id="status" class="mt-4 text-sm text-gray-600"></p>
+
+    <p class="mt-4 text-xs text-gray-400">
+      Need help? Raise your hand and tell <strong>Mrs. A</strong>.
+    </p>
+  </div>
+
+  <!-- Firebase (modular SDK v12) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // Your Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
+      authDomain: "lrcquest-3039e.firebaseapp.com",
+      projectId: "lrcquest-3039e",
+      storageBucket: "lrcquest-3039e.firebasestorage.app",
+      messagingSenderId: "72063656342",
+      appId: "1:72063656342:web:bc08c6538437f50b53bdb7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    // Change this if your hub page has a different name
+    const DESTINATION_PAGE = "questHub.html";
+
+    const btn = document.getElementById("googleLoginBtn");
+    const statusEl = document.getElementById("status");
+
+    async function loadOrCreatePlayer(uid, email, displayName) {
+      const ref = doc(db, "players", uid);
+      const snap = await getDoc(ref);
+
+      if (!snap.exists()) {
+        // New player: create a basic record
+        const newData = {
+          email,
+          displayName,
+          progress: {},            // empty progress
+          subscriptionTier: "free" // default tier for now
+        };
+        await setDoc(ref, newData);
+        return newData;
+      }
+
+      // Existing player
+      const data = snap.data() || {};
+      if (!data.subscriptionTier) data.subscriptionTier = "free";
+      if (!data.progress) data.progress = {};
+      return data;
+    }
+
+    btn.addEventListener("click", async () => {
+      statusEl.textContent = "Opening Google sign-in...";
+
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        const student = {
+          uid: user.uid,
+          fullName: user.displayName || "",
+          email: user.email || ""
+        };
+
+        // Save basic identity locally
+        localStorage.setItem("lrcQuestStudent", JSON.stringify(student));
+
+        statusEl.textContent = "Loading your progress...";
+
+        // Load or create Firestore player document
+        const playerData = await loadOrCreatePlayer(student.uid, student.email, student.fullName);
+
+        // Save progress + tier locally so worlds can use it
+        localStorage.setItem("lrcQuestProgress", JSON.stringify(playerData.progress || {}));
+        localStorage.setItem("lrcQuestTier", playerData.subscriptionTier || "free");
+
+        statusEl.textContent = "Heading into the jungle...";
+
+        // Name parts for nicer greeting
+        const [firstName, ...rest] = (student.fullName || "").split(" ");
+        const lastName = rest.join(" ");
+
+        const params = new URLSearchParams({
+          fn: firstName || "",
+          ln: lastName || "",
+          email: student.email || "",
+          uid: student.uid || ""
+        });
+
+        window.location.href = `${DESTINATION_PAGE}?${params.toString()}`;
+
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Login failed or was canceled. Try again.";
+      }
+    });
+  </script>
+
+</body>
+</html>

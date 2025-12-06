@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Quest Hub</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: linear-gradient(to bottom, #fff8e1, #f3e8ff);
+      min-height: 100vh;
+      font-family: 'Poppins', sans-serif;
+    }
+    .world-btn {
+      @apply w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl font-semibold transition;
+    }
+  </style>
+</head>
+
+<body class="p-6">
+
+  <!-- Container -->
+  <div class="max-w-3xl mx-auto bg-white shadow-xl rounded-3xl p-6 mt-10">
+
+    <!-- Greeting Section -->
+    <h1 id="studentGreeting" class="text-3xl font-bold mb-1 text-purple-700">
+      Welcome, Explorer!
+    </h1>
+
+    <p id="studentDetails" class="text-gray-700 mb-2 text-sm">
+      Loading your info...
+    </p>
+
+    <p id="tierDetails" class="text-gray-500 mb-6 text-xs">
+      Tier: (checking...)
+    </p>
+
+    <!-- Worlds Section -->
+    <div class="space-y-3">
+      <button class="world-btn">📚 Genre World</button>
+      <button class="world-btn">🔍 Research Treehouse</button>
+      <button class="world-btn">🛡 Digital Citizenship Skylands</button>
+      <button class="world-btn">🏛 Library Skills Village</button>
+      <button class="world-btn">🖥 Tech Skills Mountain</button>
+      <button class="world-btn">🎨 Creative Projects Cove</button>
+      <button class="world-btn">🎮 Lion Head Arcade</button>
+    </div>
+
+    <!-- Logout -->
+    <button id="logoutBtn" class="mt-8 w-full py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold">
+      Log Out
+    </button>
+
+  </div>
+
+  <!-- Firebase v12 (Modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
+      authDomain: "lrcquest-3039e.firebaseapp.com",
+      projectId: "lrcquest-3039e",
+      storageBucket: "lrcquest-3039e.firebasestorage.app",
+      messagingSenderId: "72063656342",
+      appId: "1:72063656342:web:bc08c6538437f50b53bdb7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app); // not used yet, but ready
+
+    const greetingEl = document.getElementById("studentGreeting");
+    const detailsEl = document.getElementById("studentDetails");
+    const tierEl = document.getElementById("tierDetails");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    function getLocalStudent() {
+      try {
+        return JSON.parse(localStorage.getItem("lrcQuestStudent")) || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getLocalProgress() {
+      try {
+        return JSON.parse(localStorage.getItem("lrcQuestProgress")) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function getLocalTier() {
+      return localStorage.getItem("lrcQuestTier") || "free";
+    }
+
+    function showGreeting(user, student) {
+      const name = (student?.fullName) || user.displayName || "Explorer";
+      const email = student?.email || user.email || "";
+
+      greetingEl.textContent = `🦁 Welcome, ${name}!`;
+      detailsEl.textContent = `Signed in as ${email}`;
+
+      const tier = getLocalTier();
+      tierEl.textContent = `Tier: ${tier}`;
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const student = getLocalStudent();
+      showGreeting(user, student);
+
+      // You *could* read progress and show a quick summary here if you want:
+      // const progress = getLocalProgress();
+      // console.log("Progress for this player:", progress);
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      localStorage.removeItem("lrcQuestStudent");
+      localStorage.removeItem("lrcQuestProgress");
+      localStorage.removeItem("lrcQuestTier");
+      window.location.href = "login.html";
+    });
+  </script>
+
+</body>
+</html>
