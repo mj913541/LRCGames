@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Planner • Weekly</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="weekly">
+  <div class="container">
+    <div class="nav">
+      <div class="left">
+        <a class="btn" href="index.html">← Dashboard</a>
+        <div class="badge" id="userPill">…</div>
+      </div>
+      <div class="right">
+        <a class="btn" href="habits.html">Habits</a>
+        <a class="btn" href="settings.html">Settings</a>
+      </div>
+    </div>
+
+    <div class="weekWrap">
+      <div class="card">
+        <div class="hd">
+          <h2>Inbox (drag onto the week)</h2>
+        </div>
+        <div class="bd">
+          <div class="small">Tip: drag a task onto a 15-minute slot to schedule it.</div>
+          <div class="hr"></div>
+          <div class="inboxList" id="weeklyInbox"></div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:14px">
+        <div class="card">
+          <div class="hd">
+            <h2>This Week</h2>
+            <div class="small">Auto-populates from your A/B/C/D/E templates</div>
+          </div>
+          <div class="bd">
+            <div class="grid cols-2" id="weekColumns"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../scripts/lrcQuestCore.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

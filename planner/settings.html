@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Planner • Settings</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="settings">
+  <div class="container">
+    <div class="nav">
+      <div class="left">
+        <a class="btn" href="index.html">← Dashboard</a>
+        <div class="badge" id="userPill">…</div>
+      </div>
+      <div class="right">
+        <a class="btn" href="weekly.html">Weekly</a>
+        <a class="btn" href="habits.html">Habits</a>
+      </div>
+    </div>
+
+    <div class="grid cols-2">
+      <div class="card">
+        <div class="hd">
+          <h2>Week letter-days</h2>
+          <div class="small">Pick which letter-day applies to each weekday</div>
+        </div>
+        <div class="bd">
+          <div class="split">
+            <div>
+              <label class="label">Mon</label>
+              <select class="field" id="mapMon">
+                <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Tue</label>
+              <select class="field" id="mapTue">
+                <option>A</option><option selected>B</option><option>C</option><option>D</option><option>E</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="split" style="margin-top:10px">
+            <div>
+              <label class="label">Wed</label>
+              <select class="field" id="mapWed">
+                <option>A</option><option>B</option><option selected>C</option><option>D</option><option>E</option>
+              </select>
+            </div>
+            <div>
+              <label class="label">Thu</label>
+              <select class="field" id="mapThu">
+                <option>A</option><option>B</option><option>C</option><option selected>D</option><option>E</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="margin-top:10px">
+            <label class="label">Fri</label>
+            <select class="field" id="mapFri">
+              <option>A</option><option>B</option><option>C</option><option>D</option><option selected>E</option>
+            </select>
+          </div>
+
+          <div class="hr"></div>
+          <button class="btn primary" id="saveSettingsBtn" style="width:100%">Save Settings</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="hd">
+          <h2>A/B/C/D/E schedule templates</h2>
+          <div class="small">Edit JSON (fast + flexible)</div>
+        </div>
+        <div class="bd">
+          <div class="small">
+            Format: each letter is an array of blocks:
+            <span class="tag">{"start":"09:05","end":"09:50","title":"4th","location":"LRC"}</span>
+          </div>
+          <div class="hr"></div>
+          <label class="label">Letter schedules JSON</label>
+          <textarea class="field" id="scheduleJson" style="min-height:360px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;"></textarea>
+          <div class="small" style="margin-top:8px">
+            Tip: paste your full A/B/C/D/E schedule here once, then Weekly auto-populates.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../scripts/lrcQuestCore.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

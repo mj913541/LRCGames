@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Planner • Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body data-page="dashboard">
+  <div class="container">
+    <div class="nav">
+      <div class="left">
+        <div class="brand">
+          <div class="dot"></div>
+          <div>
+            <div style="font-weight:850">Planner</div>
+            <div class="small">ADHD-friendly • Pencil-friendly</div>
+          </div>
+        </div>
+        <div class="badge" id="userPill">…</div>
+      </div>
+      <div class="right">
+        <a class="btn" href="weekly.html">Weekly</a>
+        <a class="btn" href="habits.html">Habits</a>
+        <a class="btn" href="habit-history.html">Habit History</a>
+        <a class="btn" href="settings.html">Settings</a>
+      </div>
+    </div>
+
+    <div class="grid cols-3">
+      <!-- Timeline -->
+      <div class="card">
+        <div class="hd">
+          <h2>Today</h2>
+          <div class="small" id="todayDate">…</div>
+        </div>
+        <div class="bd">
+          <div class="timeline" id="timeline"></div>
+
+          <div class="hr"></div>
+
+          <div class="split">
+            <div>
+              <div class="small" style="margin-bottom:8px">Home Morning Tasks (anchors at 6:00am)</div>
+              <div class="tasks" id="morningList"></div>
+            </div>
+            <div>
+              <div class="small" style="margin-bottom:8px">Home Evening Tasks (anchors at 5:00pm)</div>
+              <div class="tasks" id="eveningList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tasks -->
+      <div class="card">
+        <div class="hd">
+          <h2>Tasks Today</h2>
+          <div class="small">Must / Should / Could</div>
+        </div>
+        <div class="bd">
+          <div class="tasks" id="tasksToday"></div>
+
+          <div class="hr"></div>
+
+          <div class="small" style="margin-bottom:8px">Quick capture to Inbox (drag to Weekly)</div>
+          <label class="label" for="quickTask">New task</label>
+          <input class="field" id="quickTask" placeholder="e.g., Email parent about book…" />
+          <div style="display:flex; gap:10px; margin-top:10px">
+            <button class="btn primary" id="addQuickTaskBtn">Add to Inbox</button>
+            <a class="btn" href="weekly.html">Open Weekly →</a>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="small" style="margin-bottom:8px">Inbox</div>
+          <div class="inboxList" id="inboxList"></div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div class="grid" style="gap:14px">
+        <!-- Habits -->
+        <div class="card">
+          <div class="hd">
+            <h2>Habits</h2>
+            <a class="btn" href="habits.html">Open</a>
+          </div>
+          <div class="bd">
+            <div class="habitsGrid" id="habitsSummary"></div>
+          </div>
+        </div>
+
+        <!-- Pomodoro -->
+        <div class="card">
+          <div class="hd">
+            <h2>Pomodoro</h2>
+            <span class="tag" id="pomoMode">Focus</span>
+          </div>
+          <div class="bd">
+            <div class="pomo">
+              <div class="timerFace" id="pomoTime">25:00</div>
+              <button class="btn primary" id="pomoStart">Start</button>
+              <button class="btn" id="pomoFocus">Focus</button>
+              <button class="btn" id="pomoBreak">Break</button>
+            </div>
+            <div class="small" style="margin-top:10px">
+              ADHD tip: start with “just 5 minutes” break mode if you’re stuck.
+            </div>
+          </div>
+        </div>
+
+        <!-- Add appointments -->
+        <div class="card">
+          <div class="hd">
+            <h2>Add appointments</h2>
+            <span class="small">Shows on timeline</span>
+          </div>
+          <div class="bd">
+            <div class="split">
+              <div>
+                <div class="small" style="margin-bottom:8px">Home appointment</div>
+                <label class="label">Title</label>
+                <input class="field" id="homeApptTitle" placeholder="Doctor / daycare / etc." />
+                <div class="split" style="margin-top:10px">
+                  <div>
+                    <label class="label">Start</label>
+                    <input class="field" id="homeApptStart" type="time" value="09:00" />
+                  </div>
+                  <div>
+                    <label class="label">End</label>
+                    <input class="field" id="homeApptEnd" type="time" value="09:30" />
+                  </div>
+                </div>
+                <button class="btn primary" style="margin-top:10px; width:100%" id="addHomeApptBtn">Add Home</button>
+              </div>
+
+              <div>
+                <div class="small" style="margin-bottom:8px">LRC appointment</div>
+                <label class="label">Title</label>
+                <input class="field" id="lrcApptTitle" placeholder="Meeting / lesson / duty…" />
+                <div class="split" style="margin-top:10px">
+                  <div>
+                    <label class="label">Start</label>
+                    <input class="field" id="lrcApptStart" type="time" value="10:00" />
+                  </div>
+                  <div>
+                    <label class="label">End</label>
+                    <input class="field" id="lrcApptEnd" type="time" value="10:30" />
+                  </div>
+                </div>
+                <button class="btn primary" style="margin-top:10px; width:100%" id="addLrcApptBtn">Add LRC</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Your LRC Quest core (adjust path if needed) -->
+  <script src="../scripts/lrcQuestCore.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
