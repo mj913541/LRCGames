@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My All-in-One Planner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg: #faf7ff;
+      --card: #ffffff;
+      --accent: #8b5cf6;
+      --accent-soft: #ede9fe;
+      --text: #1f2933;
+      --muted: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 12px 12px 24px;
+    }
+
+    header {
+      padding: 12px 16px 8px;
+    }
+
+    header h1 {
+      margin: 0 0 4px;
+      font-size: 1.4rem;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .tab-bar {
+      display: flex;
+      gap: 6px;
+      padding: 6px;
+      background: var(--accent-soft);
+      border-radius: 999px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-button {
+      flex: 1;
+      min-width: 90px;
+      border: none;
+      background: transparent;
+      padding: 8px 6px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .tab-button.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    main {
+      padding: 2px 0;
+    }
+
+    .tab {
+      display: none;
+      animation: fadeIn 0.15s ease-out;
+    }
+
+    .tab.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      padding: 10px 12px 12px;
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.06);
+    }
+
+    .card h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+
+    .card small {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* Task lists */
+    .task-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 230px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 4px;
+      border-radius: 10px;
+    }
+
+    .task-item:nth-child(odd) {
+      background: #f9fafb;
+    }
+
+    .task-item .text {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .task-item.done .text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+
+    .task-item button {
+      border: none;
+      font-size: 0.95rem;
+      border-radius: 999px;
+      padding: 3px 8px;
+    }
+
+    .task-item .check {
+      min-width: 28px;
+      background: #e5e7eb;
+    }
+
+    .task-item.done .check {
+      background: #bbf7d0;
+    }
+
+    .task-item .delete {
+      background: #fee2e2;
+      min-width: 28px;
+    }
+
+    .task-add-form {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .task-add-form input {
+      flex: 1;
+      font-size: 0.9rem;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .task-add-form button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* Textareas */
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      border-radius: 14px;
+      border: 1px solid #e5e7eb;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+      resize: vertical;
+    }
+
+    /* Log buttons + lists */
+    .log-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .log-buttons button {
+      flex: 1 1 100px;
+      border-radius: 999px;
+      border: none;
+      padding: 6px 8px;
+      font-size: 0.8rem;
+      background: #f9fafb;
+    }
+
+    .log-buttons button:active {
+      transform: scale(0.98);
+    }
+
+    .log-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      max-height: 160px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      font-size: 0.85rem;
+    }
+
+    .log-list li {
+      padding: 4px 2px;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .pill-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+
+    .pill {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: #f9fafb;
+      color: var(--muted);
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+
+    /* PIN overlay */
+    #pin-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    #pin-overlay.hidden {
+      display: none;
+    }
+
+    .pin-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 20px 18px 18px;
+      max-width: 280px;
+      width: 85%;
+      text-align: center;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.35);
+    }
+
+    .pin-card h2 {
+      margin: 0 0 4px;
+      font-size: 1.2rem;
+    }
+
+    .pin-card p {
+      margin: 0 0 10px;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    #pin-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    #pin-input {
+      font-size: 1.3rem;
+      letter-spacing: 0.4em;
+      text-align: center;
+      padding: 6px 8px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      width: 130px;
+    }
+
+    #pin-form button {
+      border: none;
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 0.9rem;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .pin-error {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #dc2626;
+      min-height: 1em;
+    }
+  </style>
+</head>
+<body>
+  <!-- PIN overlay -->
+  <div id="pin-overlay">
+    <div class="pin-card">
+      <h2>Enter PIN</h2>
+      <p>This planner is locked. Enter your 4-digit code.</p>
+      <form id="pin-form">
+        <input
+          id="pin-input"
+          type="password"
+          inputmode="numeric"
+          maxlength="4"
+          autocomplete="off"
+          placeholder="••••"
+        />
+        <button type="submit">Unlock</button>
+        <p id="pin-error" class="pin-error" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+
+  <div class="app">
+    <header>
+      <h1>My All-in-One Planner</h1>
+      <p id="today-label">Today</p>
+    </header>
+
+    <nav class="tab-bar">
+      <button class="tab-button active" data-tab-target="tab-today">Today</button>
+      <button class="tab-button" data-tab-target="tab-mom">Mom / Baby</button>
+      <button class="tab-button" data-tab-target="tab-work">Work</button>
+      <button class="tab-button" data-tab-target="tab-home">Home</button>
+      <button class="tab-button" data-tab-target="tab-brain">Brain Dump</button>
+    </nav>
+
+    <main>
+      <!-- TODAY TAB -->
+      <section id="tab-today" class="tab active">
+        <div class="grid">
+          <div class="card">
+            <h2>Daily 3</h2>
+            <small>Only three must-dos for today.</small>
+            <ul id="daily-three-list" class="task-list" data-storage-key="dailyThree"></ul>
+            <form class="task-add-form" data-list-id="daily-three-list">
+              <input type="text" placeholder="Add a focus task…" autocomplete="off" />
+              <button type="submit">＋</button>
+            </form>
+            <p class="hint">ADHD trick: when overwhelmed, just pick these three.</p>
+          </div>
+
+          <div class="card">
+            <h2>Schedule Sketch</h2>
+            <small>Rough blocks for the day.</small>
+            <textarea
+              data-storage-key="scheduleSketch"
+              placeholder="Morning:&#10;• &#10;Midday:&#10;• &#10;Afternoon / Evening:&#10;• ">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>Quick Check-ins</h2>
+            <small>Taps for a fast self-scan.</small>
+            <div class="pill-row">
+              <span class="pill">Energy: 💤 😐 ⚡️</span>
+              <span class="pill">Overwhelm: low • medium • high</span>
+              <span class="pill">One kind thing for myself?</span>
+            </div>
+            <textarea
+              data-storage-key="checkinNotes"
+              placeholder="Any quick notes about how you're feeling or what you need today…">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>Life Admin</h2>
+            <small>Calls, emails, tiny annoying tasks.</small>
+            <ul id="admin-task-list" class="task-list" data-storage-key="adminTasks"></ul>
+            <form class="task-add-form" data-list-id="admin-task-list">
+              <input type="text" placeholder="Call / email / tiny task…" autocomplete="off" />
+              <button type="submit">＋</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- MOM / BABY TAB -->
+      <section id="tab-mom" class="tab">
+        <div class="grid">
+          <div class="card">
+            <h2>Baby Log</h2>
+            <small>Tap to log; it will add the time automatically.</small>
+            <div class="log-buttons">
+              <button data-log-target="baby-log-list" data-log-label="Feeding">Feeding 🍼</button>
+              <button data-log-target="baby-log-list" data-log-label="Nap">Nap 😴</button>
+              <button data-log-target="baby-log-list" data-log-label="Diaper">Diaper 💩</button>
+              <button data-log-target="baby-log-list" data-log-label="Meds">Meds 💊</button>
+            </div>
+            <ul id="baby-log-list" class="log-list" data-storage-key="babyLog"></ul>
+          </div>
+
+          <div class="card">
+            <h2>Health & Questions</h2>
+            <small>Things to mention to the pediatrician, your partner, etc.</small>
+            <textarea
+              data-storage-key="babyHealthNotes"
+              placeholder="Spit-up, rash, sleep changes, questions for doctor…">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>My Needs</h2>
+            <small>New-mom brain is real. This is just for you.</small>
+            <textarea
+              data-storage-key="momSelfCare"
+              placeholder="Showers, naps, appointments, meds, therapy, things that would help you feel supported…">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>Shared Notes</h2>
+            <small>What your partner / family should know today.</small>
+            <textarea
+              data-storage-key="sharedNotes"
+              placeholder="Updates, reminders, or wishes for help…">
+            </textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- WORK TAB -->
+      <section id="tab-work" class="tab">
+        <div class="grid">
+          <div class="card">
+            <h2>Today at Work</h2>
+            <small>Top work priorities (not every task).</small>
+            <ul id="work-task-list" class="task-list" data-storage-key="workTasks"></ul>
+            <form class="task-add-form" data-list-id="work-task-list">
+              <input type="text" placeholder="Lesson, email, project step…" autocomplete="off" />
+              <button type="submit">＋</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Schedule / Classes</h2>
+            <small>Quick sketch of your letter-day schedule.</small>
+            <textarea
+              data-storage-key="workSchedule"
+              placeholder="A-Day:&#10;• &#10;B-Day:&#10;• &#10;C-Day:&#10;• &#10;D-Day:&#10;• &#10;E-Day:&#10;• ">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>Projects & Ideas</h2>
+            <small>LRC Quest, choice boards, events, etc.</small>
+            <textarea
+              data-storage-key="workProjects"
+              placeholder="• Genre World tweaks&#10;• Upcoming choice board ideas&#10;• Read-a-thon / house points…">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>Admin / Evidence</h2>
+            <small>Stuff you may want later for Danielson, evaluations, or emails.</small>
+            <textarea
+              data-storage-key="workAdminEvidence"
+              placeholder="Note any moments or tasks you might want to remember professionally…">
+            </textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOME TAB -->
+      <section id="tab-home" class="tab">
+        <div class="grid">
+          <div class="card">
+            <h2>Home Tasks</h2>
+            <small>Just today or this week (not everything). </small>
+            <ul id="home-task-list" class="task-list" data-storage-key="homeTasks"></ul>
+            <form class="task-add-form" data-list-id="home-task-list">
+              <input type="text" placeholder="Laundry, dishes, appointment, etc." autocomplete="off" />
+              <button type="submit">＋</button>
+            </form>
+          </div>
+
+          <div class="card">
+            <h2>Groceries & Meals</h2>
+            <small>Quick list + loose plan.</small>
+            <textarea
+              data-storage-key="groceriesMeals"
+              placeholder="Groceries:&#10;• &#10;Meals:&#10;• ">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>Bills & Money</h2>
+            <small>What’s coming up soon?</small>
+            <textarea
+              data-storage-key="billsMoney"
+              placeholder="Upcoming bills, renewals, or money things to remember…">
+            </textarea>
+          </div>
+
+          <div class="card">
+            <h2>House Projects</h2>
+            <small>Keep it tiny: one or two at a time.</small>
+            <textarea
+              data-storage-key="houseProjects"
+              placeholder="• Small thing this week&#10;• Bigger thing later&#10;• Someday…">
+            </textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- BRAIN DUMP TAB -->
+      <section id="tab-brain" class="tab">
+        <div class="card">
+          <h2>Brain Dump</h2>
+          <small>Throw everything here when your brain is buzzing.</small>
+          <textarea
+            data-storage-key="brainDump"
+            placeholder="Type or dictate anything that’s bouncing around in your head. You can sort it later into work / home / today.">
+          </textarea>
+          <p class="hint">ADHD-friendly rule: nothing is too small or silly for the brain dump. If it’s in your head, it belongs here.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Planner logic using LRC Quest core -->
+  <script type="module">
+    // Adjust this path if planner.html is in a subfolder
+    import { auth, db, requireLogin } from './scripts/lrcQuestCore.js';
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const ACCESS_PIN = '9134';
+
+      // ----- PIN OVERLAY -----
+      const pinOverlay = document.getElementById('pin-overlay');
+      const pinForm = document.getElementById('pin-form');
+      const pinInput = document.getElementById('pin-input');
+      const pinError = document.getElementById('pin-error');
+
+      function showPinOverlay() {
+        pinOverlay.classList.remove('hidden');
+        pinInput.value = '';
+        pinError.textContent = '';
+        // focus is best-effort on iPad; may require tap
+        setTimeout(() => pinInput.focus(), 50);
+      }
+
+      function hidePinOverlay() {
+        pinOverlay.classList.add('hidden');
+      }
+
+      // Remember PIN for this browser tab/session only
+      if (sessionStorage.getItem('plannerPinOK') === 'yes') {
+        hidePinOverlay();
+      } else {
+        showPinOverlay();
+      }
+
+      pinForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const entered = pinInput.value.trim();
+        if (entered === ACCESS_PIN) {
+          sessionStorage.setItem('plannerPinOK', 'yes');
+          hidePinOverlay();
+        } else {
+          pinError.textContent = 'Wrong PIN. Try again.';
+          pinInput.value = '';
+          pinInput.focus();
+        }
+      });
+
+      // ----- DATE LABEL -----
+      const todayLabel = document.getElementById('today-label');
+      const today = new Date();
+      const options = { weekday: 'long', month: 'short', day: 'numeric' };
+      todayLabel.textContent = today.toLocaleDateString(undefined, options);
+
+      // ----- TABS -----
+      const tabButtons = document.querySelectorAll('.tab-button');
+      const tabs = document.querySelectorAll('.tab');
+
+      tabButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.tabTarget;
+          tabButtons.forEach(b => b.classList.remove('active'));
+          tabs.forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById(targetId).classList.add('active');
+        });
+      });
+
+      // ----- TASK HELPERS -----
+      function saveTasks(listEl, key) {
+        const tasks = [];
+        listEl.querySelectorAll('.task-item').forEach(li => {
+          tasks.push({
+            text: li.querySelector('.text').textContent,
+            done: li.classList.contains('done')
+          });
+        });
+        localStorage.setItem(key, JSON.stringify(tasks));
+      }
+
+      function addTaskToList(listEl, key, text, done) {
+        const li = document.createElement('li');
+        li.className = 'task-item';
+        if (done) li.classList.add('done');
+        li.innerHTML = `
+          <button class="check">${done ? '✓' : '○'}</button>
+          <span class="text"></span>
+          <button class="delete">×</button>
+        `;
+        li.querySelector('.text').textContent = text;
+        listEl.appendChild(li);
+        saveTasks(listEl, key);
+      }
+
+      // ----- EXPORT / IMPORT PLANNER STATE -----
+      function exportPlannerState() {
+        const state = {
+          tasks: {},
+          textareas: {},
+          logs: {}
+        };
+
+        document.querySelectorAll('.task-list').forEach(listEl => {
+          const key = listEl.dataset.storageKey;
+          const arr = [];
+          listEl.querySelectorAll('.task-item').forEach(li => {
+            arr.push({
+              text: li.querySelector('.text').textContent,
+              done: li.classList.contains('done')
+            });
+          });
+          state.tasks[key] = arr;
+        });
+
+        document.querySelectorAll('textarea[data-storage-key]').forEach(area => {
+          state.textareas[area.dataset.storageKey] = area.value;
+        });
+
+        document.querySelectorAll('.log-list').forEach(listEl => {
+          const key = listEl.dataset.storageKey;
+          const arr = [];
+          listEl.querySelectorAll('li').forEach(li => {
+            arr.push(li.textContent);
+          });
+          state.logs[key] = arr;
+        });
+
+        return state;
+      }
+
+      function importPlannerState(state) {
+        if (!state) return;
+
+        // Tasks
+        if (state.tasks) {
+          document.querySelectorAll('.task-list').forEach(listEl => {
+            const key = listEl.dataset.storageKey;
+            const tasks = state.tasks[key] || [];
+            listEl.innerHTML = '';
+            tasks.forEach(t => {
+              addTaskToList(listEl, key, t.text, t.done);
+            });
+          });
+        }
+
+        // Textareas
+        if (state.textareas) {
+          document.querySelectorAll('textarea[data-storage-key]').forEach(area => {
+            const k = area.dataset.storageKey;
+            if (Object.prototype.hasOwnProperty.call(state.textareas, k)) {
+              area.value = state.textareas[k];
+              localStorage.setItem(k, area.value);
+            }
+          });
+        }
+
+        // Logs
+        if (state.logs) {
+          document.querySelectorAll('.log-list').forEach(listEl => {
+            const key = listEl.dataset.storageKey;
+            const items = state.logs[key] || [];
+            localStorage.setItem(key, JSON.stringify(items));
+            listEl.innerHTML = '';
+            items.forEach(text => {
+              const li = document.createElement('li');
+              li.textContent = text;
+              listEl.appendChild(li);
+            });
+          });
+        }
+      }
+
+      // ----- INITIAL LOCAL LOAD (offline-friendly) -----
+      document.querySelectorAll('.task-list').forEach(listEl => {
+        const key = listEl.dataset.storageKey;
+        const stored = JSON.parse(localStorage.getItem(key) || '[]');
+        stored.forEach(task => addTaskToList(listEl, key, task.text, task.done));
+      });
+
+      // Add tasks
+      document.querySelectorAll('.task-add-form').forEach(form => {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          const input = form.querySelector('input');
+          const text = input.value.trim();
+          if (!text) return;
+          const listId = form.dataset.listId;
+          const listEl = document.getElementById(listId);
+          const key = listEl.dataset.storageKey;
+          addTaskToList(listEl, key, text, false);
+          input.value = '';
+          scheduleCloudSave();
+        });
+      });
+
+      // Check / delete / log clicks
+      document.addEventListener('click', (e) => {
+        const checkBtn = e.target.closest('.check');
+        if (checkBtn) {
+          const li = checkBtn.closest('.task-item');
+          li.classList.toggle('done');
+          checkBtn.textContent = li.classList.contains('done') ? '✓' : '○';
+          const listEl = li.closest('.task-list');
+          const key = listEl.dataset.storageKey;
+          saveTasks(listEl, key);
+          scheduleCloudSave();
+          return;
+        }
+
+        const deleteBtn = e.target.closest('.delete');
+        if (deleteBtn) {
+          const li = deleteBtn.closest('.task-item');
+          const listEl = li.closest('.task-list');
+          const key = listEl.dataset.storageKey;
+          li.remove();
+          saveTasks(listEl, key);
+          scheduleCloudSave();
+        }
+      });
+
+      // Textareas
+      document.querySelectorAll('textarea[data-storage-key]').forEach(area => {
+        const key = area.dataset.storageKey;
+        const stored = localStorage.getItem(key);
+        if (stored !== null) {
+          area.value = stored;
+        }
+        area.addEventListener('input', () => {
+          localStorage.setItem(key, area.value);
+          scheduleCloudSave();
+        });
+      });
+
+      // Logs
+      function renderLogList(listEl, items) {
+        listEl.innerHTML = '';
+        items.forEach(text => {
+          const li = document.createElement('li');
+          li.textContent = text;
+          listEl.appendChild(li);
+        });
+      }
+
+      document.querySelectorAll('.log-list').forEach(listEl => {
+        const key = listEl.dataset.storageKey;
+        const items = JSON.parse(localStorage.getItem(key) || '[]');
+        renderLogList(listEl, items);
+      });
+
+      document.querySelectorAll('[data-log-target]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const targetId = btn.dataset.logTarget;
+          const label = btn.dataset.logLabel || btn.textContent.trim();
+          const listEl = document.getElementById(targetId);
+          const key = listEl.dataset.storageKey;
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+          const entry = `${timeStr} — ${label}`;
+          const items = JSON.parse(localStorage.getItem(key) || '[]');
+          items.unshift(entry);
+          localStorage.setItem(key, JSON.stringify(items));
+          renderLogList(listEl, items);
+          scheduleCloudSave();
+        });
+      });
+
+      // ----- CLOUD SYNC WITH FIRESTORE VIA LRC QUEST LOGIN -----
+      let plannerDocRef = null;
+      let saveTimeout = null;
+
+      function scheduleCloudSave() {
+        if (!plannerDocRef) return;
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(() => {
+          const state = exportPlannerState();
+          plannerDocRef.set(state, { merge: true })
+            .catch(err => console.error('Error saving planner to cloud:', err));
+        }, 1500);
+      }
+
+      try {
+        // Use your existing Google login flow
+        await requireLogin();
+        const user = auth.currentUser;
+        if (!user) {
+          console.error('No authenticated user after requireLogin');
+          return;
+        }
+
+        plannerDocRef = db.collection('planner').doc(user.uid);
+
+        const snap = await plannerDocRef.get();
+        if (snap.exists) {
+          importPlannerState(snap.data());
+        } else {
+          await plannerDocRef.set(exportPlannerState());
+        }
+      } catch (err) {
+        console.error('Auth / planner load error:', err);
+      }
+    });
+  </script>
+</body>
+</html>
