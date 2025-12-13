@@ -1,0 +1,164 @@
+<!-- planner/dashboard.html -->
+<div class="card">
+  <div class="hd" style="display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h2>Dashboard</h2>
+      <div id="dashDate" class="small muted">Loading date…</div>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+      <button id="openAddApptBtn" class="btn">+ Appointment</button>
+      <button id="inkToggle" class="btn">Ink: OFF</button>
+    </div>
+  </div>
+
+  <div class="bd">
+    <!-- Today Timeline -->
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd" style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div>
+          <div style="font-weight:900;">Today Timeline</div>
+          <div class="small muted">15-minute blocks • appointments + anchors</div>
+        </div>
+        <div class="small muted">${/* placeholder */""}</div>
+      </div>
+      <div class="bd" style="padding:14px;">
+        <div id="dashTimeline" class="timeline"></div>
+      </div>
+    </div>
+
+    <!-- Morning + Evening Checklists -->
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:18px;">
+      <div class="card" style="margin:0;">
+        <div class="hd">
+          <div style="font-weight:900;">Home Morning Tasks</div>
+          <div class="small muted">Anchored at 6:00am</div>
+        </div>
+        <div class="bd" style="padding:14px;">
+          <div id="morningList"></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin:0;">
+        <div class="hd">
+          <div style="font-weight:900;">Home Evening Tasks</div>
+          <div class="small muted">Anchored at 5:00pm</div>
+        </div>
+        <div class="bd" style="padding:14px;">
+          <div id="eveningList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Add -->
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Quick Add</div>
+        <div class="small muted">Brain-dump into Inbox. Drag tasks onto Weekly to schedule.</div>
+      </div>
+      <div class="bd" style="padding:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        <input id="quickTask" class="input" style="flex:1; min-width:220px;" placeholder="Add a task (e.g., email Cavello / daycare call / prep lesson)..." />
+        <button id="addQuickTaskBtn" class="btn primary">Add</button>
+      </div>
+    </div>
+
+    <!-- Must / Should / Could -->
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Tasks for Today</div>
+        <div class="small muted">Auto-sorted, but you stay in control (↑ / ↓). Drag to Weekly to time-block.</div>
+      </div>
+      <div class="bd" style="padding:14px;">
+        <div class="taskColumns">
+          <div class="taskCol">
+            <h3>Must</h3>
+            <div id="mustCol"></div>
+          </div>
+          <div class="taskCol">
+            <h3>Should</h3>
+            <div id="shouldCol"></div>
+          </div>
+          <div class="taskCol">
+            <h3>Could</h3>
+            <div id="couldCol"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inbox (optional view) -->
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Inbox</div>
+        <div class="small muted">Drag any task onto the Weekly schedule to convert it into a time block.</div>
+      </div>
+      <div class="bd" style="padding:14px;">
+        <div id="inboxList"></div>
+      </div>
+    </div>
+
+    <!-- Habits + Pomodoro + Ink Notes -->
+    <div style="display:grid; grid-template-columns: 1.1fr .9fr; gap:16px;">
+      <!-- Habits -->
+      <div class="card" style="margin:0;">
+        <div class="hd" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-weight:900;">Habits</div>
+            <div class="small muted">Turns green when you hit your daily goal</div>
+          </div>
+          <button class="btn" data-nav="habitHistory">History</button>
+        </div>
+        <div class="bd" style="padding:14px;">
+          <div id="habitsSummary"></div>
+        </div>
+      </div>
+
+      <!-- Pomodoro -->
+      <div class="card" style="margin:0;">
+        <div class="hd">
+          <div style="font-weight:900;">Pomodoro</div>
+          <div class="small muted">Gentle structure for inattentive ADHD</div>
+        </div>
+        <div class="bd" id="pomoWrap" style="padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div>
+              <div class="small muted">Mode</div>
+              <div id="pomoMode" style="font-weight:900; font-size:1.1rem;">Focus</div>
+            </div>
+            <div id="pomoTime" style="font-weight:950; font-size:1.8rem;">25:00</div>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="pomoStart" class="btn primary">Start</button>
+            <button id="pomoFocus" class="btn">Focus</button>
+            <button id="pomoBreak" class="btn">Break</button>
+          </div>
+
+          <div class="small muted" style="margin-top:10px;">
+            Tip: If you get “stuck,” start a 5-minute break, then do 1 tiny step.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Daily Ink Notes (mixed mode) -->
+    <div class="card" style="margin:18px 0 0 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Daily Notes (Ink)</div>
+        <div class="small muted">Toggle Ink ON to write with Apple Pencil. OFF = tap/type normally.</div>
+      </div>
+      <div class="bd" style="padding:14px;">
+        <div id="dailyInkToolbar"></div>
+        <div id="dailyInkWrap" class="inkWrap" style="height:240px; border-radius:18px; border:1px solid var(--border); background:#fff; overflow:hidden;">
+          <!-- canvas injected by ink.js -->
+          <div style="padding:14px; position:relative; z-index:1;">
+            <div class="small muted">
+              You can type here while ink is OFF. When ink is ON, write directly over this area.
+            </div>
+            <textarea class="input" style="width:100%; margin-top:10px; min-height:120px;" placeholder="Typed notes (optional)…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

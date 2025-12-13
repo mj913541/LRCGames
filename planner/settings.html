@@ -1,95 +1,121 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Planner • Settings</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body data-page="settings">
-  <div class="container">
-    <div class="nav">
-      <div class="left">
-        <a class="btn" href="index.html">← Dashboard</a>
-        <div class="badge" id="userPill">…</div>
+<!-- planner/settings.html -->
+<div class="card">
+  <div class="hd">
+    <h2>Settings</h2>
+    <div class="small muted">Adjust your A/B/C/D/E templates + weekday fallback mapping.</div>
+  </div>
+
+  <div class="bd">
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Weekday fallback letter map</div>
+        <div class="small muted">Used only when a date isn’t in your PDF date→letter map.</div>
       </div>
-      <div class="right">
-        <a class="btn" href="weekly.html">Weekly</a>
-        <a class="btn" href="habits.html">Habits</a>
+      <div class="bd" style="padding:14px;">
+        <div style="display:grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap:10px;">
+          <div>
+            <label class="small">Mon</label>
+            <input id="mapMon" class="input" />
+          </div>
+          <div>
+            <label class="small">Tue</label>
+            <input id="mapTue" class="input" />
+          </div>
+          <div>
+            <label class="small">Wed</label>
+            <input id="mapWed" class="input" />
+          </div>
+          <div>
+            <label class="small">Thu</label>
+            <input id="mapThu" class="input" />
+          </div>
+          <div>
+            <label class="small">Fri</label>
+            <input id="mapFri" class="input" />
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="grid cols-2">
-      <div class="card">
-        <div class="hd">
-          <h2>Week letter-days</h2>
-          <div class="small">Pick which letter-day applies to each weekday</div>
-        </div>
-        <div class="bd">
-          <div class="split">
-            <div>
-              <label class="label">Mon</label>
-              <select class="field" id="mapMon">
-                <option>A</option><option>B</option><option>C</option><option>D</option><option>E</option>
-              </select>
-            </div>
-            <div>
-              <label class="label">Tue</label>
-              <select class="field" id="mapTue">
-                <option>A</option><option selected>B</option><option>C</option><option>D</option><option>E</option>
-              </select>
-            </div>
-          </div>
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd">
+        <div style="font-weight:900;">A/B/C/D/E schedule templates (JSON)
+        {
+  "A": [
+    { "start": "09:05", "end": "09:50", "title": "4th Rosenthal", "area": "lrc" },
+    { "start": "10:05", "end": "10:50", "title": "2nd Peterson", "area": "lrc" },
+    { "start": "11:05", "end": "11:50", "title": "3rd Hossain", "area": "lrc" },
+    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
+    { "start": "12:45", "end": "13:45", "title": "Admin", "area": "lrc" },
+    { "start": "13:45", "end": "14:30", "title": "5th Ultimo", "area": "lrc" },
+    { "start": "14:30", "end": "14:45", "title": "Prep", "area": "personal" },
+    { "start": "14:45", "end": "15:30", "title": "1st Rogers", "area": "lrc" }
+  ],
 
-          <div class="split" style="margin-top:10px">
-            <div>
-              <label class="label">Wed</label>
-              <select class="field" id="mapWed">
-                <option>A</option><option>B</option><option selected>C</option><option>D</option><option>E</option>
-              </select>
-            </div>
-            <div>
-              <label class="label">Thu</label>
-              <select class="field" id="mapThu">
-                <option>A</option><option>B</option><option>C</option><option selected>D</option><option>E</option>
-              </select>
-            </div>
-          </div>
+  "B": [
+    { "start": "09:05", "end": "09:50", "title": "4th Cavello", "area": "lrc" },
+    { "start": "10:05", "end": "10:50", "title": "2nd Schmidt", "area": "lrc" },
+    { "start": "11:05", "end": "12:05", "title": "Admin", "area": "lrc" },
+    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
+    { "start": "12:45", "end": "13:45", "title": "Admin", "area": "lrc" },
+    { "start": "13:45", "end": "14:30", "title": "5th Isibindi", "area": "lrc" }
+  ],
 
-          <div style="margin-top:10px">
-            <label class="label">Fri</label>
-            <select class="field" id="mapFri">
-              <option>A</option><option>B</option><option>C</option><option>D</option><option selected>E</option>
-            </select>
-          </div>
+  "C": [
+    { "start": "08:45", "end": "09:05", "title": "AM Duty & Opening", "area": "lrc" },
+    { "start": "09:05", "end": "09:50", "title": "Admin", "area": "lrc" },
+    { "start": "10:05", "end": "10:50", "title": "2nd Adams", "area": "lrc" },
+    { "start": "11:05", "end": "12:05", "title": "3rd Pulsa", "area": "lrc" },
+    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
+    { "start": "12:45", "end": "13:45", "title": "Admin", "area": "lrc" },
+    { "start": "13:45", "end": "14:30", "title": "5th Amistad", "area": "lrc" },
+    { "start": "14:30", "end": "15:30", "title": "Prep", "area": "personal" },
+    { "start": "15:30", "end": "15:45", "title": "Closing", "area": "lrc" }
+  ],
 
-          <div class="hr"></div>
-          <button class="btn primary" id="saveSettingsBtn" style="width:100%">Save Settings</button>
+  "D": [
+    { "start": "12:20", "end": "13:00", "title": "Lunch", "area": "personal" },
+    { "start": "12:45", "end": "14:45", "title": "Prep", "area": "personal" },
+    { "start": "14:45", "end": "15:30", "title": "1st Wilson", "area": "lrc" }
+  ],
+
+  "E": [
+    { "start": "09:05", "end": "09:50", "title": "4th Tomter", "area": "lrc" },
+    { "start": "10:05", "end": "10:50", "title": "Prep", "area": "personal" },
+    { "start": "11:05", "end": "12:05", "title": "3rd Carroll", "area": "lrc" },
+    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
+    { "start": "12:45", "end": "13:45", "title": "Prep", "area": "personal" },
+    { "start": "13:45", "end": "14:30", "title": "5th Reveur", "area": "lrc" },
+    { "start": "14:30", "end": "14:45", "title": "Prep", "area": "personal" },
+    { "start": "14:45", "end": "15:30", "title": "1st Day", "area": "lrc" }
+  ]
+}</div>
+
+        <div class="small muted">
+          Each letter has an array of blocks like:
+          <code>[{"start":"09:05","end":"09:50","title":"4th Cavello","location":"LRC"}]</code>
         </div>
       </div>
+      <div class="bd" style="padding:14px;">
+        <textarea id="scheduleJson" class="input" style="width:100%; min-height:320px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"></textarea>
+      </div>
+    </div>
 
-      <div class="card">
-        <div class="hd">
-          <h2>A/B/C/D/E schedule templates</h2>
-          <div class="small">Edit JSON (fast + flexible)</div>
-        </div>
-        <div class="bd">
-          <div class="small">
-            Format: each letter is an array of blocks:
-            <span class="tag">{"start":"09:05","end":"09:50","title":"4th","location":"LRC"}</span>
-          </div>
-          <div class="hr"></div>
-          <label class="label">Letter schedules JSON</label>
-          <textarea class="field" id="scheduleJson" style="min-height:360px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;"></textarea>
-          <div class="small" style="margin-top:8px">
-            Tip: paste your full A/B/C/D/E schedule here once, then Weekly auto-populates.
-          </div>
+    <div style="display:flex; justify-content:flex-end; gap:10px;">
+      <button id="saveSettingsBtn" class="btn primary">Save Settings</button>
+    </div>
+
+    <div class="card" style="margin:18px 0 0 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Tip</div>
+        <div class="small muted">Paste your real school-day templates here once, and Weekly auto-fills.</div>
+      </div>
+      <div class="bd" style="padding:14px;">
+        <div class="small muted">
+          If you want, I can generate the exact JSON for your A/B/C/D/E schedules from what you’ve already shared.
+          (A Day, B Day, C Day, D Day, E Day blocks.)
         </div>
       </div>
     </div>
   </div>
-
-  <script src="../scripts/lrcQuestCore.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+</div>

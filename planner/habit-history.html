@@ -1,27 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Planner • Habit History</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body data-page="habitHistory">
-  <div class="container">
-    <div class="nav">
-      <div class="left">
-        <a class="btn" href="habits.html">← Habits</a>
-        <div class="badge" id="userPill">…</div>
-      </div>
-      <div class="right">
-        <a class="btn" href="index.html">Dashboard</a>
-      </div>
+<!-- planner/habitHistory.html -->
+<div class="card">
+  <div class="hd" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div>
+      <h2>Habit History</h2>
+      <div class="small muted">Last 21 days • green = goal met</div>
     </div>
-
-    <div id="habitHistory"></div>
+    <button class="btn" data-nav="habits">Back to Habits</button>
   </div>
 
-  <script src="../scripts/lrcQuestCore.js"></script>
-  <script src="app.js"></script>
-</body>
-</html>
+  <div class="bd">
+    <div id="habitHistory">
+      <div class="loadingCard" style="box-shadow:none; border:1px solid var(--border);">
+        <div class="spinner"></div>
+        <div class="loadingText">Loading history…</div>
+      </div>
+    </div>
+  </div>
+</div>

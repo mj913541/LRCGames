@@ -1,166 +1,160 @@
+<!-- planner/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Planner • Dashboard</title>
+  <title>Planner</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-page="dashboard">
-  <div class="container">
-    <div class="nav">
-      <div class="left">
-        <div class="brand">
-          <div class="dot"></div>
-          <div>
-            <div style="font-weight:850">Planner</div>
-            <div class="small">ADHD-friendly • Pencil-friendly</div>
-          </div>
-        </div>
-        <div class="badge" id="userPill">…</div>
-      </div>
-      <div class="right">
-        <a class="btn" href="weekly.html">Weekly</a>
-        <a class="btn" href="habits.html">Habits</a>
-        <a class="btn" href="habit-history.html">Habit History</a>
-        <a class="btn" href="settings.html">Settings</a>
+
+<body class="theme-light">
+  <!-- Top App Bar -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brandDot"></div>
+      <div class="brandText">
+        <div class="brandTitle">Planner</div>
+        <div id="userPill" class="pill">Loading…</div>
       </div>
     </div>
 
-    <div class="grid cols-3">
-      <!-- Timeline -->
-      <div class="card">
-        <div class="hd">
-          <h2>Today</h2>
-          <div class="small" id="todayDate">…</div>
-        </div>
-        <div class="bd">
-          <div class="timeline" id="timeline"></div>
+    <nav class="nav">
+      <button class="navBtn" data-route="dashboard">Dashboard</button>
+      <button class="navBtn" data-route="weekly">Weekly</button>
+      <button class="navBtn" data-route="chores">Chores</button>
+      <button class="navBtn" data-route="habits">Habits</button>
+      <button class="navBtn" data-route="settings">Settings</button>
+    </nav>
 
-          <div class="hr"></div>
+    <div class="topbarRight">
+      <button id="syncBtn" class="btn">Sync</button>
+    </div>
+  </header>
 
-          <div class="split">
-            <div>
-              <div class="small" style="margin-bottom:8px">Home Morning Tasks (anchors at 6:00am)</div>
-              <div class="tasks" id="morningList"></div>
-            </div>
-            <div>
-              <div class="small" style="margin-bottom:8px">Home Evening Tasks (anchors at 5:00pm)</div>
-              <div class="tasks" id="eveningList"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tasks -->
-      <div class="card">
-        <div class="hd">
-          <h2>Tasks Today</h2>
-          <div class="small">Must / Should / Could</div>
-        </div>
-        <div class="bd">
-          <div class="tasks" id="tasksToday"></div>
-
-          <div class="hr"></div>
-
-          <div class="small" style="margin-bottom:8px">Quick capture to Inbox (drag to Weekly)</div>
-          <label class="label" for="quickTask">New task</label>
-          <input class="field" id="quickTask" placeholder="e.g., Email parent about book…" />
-          <div style="display:flex; gap:10px; margin-top:10px">
-            <button class="btn primary" id="addQuickTaskBtn">Add to Inbox</button>
-            <a class="btn" href="weekly.html">Open Weekly →</a>
-          </div>
-
-          <div class="hr"></div>
-
-          <div class="small" style="margin-bottom:8px">Inbox</div>
-          <div class="inboxList" id="inboxList"></div>
-        </div>
-      </div>
-
-      <!-- Right Column -->
-      <div class="grid" style="gap:14px">
-        <!-- Habits -->
-        <div class="card">
-          <div class="hd">
-            <h2>Habits</h2>
-            <a class="btn" href="habits.html">Open</a>
-          </div>
-          <div class="bd">
-            <div class="habitsGrid" id="habitsSummary"></div>
-          </div>
-        </div>
-
-        <!-- Pomodoro -->
-        <div class="card">
-          <div class="hd">
-            <h2>Pomodoro</h2>
-            <span class="tag" id="pomoMode">Focus</span>
-          </div>
-          <div class="bd">
-            <div class="pomo">
-              <div class="timerFace" id="pomoTime">25:00</div>
-              <button class="btn primary" id="pomoStart">Start</button>
-              <button class="btn" id="pomoFocus">Focus</button>
-              <button class="btn" id="pomoBreak">Break</button>
-            </div>
-            <div class="small" style="margin-top:10px">
-              ADHD tip: start with “just 5 minutes” break mode if you’re stuck.
-            </div>
-          </div>
-        </div>
-
-        <!-- Add appointments -->
-        <div class="card">
-          <div class="hd">
-            <h2>Add appointments</h2>
-            <span class="small">Shows on timeline</span>
-          </div>
-          <div class="bd">
-            <div class="split">
-              <div>
-                <div class="small" style="margin-bottom:8px">Home appointment</div>
-                <label class="label">Title</label>
-                <input class="field" id="homeApptTitle" placeholder="Doctor / daycare / etc." />
-                <div class="split" style="margin-top:10px">
-                  <div>
-                    <label class="label">Start</label>
-                    <input class="field" id="homeApptStart" type="time" value="09:00" />
-                  </div>
-                  <div>
-                    <label class="label">End</label>
-                    <input class="field" id="homeApptEnd" type="time" value="09:30" />
-                  </div>
-                </div>
-                <button class="btn primary" style="margin-top:10px; width:100%" id="addHomeApptBtn">Add Home</button>
-              </div>
-
-              <div>
-                <div class="small" style="margin-bottom:8px">LRC appointment</div>
-                <label class="label">Title</label>
-                <input class="field" id="lrcApptTitle" placeholder="Meeting / lesson / duty…" />
-                <div class="split" style="margin-top:10px">
-                  <div>
-                    <label class="label">Start</label>
-                    <input class="field" id="lrcApptStart" type="time" value="10:00" />
-                  </div>
-                  <div>
-                    <label class="label">End</label>
-                    <input class="field" id="lrcApptEnd" type="time" value="10:30" />
-                  </div>
-                </div>
-                <button class="btn primary" style="margin-top:10px; width:100%" id="addLrcApptBtn">Add LRC</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
+  <!-- Main Mount -->
+  <main class="shell">
+    <div id="pageHost" class="pageHost">
+      <!-- SPA will inject pages here -->
+      <div class="loadingCard">
+        <div class="spinner"></div>
+        <div class="loadingText">Opening your planner…</div>
+        <div class="loadingSub">Tip: works best in Safari on iPad with Apple Pencil.</div>
       </div>
     </div>
-  </div>
+  </main>
 
-  <!-- Your LRC Quest core (adjust path if needed) -->
+  <!-- Modal Mount -->
+  <div id="modalHost" class="modalHost" aria-hidden="true"></div>
+
+  <!--
+    IMPORTANT:
+    This planner expects your existing Firebase + Google Sign-In setup via lrcQuestCore.js.
+    Adjust the path below if your core file lives elsewhere.
+
+    Common options:
+      - ../scripts/lrcQuestCore.js  (planner/ next to scripts/)
+      - /scripts/lrcQuestCore.js    (scripts/ at site root)
+  -->
   <script src="../scripts/lrcQuestCore.js"></script>
+
+  <!-- App scripts (order matters) -->
   <script src="app.js"></script>
+  <script src="ui.js"></script>
+  <script src="ink.js"></script>
+  <script src="chores.js"></script>
+
+  <script>
+    // ---------- Tiny SPA Router ----------
+    // Routes map to HTML partial files in this same folder.
+    const ROUTES = {
+      dashboard: "dashboard.html",
+      weekly: "weekly.html",
+      chores: "chores.html",
+      habits: "habits.html",
+      habitHistory: "habitHistory.html",
+      settings: "settings.html"
+    };
+
+    function setActiveNav(route) {
+      document.querySelectorAll(".navBtn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.route === route);
+      });
+    }
+
+    async function loadPartial(route) {
+      const file = ROUTES[route] || ROUTES.dashboard;
+      const host = document.getElementById("pageHost");
+      host.innerHTML = `
+        <div class="loadingCard">
+          <div class="spinner"></div>
+          <div class="loadingText">Loading ${route}…</div>
+        </div>
+      `;
+
+      const res = await fetch(file, { cache: "no-cache" });
+      if (!res.ok) {
+        host.innerHTML = `
+          <div class="card">
+            <div class="hd"><h2>Couldn’t load ${file}</h2></div>
+            <div class="bd">
+              <p class="muted">Make sure the file exists in <code>planner/</code> and GitHub Pages is serving it.</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+      const html = await res.text();
+      host.innerHTML = html;
+
+      // Tell our JS which "screen" we’re on
+      document.body.dataset.page = route;
+
+      // Let the app re-render for this route (defined in app.js)
+      if (window.PlannerApp?.onRouteLoaded) {
+        await window.PlannerApp.onRouteLoaded(route);
+      }
+
+      setActiveNav(route);
+      // Update hash for deep-linking
+      location.hash = "#" + route;
+      // Scroll to top for new screen
+      host.scrollTop = 0;
+      window.scrollTo(0, 0);
+    }
+
+    function getRouteFromHash() {
+      const raw = (location.hash || "#dashboard").replace("#", "").trim();
+      return ROUTES[raw] ? raw : "dashboard";
+    }
+
+    // Nav click
+    document.querySelectorAll(".navBtn").forEach(btn => {
+      btn.addEventListener("click", () => loadPartial(btn.dataset.route));
+    });
+
+    // Sync button (uses saveState() from app.js)
+    document.getElementById("syncBtn").addEventListener("click", async () => {
+      try {
+        if (window.PlannerApp?.saveNow) {
+          await window.PlannerApp.saveNow();
+        }
+      } catch (e) {
+        // UI will show local mode if needed
+      }
+    });
+
+    // First load
+    window.addEventListener("DOMContentLoaded", async () => {
+      // Init app core first (defined in app.js)
+      if (window.PlannerApp?.init) {
+        await window.PlannerApp.init();
+      }
+      await loadPartial(getRouteFromHash());
+    });
+
+    // Back/forward support
+    window.addEventListener("hashchange", () => loadPartial(getRouteFromHash()));
+  </script>
 </body>
 </html>
