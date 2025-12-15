@@ -101,6 +101,45 @@
     });
   }
 
+  function setNoSchoolBanner(isNoSchool) {
+    const el = $("#noSchoolBanner");
+    if (!el) return;
+    el.classList.toggle("hidden", !isNoSchool);
+  }
+
+  function getLetterDayForISO(iso) {
+    // Prefer app helper if present
+    if (window.PlannerApp?.getLetterDayForDate) return window.PlannerApp.getLetterDayForDate(iso);
+
+    const map = window.PlannerApp?.getSettings?.()?.letterDayByDate || {};
+    if (Object.prototype.hasOwnProperty.call(map, iso)) return map[iso]; // may be null
+    return undefined;
+  }
+
+  function tryApplyTemplateIfEmpty(iso) {
+    // Prefer app helper if present (best place for this logic)
+    if (window.PlannerApp?.ensureTemplateAppliedIfEmpty) {
+      return window.PlannerApp.ensureTemplateAppliedIfEmpty(iso);
+    }
+
+    // Fallback: very conservative (never overwrite)
+    const app = window.PlannerApp;
+    const letter = getLetterDayForISO(iso);
+    if (letter === undefined) return { applied: false, reason: "unknown-date" };
+    if (letter === null) return { applied: false, reason: "no-school" };
+
+    const day = app.ensureDay(iso);
+    const existing = app.getScheduledBlocks?.(iso) || day?.scheduledBlocks || [];
+    if (Array.isArray(existing) && existing.length > 0) return { applied: false, reason: "already-has-blocks" };
+
+    const tpl = app.getSettings()?.letterSchedules?.[letter];
+    if (!tpl?.blocks?.length) return { applied: false, reason: "missing-template" };
+
+    // If app has an API to set blocks, we should use it. Otherwise, do nothing.
+    // (Most builds should have ensureTemplateAppliedIfEmpty in app.js, so this fallback rarely runs.)
+    return { applied: false, reason: "no-app-helper" };
+  }
+
   /* =========================================================
      Timeline rendering (15-min slots)
      ========================================================= */
@@ -556,6 +595,28 @@
     if (!host) return;
 
     const days = app.getWeekRange(new Date());
+
+    // Banner: show if the selected "week context" has at least one no-school day
+    // (We’ll refine later if you add week navigation.)
+    let anyNoSchool = false;
+
+    // Auto-populate templates for EMPTY days (never overwrite)
+    let changed = false;
+    for (const d of days) {
+      const iso = todayISO(d);
+      const res = tryApplyTemplateIfEmpty(iso);
+      if (res?.applied) changed = true;
+
+      const letter = getLetterDayForISO(iso);
+      if (letter === null) anyNoSchool = true;
+    }
+    if (changed) {
+      // Save once after batch apply
+      app.saveNow().catch(() => {});
+    }
+
+    setNoSchoolBanner(anyNoSchool);
+
     host.innerHTML = "";
 
     for (const d of days) {
@@ -626,9 +687,6 @@
 
       wrap.appendChild(tl);
 
-      // Weekly ink overlay (one canvas for the whole weekly board area)
-      // We'll mount a single canvas that covers the entire #weeklyInkWrap,
-      // not each day column. See weekly.html layout.
       bd.appendChild(wrap);
       col.appendChild(hd);
       col.appendChild(bd);
@@ -881,8 +939,9 @@
 
   function wireSettingsHandlers() {
     $("#saveSettingsBtn")?.addEventListener("click", async () => {
-      // Week map
       const s = PlannerApp.getSettings();
+
+      // Week map
       s.weekLetterMap = {
         Mon: $("#mapMon")?.value || "A",
         Tue: $("#mapTue")?.value || "B",
@@ -891,13 +950,26 @@
         Fri: $("#mapFri")?.value || "E"
       };
 
-      // Letter schedule JSON
-      try {
-        const parsed = JSON.parse($("#scheduleJson")?.value || "{}");
-        s.letterSchedules = parsed;
-      } catch (e) {
-        alert("Schedule JSON is invalid. Fix it and try again.");
-        return;
+      // Optional JSON overrides (blank = keep current)
+      const schedStr = ($("#scheduleJson")?.value || "").trim();
+      const mapStr = ($("#dateMapJson")?.value || "").trim();
+
+      if (schedStr.length) {
+        try {
+          s.letterSchedules = JSON.parse(schedStr);
+        } catch (e) {
+          alert("Schedule JSON is invalid. Fix it and try again.");
+          return;
+        }
+      }
+
+      if (mapStr.length) {
+        try {
+          s.letterDayByDate = JSON.parse(mapStr);
+        } catch (e) {
+          alert("Date Map JSON is invalid. Fix it and try again.");
+          return;
+        }
       }
 
       // Save settings back into state
@@ -914,7 +986,10 @@
     $("#mapWed") && ($("#mapWed").value = s.weekLetterMap.Wed || "C");
     $("#mapThu") && ($("#mapThu").value = s.weekLetterMap.Thu || "D");
     $("#mapFri") && ($("#mapFri").value = s.weekLetterMap.Fri || "E");
+
+    // Put JSON into textareas (optional edits)
     $("#scheduleJson") && ($("#scheduleJson").value = JSON.stringify(s.letterSchedules || {}, null, 2));
+    $("#dateMapJson") && ($("#dateMapJson").value = JSON.stringify(s.letterDayByDate || {}, null, 2));
   }
 
   /* =========================================================
