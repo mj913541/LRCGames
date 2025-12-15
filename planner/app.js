@@ -35,7 +35,10 @@
       if (route === "weekly") {
         const wk = weekKey(new Date());
         ensureWeek(wk);
+
+        // Safe auto-populate that never overwrites existing blocks
         autoPopulateWeekIfEmpty(wk);
+
         await saveState();
       }
 
@@ -65,6 +68,10 @@
     ensureWeek,
     weekKey,
     getWeekRange,
+
+    /* ---------- Letter day helpers ---------- */
+    getLetterDayForDate,
+    ensureTemplateAppliedIfEmpty,
 
     /* ---------- Appointments (synced) ---------- */
     getAppointments(iso) {
@@ -168,7 +175,7 @@
       PlannerApp.state.weeks[wk].days[dateISO] ||= { scheduled: [] };
       const b = {
         id: uid(),
-        kind: block.kind || "task", // task|lrc|home|appt
+        kind: block.kind || "task", // task|lrc|home
         title: block.title || "Block",
         startMin: Number(block.startMin ?? 9 * 60),
         endMin: Number(block.endMin ?? 9 * 60 + 30),
@@ -212,7 +219,11 @@
         kind: "task",
         title: task.title,
         startMin,
-        endMin: clamp(startMin + durationMin, startMin + PlannerApp.settings.timelineStep, minutesFromHHMM(PlannerApp.settings.dayEnd)),
+        endMin: clamp(
+          startMin + durationMin,
+          startMin + PlannerApp.settings.timelineStep,
+          minutesFromHHMM(PlannerApp.settings.dayEnd)
+        ),
         source: { from: "taskList", originalTask: { ...task }, fromList, fromDateISO: dateISO }
       });
 
@@ -347,13 +358,59 @@
       homeMorningAnchor: "06:00",
       homeEveningAnchor: "17:00",
 
-      // School letter day templates (you can paste your full schedules in settings later)
-      letterSchedules: { A: [], B: [], C: [], D: [], E: [] },
+      // School letter day templates (DEFAULTS NOW FILLED)
+      letterSchedules: {
+        A: [
+          { start: "09:05", end: "09:50", title: "4th Rosenthal", area: "lrc" },
+          { start: "10:05", end: "10:50", title: "2nd Peterson", area: "lrc" },
+          { start: "11:05", end: "11:50", title: "3rd Hossain", area: "lrc" },
+          { start: "12:05", end: "12:45", title: "Lunch", area: "personal" },
+          { start: "12:45", end: "13:45", title: "Admin", area: "lrc" },
+          { start: "13:45", end: "14:30", title: "5th Ultimo", area: "lrc" },
+          { start: "14:30", end: "14:45", title: "Prep", area: "personal" },
+          { start: "14:45", end: "15:30", title: "1st Rogers", area: "lrc" }
+        ],
+        B: [
+          { start: "09:05", end: "09:50", title: "4th Cavello", area: "lrc" },
+          { start: "10:05", end: "10:50", title: "2nd Schmidt", area: "lrc" },
+          { start: "11:05", end: "12:05", title: "Admin", area: "lrc" },
+          { start: "12:05", end: "12:45", title: "Lunch", area: "personal" },
+          { start: "12:45", end: "13:45", title: "Admin", area: "lrc" },
+          { start: "13:45", end: "14:30", title: "5th Isibindi", area: "lrc" }
+        ],
+        C: [
+          { start: "08:45", end: "09:05", title: "AM Duty & Opening", area: "lrc" },
+          { start: "09:05", end: "09:50", title: "Admin", area: "lrc" },
+          { start: "10:05", end: "10:50", title: "2nd Adams", area: "lrc" },
+          { start: "11:05", end: "12:05", title: "3rd Pulsa", area: "lrc" },
+          { start: "12:05", end: "12:45", title: "Lunch", area: "personal" },
+          { start: "12:45", end: "13:45", title: "Admin", area: "lrc" },
+          { start: "13:45", end: "14:30", title: "5th Amistad", area: "lrc" },
+          { start: "14:30", end: "15:30", title: "Prep", area: "personal" },
+          { start: "15:30", end: "15:45", title: "Closing", area: "lrc" }
+        ],
+        D: [
+          { start: "12:20", end: "13:00", title: "Lunch", area: "personal" },
+          { start: "12:45", end: "14:45", title: "Prep", area: "personal" },
+          { start: "14:45", end: "15:30", title: "1st Wilson", area: "lrc" }
+        ],
+        E: [
+          { start: "09:05", end: "09:50", title: "4th Tomter", area: "lrc" },
+          { start: "10:05", end: "10:50", title: "Prep", area: "personal" },
+          { start: "11:05", end: "12:05", title: "3rd Carroll", area: "lrc" },
+          { start: "12:05", end: "12:45", title: "Lunch", area: "personal" },
+          { start: "12:45", end: "13:45", title: "Prep", area: "personal" },
+          { start: "13:45", end: "14:30", title: "5th Reveur", area: "lrc" },
+          { start: "14:30", end: "14:45", title: "Prep", area: "personal" },
+          { start: "14:45", end: "15:30", title: "1st Day", area: "lrc" }
+        ]
+      },
 
       // weekday fallback for dates not covered by the mapping
       weekLetterMap: { Mon: "A", Tue: "B", Wed: "C", Thu: "D", Fri: "E" },
 
       // Date->Letter mapping (your PDF range). null = No School
+      // NOTE: Tail corrected: 2026-05-26..05-29 now A/B/C/D and 2026-06-01 added as E.
       letterDayByDate: {
         // Dec 2025
         "2025-12-01": "C", "2025-12-02": "C", "2025-12-03": "E", "2025-12-04": "A", "2025-12-05": "B",
@@ -399,7 +456,14 @@
         "2026-05-04": "A", "2026-05-05": "B", "2026-05-06": "C", "2026-05-07": "D", "2026-05-08": "E",
         "2026-05-11": "A", "2026-05-12": "B", "2026-05-13": "C", "2026-05-14": "D", "2026-05-15": "E",
         "2026-05-18": "A", "2026-05-19": "B", "2026-05-20": "C", "2026-05-21": "D", "2026-05-22": "E",
-        "2026-05-25": null, "2026-05-26": null, "2026-05-27": null, "2026-05-28": null, "2026-05-29": null
+        "2026-05-25": null,
+        "2026-05-26": "A",
+        "2026-05-27": "B",
+        "2026-05-28": "C",
+        "2026-05-29": "D",
+
+        // Jun 2026
+        "2026-06-01": "E"
       },
 
       habits: [
@@ -471,6 +535,78 @@
     return PlannerApp.state.weeks[wkKey];
   }
 
+  /* ---------- Letter day lookups ---------- */
+
+  function getLetterDayForDate(iso) {
+    const map = PlannerApp.settings.letterDayByDate || {};
+    if (Object.prototype.hasOwnProperty.call(map, iso)) {
+      return map[iso]; // "A".."E" OR null
+    }
+    return undefined; // not specified
+  }
+
+  function weekdayKeyShort(dateObj) {
+    // Return Mon/Tue/Wed/Thu/Fri/Sat/Sun consistently
+    const s = dateObj.toLocaleDateString("en-US", { weekday: "short" });
+    return s.replace(".", "");
+  }
+
+  function getFallbackLetterForDate(iso) {
+    const d = new Date(iso);
+    const dow = weekdayKeyShort(d); // Mon/Tue...
+    const wkMap = PlannerApp.settings.weekLetterMap || {};
+    return wkMap[dow] || null;
+  }
+
+  function kindFromTemplateArea(area) {
+    const a = (area || "").toLowerCase();
+    if (a === "lrc") return "lrc";
+    if (a === "home") return "home";
+    // personal/other -> render as task (neutral)
+    return "task";
+  }
+
+  /**
+   * Applies letter schedule blocks for a given date ONLY if that date has zero scheduled blocks.
+   * Never overwrites an existing schedule.
+   * Returns: { applied: boolean, reason?: string, letter?: string|null }
+   */
+  function ensureTemplateAppliedIfEmpty(dateISO) {
+    const wk = weekKey(new Date(dateISO));
+    ensureWeek(wk);
+    PlannerApp.state.weeks[wk].days[dateISO] ||= { scheduled: [] };
+
+    const existing = PlannerApp.state.weeks[wk].days[dateISO].scheduled || [];
+    if (existing.length > 0) return { applied: false, reason: "already-has-blocks" };
+
+    // 1) explicit date map
+    let letter = getLetterDayForDate(dateISO);
+
+    // 2) fallback weekday map when not specified
+    if (letter === undefined) {
+      letter = getFallbackLetterForDate(dateISO);
+    }
+
+    // no school day (explicit null) OR unknown weekend fallback null
+    if (letter === null) return { applied: false, reason: "no-school", letter: null };
+
+    const template = PlannerApp.settings.letterSchedules?.[letter] || [];
+    if (!template.length) return { applied: false, reason: "missing-template", letter };
+
+    for (const item of template) {
+      PlannerApp.addBlock(dateISO, {
+        kind: kindFromTemplateArea(item.area),
+        title: `${letter} Day • ${item.title}${item.location ? " (" + item.location + ")" : ""}`,
+        startMin: minutesFromHHMM(item.start),
+        endMin: minutesFromHHMM(item.end),
+        meta: `${item.start}–${item.end}`,
+        source: { from: "letterSchedule", letter }
+      });
+    }
+
+    return { applied: true, letter };
+  }
+
   /* ---------- Recurring tasks (simple daily) ---------- */
 
   function applyRecurringTasksForDate(dateISO) {
@@ -497,41 +633,15 @@
 
   function autoPopulateWeekIfEmpty(wkKey) {
     const wk = ensureWeek(wkKey);
-    const days = getWeekRange(new Date(wkKey.replace("wk_", "")));
+    const mondayISO = wkKey.replace("wk_", "");
+    const days = getWeekRange(new Date(mondayISO));
 
     for (const d of days) {
       const iso = todayISO(d);
       wk.days[iso] ||= { scheduled: [] };
-      if ((wk.days[iso].scheduled || []).length > 0) continue;
 
-      // 1) date override map (preferred)
-      let letter = null;
-      const map = PlannerApp.settings.letterDayByDate || {};
-      if (iso in map) letter = map[iso]; // may be null
-
-      // 2) fallback weekday map if not present
-      if (!(iso in map)) {
-        const dow = d.toLocaleDateString(undefined, { weekday: "short" }); // Mon/Tue...
-        const wkMap = PlannerApp.settings.weekLetterMap || {};
-        letter = wkMap[dow] || wkMap[dow.replace(".", "")] || null;
-      }
-
-      // explicit no-school day
-      if (letter === null) continue;
-
-      const template = PlannerApp.settings.letterSchedules?.[letter] || [];
-      if (!template.length) continue;
-
-      for (const item of template) {
-        PlannerApp.addBlock(iso, {
-          kind: "lrc",
-          title: `${letter} Day • ${item.title}${item.location ? " (" + item.location + ")" : ""}`,
-          startMin: minutesFromHHMM(item.start),
-          endMin: minutesFromHHMM(item.end),
-          meta: `${item.start}–${item.end}`,
-          source: { from: "letterSchedule", letter }
-        });
-      }
+      // Only apply if empty. Never overwrite.
+      ensureTemplateAppliedIfEmpty(iso);
     }
   }
 
