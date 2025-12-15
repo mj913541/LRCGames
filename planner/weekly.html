@@ -12,6 +12,11 @@
   </div>
 
   <div class="bd">
+    <!-- No School Banner (toggled by ui.js) -->
+    <div id="noSchoolBanner" class="banner hidden" style="margin:0 0 14px 0;">
+      🏫 <strong>No School</strong> on one or more days this week — schedule lightly and enjoy the breathing room.
+    </div>
+
     <!-- Weekly Ink Layer (single canvas covering the schedule board) -->
     <div class="card" style="margin:0 0 18px 0;">
       <div class="hd" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -24,9 +29,16 @@
 
       <div class="bd" style="padding:14px;">
         <!-- Wrap MUST have id weeklyInkWrap for ink.js -->
-        <div id="weeklyInkWrap" class="inkWrap" style="position:relative; border-radius:18px; border:1px solid var(--border); background:#fff; overflow:hidden;">
+        <div
+          id="weeklyInkWrap"
+          class="inkWrap"
+          style="position:relative; border-radius:18px; border:1px solid var(--border); background:#fff; overflow:hidden;"
+        >
           <!-- canvas injected by ink.js: id weeklyInkCanvas -->
-          <div id="weekColumns" style="display:grid; grid-template-columns: repeat(7, minmax(240px, 1fr)); gap:12px; padding:12px; overflow-x:auto;">
+          <div
+            id="weekColumns"
+            style="display:grid; grid-template-columns: repeat(7, minmax(240px, 1fr)); gap:12px; padding:12px; overflow-x:auto;"
+          >
             <!-- ui.js will inject day columns/cards here -->
           </div>
         </div>
