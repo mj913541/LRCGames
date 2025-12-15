@@ -75,10 +75,6 @@
     return z.toISOString().slice(0, 10);
   }
 
-  function isTouchDevice() {
-    return "ontouchstart" in window || navigator.maxTouchPoints > 0;
-  }
-
   function mountMissingModuleCard(route, file) {
     const host = $("#pageHost");
     host.innerHTML = `
@@ -101,10 +97,14 @@
     });
   }
 
+  /* =========================================================
+     No School banner (weekly)
+     ========================================================= */
+
   function setNoSchoolBanner(isNoSchool) {
     const el = $("#noSchoolBanner");
     if (!el) return;
-    el.classList.toggle("hidden", !isNoSchool);
+    el.style.display = isNoSchool ? "block" : "none";
   }
 
   function getLetterDayForISO(iso) {
@@ -122,22 +122,31 @@
       return window.PlannerApp.ensureTemplateAppliedIfEmpty(iso);
     }
 
-    // Fallback: very conservative (never overwrite)
+    // Fallback: never overwrite, only apply if zero blocks
     const app = window.PlannerApp;
+    if (!app) return { applied: false, reason: "no-app" };
+
     const letter = getLetterDayForISO(iso);
     if (letter === undefined) return { applied: false, reason: "unknown-date" };
     if (letter === null) return { applied: false, reason: "no-school" };
 
-    const day = app.ensureDay(iso);
-    const existing = app.getScheduledBlocks?.(iso) || day?.scheduledBlocks || [];
+    const existing = app.getScheduledBlocks?.(iso) || [];
     if (Array.isArray(existing) && existing.length > 0) return { applied: false, reason: "already-has-blocks" };
 
-    const tpl = app.getSettings()?.letterSchedules?.[letter];
-    if (!tpl?.blocks?.length) return { applied: false, reason: "missing-template" };
+    const tpl = app.getSettings()?.letterSchedules?.[letter] || [];
+    if (!tpl.length) return { applied: false, reason: "missing-template" };
 
-    // If app has an API to set blocks, we should use it. Otherwise, do nothing.
-    // (Most builds should have ensureTemplateAppliedIfEmpty in app.js, so this fallback rarely runs.)
-    return { applied: false, reason: "no-app-helper" };
+    for (const item of tpl) {
+      app.addBlock(iso, {
+        kind: item.area === "home" ? "home" : (item.area === "lrc" ? "lrc" : "task"),
+        title: `${letter} Day • ${item.title}`,
+        startMin: minutesFromHHMM(item.start),
+        endMin: minutesFromHHMM(item.end),
+        meta: `${item.start}–${item.end}`,
+        source: { from: "letterSchedule", letter }
+      });
+    }
+    return { applied: true, reason: "applied-fallback" };
   }
 
   /* =========================================================
@@ -219,9 +228,6 @@
         e.stopPropagation();
         openBlockModal(block.dataset.dateISO || opts.dateISO, b.id);
       });
-
-      // Drag blocks? (optional later; currently tasks drag in, blocks edit via modal)
-      // If you want block drag-move later, we can add it safely.
     }
   }
 
@@ -294,7 +300,6 @@
       app.scheduleTask(dateISO, listName, taskId, targetDateISO, startMin, 30);
       await app.saveNow();
 
-      // Re-render weekly + dashboard inbox if needed
       renderWeekly();
       if (UI.currentRoute === "dashboard") renderDashboard();
     }
@@ -438,10 +443,8 @@
     const settings = app.getSettings();
 
     $("#dashDate") && ($("#dashDate").textContent = fmtDateLong(new Date()));
-    // Timeline blocks = appointments + anchors
-    const blocks = [];
 
-    // Appointments (all areas)
+    const blocks = [];
     const appts = app.getAppointments(dateISO);
     for (const a of appts) {
       blocks.push({
@@ -455,7 +458,6 @@
       });
     }
 
-    // Anchors for checklists
     blocks.push({
       id: "homeMorningAnchor",
       kind: "home",
@@ -476,11 +478,9 @@
     const tl = $("#dashTimeline");
     if (tl) renderTimeline(tl, blocks, { dateISO });
 
-    // Checklists
     renderChecklist("#morningList", dateISO, "homeMorning");
     renderChecklist("#eveningList", dateISO, "homeEvening");
 
-    // Tasks columns: Must/Should/Could
     const inbox = app.getTasks(dateISO, "inbox");
     const home = app.getTasks(dateISO, "home");
     const lrc = app.getTasks(dateISO, "lrc");
@@ -490,7 +490,6 @@
       ...lrc.map(t => ({ ...t, _list: "lrc" }))
     ].filter(t => !t.done);
 
-    // Clear columns
     const mustCol = $("#mustCol");
     const shouldCol = $("#shouldCol");
     const couldCol = $("#couldCol");
@@ -505,7 +504,6 @@
       else couldCol?.appendChild(card);
     }
 
-    // Inbox list (optional quick view)
     const inboxWrap = $("#inboxList");
     if (inboxWrap) {
       inboxWrap.innerHTML = "";
@@ -516,13 +514,9 @@
       }
     }
 
-    // Habits summary
     renderHabitsSummary(dateISO);
-
-    // Pomodoro
     renderPomodoro(dateISO);
 
-    // Ink (daily) — mixed mode (typed + pencil). Canvas sits behind controls unless toggled on.
     if (window.PlannerInk?.mountDaily) {
       window.PlannerInk.mountDaily({
         wrapId: "dailyInkWrap",
@@ -596,25 +590,21 @@
 
     const days = app.getWeekRange(new Date());
 
-    // Banner: show if the selected "week context" has at least one no-school day
-    // (We’ll refine later if you add week navigation.)
-    let anyNoSchool = false;
-
     // Auto-populate templates for EMPTY days (never overwrite)
     let changed = false;
+    let anyNoSchool = false;
+
     for (const d of days) {
       const iso = todayISO(d);
+
       const res = tryApplyTemplateIfEmpty(iso);
       if (res?.applied) changed = true;
 
       const letter = getLetterDayForISO(iso);
       if (letter === null) anyNoSchool = true;
     }
-    if (changed) {
-      // Save once after batch apply
-      app.saveNow().catch(() => {});
-    }
 
+    if (changed) app.saveNow().catch(() => {});
     setNoSchoolBanner(anyNoSchool);
 
     host.innerHTML = "";
@@ -629,7 +619,7 @@
       hd.className = "hd";
 
       const map = app.getSettings().letterDayByDate || {};
-      const hasOverride = iso in map;
+      const hasOverride = Object.prototype.hasOwnProperty.call(map, iso);
       const letter = hasOverride ? map[iso] : null;
       const extra = hasOverride ? (letter ? ` • ${letter} Day` : " • No School") : "";
 
@@ -645,12 +635,10 @@
 
       const tl = document.createElement("div");
       tl.className = "timeline weekTimeline";
-      tl.dataset.date = iso; // needed for slot rows
+      tl.dataset.date = iso;
 
-      // Blocks = scheduled blocks + appointments
       const blocks = [];
 
-      // scheduled
       const scheduled = app.getScheduledBlocks(iso);
       for (const b of scheduled) {
         blocks.push({
@@ -659,7 +647,6 @@
         });
       }
 
-      // appointments
       const appts = app.getAppointments(iso);
       for (const a of appts) {
         blocks.push({
@@ -675,7 +662,6 @@
 
       renderTimeline(tl, blocks, { dateISO: iso });
 
-      // Click empty cell to quick-add appt at that time
       tl.addEventListener("click", (e) => {
         const slot = e.target.closest(".slot");
         if (!slot) return;
@@ -693,7 +679,6 @@
       host.appendChild(col);
     }
 
-    // Weekly inbox list (drag tasks onto time slots)
     const inboxWrap = $("#weeklyInbox");
     if (inboxWrap) {
       const dateISO = app.getTodayISO();
@@ -706,7 +691,6 @@
       }
     }
 
-    // Mount weekly ink (single layer covering the weekly board container)
     if (window.PlannerInk?.mountWeekly) {
       const wkKey = PlannerApp.weekKey(new Date());
       window.PlannerInk.mountWeekly({
@@ -937,17 +921,34 @@
      SETTINGS
      ========================================================= */
 
+  function cleanLetter(v, fallback) {
+    const s = String(v ?? "").trim().toUpperCase();
+    const ch = s[0] || "";
+    return ["A", "B", "C", "D", "E"].includes(ch) ? ch : fallback;
+  }
+
   function wireSettingsHandlers() {
+    // Force A–E + uppercase as the user types
+    ["#mapMon", "#mapTue", "#mapWed", "#mapThu", "#mapFri"].forEach((id, idx) => {
+      const fallback = ["A", "B", "C", "D", "E"][idx];
+      $(id)?.addEventListener("input", (e) => {
+        e.target.value = cleanLetter(e.target.value, fallback);
+      });
+      $(id)?.addEventListener("blur", (e) => {
+        e.target.value = cleanLetter(e.target.value, fallback);
+      });
+    });
+
     $("#saveSettingsBtn")?.addEventListener("click", async () => {
       const s = PlannerApp.getSettings();
 
       // Week map
       s.weekLetterMap = {
-        Mon: $("#mapMon")?.value || "A",
-        Tue: $("#mapTue")?.value || "B",
-        Wed: $("#mapWed")?.value || "C",
-        Thu: $("#mapThu")?.value || "D",
-        Fri: $("#mapFri")?.value || "E"
+        Mon: cleanLetter($("#mapMon")?.value, "A"),
+        Tue: cleanLetter($("#mapTue")?.value, "B"),
+        Wed: cleanLetter($("#mapWed")?.value, "C"),
+        Thu: cleanLetter($("#mapThu")?.value, "D"),
+        Fri: cleanLetter($("#mapFri")?.value, "E")
       };
 
       // Optional JSON overrides (blank = keep current)
@@ -972,22 +973,42 @@
         }
       }
 
-      // Save settings back into state
       PlannerApp.getState().settings = s;
       await PlannerApp.saveNow();
       alert("Saved ✅");
+    });
+
+    $("#resetSettingsBtn")?.addEventListener("click", async () => {
+      // Restore defaults from app.js defaultSettings()
+      const fresh = PlannerApp.getState()?.settings;
+      // If app.js later exposes a helper like PlannerApp.resetSettings(), use it.
+      // For now we do a safe "re-init settings" by calling app.js default via reload trick:
+      // (We cannot call defaultSettings() from here; it is scoped inside app.js.)
+      //
+      // So: simplest reliable reset is "wipe settings" and reload the app,
+      // letting app.js recreate defaults on load.
+
+      if (!confirm("Reset settings to defaults? (Keeps your tasks/appointments; only settings reset.)")) return;
+
+      const st = PlannerApp.getState();
+      if (!st) return;
+      st.settings = null;
+      await PlannerApp.saveNow();
+
+      // Reload so app.js defaultSettings() rehydrates settings cleanly
+      location.reload();
     });
   }
 
   function renderSettings() {
     const s = PlannerApp.getSettings();
-    $("#mapMon") && ($("#mapMon").value = s.weekLetterMap.Mon || "A");
-    $("#mapTue") && ($("#mapTue").value = s.weekLetterMap.Tue || "B");
-    $("#mapWed") && ($("#mapWed").value = s.weekLetterMap.Wed || "C");
-    $("#mapThu") && ($("#mapThu").value = s.weekLetterMap.Thu || "D");
-    $("#mapFri") && ($("#mapFri").value = s.weekLetterMap.Fri || "E");
 
-    // Put JSON into textareas (optional edits)
+    $("#mapMon") && ($("#mapMon").value = cleanLetter(s.weekLetterMap?.Mon, "A"));
+    $("#mapTue") && ($("#mapTue").value = cleanLetter(s.weekLetterMap?.Tue, "B"));
+    $("#mapWed") && ($("#mapWed").value = cleanLetter(s.weekLetterMap?.Wed, "C"));
+    $("#mapThu") && ($("#mapThu").value = cleanLetter(s.weekLetterMap?.Thu, "D"));
+    $("#mapFri") && ($("#mapFri").value = cleanLetter(s.weekLetterMap?.Fri, "E"));
+
     $("#scheduleJson") && ($("#scheduleJson").value = JSON.stringify(s.letterSchedules || {}, null, 2));
     $("#dateMapJson") && ($("#dateMapJson").value = JSON.stringify(s.letterDayByDate || {}, null, 2));
   }
@@ -1083,7 +1104,6 @@
   function openBlockModal(dateISO, blockId) {
     if (!dateISO) return;
 
-    // block might be scheduled OR an appointment block (prefixed "appt_")
     if (String(blockId).startsWith("appt_")) {
       const apptId = String(blockId).replace("appt_", "");
       return openAppointmentModal({ dateISO, apptId });
