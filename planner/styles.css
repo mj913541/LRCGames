@@ -142,6 +142,21 @@ h2 {
   color: var(--muted);
 }
 
+/* -------------------- Banner -------------------- */
+
+.banner {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+  box-shadow: 0 2px 10px rgba(0,0,0,.04);
+}
+
+.hidden {
+  display: none;
+}
+
 /* -------------------- Buttons -------------------- */
 
 .btn {
@@ -344,6 +359,15 @@ h2 {
   margin-bottom: 10px;
 }
 
+/* Touch + Pencil polish: prevent page scrolling while dragging/inking */
+.draggable,
+.taskRow.draggable,
+.block,
+.inkCanvas,
+.inkWrap {
+  touch-action: none;
+}
+
 /* -------------------- Modals -------------------- */
 
 .modalHost {
@@ -399,10 +423,12 @@ h2 {
 
 .dragging {
   opacity: .85;
-  z-index: 30;
+  z-index: 999;
+  position: relative;
 }
 
-/* -------------------- Inputs (ADD THIS AT BOTTOM) -------------------- */
+/* -------------------- Inputs -------------------- */
+
 .input {
   width: 100%;
   background: #ffffff;
