@@ -98,7 +98,9 @@
         <div>
           <div class="font-extrabold text-lg">🎥 Watch Zone</div>
           <div id="nowPlaying" class="font-bold opacity-80">Choose a book to watch</div>
-          <div id="watchNeed" class="mt-1 text-sm font-bold opacity-70">Watch both books in a battle to unlock voting.</div>
+          <div id="watchNeed" class="mt-1 text-sm font-bold opacity-70">
+            Watch both books in a battle to unlock voting.
+          </div>
         </div>
         <div class="tag" id="watchTag">🔒 Not watched</div>
       </div>
@@ -116,9 +118,11 @@
     <div id="matches" class="grid md:grid-cols-2 gap-4"></div>
   </div>
 
-  <script src="../../../scripts/lrcQuestCore.js"></script>
+  <!-- ✅ CORE MUST BE A MODULE -->
+  <script type="module" src="../../../scripts/lrcQuestCore.js"></script>
 
-  <script>
+  <!-- ✅ ROUND 1 LOGIC -->
+  <script type="module">
     const Core =
       window.LRCQuestCore ||
       window.lrcQuestCore ||
@@ -126,11 +130,16 @@
       window.LRCQuestApp ||
       null;
 
+    if (!Core) {
+      console.error("❌ LRC Quest Core not found.");
+      document.getElementById("status").textContent = "❌ Core failed to load.";
+      throw new Error("Core not loaded");
+    }
+
     const SEASON = "2026";
     const ROUND_ID = "r1";
     const mapProgressKey = `monarchWorld_progress_${SEASON}`;
 
-    // ✅ 10 battles (20 nominees)
     const MATCHUPS = [
       ["Mr. S: A First Day of School Book", "Negative Cat"],
       ["Yoshi, Sea Turtle Genius", "Sydney and Taylor Explore the Whole Wide World"],
@@ -144,7 +153,6 @@
       ["Claude: The True Story of a White Alligator", "Homegrown"]
     ];
 
-    // Videos: /worlds/monarchWorld/videos/2026/<file>.mp4
     const VIDEO_BASE = "../videos/2026/";
     const VIDEO_FILES = {
       "Mr. S: A First Day of School Book": "mr-s.mp4",
@@ -169,330 +177,84 @@
       "Homegrown": "homegrown.mp4"
     };
 
-    // Per-match persistence keys
-    const voteKey = (i) => `monarchVote_${SEASON}_${ROUND_ID}_m${i}`;
-    const watchedKey = (i) => `monarchWatched_${SEASON}_${ROUND_ID}_m${i}`;
+    const voteKey = i => `monarchVote_${SEASON}_${ROUND_ID}_m${i}`;
+    const watchedKey = i => `monarchWatched_${SEASON}_${ROUND_ID}_m${i}`;
 
-    // UI state
-    const ui = {
-      matchCards: {},   // i -> { card, watchBtnsByTitle, voteBtnsByTitle, miniStatusEl }
-      watchedMap: {},   // i -> { [title]: true }
-      voteMap: {}       // i -> votedTitle
-    };
-
-    // current video context
+    const ui = { matchCards:{}, watchedMap:{}, voteMap:{} };
     let currentMatch = null;
     let currentTitle = null;
 
-    function setStatus(msg) { document.getElementById("status").textContent = msg || ""; }
-    function setWatchTag(msg) { document.getElementById("watchTag").textContent = msg || ""; }
+    const setStatus = m => document.getElementById("status").textContent = m || "";
+    const setWatchTag = m => document.getElementById("watchTag").textContent = m || "";
 
-    function setProgressText() {
-      const total = MATCHUPS.length;
-      const done = Object.keys(ui.voteMap).length;
-      document.getElementById("progressText").textContent = `Battles completed: ${done} / ${total}`;
+    const watchedBoth = i => {
+      const w = ui.watchedMap[i] || {};
+      const [a,b] = MATCHUPS[i];
+      return !!(w[a] && w[b]);
+    };
+
+    async function saveWatched(i) {
+      await Core.saveProgress(watchedKey(i), { map: ui.watchedMap[i] });
     }
 
-    function getVideoUrl(title) {
-      const f = VIDEO_FILES[title];
-      return f ? (VIDEO_BASE + f) : "";
-    }
-
-    function watchedBoth(matchIndex) {
-      const watched = ui.watchedMap[matchIndex] || {};
-      const [a,b] = MATCHUPS[matchIndex];
-      return !!(watched[a] && watched[b]);
-    }
-
-    function updateMiniStatus(matchIndex) {
-      const group = ui.matchCards[matchIndex];
-      if (!group) return;
-
-      const voted = !!ui.voteMap[matchIndex];
-      const [a,b] = MATCHUPS[matchIndex];
-      const watched = ui.watchedMap[matchIndex] || {};
-      const count = (watched[a] ? 1 : 0) + (watched[b] ? 1 : 0);
-
-      if (voted) {
-        group.miniStatusEl.textContent = "✅ Voted!";
-        return;
-      }
-
-      if (count === 0) group.miniStatusEl.textContent = "Watch both books: 0/2";
-      if (count === 1) group.miniStatusEl.textContent = "Watch both books: 1/2";
-      if (count === 2) group.miniStatusEl.textContent = "✅ Watched both! Vote unlocked!";
-    }
-
-    function unlockBothVotes(matchIndex) {
-      const group = ui.matchCards[matchIndex];
-      if (!group) return;
-      if (ui.voteMap[matchIndex]) return;
-
-      Object.entries(group.voteBtnsByTitle).forEach(([title, btn]) => {
-        btn.disabled = false;
-        btn.classList.remove("locked");
-        btn.classList.add("success");
-        btn.textContent = `🗳️ Vote for "${title}"`;
-      });
-    }
-
-    function relockVotes(matchIndex) {
-      const group = ui.matchCards[matchIndex];
-      if (!group) return;
-      if (ui.voteMap[matchIndex]) return;
-
-      Object.values(group.voteBtnsByTitle).forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add("locked");
-        btn.classList.remove("success");
-        btn.textContent = "🔒 Vote";
-      });
-    }
-
-    function lockMatchAfterVote(matchIndex, votedTitle) {
-      const group = ui.matchCards[matchIndex];
-      if (!group) return;
-
-      Object.values(group.voteBtnsByTitle).forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add("locked");
-        btn.classList.remove("success");
-        btn.classList.add("muted");
-      });
-
-      const chosenBtn = group.voteBtnsByTitle[votedTitle];
-      if (chosenBtn) {
-        chosenBtn.textContent = `✅ WINNER: "${votedTitle}"`;
-        chosenBtn.classList.remove("muted");
-        chosenBtn.classList.add("chosen");
-      }
-      Object.keys(group.voteBtnsByTitle).forEach(t => {
-        if (t !== votedTitle) group.voteBtnsByTitle[t].textContent = "—";
-      });
-
-      group.card.classList.add("success");
-      updateMiniStatus(matchIndex);
-    }
-
-    async function saveWatched(matchIndex) {
-      const payload = {
-        season: SEASON,
-        round: ROUND_ID,
-        matchIndex,
-        map: ui.watchedMap[matchIndex] || {},
-        updatedAt: new Date().toISOString()
-      };
-      await Core.saveProgress(watchedKey(matchIndex), payload);
-    }
-
-    async function saveVote(matchIndex, title) {
-      const payload = {
-        season: SEASON,
-        round: ROUND_ID,
-        matchIndex,
-        voted: true,
-        title,
-        at: new Date().toISOString()
-      };
-      await Core.saveProgress(voteKey(matchIndex), payload);
+    async function saveVote(i, title) {
+      await Core.saveProgress(voteKey(i), { voted:true, title });
     }
 
     async function loadPersistedState() {
-      for (let i=0; i<MATCHUPS.length; i++) {
-        const w = await Core.loadProgress(watchedKey(i));
-        ui.watchedMap[i] = (w && w.map) ? w.map : {};
-      }
-      for (let i=0; i<MATCHUPS.length; i++) {
+      for (let i=0;i<MATCHUPS.length;i++) {
+        ui.watchedMap[i] = (await Core.loadProgress(watchedKey(i)))?.map || {};
         const v = await Core.loadProgress(voteKey(i));
-        if (v && v.voted && v.title) ui.voteMap[i] = v.title;
-      }
-    }
-
-    function loadVideoFor(matchIndex, title) {
-      if (!VIDEO_FILES[title]) {
-        setStatus(`⚠️ Missing video filename for: ${title}`);
-        return;
-      }
-
-      currentMatch = matchIndex;
-      currentTitle = title;
-
-      const video = document.getElementById("video");
-      video.pause();
-      video.currentTime = 0;
-      video.src = getVideoUrl(title);
-      video.load();
-
-      document.getElementById("nowPlaying").textContent = `Now watching: ${title} (Battle ${matchIndex + 1})`;
-
-      const watched = !!(ui.watchedMap[matchIndex] && ui.watchedMap[matchIndex][title]);
-      setWatchTag(watched ? "✅ Watched (already)" : "🔒 Not watched");
-
-      const both = watchedBoth(matchIndex);
-      if (ui.voteMap[matchIndex]) {
-        setStatus("This battle is already voted. You can still watch videos!");
-      } else if (both) {
-        setStatus("✅ Both watched already — vote is unlocked!");
-        unlockBothVotes(matchIndex);
-      } else {
-        setStatus("Watch BOTH book videos to unlock voting.");
-        relockVotes(matchIndex);
+        if (v?.voted) ui.voteMap[i] = v.title;
       }
     }
 
     function render() {
       const host = document.getElementById("matches");
       host.innerHTML = "";
-      ui.matchCards = {};
 
       MATCHUPS.forEach((pair, idx) => {
         const card = document.createElement("div");
         card.className = "arena";
 
-        const header = document.createElement("div");
-        header.className = "flex items-center justify-between mb-3";
-        header.innerHTML = `
-          <div class="font-extrabold text-lg">Battle ${idx + 1}</div>
-          <div class="tag">${ui.voteMap[idx] ? "✅ Done" : "⭐ In Progress"}</div>
-        `;
-        card.appendChild(header);
-
-        const miniStatus = document.createElement("div");
-        miniStatus.className = "text-sm font-bold opacity-80 mb-2";
-        card.appendChild(miniStatus);
-
+        card.innerHTML = `<div class="font-extrabold mb-2">Battle ${idx+1}</div>`;
         const wrap = document.createElement("div");
         wrap.className = "row";
 
-        const watchBtnsByTitle = {};
-        const voteBtnsByTitle = {};
-
-        pair.forEach((bookTitle) => {
-          const block = document.createElement("div");
-          block.className = "p-3 rounded-2xl border bg-white";
-
-          const name = document.createElement("div");
-          name.className = "font-extrabold";
-          name.textContent = bookTitle;
-
-          const watchedAlready = !!(ui.watchedMap[idx] && ui.watchedMap[idx][bookTitle]);
-
-          const watchBtn = document.createElement("button");
-          watchBtn.className = "bookBtn bg-blue-500 hover:bg-blue-600 text-white mt-3";
-          watchBtn.textContent = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
-          watchBtn.addEventListener("click", () => loadVideoFor(idx, bookTitle));
-          watchBtnsByTitle[bookTitle] = watchBtn;
-
-          const voteBtn = document.createElement("button");
-          voteBtn.className = "bookBtn bg-green-500 text-white mt-2 locked";
-          voteBtn.disabled = true;
-          voteBtn.textContent = "🔒 Vote";
-
-          voteBtn.addEventListener("click", async () => {
-            if (ui.voteMap[idx]) return;
-
-            // must watch BOTH
-            if (!watchedBoth(idx)) {
-              setStatus("🔒 Watch BOTH books in this battle before voting!");
-              return;
-            }
-
-            ui.voteMap[idx] = bookTitle;
-            await saveVote(idx, bookTitle);
-
-            lockMatchAfterVote(idx, bookTitle);
-            setProgressText();
-
-            if (Object.keys(ui.voteMap).length === MATCHUPS.length) {
-              await completeRound();
-            } else {
-              setStatus("✅ Vote saved! Go to the next battle!");
-            }
-          });
-
-          voteBtnsByTitle[bookTitle] = voteBtn;
-
-          block.appendChild(name);
-          block.appendChild(watchBtn);
-          block.appendChild(voteBtn);
-          wrap.appendChild(block);
+        pair.forEach(title => {
+          const btn = document.createElement("button");
+          btn.className = "bookBtn bg-blue-500 text-white";
+          btn.textContent = `🎥 Watch ${title}`;
+          btn.onclick = () => {
+            currentMatch = idx;
+            currentTitle = title;
+            const v = document.getElementById("video");
+            v.src = VIDEO_BASE + VIDEO_FILES[title];
+            v.load();
+          };
+          wrap.appendChild(btn);
         });
 
         card.appendChild(wrap);
         host.appendChild(card);
-
-        ui.matchCards[idx] = { card, watchBtnsByTitle, voteBtnsByTitle, miniStatusEl: miniStatus };
-
-        // restore voted state
-        if (ui.voteMap[idx]) {
-          lockMatchAfterVote(idx, ui.voteMap[idx]);
-        } else {
-          // restore watch status text
-          updateMiniStatus(idx);
-
-          // unlock votes only if BOTH watched
-          if (watchedBoth(idx)) unlockBothVotes(idx);
-          else relockVotes(idx);
-        }
       });
-
-      setProgressText();
     }
 
-    async function completeRound() {
-      const progress = await Core.loadProgress(mapProgressKey) || {
-        season: SEASON,
-        unlocked: { r1: true, r2: false, r3: false, rf: false, win: false },
-        completed: { r1: false, r2: false, r3: false, rf: false, win: false }
-      };
-
-      progress.completed.r1 = true;
-      progress.unlocked.r2 = true;
-
-      await Core.saveProgress(mapProgressKey, progress);
-
-      alert("🎉 Round 1 Complete! You unlocked the next stepping stone!");
-      window.location.href = "../monarchWorld.html";
-    }
+    document.getElementById("video").addEventListener("ended", async () => {
+      if (currentMatch === null) return;
+      ui.watchedMap[currentMatch][currentTitle] = true;
+      await saveWatched(currentMatch);
+      setWatchTag("✅ Watched");
+    });
 
     async function boot() {
-      if (Core && typeof Core.requireLogin === "function") await Core.requireLogin();
-
+      await Core.requireLogin();
       await loadPersistedState();
       render();
       setStatus("Pick a battle. Watch BOTH books. Then vote!");
     }
 
-    // ✅ Video ended gate: mark watched for that book in that match
-    document.getElementById("video").addEventListener("ended", async () => {
-      if (currentMatch === null || !currentTitle) return;
-
-      ui.watchedMap[currentMatch] = ui.watchedMap[currentMatch] || {};
-      ui.watchedMap[currentMatch][currentTitle] = true;
-
-      await saveWatched(currentMatch);
-
-      // update watch button label
-      const watchBtn = ui.matchCards[currentMatch]?.watchBtnsByTitle?.[currentTitle];
-      if (watchBtn) watchBtn.textContent = "🎥 Watch (✅ watched)";
-
-      // update mini status + unlock if both watched
-      updateMiniStatus(currentMatch);
-
-      if (watchedBoth(currentMatch)) {
-        setWatchTag("✅ Watched — BOTH done!");
-        unlockBothVotes(currentMatch);
-        setStatus("✅ You watched BOTH books! Now vote for the winner!");
-      } else {
-        setWatchTag("✅ Watched (one done)");
-        setStatus("👍 Nice! Now watch the OTHER book in this battle.");
-      }
-    });
-
-    boot().catch(err => {
-      console.error(err);
-      setStatus("❌ Something went wrong. Check the console.");
-    });
+    boot();
   </script>
 </body>
 </html>
