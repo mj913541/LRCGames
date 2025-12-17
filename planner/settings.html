@@ -6,114 +6,86 @@
   </div>
 
   <div class="bd">
+    <!-- Weekday fallback mapping -->
     <div class="card" style="margin:0 0 18px 0;">
       <div class="hd">
         <div style="font-weight:900;">Weekday fallback letter map</div>
-        <div class="small muted">Used only when a date isn’t in your PDF date→letter map.</div>
+        <div class="small muted">Used only when a date isn’t in your Date → Letter map.</div>
       </div>
       <div class="bd" style="padding:14px;">
         <div style="display:grid; grid-template-columns: repeat(5, minmax(120px, 1fr)); gap:10px;">
           <div>
             <label class="small">Mon</label>
-            <input id="mapMon" class="input" />
+            <input id="mapMon" class="input" maxlength="1" placeholder="A" style="text-transform:uppercase;" />
           </div>
           <div>
             <label class="small">Tue</label>
-            <input id="mapTue" class="input" />
+            <input id="mapTue" class="input" maxlength="1" placeholder="B" style="text-transform:uppercase;" />
           </div>
           <div>
             <label class="small">Wed</label>
-            <input id="mapWed" class="input" />
+            <input id="mapWed" class="input" maxlength="1" placeholder="C" style="text-transform:uppercase;" />
           </div>
           <div>
             <label class="small">Thu</label>
-            <input id="mapThu" class="input" />
+            <input id="mapThu" class="input" maxlength="1" placeholder="D" style="text-transform:uppercase;" />
           </div>
           <div>
             <label class="small">Fri</label>
-            <input id="mapFri" class="input" />
+            <input id="mapFri" class="input" maxlength="1" placeholder="E" style="text-transform:uppercase;" />
           </div>
         </div>
       </div>
     </div>
 
+    <!-- A/B/C/D/E schedule templates -->
     <div class="card" style="margin:0 0 18px 0;">
       <div class="hd">
-        <div style="font-weight:900;">A/B/C/D/E schedule templates (JSON)
-        {
-  "A": [
-    { "start": "09:05", "end": "09:50", "title": "4th Rosenthal", "area": "lrc" },
-    { "start": "10:05", "end": "10:50", "title": "2nd Peterson", "area": "lrc" },
-    { "start": "11:05", "end": "11:50", "title": "3rd Hossain", "area": "lrc" },
-    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
-    { "start": "12:45", "end": "13:45", "title": "Admin", "area": "lrc" },
-    { "start": "13:45", "end": "14:30", "title": "5th Ultimo", "area": "lrc" },
-    { "start": "14:30", "end": "14:45", "title": "Prep", "area": "personal" },
-    { "start": "14:45", "end": "15:30", "title": "1st Rogers", "area": "lrc" }
-  ],
-
-  "B": [
-    { "start": "09:05", "end": "09:50", "title": "4th Cavello", "area": "lrc" },
-    { "start": "10:05", "end": "10:50", "title": "2nd Schmidt", "area": "lrc" },
-    { "start": "11:05", "end": "12:05", "title": "Admin", "area": "lrc" },
-    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
-    { "start": "12:45", "end": "13:45", "title": "Admin", "area": "lrc" },
-    { "start": "13:45", "end": "14:30", "title": "5th Isibindi", "area": "lrc" }
-  ],
-
-  "C": [
-    { "start": "08:45", "end": "09:05", "title": "AM Duty & Opening", "area": "lrc" },
-    { "start": "09:05", "end": "09:50", "title": "Admin", "area": "lrc" },
-    { "start": "10:05", "end": "10:50", "title": "2nd Adams", "area": "lrc" },
-    { "start": "11:05", "end": "12:05", "title": "3rd Pulsa", "area": "lrc" },
-    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
-    { "start": "12:45", "end": "13:45", "title": "Admin", "area": "lrc" },
-    { "start": "13:45", "end": "14:30", "title": "5th Amistad", "area": "lrc" },
-    { "start": "14:30", "end": "15:30", "title": "Prep", "area": "personal" },
-    { "start": "15:30", "end": "15:45", "title": "Closing", "area": "lrc" }
-  ],
-
-  "D": [
-    { "start": "12:20", "end": "13:00", "title": "Lunch", "area": "personal" },
-    { "start": "12:45", "end": "14:45", "title": "Prep", "area": "personal" },
-    { "start": "14:45", "end": "15:30", "title": "1st Wilson", "area": "lrc" }
-  ],
-
-  "E": [
-    { "start": "09:05", "end": "09:50", "title": "4th Tomter", "area": "lrc" },
-    { "start": "10:05", "end": "10:50", "title": "Prep", "area": "personal" },
-    { "start": "11:05", "end": "12:05", "title": "3rd Carroll", "area": "lrc" },
-    { "start": "12:05", "end": "12:45", "title": "Lunch", "area": "personal" },
-    { "start": "12:45", "end": "13:45", "title": "Prep", "area": "personal" },
-    { "start": "13:45", "end": "14:30", "title": "5th Reveur", "area": "lrc" },
-    { "start": "14:30", "end": "14:45", "title": "Prep", "area": "personal" },
-    { "start": "14:45", "end": "15:30", "title": "1st Day", "area": "lrc" }
-  ]
-}</div>
-
+        <div style="font-weight:900;">A/B/C/D/E schedule templates (JSON)</div>
         <div class="small muted">
-          Each letter has an array of blocks like:
-          <code>[{"start":"09:05","end":"09:50","title":"4th Cavello","location":"LRC"}]</code>
+          Paste your templates here (example):
+          <code>[{"start":"09:05","end":"09:50","title":"4th Cavello","area":"lrc"}]</code>
         </div>
       </div>
       <div class="bd" style="padding:14px;">
-        <textarea id="scheduleJson" class="input" style="width:100%; min-height:320px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"></textarea>
+        <textarea
+          id="scheduleJson"
+          class="input"
+          spellcheck="false"
+          style="width:100%; min-height:320px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"
+        ></textarea>
       </div>
     </div>
 
-    <div style="display:flex; justify-content:flex-end; gap:10px;">
+    <!-- Date → Letter map -->
+    <div class="card" style="margin:0 0 18px 0;">
+      <div class="hd">
+        <div style="font-weight:900;">Date → Letter Map (JSON)</div>
+        <div class="small muted">Overrides weekday fallback. Use <code>null</code> for No School.</div>
+      </div>
+      <div class="bd" style="padding:14px;">
+        <textarea
+          id="dateMapJson"
+          class="input"
+          spellcheck="false"
+          style="width:100%; min-height:260px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;"
+        ></textarea>
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+      <button id="resetSettingsBtn" class="btn">Reset to Defaults</button>
       <button id="saveSettingsBtn" class="btn primary">Save Settings</button>
     </div>
 
     <div class="card" style="margin:18px 0 0 0;">
       <div class="hd">
         <div style="font-weight:900;">Tip</div>
-        <div class="small muted">Paste your real school-day templates here once, and Weekly auto-fills.</div>
+        <div class="small muted">Once templates + date map are saved, Weekly auto-fills correctly every day.</div>
       </div>
       <div class="bd" style="padding:14px;">
         <div class="small muted">
-          If you want, I can generate the exact JSON for your A/B/C/D/E schedules from what you’ve already shared.
-          (A Day, B Day, C Day, D Day, E Day blocks.)
+          Put the BIG A/B/C/D/E JSON into <b>scheduleJson</b>. Put the PDF date map into <b>dateMapJson</b>.
         </div>
       </div>
     </div>

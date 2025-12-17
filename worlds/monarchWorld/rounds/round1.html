@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚔️ Monarch World | Round 1 Battles</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: radial-gradient(circle at 20% 10%, #fff7ed, #fef3c7 35%, #dcfce7 100%);
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui;
+    }
+    .card {
+      background: rgba(255,255,255,0.95);
+      border-radius: 24px;
+      border: 1px solid rgba(0,0,0,0.08);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
+    }
+    .arena {
+      border-radius: 24px;
+      border: 2px dashed rgba(0,0,0,0.12);
+      background: rgba(255,255,255,0.82);
+      padding: 16px;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .bookBtn {
+      border-radius: 20px;
+      font-weight: 900;
+      padding: 14px;
+      width: 100%;
+      transition: transform 0.08s ease, filter 0.15s ease;
+    }
+    .bookBtn:active { transform: scale(0.98); }
+    .locked { opacity: 0.55; cursor: not-allowed; }
+    .muted { opacity: 0.72; }
+    .success {
+      background: rgba(34,197,94,0.12) !important;
+      border: 2px solid rgba(34,197,94,0.35);
+    }
+    .chosen {
+      outline: 4px solid rgba(34,197,94,0.35);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.85);
+    }
+    video {
+      width: 100%;
+      border-radius: 20px;
+      background: #000;
+      border: 2px solid rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="max-w-6xl mx-auto p-4 md:p-6">
+
+    <!-- HEADER -->
+    <div class="card p-4 md:p-6 mb-4">
+      <div class="flex justify-between items-center gap-3 flex-wrap">
+        <div>
+          <div class="text-2xl md:text-3xl font-extrabold">⚔️ Round 1: Battle Arena</div>
+          <div class="text-sm opacity-80 mt-1">
+            Rule: Watch BOTH book videos all the way to the end, then vote for the winner.
+          </div>
+        </div>
+        <a href="../monarchWorld.html"
+           class="px-4 py-3 rounded-2xl font-extrabold bg-white border hover:bg-gray-50">
+          ← Map
+        </a>
+      </div>
+
+      <div class="mt-3 flex items-center justify-between gap-3 flex-wrap">
+        <div id="progressText" class="text-sm font-bold"></div>
+        <div id="status" class="text-sm font-bold opacity-80"></div>
+      </div>
+    </div>
+
+    <!-- VIDEO ZONE -->
+    <div class="card p-4 md:p-6 mb-4">
+      <div class="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <div class="font-extrabold text-lg">🎥 Watch Zone</div>
+          <div id="nowPlaying" class="font-bold opacity-80">Choose a book to watch</div>
+          <div id="watchNeed" class="mt-1 text-sm font-bold opacity-70">Watch both books in a battle to unlock voting.</div>
+        </div>
+        <div class="tag" id="watchTag">🔒 Not watched</div>
+      </div>
+
+      <div class="mt-3">
+        <video id="video" controls preload="metadata"></video>
+      </div>
+
+      <div class="mt-2 text-sm font-bold opacity-70">
+        Tip: When the video ends, it counts as watched ✅
+      </div>
+    </div>
+
+    <!-- MATCHUPS -->
+    <div id="matches" class="grid md:grid-cols-2 gap-4"></div>
+  </div>
+
+  <script src="../../../scripts/lrcQuestCore.js"></script>
+
+  <script>
+    const Core =
+      window.LRCQuestCore ||
+      window.lrcQuestCore ||
+      window.LRCQuest ||
+      window.LRCQuestApp ||
+      null;
+
+    const SEASON = "2026";
+    const ROUND_ID = "r1";
+    const mapProgressKey = `monarchWorld_progress_${SEASON}`;
+
+    // ✅ 10 battles (20 nominees)
+    const MATCHUPS = [
+      ["Mr. S: A First Day of School Book", "Negative Cat"],
+      ["Yoshi, Sea Turtle Genius", "Sydney and Taylor Explore the Whole Wide World"],
+      ["Knight Owl", "Beneath"],
+      ["Thunder and Cluck: Friends Do Not Eat Friends", "We Are Definitely Human"],
+      ["The Red Jacket", "Hamsters Make Terrible Roommates"],
+      ["The Flower Garden", "Butt or Face?: A Hilarious Animal Guessing Game for Kids"],
+      ["Time to Make Art", "Bathe the Cat"],
+      ["Who’s Afraid of the Light?", "Just SNOW Already!"],
+      ["Home is Calling: The Journey of the Monarch Butterfly", "The World’s Best Class Plant"],
+      ["Claude: The True Story of a White Alligator", "Homegrown"]
+    ];
+
+    // Videos: /worlds/monarchWorld/videos/2026/<file>.mp4
+    const VIDEO_BASE = "../videos/2026/";
+    const VIDEO_FILES = {
+      "Mr. S: A First Day of School Book": "mr-s.mp4",
+      "Negative Cat": "negative-cat.mp4",
+      "Yoshi, Sea Turtle Genius": "yoshi-sea-turtle-genius.mp4",
+      "Sydney and Taylor Explore the Whole Wide World": "sydney-and-taylor-explore-the-whole-wide-world.mp4",
+      "Knight Owl": "knight-owl.mp4",
+      "Beneath": "beneath.mp4",
+      "Thunder and Cluck: Friends Do Not Eat Friends": "thunder-and-cluck-friends-do-not-eat-friends.mp4",
+      "We Are Definitely Human": "we-are-definitely-human.mp4",
+      "The Red Jacket": "the-red-jacket.mp4",
+      "Hamsters Make Terrible Roommates": "hamsters-make-terrible-roommates.mp4",
+      "The Flower Garden": "the-flower-garden.mp4",
+      "Butt or Face?: A Hilarious Animal Guessing Game for Kids": "butt-or-face.mp4",
+      "Time to Make Art": "time-to-make-art.mp4",
+      "Bathe the Cat": "bathe-the-cat.mp4",
+      "Who’s Afraid of the Light?": "whos-afraid-of-the-light.mp4",
+      "Just SNOW Already!": "just-snow-already.mp4",
+      "Home is Calling: The Journey of the Monarch Butterfly": "home-is-calling-the-journey-of-the-monarch-butterfly.mp4",
+      "The World’s Best Class Plant": "the-worlds-best-class-plant.mp4",
+      "Claude: The True Story of a White Alligator": "claude-the-true-story-of-a-white-alligator.mp4",
+      "Homegrown": "homegrown.mp4"
+    };
+
+    // Per-match persistence keys
+    const voteKey = (i) => `monarchVote_${SEASON}_${ROUND_ID}_m${i}`;
+    const watchedKey = (i) => `monarchWatched_${SEASON}_${ROUND_ID}_m${i}`;
+
+    // UI state
+    const ui = {
+      matchCards: {},   // i -> { card, watchBtnsByTitle, voteBtnsByTitle, miniStatusEl }
+      watchedMap: {},   // i -> { [title]: true }
+      voteMap: {}       // i -> votedTitle
+    };
+
+    // current video context
+    let currentMatch = null;
+    let currentTitle = null;
+
+    function setStatus(msg) { document.getElementById("status").textContent = msg || ""; }
+    function setWatchTag(msg) { document.getElementById("watchTag").textContent = msg || ""; }
+
+    function setProgressText() {
+      const total = MATCHUPS.length;
+      const done = Object.keys(ui.voteMap).length;
+      document.getElementById("progressText").textContent = `Battles completed: ${done} / ${total}`;
+    }
+
+    function getVideoUrl(title) {
+      const f = VIDEO_FILES[title];
+      return f ? (VIDEO_BASE + f) : "";
+    }
+
+    function watchedBoth(matchIndex) {
+      const watched = ui.watchedMap[matchIndex] || {};
+      const [a,b] = MATCHUPS[matchIndex];
+      return !!(watched[a] && watched[b]);
+    }
+
+    function updateMiniStatus(matchIndex) {
+      const group = ui.matchCards[matchIndex];
+      if (!group) return;
+
+      const voted = !!ui.voteMap[matchIndex];
+      const [a,b] = MATCHUPS[matchIndex];
+      const watched = ui.watchedMap[matchIndex] || {};
+      const count = (watched[a] ? 1 : 0) + (watched[b] ? 1 : 0);
+
+      if (voted) {
+        group.miniStatusEl.textContent = "✅ Voted!";
+        return;
+      }
+
+      if (count === 0) group.miniStatusEl.textContent = "Watch both books: 0/2";
+      if (count === 1) group.miniStatusEl.textContent = "Watch both books: 1/2";
+      if (count === 2) group.miniStatusEl.textContent = "✅ Watched both! Vote unlocked!";
+    }
+
+    function unlockBothVotes(matchIndex) {
+      const group = ui.matchCards[matchIndex];
+      if (!group) return;
+      if (ui.voteMap[matchIndex]) return;
+
+      Object.entries(group.voteBtnsByTitle).forEach(([title, btn]) => {
+        btn.disabled = false;
+        btn.classList.remove("locked");
+        btn.classList.add("success");
+        btn.textContent = `🗳️ Vote for "${title}"`;
+      });
+    }
+
+    function relockVotes(matchIndex) {
+      const group = ui.matchCards[matchIndex];
+      if (!group) return;
+      if (ui.voteMap[matchIndex]) return;
+
+      Object.values(group.voteBtnsByTitle).forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add("locked");
+        btn.classList.remove("success");
+        btn.textContent = "🔒 Vote";
+      });
+    }
+
+    function lockMatchAfterVote(matchIndex, votedTitle) {
+      const group = ui.matchCards[matchIndex];
+      if (!group) return;
+
+      Object.values(group.voteBtnsByTitle).forEach(btn => {
+        btn.disabled = true;
+        btn.classList.add("locked");
+        btn.classList.remove("success");
+        btn.classList.add("muted");
+      });
+
+      const chosenBtn = group.voteBtnsByTitle[votedTitle];
+      if (chosenBtn) {
+        chosenBtn.textContent = `✅ WINNER: "${votedTitle}"`;
+        chosenBtn.classList.remove("muted");
+        chosenBtn.classList.add("chosen");
+      }
+      Object.keys(group.voteBtnsByTitle).forEach(t => {
+        if (t !== votedTitle) group.voteBtnsByTitle[t].textContent = "—";
+      });
+
+      group.card.classList.add("success");
+      updateMiniStatus(matchIndex);
+    }
+
+    async function saveWatched(matchIndex) {
+      const payload = {
+        season: SEASON,
+        round: ROUND_ID,
+        matchIndex,
+        map: ui.watchedMap[matchIndex] || {},
+        updatedAt: new Date().toISOString()
+      };
+      await Core.saveProgress(watchedKey(matchIndex), payload);
+    }
+
+    async function saveVote(matchIndex, title) {
+      const payload = {
+        season: SEASON,
+        round: ROUND_ID,
+        matchIndex,
+        voted: true,
+        title,
+        at: new Date().toISOString()
+      };
+      await Core.saveProgress(voteKey(matchIndex), payload);
+    }
+
+    async function loadPersistedState() {
+      for (let i=0; i<MATCHUPS.length; i++) {
+        const w = await Core.loadProgress(watchedKey(i));
+        ui.watchedMap[i] = (w && w.map) ? w.map : {};
+      }
+      for (let i=0; i<MATCHUPS.length; i++) {
+        const v = await Core.loadProgress(voteKey(i));
+        if (v && v.voted && v.title) ui.voteMap[i] = v.title;
+      }
+    }
+
+    function loadVideoFor(matchIndex, title) {
+      if (!VIDEO_FILES[title]) {
+        setStatus(`⚠️ Missing video filename for: ${title}`);
+        return;
+      }
+
+      currentMatch = matchIndex;
+      currentTitle = title;
+
+      const video = document.getElementById("video");
+      video.pause();
+      video.currentTime = 0;
+      video.src = getVideoUrl(title);
+      video.load();
+
+      document.getElementById("nowPlaying").textContent = `Now watching: ${title} (Battle ${matchIndex + 1})`;
+
+      const watched = !!(ui.watchedMap[matchIndex] && ui.watchedMap[matchIndex][title]);
+      setWatchTag(watched ? "✅ Watched (already)" : "🔒 Not watched");
+
+      const both = watchedBoth(matchIndex);
+      if (ui.voteMap[matchIndex]) {
+        setStatus("This battle is already voted. You can still watch videos!");
+      } else if (both) {
+        setStatus("✅ Both watched already — vote is unlocked!");
+        unlockBothVotes(matchIndex);
+      } else {
+        setStatus("Watch BOTH book videos to unlock voting.");
+        relockVotes(matchIndex);
+      }
+    }
+
+    function render() {
+      const host = document.getElementById("matches");
+      host.innerHTML = "";
+      ui.matchCards = {};
+
+      MATCHUPS.forEach((pair, idx) => {
+        const card = document.createElement("div");
+        card.className = "arena";
+
+        const header = document.createElement("div");
+        header.className = "flex items-center justify-between mb-3";
+        header.innerHTML = `
+          <div class="font-extrabold text-lg">Battle ${idx + 1}</div>
+          <div class="tag">${ui.voteMap[idx] ? "✅ Done" : "⭐ In Progress"}</div>
+        `;
+        card.appendChild(header);
+
+        const miniStatus = document.createElement("div");
+        miniStatus.className = "text-sm font-bold opacity-80 mb-2";
+        card.appendChild(miniStatus);
+
+        const wrap = document.createElement("div");
+        wrap.className = "row";
+
+        const watchBtnsByTitle = {};
+        const voteBtnsByTitle = {};
+
+        pair.forEach((bookTitle) => {
+          const block = document.createElement("div");
+          block.className = "p-3 rounded-2xl border bg-white";
+
+          const name = document.createElement("div");
+          name.className = "font-extrabold";
+          name.textContent = bookTitle;
+
+          const watchedAlready = !!(ui.watchedMap[idx] && ui.watchedMap[idx][bookTitle]);
+
+          const watchBtn = document.createElement("button");
+          watchBtn.className = "bookBtn bg-blue-500 hover:bg-blue-600 text-white mt-3";
+          watchBtn.textContent = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
+          watchBtn.addEventListener("click", () => loadVideoFor(idx, bookTitle));
+          watchBtnsByTitle[bookTitle] = watchBtn;
+
+          const voteBtn = document.createElement("button");
+          voteBtn.className = "bookBtn bg-green-500 text-white mt-2 locked";
+          voteBtn.disabled = true;
+          voteBtn.textContent = "🔒 Vote";
+
+          voteBtn.addEventListener("click", async () => {
+            if (ui.voteMap[idx]) return;
+
+            // must watch BOTH
+            if (!watchedBoth(idx)) {
+              setStatus("🔒 Watch BOTH books in this battle before voting!");
+              return;
+            }
+
+            ui.voteMap[idx] = bookTitle;
+            await saveVote(idx, bookTitle);
+
+            lockMatchAfterVote(idx, bookTitle);
+            setProgressText();
+
+            if (Object.keys(ui.voteMap).length === MATCHUPS.length) {
+              await completeRound();
+            } else {
+              setStatus("✅ Vote saved! Go to the next battle!");
+            }
+          });
+
+          voteBtnsByTitle[bookTitle] = voteBtn;
+
+          block.appendChild(name);
+          block.appendChild(watchBtn);
+          block.appendChild(voteBtn);
+          wrap.appendChild(block);
+        });
+
+        card.appendChild(wrap);
+        host.appendChild(card);
+
+        ui.matchCards[idx] = { card, watchBtnsByTitle, voteBtnsByTitle, miniStatusEl: miniStatus };
+
+        // restore voted state
+        if (ui.voteMap[idx]) {
+          lockMatchAfterVote(idx, ui.voteMap[idx]);
+        } else {
+          // restore watch status text
+          updateMiniStatus(idx);
+
+          // unlock votes only if BOTH watched
+          if (watchedBoth(idx)) unlockBothVotes(idx);
+          else relockVotes(idx);
+        }
+      });
+
+      setProgressText();
+    }
+
+    async function completeRound() {
+      const progress = await Core.loadProgress(mapProgressKey) || {
+        season: SEASON,
+        unlocked: { r1: true, r2: false, r3: false, rf: false, win: false },
+        completed: { r1: false, r2: false, r3: false, rf: false, win: false }
+      };
+
+      progress.completed.r1 = true;
+      progress.unlocked.r2 = true;
+
+      await Core.saveProgress(mapProgressKey, progress);
+
+      alert("🎉 Round 1 Complete! You unlocked the next stepping stone!");
+      window.location.href = "../monarchWorld.html";
+    }
+
+    async function boot() {
+      if (Core && typeof Core.requireLogin === "function") await Core.requireLogin();
+
+      await loadPersistedState();
+      render();
+      setStatus("Pick a battle. Watch BOTH books. Then vote!");
+    }
+
+    // ✅ Video ended gate: mark watched for that book in that match
+    document.getElementById("video").addEventListener("ended", async () => {
+      if (currentMatch === null || !currentTitle) return;
+
+      ui.watchedMap[currentMatch] = ui.watchedMap[currentMatch] || {};
+      ui.watchedMap[currentMatch][currentTitle] = true;
+
+      await saveWatched(currentMatch);
+
+      // update watch button label
+      const watchBtn = ui.matchCards[currentMatch]?.watchBtnsByTitle?.[currentTitle];
+      if (watchBtn) watchBtn.textContent = "🎥 Watch (✅ watched)";
+
+      // update mini status + unlock if both watched
+      updateMiniStatus(currentMatch);
+
+      if (watchedBoth(currentMatch)) {
+        setWatchTag("✅ Watched — BOTH done!");
+        unlockBothVotes(currentMatch);
+        setStatus("✅ You watched BOTH books! Now vote for the winner!");
+      } else {
+        setWatchTag("✅ Watched (one done)");
+        setStatus("👍 Nice! Now watch the OTHER book in this battle.");
+      }
+    });
+
+    boot().catch(err => {
+      console.error(err);
+      setStatus("❌ Something went wrong. Check the console.");
+    });
+  </script>
+</body>
+</html>
