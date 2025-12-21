@@ -18,25 +18,15 @@
     /* --- Round 1 mini-map layout --- */
     .r1-mapWrap{
       position: relative;
-      padding: 18px;
-      border-radius: 28px;
+      padding: 12px;
+      border-radius: 0;
 
-      /* BARELY THERE / almost transparent */
-      background: rgba(255,255,255,0.14);
-      border: 1px solid rgba(255,255,255,0.10);
-      backdrop-filter: blur(6px);
+      /* NO BACKGROUND CARD */
+      background: transparent;
+      border: none;
+      backdrop-filter: none;
+      box-shadow: none;
       overflow: hidden;
-      box-shadow: 0 14px 44px rgba(0,0,0,0.14);
-    }
-
-    /* ultra-subtle tint so stones still pop */
-    .r1-mapWrap::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background: rgba(17,24,39,0.04);
-      pointer-events:none;
-      z-index:0;
     }
 
     .r1-pathCanvas{
@@ -44,8 +34,8 @@
       inset: 0;
       pointer-events: none;
 
-      /* BARELY THERE path */
-      opacity: 0.18;
+      /* barely there */
+      opacity: 0.12;
 
       z-index: 1;
     }
@@ -56,8 +46,6 @@
       inset: 0;
       pointer-events: none;
       z-index: 2;
-
-      /* optional reduced intensity */
       opacity: 0.65;
     }
 
@@ -92,7 +80,7 @@
       background: rgba(255,255,255,0.88);
       font-size: 12px;
       font-weight: 900;
-      box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.10);
       user-select: none;
       white-space: nowrap;
     }
@@ -102,25 +90,6 @@
       outline: 4px solid rgba(59,130,246,0.45);
       outline-offset: 6px;
       border-radius: 18px;
-    }
-
-    /* Battle panel helper */
-    .r1-panelGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-    @media (min-width: 900px){
-      .r1-panelGrid{
-        grid-template-columns: 1.15fr 0.85fr;
-        gap: 16px;
-      }
-    }
-
-    .r1-hint{
-      font-weight: 900;
-      font-size: 13px;
-      opacity: 0.85;
     }
 
     /* ----------------- Fireflies ----------------- */
@@ -135,7 +104,6 @@
         0 0 22px rgba(251,191,36,0.25);
       opacity: 0.0;
 
-      /* Follow the curve */
       offset-path: path("M130,620 C240,560 250,470 330,420 C430,360 520,390 600,330 C700,270 690,190 800,160 C900,135 930,80 860,60");
       offset-rotate: 0deg;
 
@@ -159,32 +127,34 @@
       50%     { transform: translateY(-2px) scale(0.95); opacity: 0.55; }
     }
 
-    /* If the browser doesn't support offset-path, hide fireflies gracefully */
     @supports not (offset-path: path("M0,0 L1,1")) {
       .r1-fireflies{ display:none; }
     }
 
-    /* ----------------- Voting Modal ----------------- */
+    /* ----------------- Battle Arena Modal ----------------- */
     .r1-modalBack{
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.55);
-      z-index: 60;
+      background: rgba(0,0,0,0.58);
+      z-index: 80;
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 18px;
+      padding: 14px;
     }
     .r1-modalBack.isOpen{ display:flex; }
 
     .r1-modal{
-      width: min(720px, 96vw);
-      border-radius: 22px;
-      background: rgba(255,255,255,0.92);
+      width: min(1100px, 98vw);
+      max-height: min(92vh, 920px);
+      border-radius: 24px;
+      background: rgba(255,255,255,0.93);
       border: 1px solid rgba(0,0,0,0.10);
       backdrop-filter: blur(10px);
-      box-shadow: 0 22px 60px rgba(0,0,0,0.28);
+      box-shadow: 0 24px 70px rgba(0,0,0,0.30);
       overflow: hidden;
+      display:flex;
+      flex-direction: column;
     }
 
     .r1-modalHead{
@@ -192,50 +162,52 @@
       align-items:flex-start;
       justify-content: space-between;
       gap: 12px;
-      padding: 16px 16px 12px;
+      padding: 14px 14px 12px;
       border-bottom: 1px solid rgba(0,0,0,0.08);
+      flex: 0 0 auto;
     }
 
     .r1-modalBody{
-      padding: 14px 16px 16px;
-    }
-
-    .r1-voteGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-    }
-    @media (min-width: 640px){
-      .r1-voteGrid{ grid-template-columns: 1fr 1fr; }
-    }
-
-    .r1-choiceCard{
-      border: 1px solid rgba(0,0,0,0.10);
-      border-radius: 18px;
-      background: rgba(255,255,255,0.75);
-      padding: 14px;
-      box-shadow: 0 10px 22px rgba(0,0,0,0.08);
-      display:flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .r1-choiceTitle{
-      font-weight: 900;
-      font-size: 14px;
-      line-height: 1.25;
+      padding: 12px 14px 14px;
+      overflow: auto; /* if small screens */
+      flex: 1 1 auto;
     }
 
     .r1-closeBtn{
       border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.90);
       border-radius: 999px;
       padding: 8px 10px;
       font-weight: 900;
       box-shadow: 0 8px 18px rgba(0,0,0,0.10);
       user-select:none;
+      line-height: 1;
     }
     .r1-closeBtn:hover{ transform: translateY(-1px); }
+
+    .r1-panelGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+    @media (min-width: 900px){
+      .r1-panelGrid{
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 16px;
+        align-items: start;
+      }
+    }
+
+    .r1-hint{
+      font-weight: 900;
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    /* Optional: make the video feel bigger in the modal */
+    .r1-videoWrap .mw-video{
+      max-height: 56vh;
+    }
   </style>
 </head>
 
@@ -248,7 +220,7 @@
         <div>
           <div class="mw-title">🪨 Round 1: Battle Path</div>
           <div class="mw-subtitle">
-            Pick any stepping stone. Watch BOTH videos. Then vote for the winner.
+            Tap a stepping stone to open the Battle Arena (no scrolling!).
           </div>
         </div>
         <a class="mw-pill" href="../monarchWorld.html">← Map</a>
@@ -260,10 +232,10 @@
       </div>
     </div>
 
-    <!-- MINI MAP -->
+    <!-- MINI MAP (no background card) -->
     <div class="r1-mapWrap mw-animate-fade-up">
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3 relative" style="z-index:4;">
-        <div class="font-extrabold text-lg">🗺️ Choose a Battle</div>
+        <div class="font-extrabold text-lg text-white drop-shadow">🗺️ Choose a Battle</div>
         <div class="mw-tag" id="mapMiniStatus">Loading…</div>
       </div>
 
@@ -275,7 +247,7 @@
              C700,270 690,190 800,160
              C900,135 930,80 860,60"
           fill="none"
-          stroke="rgba(17,24,39,0.07)"
+          stroke="rgba(255,255,255,0.10)"
           stroke-width="10"
           stroke-linecap="round"
           stroke-dasharray="14 18"
@@ -286,7 +258,7 @@
              C700,270 690,190 800,160
              C900,135 930,80 860,60"
           fill="none"
-          stroke="rgba(251,191,36,0.035)"
+          stroke="rgba(251,191,36,0.025)"
           stroke-width="22"
           stroke-linecap="round"
         />
@@ -297,72 +269,57 @@
 
       <div id="battleMap" class="r1-mapArea"></div>
 
-      <div class="mt-4 text-sm font-bold opacity-80 relative" style="z-index:4;">
+      <div class="mt-3 text-sm font-bold text-white drop-shadow relative" style="z-index:4;">
         ✅ Completed = you already voted in that battle.
-      </div>
-    </div>
-
-    <!-- BATTLE PANEL -->
-    <div id="battlePanel" class="mw-card mw-card--soft mw-section mt-4 mw-animate-fade-up">
-      <div class="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <div id="panelTitle" class="font-extrabold text-lg">⚔️ Select a stepping stone to begin</div>
-          <div id="panelHint" class="r1-hint">Tip: You can do battles in any order.</div>
-        </div>
-
-        <div class="flex items-center gap-2 flex-wrap">
-          <div class="mw-tag" id="watchTag">🔒 Not watched</div>
-          <button id="openVoteBtn" class="mw-pill" type="button">🗳️ Open Voting</button>
-        </div>
-      </div>
-
-      <div class="r1-panelGrid mt-4">
-
-        <!-- Watch zone -->
-        <div>
-          <div class="font-extrabold text-lg mb-1">🎥 Watch Zone</div>
-          <div id="nowPlaying" class="font-bold opacity-80">Choose a book to watch</div>
-
-          <div class="mt-3">
-            <video id="video" class="mw-video" controls preload="metadata"></video>
-          </div>
-
-          <div class="mt-2 text-sm font-bold opacity-70">
-            When the video ends, it counts as watched ✅
-          </div>
-          <div id="watchNeed" class="mt-2 text-sm font-bold opacity-70">
-            Watch both books in this battle to unlock voting.
-          </div>
-        </div>
-
-        <!-- Battle controls -->
-        <div>
-          <div class="font-extrabold text-lg mb-2">📚 Battle Books</div>
-          <div class="mw-bookGrid" id="booksArea"></div>
-
-          <div class="mt-3 text-sm font-bold opacity-70">
-            Voting is in the 🗳️ modal and unlocks only after BOTH videos are watched.
-          </div>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- VOTING MODAL -->
-  <div id="voteModalBack" class="r1-modalBack" role="dialog" aria-modal="true" aria-labelledby="voteModalTitle">
+  <!-- BATTLE ARENA MODAL (VIDEO + BOOKS + VOTES ALL INSIDE) -->
+  <div id="arenaModalBack" class="r1-modalBack" role="dialog" aria-modal="true" aria-labelledby="arenaTitle">
     <div class="r1-modal" role="document">
       <div class="r1-modalHead">
-        <div>
-          <div id="voteModalTitle" class="font-extrabold text-lg">🗳️ Vote</div>
-          <div id="voteModalSub" class="text-sm font-bold opacity-75">Watch both videos to unlock voting.</div>
+        <div class="min-w-0">
+          <div id="arenaTitle" class="font-extrabold text-lg">⚔️ Battle Arena</div>
+          <div id="arenaHint" class="r1-hint">Watch BOTH videos to unlock voting.</div>
+          <div class="flex items-center gap-2 flex-wrap mt-2">
+            <div class="mw-tag" id="watchTag">🔒 Not watched</div>
+            <div class="mw-tag" id="arenaLockTag">🔒 Voting locked</div>
+          </div>
         </div>
-        <button id="closeVoteBtn" class="r1-closeBtn" type="button">✖</button>
+        <button id="closeArenaBtn" class="r1-closeBtn" type="button">✖</button>
       </div>
 
       <div class="r1-modalBody">
-        <div class="r1-voteGrid" id="voteChoices"></div>
-        <div class="mt-3 text-sm font-bold opacity-70">
-          Your vote saves instantly after you click ✅
+        <div class="r1-panelGrid">
+
+          <!-- Watch zone -->
+          <div class="r1-videoWrap">
+            <div class="font-extrabold text-lg mb-1">🎥 Watch Zone</div>
+            <div id="nowPlaying" class="font-bold opacity-80">Choose a book to watch</div>
+
+            <div class="mt-3">
+              <video id="video" class="mw-video" controls preload="metadata"></video>
+            </div>
+
+            <div class="mt-2 text-sm font-bold opacity-70">
+              When the video ends, it counts as watched ✅
+            </div>
+            <div id="watchNeed" class="mt-2 text-sm font-bold opacity-70">
+              Watch both books in this battle to unlock voting.
+            </div>
+          </div>
+
+          <!-- Books + Vote buttons (no scroll on page; all in modal) -->
+          <div>
+            <div class="font-extrabold text-lg mb-2">📚 Battle Books</div>
+            <div class="mw-bookGrid" id="booksArea"></div>
+
+            <div class="mt-3 text-sm font-bold opacity-70">
+              Voting unlocks only after BOTH videos are watched.
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -398,25 +355,24 @@
       battleMap: document.getElementById("battleMap"),
       fireflies: document.getElementById("fireflies"),
 
-      panelTitle: document.getElementById("panelTitle"),
-      panelHint: document.getElementById("panelHint"),
+      // Arena modal
+      arenaModalBack: document.getElementById("arenaModalBack"),
+      closeArenaBtn: document.getElementById("closeArenaBtn"),
+      arenaTitle: document.getElementById("arenaTitle"),
+      arenaHint: document.getElementById("arenaHint"),
+      arenaLockTag: document.getElementById("arenaLockTag"),
+
       nowPlaying: document.getElementById("nowPlaying"),
       watchNeed: document.getElementById("watchNeed"),
       watchTag: document.getElementById("watchTag"),
 
       video: document.getElementById("video"),
       booksArea: document.getElementById("booksArea"),
-
-      openVoteBtn: document.getElementById("openVoteBtn"),
-      voteModalBack: document.getElementById("voteModalBack"),
-      closeVoteBtn: document.getElementById("closeVoteBtn"),
-      voteChoices: document.getElementById("voteChoices"),
-      voteModalTitle: document.getElementById("voteModalTitle"),
-      voteModalSub: document.getElementById("voteModalSub"),
     };
 
     function setStatus(msg){ els.status.textContent = msg || ""; }
     function setWatchTag(msg){ els.watchTag.textContent = msg || ""; }
+    function setArenaLockTag(msg){ els.arenaLockTag.textContent = msg || ""; }
 
     const ui = {
       watchedMap: {},
@@ -455,6 +411,26 @@
     function stoneStateForBattle(i){
       return isVoted(ui.voteMap, i) ? "completed" : "unlocked";
     }
+
+    function openArena(){
+      els.arenaModalBack.classList.add("isOpen");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeArena(){
+      els.arenaModalBack.classList.remove("isOpen");
+      document.body.style.overflow = "";
+      // stop video to avoid audio continuing
+      els.video.pause();
+    }
+
+    els.closeArenaBtn.addEventListener("click", closeArena);
+    els.arenaModalBack.addEventListener("click", (e) => {
+      if (e.target === els.arenaModalBack) closeArena();
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && els.arenaModalBack.classList.contains("isOpen")) closeArena();
+    });
 
     function renderFireflies(){
       els.fireflies.innerHTML = "";
@@ -524,9 +500,6 @@
         els.battleMap.appendChild(slot);
         ui.stones.push({ slotEl: slot, stoneApi: stone });
       });
-
-      const firstIncomplete = MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i));
-      selectBattle(firstIncomplete >= 0 ? firstIncomplete : 0);
     }
 
     function highlightSelectedStone(){
@@ -536,36 +509,31 @@
       });
     }
 
-    function openVoteModal(){
-      if (currentMatchIndex == null) return;
+    function syncArenaLockUI(matchIndex){
+      const [a,b] = MATCHUPS[matchIndex];
+      const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
+      const voted = isVoted(ui.voteMap, matchIndex);
 
-      els.voteModalBack.classList.add("isOpen");
-      document.body.style.overflow = "hidden";
-
-      renderVoteModal(currentMatchIndex);
-    }
-
-    function closeVoteModal(){
-      els.voteModalBack.classList.remove("isOpen");
-      document.body.style.overflow = "";
-    }
-
-    els.voteModalBack.addEventListener("click", (e) => {
-      if (e.target === els.voteModalBack) closeVoteModal();
-    });
-    els.closeVoteBtn.addEventListener("click", closeVoteModal);
-
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && els.voteModalBack.classList.contains("isOpen")) closeVoteModal();
-    });
-
-    els.openVoteBtn.addEventListener("click", () => {
-      if (currentMatchIndex == null) {
-        setStatus("Select a battle first!");
-        return;
+      if (voted){
+        setArenaLockTag("✅ Voted");
+        els.arenaHint.textContent = "✅ You already voted in this battle (rewatching is allowed).";
+      } else if (both){
+        setArenaLockTag("✅ Voting unlocked");
+        els.arenaHint.textContent = "✅ Voting unlocked! Pick your winner.";
+      } else {
+        setArenaLockTag("🔒 Voting locked");
+        els.arenaHint.textContent = "Watch BOTH videos to unlock voting.";
       }
-      openVoteModal();
-    });
+
+      if (voted) {
+        // visually show voted button state
+        const votedTitle = getVoteForMatch(ui.voteMap, matchIndex);
+        if (votedTitle) applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle });
+      } else {
+        if (both) unlockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
+        else lockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
+      }
+    }
 
     function loadVideoFor(matchIndex, title){
       const url = getVideoUrl2026(title);
@@ -587,46 +555,36 @@
       const alreadyWatched = hasWatched(ui.watchedMap, matchIndex, title);
       setWatchTag(alreadyWatched ? "✅ Watched (already)" : "🔒 Not watched");
 
-      const [a,b] = MATCHUPS[matchIndex];
-      const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
-
-      if (isVoted(ui.voteMap, matchIndex)) {
-        setStatus("This battle is already voted. You can still watch videos!");
-      } else if (both) {
-        setStatus("✅ Both watched already — voting is unlocked!");
-        unlockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
-      } else {
-        setStatus("Watch BOTH book videos to unlock voting.");
-        lockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
-      }
+      syncArenaLockUI(matchIndex);
     }
 
-    function renderVoteModal(matchIndex){
+    function renderArena(matchIndex){
       ui.voteBtnsByTitle = {};
-      els.voteChoices.innerHTML = "";
+      ui.watchBtnsByTitle = {};
+      els.booksArea.innerHTML = "";
 
       const [a,b] = MATCHUPS[matchIndex];
 
-      els.voteModalTitle.textContent = `🗳️ Vote — Battle ${matchIndex + 1}`;
+      els.arenaTitle.textContent = `⚔️ Battle Arena — Battle ${matchIndex + 1}`;
+      els.nowPlaying.textContent = "Choose a book to watch";
+      setWatchTag("🔒 Not watched");
 
-      const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
-      const alreadyVoted = isVoted(ui.voteMap, matchIndex);
-
-      if (alreadyVoted){
-        els.voteModalSub.textContent = "✅ You already voted in this battle (you can still watch videos).";
-      } else if (both){
-        els.voteModalSub.textContent = "✅ Voting unlocked! Pick your winner.";
-      } else {
-        els.voteModalSub.textContent = "🔒 Watch BOTH videos to unlock voting.";
-      }
-
-      [a,b].forEach((title) => {
-        const card = document.createElement("div");
-        card.className = "r1-choiceCard";
+      // Build each book block with Watch + Vote buttons
+      MATCHUPS[matchIndex].forEach((title) => {
+        const block = document.createElement("div");
+        block.className = "mw-bookBlock";
 
         const t = document.createElement("div");
-        t.className = "r1-choiceTitle";
+        t.className = "mw-bookTitle";
         t.textContent = title;
+
+        const watchedAlready = hasWatched(ui.watchedMap, matchIndex, title);
+
+        const watchBtn = document.createElement("button");
+        watchBtn.className = "mw-btn mw-btn--watch";
+        watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
+        watchBtn.addEventListener("click", () => loadVideoFor(matchIndex, title));
+        ui.watchBtnsByTitle[title] = watchBtn;
 
         const voteBtn = document.createElement("button");
         voteBtn.className = "mw-btn mw-btn--vote mw-locked";
@@ -659,8 +617,7 @@
 
           refreshTopProgress();
           setStatus("✅ Vote saved! Pick another stepping stone!");
-
-          closeVoteModal();
+          syncArenaLockUI(matchIndex);
 
           if (voteCount() === MATCHUPS.length) {
             setStatus("🎉 Round 1 complete! Returning to the main map...");
@@ -670,73 +627,43 @@
 
         ui.voteBtnsByTitle[title] = voteBtn;
 
-        card.appendChild(t);
-        card.appendChild(voteBtn);
-        els.voteChoices.appendChild(card);
-      });
-
-      const votedTitle = getVoteForMatch(ui.voteMap, matchIndex);
-      if (votedTitle) {
-        applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle });
-      } else {
-        if (both) unlockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
-        else lockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
-      }
-    }
-
-    function renderBattlePanel(matchIndex){
-      ui.watchBtnsByTitle = {};
-      els.booksArea.innerHTML = "";
-
-      const [a,b] = MATCHUPS[matchIndex];
-
-      els.panelTitle.textContent = `⚔️ Battle ${matchIndex + 1}`;
-      els.panelHint.textContent = isVoted(ui.voteMap, matchIndex)
-        ? "✅ You already voted in this battle (you can still rewatch videos)."
-        : "Watch BOTH videos to unlock voting.";
-
-      els.nowPlaying.textContent = "Choose a book to watch";
-      setWatchTag("🔒 Not watched");
-
-      MATCHUPS[matchIndex].forEach((title) => {
-        const block = document.createElement("div");
-        block.className = "mw-bookBlock";
-
-        const t = document.createElement("div");
-        t.className = "mw-bookTitle";
-        t.textContent = title;
-
-        const watchedAlready = hasWatched(ui.watchedMap, matchIndex, title);
-
-        const watchBtn = document.createElement("button");
-        watchBtn.className = "mw-btn mw-btn--watch";
-        watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
-        watchBtn.addEventListener("click", () => loadVideoFor(matchIndex, title));
-        ui.watchBtnsByTitle[title] = watchBtn;
-
         block.appendChild(t);
         block.appendChild(watchBtn);
+        block.appendChild(voteBtn);
         els.booksArea.appendChild(block);
       });
 
+      // lock/unlock + voted visuals
+      syncArenaLockUI(matchIndex);
+
+      // If they already voted, show status message
       if (isVoted(ui.voteMap, matchIndex)) {
         setStatus("✅ Already voted here. Choose another battle or rewatch.");
       } else {
         if (hasWatchedBoth(ui.watchedMap, matchIndex, a, b)) {
-          setStatus("✅ Both watched — open 🗳️ Voting to vote!");
+          setStatus("✅ Both watched — vote is unlocked!");
         } else {
-          setStatus("Pick a book. Watch BOTH videos. Then open 🗳️ Voting!");
+          setStatus("Pick a book. Watch BOTH videos. Then vote!");
         }
       }
+
+      // Reset video when switching battles
+      els.video.pause();
+      els.video.currentTime = 0;
+      els.video.removeAttribute("src");
+      els.video.load();
+
+      currentMatchIndex = matchIndex;
+      currentTitle = null;
     }
 
     function selectBattle(matchIndex){
       ui.selectedIndex = matchIndex;
       highlightSelectedStone();
-      renderBattlePanel(matchIndex);
 
-      currentMatchIndex = matchIndex;
-      currentTitle = null;
+      // Render arena + open modal immediately (no scrolling)
+      renderArena(matchIndex);
+      openArena();
     }
 
     async function boot(){
@@ -764,20 +691,19 @@
             const [a, b] = MATCHUPS[matchIndex];
             const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
 
-            if (els.voteModalBack.classList.contains("isOpen")) {
-              renderVoteModal(matchIndex);
-            }
-
             if (both) {
               setWatchTag("✅ Watched — BOTH done!");
               if (!isVoted(ui.voteMap, matchIndex)) {
                 unlockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
               }
-              setStatus("✅ You watched BOTH books! Open 🗳️ Voting to vote for the winner!");
+              setStatus("✅ You watched BOTH books! Now vote for the winner!");
             } else {
               setWatchTag("✅ Watched (one done)");
               setStatus("👍 Nice! Now watch the OTHER book in this battle.");
             }
+
+            // Always refresh lock tag + hint inside the modal
+            syncArenaLockUI(matchIndex);
           }
         });
       });
