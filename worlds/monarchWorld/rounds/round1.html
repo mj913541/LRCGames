@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🦋 Monarch World | Round 1 🦋</title>
+  <title>🪨 Monarch World | Round 1 Path</title>
 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../styles/monarch.css">
@@ -19,7 +19,7 @@
     .r1-mapWrap{
       position: relative;
       padding: 12px;
-      padding-bottom: 90px; /* optional upgrade: extra breathing room at bottom */
+      padding-bottom: 90px; /* extra breathing room */
       border-radius: 0;
       background: transparent;
       border: none;
@@ -83,7 +83,7 @@
       position: relative;
     }
 
-    /* optional upgrade: little "finish" flag on #10 */
+    /* optional: finish flag on #10 */
     .r1-battleLabel .r1-finishBadge{
       position: absolute;
       top: -10px;
@@ -91,12 +91,6 @@
       font-size: 16px;
       filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
       transform: rotate(8deg);
-    }
-
-    .r1-selectedRing{
-      outline: 4px solid rgba(59,130,246,0.45);
-      outline-offset: 6px;
-      border-radius: 18px;
     }
 
     /* ----------------- Fireflies ----------------- */
@@ -140,7 +134,6 @@
     }
 
     /* ----------------- OPTION A: Locked stones are NOT grayed out ----------------- */
-    /* These selectors are intentionally broad to catch your stepStone component styles */
     .mw-stepStone--locked,
     .mw-stepStone--locked *,
     .mw-stepStone.locked,
@@ -150,10 +143,10 @@
       opacity: 1 !important;
       filter: none !important;
       -webkit-filter: none !important;
-      pointer-events: auto !important; /* IMPORTANT: let clicks still work so we can show "complete previous" */
+      pointer-events: auto !important; /* allow click to show message */
     }
 
-    /* optional upgrade: subtle "locked but tempting" ring */
+    /* locked-but-tempting ring */
     .r1-stoneSlot.isLocked{
       filter: drop-shadow(0 10px 18px rgba(0,0,0,0.18));
     }
@@ -161,7 +154,7 @@
       box-shadow: 0 0 0 3px rgba(255,255,255,0.25), 0 10px 22px rgba(0,0,0,0.14);
     }
 
-    /* optional upgrade: NEXT stone glow */
+    /* next unlocked stone glow */
     .r1-stoneSlot.isNext{
       animation: r1NextPulse 1.6s ease-in-out infinite;
     }
@@ -170,13 +163,21 @@
       50%     { filter: drop-shadow(0 0 18px rgba(251,191,36,0.38)) drop-shadow(0 18px 26px rgba(0,0,0,0.22)); }
     }
 
-    /* optional upgrade: finish stone celebration pulse */
-    .r1-stoneSlot.isFinishPulse{
-      animation: r1FinishPulse 1.2s ease-in-out infinite;
+    /* ----------------- Moving Avatar marker ----------------- */
+    .r1-avatar{
+      position: absolute;
+      z-index: 6; /* above stones + labels */
+      width: 56px;
+      height: 56px;
+      transform: translate(-50%, -90%); /* hover slightly above the stone */
+      pointer-events: none;
+      transition: left 520ms var(--mw-ease-pop, ease), top 520ms var(--mw-ease-pop, ease);
+      filter: drop-shadow(0 14px 18px rgba(0,0,0,0.35));
     }
-    @keyframes r1FinishPulse{
-      0%,100% { transform: translate(-50%, -50%) scale(1); }
-      50%     { transform: translate(-50%, -50%) scale(1.05); }
+    .r1-avatar img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
     }
 
     /* ----------------- Battle Arena Modal ----------------- */
@@ -307,28 +308,29 @@
       max-height: 50vh;
     }
 
-    /* Book cover styling */
-.mw-bookCover {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 16px;
-  border: 1px solid rgba(0,0,0,0.10);
-  background: rgba(255,255,255,0.85);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.10);
-}
-
-@media (min-width: 640px) {
-  .mw-bookCover { height: 165px; }
-}
-
-.mw-coverRow {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 12px;
-  align-items: center;
-}
-
+    /* ----------------- Avatar Picker Cards ----------------- */
+    .r1-avatarCard{
+      border: 1px solid rgba(0,0,0,0.10);
+      background: rgba(255,255,255,0.78);
+      border-radius: 18px;
+      padding: 12px;
+      text-align: center;
+      box-shadow: 0 12px 26px rgba(0,0,0,0.10);
+      cursor: pointer;
+      user-select: none;
+    }
+    .r1-avatarCard:hover{ transform: translateY(-2px); }
+    .r1-avatarCard img{
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      margin: 0 auto 8px;
+    }
+    .r1-avatarCard .name{
+      font-weight: 900;
+      font-size: 13px;
+      opacity: 0.9;
+    }
   </style>
 </head>
 
@@ -339,15 +341,20 @@
     <div class="mw-card mw-card--soft mw-section mw-animate-fade-up">
       <div class="mw-header">
         <div>
-          <div class="mw-title">🦋 AA Round 1 🦋</div>
+          <div class="mw-title">🪨 Round 1: Battle Path</div>
           <div class="mw-subtitle">
             Complete the battles IN ORDER. The next number will glow when it unlocks.
           </div>
         </div>
-        <a class="mw-pill" href="../monarchWorld.html">← Map</a>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <button id="openAvatarBtn" class="mw-pill" type="button">🧑‍🚀 Avatar</button>
+          <a class="mw-pill" href="../monarchWorld.html">← Map</a>
+        </div>
       </div>
 
       <div class="mw-row">
+        <div id="progressText" class="mw-status"></div>
         <div id="status" class="mw-status"></div>
       </div>
     </div>
@@ -355,13 +362,12 @@
     <!-- MINI MAP -->
     <div class="r1-mapWrap mw-animate-fade-up">
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3 relative" style="z-index:4;">
-        <div class="font-extrabold text-lg text-white drop-shadow">🗺️ Battle Path</div>
+        <div class="font-extrabold text-lg text-white drop-shadow">🗺️ Battle Path (In Order)</div>
         <div class="mw-tag" id="mapMiniStatus">Loading…</div>
       </div>
 
       <!-- S-CURVE PATH -->
       <svg class="r1-pathCanvas" id="pathSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
-        <!-- base path -->
         <path
           id="pathBase"
           d="M520,70
@@ -374,7 +380,6 @@
           stroke-linecap="round"
           stroke-dasharray="14 18"
         />
-        <!-- soft glow underlay -->
         <path
           d="M520,70
              C820,150 820,280 520,350
@@ -385,7 +390,7 @@
           stroke-width="22"
           stroke-linecap="round"
         />
-        <!-- optional upgrade: progress highlight that "fills" down the path -->
+        <!-- progress highlight fill -->
         <path
           id="pathProgress"
           d="M520,70
@@ -402,8 +407,17 @@
       </svg>
 
       <div id="fireflies" class="r1-fireflies" aria-hidden="true"></div>
+
       <div id="battleMap" class="r1-mapArea"></div>
 
+      <!-- Moving avatar marker -->
+      <div id="pathAvatar" class="r1-avatar" aria-hidden="true">
+        <img id="pathAvatarImg" alt="" />
+      </div>
+
+      <div class="mt-3 text-sm font-bold text-white drop-shadow relative" style="z-index:4;">
+        ✅ Completed = you already voted in that battle.
+      </div>
     </div>
   </div>
 
@@ -412,7 +426,7 @@
     <div class="r1-modal" role="document">
       <div class="r1-modalHead">
         <div class="min-w-0">
-          <div id="arenaTitle" class="font-extrabold text-lg">⚔️ Battle Arena ⚔️</div>
+          <div id="arenaTitle" class="font-extrabold text-lg">⚔️ Battle Arena</div>
           <div id="arenaHint" class="r1-hint">Watch BOTH videos to unlock voting.</div>
           <div class="flex items-center gap-2 flex-wrap mt-2">
             <div class="mw-tag" id="watchTag">🔒 Not watched</div>
@@ -432,7 +446,7 @@
 
         <!-- BOTTOM: video player -->
         <div class="r1-videoSection mt-4">
-          <div class="font-extrabold text-lg mb-1">🎥 Watch</div>
+          <div class="font-extrabold text-lg mb-1">🎥 Watch Zone</div>
           <div id="nowPlaying" class="font-bold opacity-80">Choose a book to watch</div>
 
           <div class="mt-3">
@@ -450,11 +464,31 @@
     </div>
   </div>
 
+  <!-- AVATAR PICKER MODAL -->
+  <div id="avatarModalBack" class="r1-modalBack" role="dialog" aria-modal="true" aria-labelledby="avatarTitle">
+    <div class="r1-modal" role="document" style="max-width: 760px;">
+      <div class="r1-modalHead">
+        <div class="min-w-0">
+          <div id="avatarTitle" class="font-extrabold text-lg">🧑‍🚀 Choose Your Avatar</div>
+          <div class="r1-hint">Pick one — it will move along the path as you unlock battles.</div>
+        </div>
+        <button id="closeAvatarBtn" class="r1-closeBtn" type="button">✖</button>
+      </div>
+
+      <div class="r1-modalBody">
+        <div id="avatarGrid" style="
+          display:grid;
+          grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+          gap: 14px;
+        "></div>
+      </div>
+    </div>
+  </div>
+
   <script type="module">
     import { requireLogin, getLocalProgress, saveProgress } from "../../../scripts/lrcQuestCore.js";
 
- import { SEASON, coverPath2026 } from "../data/nominees-2026.js";
-
+    import { SEASON } from "../data/nominees-2026.js";
     import { ROUND1_MATCHUPS as MATCHUPS } from "../data/bracket-2026.js";
     import { getVideoUrl2026 } from "../data/video-map-2026.js";
 
@@ -485,6 +519,16 @@
       pathBase: document.getElementById("pathBase"),
       pathProgress: document.getElementById("pathProgress"),
 
+      // moving avatar
+      pathAvatar: document.getElementById("pathAvatar"),
+      pathAvatarImg: document.getElementById("pathAvatarImg"),
+
+      // avatar picker
+      openAvatarBtn: document.getElementById("openAvatarBtn"),
+      avatarModalBack: document.getElementById("avatarModalBack"),
+      closeAvatarBtn: document.getElementById("closeAvatarBtn"),
+      avatarGrid: document.getElementById("avatarGrid"),
+
       // Arena modal
       arenaModalBack: document.getElementById("arenaModalBack"),
       closeArenaBtn: document.getElementById("closeArenaBtn"),
@@ -510,7 +554,6 @@
       watchedMap: {},
       voteMap: {},
       stones: [],
-      selectedIndex: null,
       voteBtnsByTitle: {},
       watchBtnsByTitle: {},
       pathLen: 0
@@ -518,6 +561,18 @@
 
     let currentMatchIndex = null;
     let currentTitle = null;
+
+    // Avatar options (place these PNGs in: worlds/monarchWorld/assets/avatars/)
+    // Filenames expected:
+    // lion.png, monarch.png, caterpillar.png, bear.png, book.png, owl.png
+    const AVATAR_OPTIONS = [
+      { id: "lion",        name: "Lion",        src: "../assets/avatars/lion.png" },
+      { id: "monarch",     name: "Monarch",     src: "../assets/avatars/monarch.png" },
+      { id: "caterpillar", name: "Caterpillar", src: "../assets/avatars/caterpillar.png" },
+      { id: "bear",        name: "Bear",        src: "../assets/avatars/bear.png" },
+      { id: "book",        name: "Book",        src: "../assets/avatars/book.png" },
+      { id: "owl",         name: "Owl",         src: "../assets/avatars/owl.png" }
+    ];
 
     // SNAKE positions (with extra bottom room so 8/9/10 don't smush)
     const STONE_POS = [
@@ -530,14 +585,14 @@
       { x: 60, y: 76 },   // 7
       { x: 36, y: 86 },   // 8
       { x: 58, y: 94 },   // 9
-      { x: 52, y: 102 }   // 10 (slightly past 100% is OK; map has bottom padding)
+      { x: 52, y: 102 }   // 10 (slightly past 100% is OK)
     ];
 
     function voteCount(){
       return ui.voteMap ? Object.keys(ui.voteMap).length : 0;
     }
 
-    // sequential unlocking: battle i unlocks only if battle i-1 is voted
+    // sequential unlocking
     function isUnlockedBattle(i){
       if (i === 0) return true;
       return isVoted(ui.voteMap, i - 1);
@@ -552,13 +607,7 @@
       return MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i) && isUnlockedBattle(i));
     }
 
-    function refreshTopProgress(){
-      setProgressTextUI(voteCount(), MATCHUPS.length);
-      els.mapMiniStatus.textContent = `Completed: ${voteCount()} / ${MATCHUPS.length}`;
-      updatePathProgress();
-    }
-
-    /* optional upgrade: path highlight fill */
+    /* ---------- Path progress fill ---------- */
     function initPathProgress(){
       try{
         if (!els.pathBase || !els.pathProgress) return;
@@ -568,7 +617,7 @@
         els.pathProgress.style.strokeDasharray = `${len} ${len}`;
         els.pathProgress.style.strokeDashoffset = `${len}`; // start empty
       }catch(e){
-        // ignore if SVG isn't measurable
+        // ignore
       }
     }
 
@@ -579,6 +628,13 @@
       els.pathProgress.style.strokeDashoffset = `${remaining}`;
     }
 
+    function refreshTopProgress(){
+      setProgressTextUI(voteCount(), MATCHUPS.length);
+      els.mapMiniStatus.textContent = `Completed: ${voteCount()} / ${MATCHUPS.length}`;
+      updatePathProgress();
+    }
+
+    /* ---------- Arena modal ---------- */
     function openArena(){
       els.arenaModalBack.classList.add("isOpen");
       document.body.style.overflow = "hidden";
@@ -598,6 +654,97 @@
       if (e.key === "Escape" && els.arenaModalBack.classList.contains("isOpen")) closeArena();
     });
 
+    /* ---------- Avatar picker modal ---------- */
+    function openAvatarModal(){
+      els.avatarModalBack.classList.add("isOpen");
+      document.body.style.overflow = "hidden";
+    }
+    function closeAvatarModal(){
+      els.avatarModalBack.classList.remove("isOpen");
+      document.body.style.overflow = "";
+    }
+
+    els.openAvatarBtn.addEventListener("click", openAvatarModal);
+    els.closeAvatarBtn.addEventListener("click", closeAvatarModal);
+    els.avatarModalBack.addEventListener("click", (e) => {
+      if (e.target === els.avatarModalBack) closeAvatarModal();
+    });
+
+    /* ---------- Save avatar choice into local progress ---------- */
+    function getAvatarId(){
+      const p = getLocalProgress?.() || {};
+      return p?.monarchWorld?.[SEASON]?.[ROUND_ID]?.avatarId || "lion";
+    }
+
+    async function setAvatarId(avatarId){
+      const p = getLocalProgress?.() || {};
+      p.monarchWorld ||= {};
+      p.monarchWorld[SEASON] ||= {};
+      p.monarchWorld[SEASON][ROUND_ID] ||= {};
+      p.monarchWorld[SEASON][ROUND_ID].avatarId = avatarId;
+      await saveProgress(p);
+    }
+
+    function applyAvatarImage(){
+      const id = getAvatarId();
+      const found = AVATAR_OPTIONS.find(a => a.id === id) || AVATAR_OPTIONS[0];
+      els.pathAvatarImg.src = found.src;
+    }
+
+    function renderAvatarGrid(){
+      els.avatarGrid.innerHTML = "";
+      const current = getAvatarId();
+
+      AVATAR_OPTIONS.forEach(a => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = "r1-avatarCard";
+        card.innerHTML = `
+          <img src="${a.src}" alt="">
+          <div class="name">${a.name}${a.id === current ? " ✅" : ""}</div>
+        `;
+        card.addEventListener("click", async () => {
+          await setAvatarId(a.id);
+          applyAvatarImage();
+          renderAvatarGrid();
+          closeAvatarModal();
+        });
+        els.avatarGrid.appendChild(card);
+      });
+    }
+
+    /* ---------- Moving avatar logic ---------- */
+    function moveAvatarToIndex(idx, animate = true){
+      const stone = ui.stones?.[idx]?.slotEl;
+      if (!stone || !els.pathAvatar || !els.battleMap) return;
+
+      if (!animate) {
+        els.pathAvatar.style.transition = "none";
+      } else {
+        els.pathAvatar.style.transition = "";
+      }
+
+      const mapRect = els.battleMap.getBoundingClientRect();
+      const stoneRect = stone.getBoundingClientRect();
+
+      const centerX = (stoneRect.left - mapRect.left) + (stoneRect.width / 2);
+      const centerY = (stoneRect.top  - mapRect.top)  + (stoneRect.height / 2);
+
+      els.pathAvatar.style.left = `${centerX}px`;
+      els.pathAvatar.style.top  = `${centerY}px`;
+
+      if (!animate) {
+        requestAnimationFrame(() => { els.pathAvatar.style.transition = ""; });
+      }
+    }
+
+    function moveAvatarToNext(animate = true){
+      const nextIdx = nextUnlockedIndex();
+      const target = nextIdx >= 0 ? nextIdx : (MATCHUPS.length - 1);
+      moveAvatarToIndex(target, animate);
+    }
+
+    /* ---------- Fireflies ---------- */
     function renderFireflies(){
       els.fireflies.innerHTML = "";
       const count = 14;
@@ -628,6 +775,7 @@
       }
     }
 
+    /* ---------- Map render ---------- */
     function renderBattleMap(){
       els.battleMap.innerHTML = "";
       ui.stones = [];
@@ -644,18 +792,12 @@
 
         const state = stoneStateForBattle(idx);
 
-        // optional upgrades: classes for locked + next glow
         if (state === "locked") slot.classList.add("isLocked");
         if (idx === nextIdx) slot.classList.add("isNext");
 
-        // finish pulse once unlocked and not yet completed (fun “goal”)
-        if (idx === MATCHUPS.length - 1 && state !== "completed") {
-          slot.classList.add("isFinishPulse");
-        }
-
         const stone = createStepStone({
           assetBase: "../assets",
-          state,                 // keep locked state for logic...
+          state,
           href: "#",
           label: "",
           title: `${idx + 1}`,
@@ -666,7 +808,6 @@
         label.className = "r1-battleLabel";
         label.textContent = `${idx + 1}`;
 
-        // optional finish badge on #10
         if (idx === MATCHUPS.length - 1){
           const badge = document.createElement("span");
           badge.className = "r1-finishBadge";
@@ -676,6 +817,9 @@
 
         stone.root.addEventListener("click", (e) => {
           e.preventDefault();
+
+          // move avatar to the tapped stone (even if locked, it "shows them" where they tried)
+          moveAvatarToIndex(idx, true);
 
           if (!isUnlockedBattle(idx) && !isVoted(ui.voteMap, idx)) {
             setStatus(`🔒 Complete Battle ${idx} first!`);
@@ -691,15 +835,12 @@
         els.battleMap.appendChild(slot);
         ui.stones.push({ slotEl: slot, stoneApi: stone });
       });
+
+      // After stones exist, place avatar on next unlocked
+      setTimeout(() => moveAvatarToNext(false), 0);
     }
 
-    function highlightSelectedStone(){
-      ui.stones.forEach((s, idx) => {
-        if (idx === ui.selectedIndex) s.slotEl.classList.add("r1-selectedRing");
-        else s.slotEl.classList.remove("r1-selectedRing");
-      });
-    }
-
+    /* ---------- Arena logic ---------- */
     function syncArenaLockUI(matchIndex){
       const [a,b] = MATCHUPS[matchIndex];
       const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
@@ -748,131 +889,82 @@
       syncArenaLockUI(matchIndex);
     }
 
- function buildBookCard(containerEl, matchIndex, title){
-  containerEl.innerHTML = "";
+    function buildBookCard(containerEl, matchIndex, title){
+      containerEl.innerHTML = "";
 
-  // --- Cover + Title row (NEW) ---
-  const row = document.createElement("div");
-  row.className = "mw-coverRow";
+      const titleEl = document.createElement("div");
+      titleEl.className = "r1-bookTitle";
+      titleEl.textContent = title;
 
-  const cover = document.createElement("img");
-  cover.className = "mw-bookCover";
-  cover.src = coverPath2026(title);
-  cover.alt = `${title} cover`;
+      const watchedAlready = hasWatched(ui.watchedMap, matchIndex, title);
 
-  // Optional: if a cover is missing, show a simple placeholder (no extra file required)
-  cover.onerror = () => {
-    cover.onerror = null;
-    cover.src =
-      "data:image/svg+xml;charset=UTF-8," +
-      encodeURIComponent(`
-        <svg xmlns='http://www.w3.org/2000/svg' width='400' height='250'>
-          <defs>
-            <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
-              <stop offset='0' stop-color='%23ffffff' stop-opacity='0.9'/>
-              <stop offset='1' stop-color='%23e5e7eb' stop-opacity='0.9'/>
-            </linearGradient>
-          </defs>
-          <rect width='100%' height='100%' rx='24' ry='24' fill='url(%23g)'/>
-          <text x='50%' y='45%' text-anchor='middle' font-family='system-ui, sans-serif'
-                font-size='18' fill='%23374151' font-weight='800'>Cover not found</text>
-          <text x='50%' y='60%' text-anchor='middle' font-family='system-ui, sans-serif'
-                font-size='12' fill='%236b7280' font-weight='700'>${title.replace(/&/g,"&amp;").slice(0,40)}</text>
-        </svg>
-      `);
-  };
+      const btnRow = document.createElement("div");
+      btnRow.className = "r1-btnRow";
 
-  const right = document.createElement("div");
+      const watchBtn = document.createElement("button");
+      watchBtn.className = "mw-btn mw-btn--watch";
+      watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
+      watchBtn.addEventListener("click", () => loadVideoFor(matchIndex, title));
+      ui.watchBtnsByTitle[title] = watchBtn;
 
-  const titleEl = document.createElement("div");
-  titleEl.className = "r1-bookTitle";
-  titleEl.textContent = title;
+      const voteBtn = document.createElement("button");
+      voteBtn.className = "mw-btn mw-btn--vote mw-locked";
+      voteBtn.disabled = true;
+      voteBtn.textContent = "🔒 Vote";
 
-  const sub = document.createElement("div");
-  sub.className = "text-xs font-bold opacity-70 mt-1";
-  sub.textContent = "Watch the video, then vote!";
+      const [a,b] = MATCHUPS[matchIndex];
 
-  right.appendChild(titleEl);
-  right.appendChild(sub);
+      voteBtn.addEventListener("click", async () => {
+        if (isVoted(ui.voteMap, matchIndex)) return;
 
-  row.appendChild(cover);
-  row.appendChild(right);
+        if (!hasWatchedBoth(ui.watchedMap, matchIndex, a, b)) {
+          setStatus("🔒 Watch BOTH books in this battle before voting!");
+          return;
+        }
 
-  // --- Buttons (existing logic) ---
-  const watchedAlready = hasWatched(ui.watchedMap, matchIndex, title);
+        await saveVote({
+          matchIndex,
+          title,
+          season: SEASON,
+          roundId: ROUND_ID,
+          saveProgress
+        });
 
-  const btnRow = document.createElement("div");
-  btnRow.className = "r1-btnRow";
+        ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
 
-  const watchBtn = document.createElement("button");
-  watchBtn.className = "mw-btn mw-btn--watch";
-  watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
-  watchBtn.addEventListener("click", () => loadVideoFor(matchIndex, title));
-  ui.watchBtnsByTitle[title] = watchBtn;
+        applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
+        confettiBurst({ durationMs: 700, particleCount: 90 });
 
-  const voteBtn = document.createElement("button");
-  voteBtn.className = "mw-btn mw-btn--vote mw-locked";
-  voteBtn.disabled = true;
-  voteBtn.textContent = "🔒 Vote";
+        // Update stone visuals + unlock next
+        renderBattleMap();
+        refreshTopProgress();
 
-  const [a,b] = MATCHUPS[matchIndex];
+        // slide avatar to next unlocked
+        setTimeout(() => moveAvatarToNext(true), 80);
 
-  voteBtn.addEventListener("click", async () => {
-    if (isVoted(ui.voteMap, matchIndex)) return;
+        const nextNum = matchIndex + 2;
+        if (nextNum <= MATCHUPS.length){
+          setStatus(`✅ Vote saved! Battle ${nextNum} is now unlocked.`);
+        } else {
+          setStatus("✅ Vote saved!");
+        }
 
-    if (!hasWatchedBoth(ui.watchedMap, matchIndex, a, b)) {
-      setStatus("🔒 Watch BOTH books in this battle before voting!");
-      return;
+        syncArenaLockUI(matchIndex);
+
+        if (voteCount() === MATCHUPS.length) {
+          setStatus("🎉 Round 1 complete! Returning to the main map...");
+          setTimeout(() => window.location.href = "../monarchWorld.html", 900);
+        }
+      });
+
+      ui.voteBtnsByTitle[title] = voteBtn;
+
+      btnRow.appendChild(watchBtn);
+      btnRow.appendChild(voteBtn);
+
+      containerEl.appendChild(titleEl);
+      containerEl.appendChild(btnRow);
     }
-
-    await saveVote({
-      matchIndex,
-      title,
-      season: SEASON,
-      roundId: ROUND_ID,
-      saveProgress
-    });
-
-    ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
-
-    applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
-    confettiBurst({ durationMs: 700, particleCount: 90 });
-
-    // Update this stone to completed
-    const s = ui.stones[matchIndex];
-    if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
-
-    // Re-render map so: next stone glows + locked ring updates + path progress updates
-    renderBattleMap();
-    highlightSelectedStone();
-    refreshTopProgress();
-
-    const nextNum = matchIndex + 2;
-    if (nextNum <= MATCHUPS.length){
-      setStatus(`✅ Vote saved! Battle ${nextNum} is now unlocked.`);
-    } else {
-      setStatus("✅ Vote saved!");
-    }
-
-    syncArenaLockUI(matchIndex);
-
-    if (voteCount() === MATCHUPS.length) {
-      setStatus("🎉 Round 1 complete! Returning to the main map...");
-      setTimeout(() => window.location.href = "../monarchWorld.html", 900);
-    }
-  });
-
-  ui.voteBtnsByTitle[title] = voteBtn;
-
-  btnRow.appendChild(watchBtn);
-  btnRow.appendChild(voteBtn);
-
-  // --- Assemble card ---
-  containerEl.appendChild(row);
-  containerEl.appendChild(btnRow);
-}
-
-    
 
     function renderArena(matchIndex){
       ui.voteBtnsByTitle = {};
@@ -908,9 +1000,6 @@
     }
 
     function selectBattle(matchIndex){
-      ui.selectedIndex = matchIndex;
-      highlightSelectedStone();
-
       renderArena(matchIndex);
       openArena();
     }
@@ -920,15 +1009,19 @@
         ui.watchedMap = getWatchedMap(getLocalProgress, SEASON, ROUND_ID);
         ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
 
+        // avatar init
+        applyAvatarImage();
+        renderAvatarGrid();
+
         initPathProgress();
         refreshTopProgress();
         renderFireflies();
         renderBattleMap();
 
-        // highlight the next unlocked (not yet voted) battle
-        const nextToDo = nextUnlockedIndex();
-        ui.selectedIndex = nextToDo >= 0 ? nextToDo : 0;
-        highlightSelectedStone();
+        // keep avatar aligned on resize/scroll
+        const realign = () => moveAvatarToNext(false);
+        window.addEventListener("resize", realign);
+        window.addEventListener("scroll", realign, { passive: true });
 
         attachVideoGate({
           videoEl: els.video,
