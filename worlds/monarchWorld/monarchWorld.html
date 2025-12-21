@@ -1,473 +1,242 @@
+<!-- worlds/monarchWorld/monarchWorld.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🦁 Monarch World | The Monarch Trail</title>
+  <title>🦋 Monarch World | Map</title>
 
+  <!-- Tailwind (optional; you can remove later if you prefer pure CSS) -->
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 
+  <!-- Your Monarch styles -->
+  <link rel="stylesheet" href="./styles/monarch.css">
+  <link rel="stylesheet" href="./styles/animations.css">
+
   <style>
-    :root{
-      --sky1:#fff7ed; --sky2:#fef3c7; --sky3:#dcfce7;
-      --card: rgba(255,255,255,0.88);
-      --ink: rgba(17,24,39,0.92);
-    }
+    /* Background for the map page */
     body{
-      min-height:100vh;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      background: radial-gradient(circle at 20% 10%, var(--sky1), var(--sky2) 35%, var(--sky3) 100%);
-      color: var(--ink);
-      overflow-x:hidden;
-    }
-    .card{
-      background: var(--card);
-      border: 1px solid rgba(0,0,0,0.06);
-      border-radius: 22px;
-      box-shadow: 0 14px 38px rgba(0,0,0,0.08);
-      backdrop-filter: blur(10px);
-    }
-    .pill{
-      border-radius: 999px;
-      padding: 8px 12px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.85);
-      font-weight: 900;
-      font-size: 12px;
-    }
-
-    /* --- GAME MAP --- */
-    .mapWrap{
-      position: relative;
-      border-radius: 26px;
-      border: 1px solid rgba(0,0,0,0.06);
-      background:
-        radial-gradient(circle at 20% 20%, rgba(34,197,94,0.12), transparent 40%),
-        radial-gradient(circle at 80% 30%, rgba(59,130,246,0.10), transparent 45%),
-        radial-gradient(circle at 60% 80%, rgba(251,191,36,0.14), transparent 40%),
-        linear-gradient(180deg, rgba(255,255,255,0.45), rgba(255,255,255,0.08));
-      overflow: hidden;
-    }
-
-    /* cute drifting clouds */
-    .cloud{
-      position:absolute; top:18px; left:-120px;
-      width:160px; height:54px;
-      border-radius:999px;
-      background: rgba(255,255,255,0.55);
-      filter: blur(0.2px);
-      animation: drift 28s linear infinite;
-      border: 1px solid rgba(0,0,0,0.04);
-    }
-    .cloud:before,.cloud:after{
-      content:"";
-      position:absolute;
-      background: rgba(255,255,255,0.62);
-      border-radius:999px;
-      border: 1px solid rgba(0,0,0,0.03);
-    }
-    .cloud:before{ width:70px; height:46px; left:18px; top:-18px; }
-    .cloud:after { width:88px; height:54px; right:18px; top:-22px; }
-    .cloud.c2{ top:60px; animation-duration: 36s; opacity:0.75; transform: scale(0.9); }
-    .cloud.c3{ top:110px; animation-duration: 44s; opacity:0.6; transform: scale(0.78); }
-
-    @keyframes drift{
-      0%{ transform: translateX(0) }
-      100%{ transform: translateX(calc(100vw + 240px)) }
-    }
-
-    /* path line */
-    .trailSvg{
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      opacity:0.75;
-    }
-
-    /* node layout */
-    .nodes{
-      position: relative;
-      padding: 22px;
-      display: grid;
-      grid-template-columns: repeat(12, minmax(0,1fr));
-      grid-auto-rows: minmax(78px, auto);
-      gap: 12px;
-      min-height: 560px;
-    }
-
-    .node{
-      position: relative;
-      display:flex;
-      align-items:center;
-      gap: 12px;
-      padding: 14px;
-      border-radius: 22px;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.88);
-      box-shadow: 0 10px 22px rgba(0,0,0,0.08);
-      transition: transform 0.12s ease, filter 0.15s ease;
-      user-select:none;
-    }
-    .node:hover{ transform: translateY(-2px); }
-    .node.locked{ opacity:0.55; filter: grayscale(0.35); }
-    .node.completed{
-      background: rgba(34,197,94,0.14);
-      border-left: 6px solid rgba(34,197,94,0.65);
-    }
-    .node.current{
-      background: rgba(251,191,36,0.16);
-      border-left: 6px solid rgba(251,191,36,0.75);
-      animation: glow 1.25s ease-in-out infinite;
-    }
-
-    @keyframes glow{
-      0%,100%{ box-shadow: 0 10px 24px rgba(0,0,0,0.08); }
-      50%{ box-shadow: 0 14px 36px rgba(251,191,36,0.26); }
-    }
-
-    .badge{
-      width: 56px; height: 56px;
-      border-radius: 18px;
-      display:flex; align-items:center; justify-content:center;
-      font-size: 26px; font-weight: 900;
-      background: rgba(0,0,0,0.05);
-      border: 1px solid rgba(0,0,0,0.06);
-      flex: 0 0 auto;
-    }
-    .nodeTitle{ font-weight: 1000; line-height:1.05; font-size: 18px; }
-    .nodeSub{ font-size: 12px; opacity: 0.78; font-weight: 700; margin-top:2px; }
-    .nodeBtns{ margin-left:auto; display:flex; gap: 8px; flex-wrap: wrap; }
-
-    .btn{
-      border-radius: 16px;
-      padding: 10px 12px;
-      font-weight: 1000;
-      border: 1px solid rgba(0,0,0,0.08);
-      background: rgba(255,255,255,0.9);
-      transition: transform 0.05s ease;
-      white-space: nowrap;
-    }
-    .btn:active{ transform: scale(0.99); }
-    .btn.primary{
-      background: rgba(59,130,246,0.90);
-      color:white;
-      border-color: rgba(59,130,246,0.25);
-    }
-    .btn.primary:hover{ filter: brightness(1.02); }
-    .btn.disabled{ opacity:0.6; cursor:not-allowed; }
-
-    /* stepping stones sprinkle */
-    .paw{
-      position:absolute;
-      width: 18px; height: 18px;
-      border-radius: 999px;
-      background: rgba(17,24,39,0.18);
-      filter: blur(0.2px);
-      opacity: 0.0;
-      animation: pawPop 2.2s ease-in-out infinite;
-    }
-    .paw:before{
-      content:"🐾";
-      position:absolute;
-      inset:-2px 0 0 0;
-      display:flex; align-items:center; justify-content:center;
-      font-size: 18px;
-      opacity: 0.65;
-    }
-    @keyframes pawPop{
-      0%{ opacity: 0; transform: translateY(6px) scale(0.95); }
-      25%{ opacity: 0.9; }
-      60%{ opacity: 0.25; }
-      100%{ opacity: 0; transform: translateY(-6px) scale(1.06); }
-    }
-
-    /* Confetti (simple) */
-    .confetti{
-      position: fixed;
-      inset: 0;
-      pointer-events:none;
-      overflow:hidden;
-      z-index: 50;
-    }
-    .confetti i{
-      position:absolute;
-      top:-20px;
-      width: 10px; height: 14px;
-      border-radius: 4px;
-      opacity: 0.9;
-      animation: fall 1.6s linear forwards;
-    }
-    @keyframes fall{
-      to{ transform: translateY(110vh) rotate(520deg); opacity: 0.9; }
+      background: url("./assets/backgrounds/forest-map.png") center / cover no-repeat fixed;
     }
   </style>
 </head>
 
 <body>
-  <div class="max-w-6xl mx-auto p-4 md:p-6">
-    <!-- Header -->
-    <div class="card p-4 md:p-6 mb-4">
-      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+  <div class="mw-shell">
+
+    <!-- Top Card -->
+    <div class="mw-card mw-card--soft mw-section mw-animate-fade-up">
+      <div class="mw-header">
         <div>
-          <div class="text-2xl md:text-3xl font-extrabold">🦁 Monarch World: The Monarch Trail</div>
-          <div class="text-sm opacity-80 mt-1">
-            Follow the stepping stones. Finish a round to unlock the next!
+          <div class="mw-title">🦋 Monarch World</div>
+          <div class="mw-subtitle">
+            Follow the stepping stones. Watch book videos, then vote to advance!
           </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="pill">
-            <div class="opacity-70">Player</div>
-            <div id="whoami" class="text-sm font-extrabold">Loading…</div>
-          </div>
-
-          <button id="btnDemoComplete"
-                  class="pill hover:bg-white active:scale-95"
-                  title="Teacher demo: mark next round complete (remove later)">
-            🧪 Demo Complete
-          </button>
-
-          <a href="../../questHub.html" class="pill hover:bg-white active:scale-95">← Quest Hub</a>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="mw-tag" id="userTag">Loading…</span>
+          <a class="mw-pill" href="../../questHub.html">← Quest Hub</a>
         </div>
       </div>
 
-      <div id="status" class="mt-3 text-sm font-bold opacity-80"></div>
-    </div>
+      <div class="mw-row">
+        <div class="mw-status" id="mapStatus">Checking your progress…</div>
 
-    <!-- Map -->
-    <div class="card p-3 md:p-4">
-      <div class="mapWrap">
-        <div class="cloud"></div>
-        <div class="cloud c2"></div>
-        <div class="cloud c3"></div>
-
-        <!-- curvy trail -->
-        <svg class="trailSvg" viewBox="0 0 1200 600" preserveAspectRatio="none">
-          <path d="M70,520 C220,420 280,520 430,440 C560,370 640,420 740,320 C840,220 920,260 1010,160 C1090,70 1140,90 1160,70"
-                fill="none" stroke="rgba(17,24,39,0.18)" stroke-width="10" stroke-linecap="round" stroke-dasharray="8 14"/>
-          <path d="M70,520 C220,420 280,520 430,440 C560,370 640,420 740,320 C840,220 920,260 1010,160 C1090,70 1140,90 1160,70"
-                fill="none" stroke="rgba(251,191,36,0.25)" stroke-width="5" stroke-linecap="round"/>
-        </svg>
-
-        <div class="nodes" id="nodesHost">
-          <!-- Nodes injected here -->
-        </div>
+        <!-- Teacher link appears only for allowed teacher emails -->
+        <a id="teacherLink"
+           class="mw-pill mw-shimmer"
+           href="./teacher/dashboard.html"
+           style="display:none;">
+          👩‍🏫 Teacher Dashboard
+        </a>
       </div>
     </div>
+
+    <!-- Map Path -->
+    <div class="mw-mapOverlay mw-animate-fade-up">
+      <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
+        <div class="font-extrabold text-lg">🪨 Stepping Stones</div>
+        <div class="mw-tag" id="seasonTag">Season: 2026</div>
+      </div>
+
+      <div id="path" class="mw-path"></div>
+
+      <div class="mt-4 text-sm font-bold opacity-80">
+        Tip: A locked stone means the next round hasn’t been unlocked yet.
+      </div>
+    </div>
+
   </div>
 
-  <div id="confetti" class="confetti" aria-hidden="true"></div>
+  <script type="module">
+    // Core auth + local progress
+    import { requireLogin, getLocalProgress } from "../../scripts/lrcQuestCore.js";
 
-  <!-- ✅ LRC Quest core -->
-  <script src="../../scripts/lrcQuestCore.js"></script>
+    // Data (season + match count)
+    import { SEASON } from "./data/nominees-2026.js";
+    import { ROUND1_MATCHUPS } from "./data/bracket-2026.js";
 
-  <script>
-    /*************************************************************************
-     * Monarch World Map (Overworld)
-     * - Shows stepping-stone progression
-     * - Loads/saves progress via lrcQuestCore.js (Firestore) with local fallback
-     *************************************************************************/
+    // Stepstone component
+    import { createStepStone } from "./components/stepStone.js";
 
-    const Core =
-      window.LRCQuestCore ||
-      window.lrcQuestCore ||
-      window.LRCQuest ||
-      window.LRCQuestApp ||
-      null;
+    // Firestore reads (central season doc)
+    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-    const SEASON = "2026";
-    const PROG_KEY = `monarchWorld_progress_${SEASON}`;
+    // Teacher allowlist (you requested only these two)
+    const TEACHER_EMAILS = new Set([
+      "malbrecht@sd308.org",
+      "malbrecht3317@gmail.com"
+    ]);
 
-    // Round nodes (game levels)
-    const LEVELS = [
-      { id: "r1",  title: "Round 1 Battles",   sub: "First set of matchups!", icon: "🪨", href: "./rounds/round1.html", grid: "col-span-12 md:col-span-6", pos: { x: 80,  y: 470 } },
-      { id: "r2",  title: "Quarterfinals",     sub: "Winners keep going!",     icon: "⚔️", href: "./rounds/round2.html", grid: "col-span-12 md:col-span-5 md:col-start-7", pos: { x: 420, y: 390 } },
-      { id: "r3",  title: "Semifinals",        sub: "Only a few left!",        icon: "🔥", href: "./rounds/round3.html", grid: "col-span-12 md:col-span-5", pos: { x: 720, y: 270 } },
-      { id: "rf",  title: "Final Battle",      sub: "Last matchup!",           icon: "🏟️", href: "./rounds/final.html",  grid: "col-span-12 md:col-span-5 md:col-start-7", pos: { x: 960, y: 155 } },
-      { id: "win", title: "Crown Reveal",      sub: "Celebrate the winner!",   icon: "👑", href: "./rounds/crown.html",  grid: "col-span-12 md:col-span-6", pos: { x: 1120,y: 80 } }
-    ];
+    const els = {
+      userTag: document.getElementById("userTag"),
+      mapStatus: document.getElementById("mapStatus"),
+      seasonTag: document.getElementById("seasonTag"),
+      path: document.getElementById("path"),
+      teacherLink: document.getElementById("teacherLink")
+    };
 
-    // Default progress: only Round 1 unlocked
-    function defaultProgress(){
-      return {
-        season: SEASON,
-        unlocked: { r1: true, r2: false, r3: false, rf: false, win: false },
-        completed: { r1: false, r2: false, r3: false, rf: false, win: false },
-        updatedAt: new Date().toISOString()
-      };
+    const db = getFirestore();
+
+    const DEFAULT_MAP_STATE = {
+      unlocked: { r1: true, r2: false, r3: false, final: false },
+      completed: { r1: false, r2: false, r3: false, final: false }
+    };
+
+    function isTeacherEmail(email) {
+      return TEACHER_EMAILS.has(String(email || "").toLowerCase().trim());
     }
 
-    function setStatus(msg){ document.getElementById("status").textContent = msg || ""; }
-
-    function localKey(uid){ return `LRCQ_${uid}_${PROG_KEY}`; }
-
-    async function loadProgress(uid){
-      if (Core && typeof Core.loadProgress === "function"){
-        try{
-          const p = await Core.loadProgress(PROG_KEY);
-          if (p) return p;
-        }catch(e){
-          console.warn("Firestore load failed, fallback local:", e);
-        }
-      }
-      try{
-        const raw = localStorage.getItem(localKey(uid));
-        return raw ? JSON.parse(raw) : null;
-      }catch{ return null; }
+    function countKeys(obj) {
+      return obj ? Object.keys(obj).length : 0;
     }
 
-    async function saveProgress(uid, payload){
-      payload.updatedAt = new Date().toISOString();
-
-      if (Core && typeof Core.saveProgress === "function"){
-        try{
-          await Core.saveProgress(PROG_KEY, payload);
-          return { ok:true, where:"Firestore" };
-        }catch(e){
-          console.warn("Firestore save failed, fallback local:", e);
-        }
-      }
-      try{
-        localStorage.setItem(localKey(uid), JSON.stringify(payload));
-        return { ok:true, where:"localStorage" };
-      }catch(e){
-        return { ok:false, where:"nowhere", error:e };
-      }
+    function inferR1CompletedFromLocal(progressObj) {
+      // If a student voted in all Round 1 matches, treat as completed for THIS student
+      const votes = progressObj?.monarchWorld?.[SEASON]?.r1?.votes || {};
+      return countKeys(votes) >= ROUND1_MATCHUPS.length;
     }
 
-    function getCurrentLevelId(progress){
-      // first unlocked but not completed; else crown
-      for (const lvl of LEVELS){
-        if (progress.unlocked[lvl.id] && !progress.completed[lvl.id]) return lvl.id;
-      }
-      return "win";
+    async function loadSeasonDoc(season) {
+      // Reads monarchSeasons/{season} created by teacher tool
+      const ref = doc(db, "monarchSeasons", season);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) return null;
+      return snap.data() || null;
     }
 
-    function explodeConfetti(){
-      const c = document.getElementById("confetti");
-      c.innerHTML = "";
-      const pieces = 46;
-      for (let i=0;i<pieces;i++){
-        const el = document.createElement("i");
-        el.style.left = Math.random()*100 + "vw";
-        el.style.background = `hsl(${Math.floor(Math.random()*360)}, 85%, 65%)`;
-        el.style.animationDelay = (Math.random()*0.25) + "s";
-        el.style.transform = `translateY(-10px) rotate(${Math.random()*200}deg)`;
-        c.appendChild(el);
+    function normalizeMapState(fromDoc, localProgress) {
+      // Priority:
+      // 1) Teacher season doc (global unlocks)
+      // 2) Defaults
+      const state = structuredClone(DEFAULT_MAP_STATE);
+
+      if (fromDoc?.map?.unlocked) state.unlocked = { ...state.unlocked, ...fromDoc.map.unlocked };
+      if (fromDoc?.map?.completed) state.completed = { ...state.completed, ...fromDoc.map.completed };
+
+      // Student-specific completion inference (helpful before teacher generates season doc)
+      // Only fill completed.r1 if teacher doc hasn't already marked it.
+      if (!state.completed.r1) {
+        state.completed.r1 = inferR1CompletedFromLocal(localProgress);
       }
-      setTimeout(()=>{ c.innerHTML = ""; }, 2000);
+
+      // If a student completed r1, it makes sense for them to see r2 as unlocked
+      // ONLY if the season doc says so; we won't override global locks here.
+      return state;
     }
 
-    function renderNodes(progress){
-      const host = document.getElementById("nodesHost");
-      host.innerHTML = "";
+    function renderPath(mapState) {
+      els.path.innerHTML = "";
 
-      const currentId = getCurrentLevelId(progress);
+      const items = [
+        { key: "r1", label: "Round 1", href: "./rounds/round1.html" },
+        { key: "r2", label: "Round 2", href: "./rounds/round2.html" },
+        { key: "r3", label: "Round 3", href: "./rounds/round3.html" },
+        { key: "final", label: "Final", href: "./rounds/final.html" }
+      ];
 
-      LEVELS.forEach((lvl, idx) => {
-        const unlocked = !!progress.unlocked[lvl.id];
-        const completed = !!progress.completed[lvl.id];
-        const current = lvl.id === currentId;
+      items.forEach((it) => {
+        const unlocked = !!mapState.unlocked[it.key];
+        const completed = !!mapState.completed[it.key];
 
-        const node = document.createElement("div");
-        node.className = `node ${lvl.grid} ${!unlocked ? "locked" : ""} ${completed ? "completed" : ""} ${current ? "current" : ""}`;
+        const state = completed ? "completed" : (unlocked ? "unlocked" : "locked");
 
-        const badge = document.createElement("div");
-        badge.className = "badge";
-        badge.textContent = completed ? "✅" : (current ? "⭐" : (unlocked ? lvl.icon : "🔒"));
+        const stone = createStepStone({
+          assetBase: "./assets",
+          state,
+          href: it.href,
+          label: it.label,
+          title: unlocked
+            ? (completed ? `${it.label} completed` : `${it.label} unlocked`)
+            : `${it.label} locked`,
+          allowCompletedClick: true
+        });
 
-        const txt = document.createElement("div");
-        txt.innerHTML = `
-          <div class="nodeTitle">${lvl.title}</div>
-          <div class="nodeSub">${lvl.sub}</div>
-        `;
+        // Optional: add a small caption under stones
+        const wrap = document.createElement("div");
+        wrap.className = "flex flex-col items-center";
+        wrap.appendChild(stone.root);
 
-        const btns = document.createElement("div");
-        btns.className = "nodeBtns";
+        const cap = document.createElement("div");
+        cap.className = "mw-stoneCaption";
+        cap.textContent = completed ? "✅ Completed" : (unlocked ? "⭐ Ready" : "🔒 Locked");
+        wrap.appendChild(cap);
 
-        const enter = document.createElement("a");
-        enter.className = "btn primary";
-        enter.textContent = completed ? "Replay" : "ENTER";
-        enter.href = lvl.href;
-
-        if (!unlocked){
-          enter.classList.add("disabled");
-          enter.href = "javascript:void(0)";
-          enter.addEventListener("click", () => {
-            setStatus("🔒 Keep going! Finish the current stepping stone first!");
-            // little “shake” feedback
-            node.animate([{transform:"translateX(0)"},{transform:"translateX(-3px)"},{transform:"translateX(3px)"},{transform:"translateX(0)"}], {duration:240});
-          });
-        }
-
-        btns.appendChild(enter);
-
-        node.appendChild(badge);
-        node.appendChild(txt);
-        node.appendChild(btns);
-
-        host.appendChild(node);
-      });
-
-      // Pawprints near the CURRENT level (fun)
-      const cur = LEVELS.find(l => l.id === currentId);
-      if (cur){
-        for (let i=0;i<4;i++){
-          const p = document.createElement("div");
-          p.className = "paw";
-          p.style.left = (cur.pos.x/12 + i*2) + "%";
-          p.style.top  = (cur.pos.y/6 + (i%2)*3) + "%";
-          p.style.animationDelay = (i*0.35) + "s";
-          host.appendChild(p);
-        }
-      }
-    }
-
-    async function boot(){
-      // login
-      if (Core && typeof Core.requireLogin === "function") await Core.requireLogin();
-
-      // best-effort user
-      let user = null;
-      if (Core && typeof Core.getUser === "function") user = Core.getUser();
-      if (!user && Core && Core.user) user = Core.user;
-
-      const uid = user?.uid || "anonymous";
-      document.getElementById("whoami").textContent = user?.displayName || user?.email || "Player";
-
-      let progress = await loadProgress(uid);
-      if (!progress){
-        progress = defaultProgress();
-        await saveProgress(uid, progress);
-      }
-
-      // If they completed a level elsewhere, it’ll reflect here.
-      renderNodes(progress);
-
-      setStatus("Find the ⭐ star stone and click ENTER!");
-
-      // Demo button: marks the CURRENT level complete + unlocks next (remove later)
-      document.getElementById("btnDemoComplete").addEventListener("click", async () => {
-        const currentId = getCurrentLevelId(progress);
-        progress.completed[currentId] = true;
-
-        // unlock next level in sequence
-        const idx = LEVELS.findIndex(l => l.id === currentId);
-        if (idx >= 0 && idx < LEVELS.length - 1){
-          const nextId = LEVELS[idx + 1].id;
-          progress.unlocked[nextId] = true;
-        }
-
-        const res = await saveProgress(uid, progress);
-        explodeConfetti();
-        renderNodes(progress);
-        setStatus(`🎉 Nice! Saved (${res.where}). Next stepping stone unlocked!`);
+        els.path.appendChild(wrap);
       });
     }
 
-    boot().catch(err => {
+    function setStatusText(mapState, seasonDocExists) {
+      const unlockedCount =
+        (mapState.unlocked.r1 ? 1 : 0) +
+        (mapState.unlocked.r2 ? 1 : 0) +
+        (mapState.unlocked.r3 ? 1 : 0) +
+        (mapState.unlocked.final ? 1 : 0);
+
+      const completedCount =
+        (mapState.completed.r1 ? 1 : 0) +
+        (mapState.completed.r2 ? 1 : 0) +
+        (mapState.completed.r3 ? 1 : 0) +
+        (mapState.completed.final ? 1 : 0);
+
+      const source = seasonDocExists ? "Teacher season controls are active." : "Using your personal progress (teacher unlocks not found yet).";
+      els.mapStatus.textContent = `Unlocked: ${unlockedCount}/4 • Completed: ${completedCount}/4 • ${source}`;
+    }
+
+    async function boot() {
+      els.seasonTag.textContent = `Season: ${SEASON}`;
+
+      requireLogin(async (user) => {
+        const email = (user?.email || "").toLowerCase().trim();
+        els.userTag.textContent = email ? `Signed in: ${email}` : "Signed in";
+
+        // Show teacher dashboard link only for approved teacher emails
+        if (isTeacherEmail(email)) {
+          els.teacherLink.style.display = "";
+        }
+
+        const localProgress = getLocalProgress() || {};
+
+        let seasonDoc = null;
+        try {
+          seasonDoc = await loadSeasonDoc(SEASON);
+        } catch (e) {
+          // If rules block this read, or doc doesn't exist, we fall back safely
+          console.warn("Season doc read failed (fallback to local progress).", e);
+        }
+
+        const mapState = normalizeMapState(seasonDoc, localProgress);
+
+        renderPath(mapState);
+        setStatusText(mapState, !!seasonDoc);
+      });
+    }
+
+    boot().catch((err) => {
       console.error(err);
-      setStatus("❌ Something went wrong loading Monarch World. Check the console.");
+      els.userTag.textContent = "⚠️ Error";
+      els.mapStatus.textContent = "Something went wrong loading the map. Check the console.";
     });
   </script>
 </body>

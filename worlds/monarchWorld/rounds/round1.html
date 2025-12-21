@@ -1,3 +1,4 @@
+<!-- worlds/monarchWorld/rounds/round1.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,92 +7,37 @@
   <title>⚔️ Monarch World | Round 1 Battles</title>
 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../styles/monarch.css">
+  <link rel="stylesheet" href="../styles/animations.css">
 
   <style>
-    body {
-      background: radial-gradient(circle at 20% 10%, #fff7ed, #fef3c7 35%, #dcfce7 100%);
-      min-height: 100vh;
-      font-family: ui-sans-serif, system-ui;
-    }
-    .card {
-      background: rgba(255,255,255,0.95);
-      border-radius: 24px;
-      border: 1px solid rgba(0,0,0,0.08);
-      box-shadow: 0 12px 30px rgba(0,0,0,0.1);
-    }
-    .arena {
-      border-radius: 24px;
-      border: 2px dashed rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.82);
-      padding: 16px;
-    }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-    .bookBtn {
-      border-radius: 20px;
-      font-weight: 900;
-      padding: 14px;
-      width: 100%;
-      transition: transform 0.08s ease, filter 0.15s ease;
-    }
-    .bookBtn:active { transform: scale(0.98); }
-    .locked { opacity: 0.55; cursor: not-allowed; }
-    .muted { opacity: 0.72; }
-    .success {
-      background: rgba(34,197,94,0.12) !important;
-      border: 2px solid rgba(34,197,94,0.35);
-    }
-    .chosen { outline: 4px solid rgba(34,197,94,0.35); }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: 900;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(0,0,0,0.10);
-      background: rgba(255,255,255,0.85);
-    }
-    video {
-      width: 100%;
-      border-radius: 20px;
-      background: #000;
-      border: 2px solid rgba(0,0,0,0.1);
+    body{
+      background: url("../assets/backgrounds/night-forest.png") center / cover no-repeat fixed;
     }
   </style>
 </head>
 
 <body>
-  <div class="max-w-6xl mx-auto p-4 md:p-6">
+  <div class="mw-shell">
 
     <!-- HEADER -->
-    <div class="card p-4 md:p-6 mb-4">
-      <div class="flex justify-between items-center gap-3 flex-wrap">
+    <div class="mw-card mw-card--soft mw-section mw-animate-fade-up">
+      <div class="mw-header">
         <div>
-          <div class="text-2xl md:text-3xl font-extrabold">⚔️ Round 1: Battle Arena</div>
-          <div class="text-sm opacity-80 mt-1">
-            Rule: Watch BOTH book videos all the way to the end, then vote for the winner.
-          </div>
+          <div class="mw-title">⚔️ Round 1: Battle Arena</div>
+          <div class="mw-subtitle">Rule: Watch BOTH book videos all the way to the end, then vote for the winner.</div>
         </div>
-        <a href="../monarchWorld.html"
-           class="px-4 py-3 rounded-2xl font-extrabold bg-white border hover:bg-gray-50">
-          ← Map
-        </a>
+        <a class="mw-pill" href="../monarchWorld.html">← Map</a>
       </div>
 
-      <div class="mt-3 flex items-center justify-between gap-3 flex-wrap">
-        <div id="progressText" class="text-sm font-bold"></div>
-        <div id="status" class="text-sm font-bold opacity-80"></div>
+      <div class="mw-row">
+        <div id="progressText" class="mw-status"></div>
+        <div id="status" class="mw-status"></div>
       </div>
     </div>
 
     <!-- VIDEO ZONE -->
-    <div class="card p-4 md:p-6 mb-4">
+    <div class="mw-card mw-card--soft mw-section mw-animate-fade-up">
       <div class="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <div class="font-extrabold text-lg">🎥 Watch Zone</div>
@@ -100,11 +46,11 @@
             Watch both books in a battle to unlock voting.
           </div>
         </div>
-        <div class="tag" id="watchTag">🔒 Not watched</div>
+        <div class="mw-tag" id="watchTag">🔒 Not watched</div>
       </div>
 
       <div class="mt-3">
-        <video id="video" controls preload="metadata"></video>
+        <video id="video" class="mw-video" controls preload="metadata"></video>
       </div>
 
       <div class="mt-2 text-sm font-bold opacity-70">
@@ -113,381 +59,281 @@
     </div>
 
     <!-- MATCHUPS -->
-    <div id="matches" class="grid md:grid-cols-2 gap-4"></div>
+    <div id="matches" class="mw-arenas mw-animate-fade-up"></div>
   </div>
 
-  <!-- ✅ EVERYTHING AS A MODULE + IMPORT YOUR CORE -->
   <script type="module">
-import {
-  requireLogin,
-  getLocalProgress,
-  saveProgress
-} from "../../../scripts/lrcQuestCore.js";
+    // ✅ Core (ES module)
+    import { requireLogin, getLocalProgress, saveProgress } from "../../../scripts/lrcQuestCore.js";
 
-    const SEASON = "2026";
+    // ✅ Data
+    import { SEASON } from "../data/nominees-2026.js";
+    import { ROUND1_MATCHUPS as MATCHUPS } from "../data/bracket-2026.js";
+    import { getVideoUrl2026 } from "../data/video-map-2026.js";
+
+    // ✅ Components
+    import { setProgressText as setProgressTextUI } from "../components/progressBar.js";
+    import { attachVideoGate, getWatchedMap, hasWatchedBoth, hasWatched } from "../components/videoGate.js";
+    import {
+      getVoteMap,
+      getVoteForMatch,
+      isVoted,
+      saveVote,
+      applyVotedUI,
+      unlockVoteUI,
+      lockVoteUI
+    } from "../components/voteLock.js";
+    import { confettiBurst } from "../components/confetti.js";
+
     const ROUND_ID = "r1";
 
-    const MATCHUPS = [
-      ["Mr. S: A First Day of School Book", "Negative Cat"],
-      ["Yoshi, Sea Turtle Genius", "Sydney and Taylor Explore the Whole Wide World"],
-      ["Knight Owl", "Beneath"],
-      ["Thunder and Cluck: Friends Do Not Eat Friends", "We Are Definitely Human"],
-      ["The Red Jacket", "Hamsters Make Terrible Roommates"],
-      ["The Flower Garden", "Butt or Face?: A Hilarious Animal Guessing Game for Kids"],
-      ["Time to Make Art", "Bathe the Cat"],
-      ["Who’s Afraid of the Light?", "Just SNOW Already!"],
-      ["Home is Calling: The Journey of the Monarch Butterfly", "The World’s Best Class Plant"],
-      ["Claude: The True Story of a White Alligator", "Homegrown"]
-    ];
-
-    const VIDEO_BASE = "../videos/2026/";
-    const VIDEO_FILES = {
-      "Mr. S: A First Day of School Book": "mr-s.mp4",
-      "Negative Cat": "negative-cat.mp4",
-      "Yoshi, Sea Turtle Genius": "yoshi-sea-turtle-genius.mp4",
-      "Sydney and Taylor Explore the Whole Wide World": "sydney-and-taylor-explore-the-whole-wide-world.mp4",
-      "Knight Owl": "knight-owl.mp4",
-      "Beneath": "beneath.mp4",
-      "Thunder and Cluck: Friends Do Not Eat Friends": "thunder-and-cluck-friends-do-not-eat-friends.mp4",
-      "We Are Definitely Human": "we-are-definitely-human.mp4",
-      "The Red Jacket": "the-red-jacket.mp4",
-      "Hamsters Make Terrible Roommates": "hamsters-make-terrible-roommates.mp4",
-      "The Flower Garden": "the-flower-garden.mp4",
-      "Butt or Face?: A Hilarious Animal Guessing Game for Kids": "butt-or-face.mp4",
-      "Time to Make Art": "time-to-make-art.mp4",
-      "Bathe the Cat": "bathe-the-cat.mp4",
-      "Who’s Afraid of the Light?": "whos-afraid-of-the-light.mp4",
-      "Just SNOW Already!": "just-snow-already.mp4",
-      "Home is Calling: The Journey of the Monarch Butterfly": "home-is-calling-the-journey-of-the-monarch-butterfly.mp4",
-      "The World’s Best Class Plant": "the-worlds-best-class-plant.mp4",
-      "Claude: The True Story of a White Alligator": "claude-the-true-story-of-a-white-alligator.mp4",
-      "Homegrown": "homegrown.mp4"
+    const els = {
+      status: document.getElementById("status"),
+      progressText: document.getElementById("progressText"),
+      nowPlaying: document.getElementById("nowPlaying"),
+      watchTag: document.getElementById("watchTag"),
+      video: document.getElementById("video"),
+      matches: document.getElementById("matches")
     };
 
-    // -----------------------------
-    // Progress shape stored inside lrcQuest progress object:
-    // progress.monarchWorld[SEASON].r1 = { watched: { m0:{title:true...} }, votes:{ m0:"title" } }
-    // -----------------------------
-    function getRoundState() {
-      const p = getLocalProgress() || {};
-      p.monarchWorld = p.monarchWorld || {};
-      p.monarchWorld[SEASON] = p.monarchWorld[SEASON] || {};
-      p.monarchWorld[SEASON][ROUND_ID] = p.monarchWorld[SEASON][ROUND_ID] || { watched: {}, votes: {} };
-      return p;
-    }
+    function setStatus(msg) { els.status.textContent = msg || ""; }
+    function setWatchTag(msg) { els.watchTag.textContent = msg || ""; }
 
-    function setStatus(msg) { document.getElementById("status").textContent = msg || ""; }
-    function setWatchTag(msg) { document.getElementById("watchTag").textContent = msg || ""; }
-
+    // UI state
     const ui = {
-      matchCards: {}, // i -> { card, watchBtnsByTitle, voteBtnsByTitle, miniStatusEl }
-      watchedMap: {}, // i -> { [title]: true }
-      voteMap: {}     // i -> votedTitle
+      // matchIndex -> { card, miniStatusEl, watchBtnsByTitle, voteBtnsByTitle }
+      matchCards: {},
+      watchedMap: {}, // from progress: watched.m{idx}[title] = true
+      voteMap: {}     // from progress: votes.m{idx} = title
     };
 
-    let currentMatch = null;
+    // current video context (for videoGate)
+    let currentMatchIndex = null;
     let currentTitle = null;
 
-    function setProgressText() {
-      const total = MATCHUPS.length;
-      const done = Object.keys(ui.voteMap).length;
-      document.getElementById("progressText").textContent = `Battles completed: ${done} / ${total}`;
+    function countVotes(voteMap) {
+      return voteMap ? Object.keys(voteMap).length : 0;
     }
 
-    function watchedBoth(matchIndex) {
-      const watched = ui.watchedMap[matchIndex] || {};
-      const [a,b] = MATCHUPS[matchIndex];
-      return !!(watched[a] && watched[b]);
+    function refreshProgressText() {
+      setProgressTextUI(countVotes(ui.voteMap), MATCHUPS.length);
     }
 
     function updateMiniStatus(matchIndex) {
       const group = ui.matchCards[matchIndex];
       if (!group) return;
 
-      const voted = !!ui.voteMap[matchIndex];
-      const [a,b] = MATCHUPS[matchIndex];
-      const watched = ui.watchedMap[matchIndex] || {};
-      const count = (watched[a] ? 1 : 0) + (watched[b] ? 1 : 0);
+      const [a, b] = MATCHUPS[matchIndex];
+      const watchedA = hasWatched(ui.watchedMap, matchIndex, a);
+      const watchedB = hasWatched(ui.watchedMap, matchIndex, b);
+      const watchedCount = (watchedA ? 1 : 0) + (watchedB ? 1 : 0);
 
-      if (voted) return (group.miniStatusEl.textContent = "✅ Voted!");
-      group.miniStatusEl.textContent =
-        count === 0 ? "Watch both books: 0/2" :
-        count === 1 ? "Watch both books: 1/2" :
-                      "✅ Watched both! Vote unlocked!";
-    }
-
-    function unlockVotes(matchIndex) {
-      const group = ui.matchCards[matchIndex];
-      if (!group || ui.voteMap[matchIndex]) return;
-
-      Object.entries(group.voteBtnsByTitle).forEach(([title, btn]) => {
-        btn.disabled = false;
-        btn.classList.remove("locked");
-        btn.classList.add("success");
-        btn.textContent = `🗳️ Vote for "${title}"`;
-      });
-    }
-
-    function relockVotes(matchIndex) {
-      const group = ui.matchCards[matchIndex];
-      if (!group || ui.voteMap[matchIndex]) return;
-
-      Object.values(group.voteBtnsByTitle).forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add("locked");
-        btn.classList.remove("success");
-        btn.textContent = "🔒 Vote";
-      });
-    }
-
-    function lockMatchAfterVote(matchIndex, votedTitle) {
-      const group = ui.matchCards[matchIndex];
-      if (!group) return;
-
-      Object.values(group.voteBtnsByTitle).forEach(btn => {
-        btn.disabled = true;
-        btn.classList.add("locked", "muted");
-        btn.classList.remove("success");
-      });
-
-      const chosenBtn = group.voteBtnsByTitle[votedTitle];
-      if (chosenBtn) {
-        chosenBtn.textContent = `✅ WINNER: "${votedTitle}"`;
-        chosenBtn.classList.remove("muted");
-        chosenBtn.classList.add("chosen");
-      }
-      Object.keys(group.voteBtnsByTitle).forEach(t => {
-        if (t !== votedTitle) group.voteBtnsByTitle[t].textContent = "—";
-      });
-
-      group.card.classList.add("success");
-      updateMiniStatus(matchIndex);
-    }
-
-    async function persistWatched(matchIndex) {
-      await saveProgress((progress) => {
-        progress = progress || {};
-        progress.monarchWorld = progress.monarchWorld || {};
-        progress.monarchWorld[SEASON] = progress.monarchWorld[SEASON] || {};
-        const r = progress.monarchWorld[SEASON][ROUND_ID] || { watched: {}, votes: {} };
-
-        r.watched = r.watched || {};
-        r.watched[`m${matchIndex}`] = ui.watchedMap[matchIndex] || {};
-
-        progress.monarchWorld[SEASON][ROUND_ID] = r;
-        return progress;
-      });
-    }
-
-    async function persistVote(matchIndex, title) {
-      await saveProgress((progress) => {
-        progress = progress || {};
-        progress.monarchWorld = progress.monarchWorld || {};
-        progress.monarchWorld[SEASON] = progress.monarchWorld[SEASON] || {};
-        const r = progress.monarchWorld[SEASON][ROUND_ID] || { watched: {}, votes: {} };
-
-        r.votes = r.votes || {};
-        r.votes[`m${matchIndex}`] = title;
-
-        progress.monarchWorld[SEASON][ROUND_ID] = r;
-        return progress;
-      });
-    }
-
-    function loadFromLocalProgress() {
-      const p = getRoundState();
-      const r = p.monarchWorld[SEASON][ROUND_ID];
-
-      ui.watchedMap = {};
-      ui.voteMap = {};
-
-      const watched = r.watched || {};
-      const votes = r.votes || {};
-
-      for (let i=0;i<MATCHUPS.length;i++) {
-        ui.watchedMap[i] = watched[`m${i}`] || {};
-        if (votes[`m${i}`]) ui.voteMap[i] = votes[`m${i}`];
-      }
-    }
-
-    function loadVideoFor(matchIndex, title) {
-      if (!VIDEO_FILES[title]) {
-        setStatus(`⚠️ Missing video filename for: ${title}`);
+      const votedTitle = getVoteForMatch(ui.voteMap, matchIndex);
+      if (votedTitle) {
+        group.miniStatusEl.textContent = "✅ Voted!";
         return;
       }
 
-      currentMatch = matchIndex;
+      if (watchedCount === 0) group.miniStatusEl.textContent = "Watch both books: 0/2";
+      if (watchedCount === 1) group.miniStatusEl.textContent = "Watch both books: 1/2";
+      if (watchedCount === 2) group.miniStatusEl.textContent = "✅ Watched both! Vote unlocked!";
+    }
+
+    function loadVideoFor(matchIndex, title) {
+      const url = getVideoUrl2026(title);
+      if (!url) {
+        setStatus(`⚠️ Missing video for: ${title}`);
+        return;
+      }
+
+      currentMatchIndex = matchIndex;
       currentTitle = title;
 
-      const video = document.getElementById("video");
-      video.pause();
-      video.currentTime = 0;
-      video.src = VIDEO_BASE + VIDEO_FILES[title];
-      video.load();
+      els.video.pause();
+      els.video.currentTime = 0;
+      els.video.src = url;
+      els.video.load();
 
-      document.getElementById("nowPlaying").textContent =
-        `Now watching: ${title} (Battle ${matchIndex + 1})`;
+      els.nowPlaying.textContent = `Now watching: ${title} (Battle ${matchIndex + 1})`;
 
-      const watched = !!(ui.watchedMap[matchIndex] && ui.watchedMap[matchIndex][title]);
-      setWatchTag(watched ? "✅ Watched (already)" : "🔒 Not watched");
+      const alreadyWatched = hasWatched(ui.watchedMap, matchIndex, title);
+      setWatchTag(alreadyWatched ? "✅ Watched (already)" : "🔒 Not watched");
 
-      if (ui.voteMap[matchIndex]) {
+      const [a, b] = MATCHUPS[matchIndex];
+      const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
+
+      if (isVoted(ui.voteMap, matchIndex)) {
         setStatus("This battle is already voted. You can still watch videos!");
-      } else if (watchedBoth(matchIndex)) {
+      } else if (both) {
         setStatus("✅ Both watched already — vote is unlocked!");
-        unlockVotes(matchIndex);
+        unlockVoteUI({ voteBtnsByTitle: ui.matchCards[matchIndex].voteBtnsByTitle });
       } else {
         setStatus("Watch BOTH book videos to unlock voting.");
-        relockVotes(matchIndex);
+        lockVoteUI({ voteBtnsByTitle: ui.matchCards[matchIndex].voteBtnsByTitle });
       }
     }
 
-    function render() {
-      const host = document.getElementById("matches");
-      host.innerHTML = "";
+    function renderMatches() {
+      els.matches.innerHTML = "";
       ui.matchCards = {};
 
       MATCHUPS.forEach((pair, idx) => {
-        const card = document.createElement("div");
-        card.className = "arena";
+        const arena = document.createElement("div");
+        arena.className = "mw-arena";
 
-        const header = document.createElement("div");
-        header.className = "flex items-center justify-between mb-3";
-        header.innerHTML = `
-          <div class="font-extrabold text-lg">Battle ${idx + 1}</div>
-          <div class="tag">${ui.voteMap[idx] ? "✅ Done" : "⭐ In Progress"}</div>
+        const head = document.createElement("div");
+        head.className = "mw-arenaHead";
+        head.innerHTML = `
+          <div class="mw-arenaTitle">Battle ${idx + 1}</div>
+          <div class="mw-tag">${isVoted(ui.voteMap, idx) ? "✅ Done" : "⭐ In Progress"}</div>
         `;
-        card.appendChild(header);
+        arena.appendChild(head);
 
         const miniStatus = document.createElement("div");
-        miniStatus.className = "text-sm font-bold opacity-80 mb-2";
-        card.appendChild(miniStatus);
+        miniStatus.className = "mw-miniStatus";
+        arena.appendChild(miniStatus);
 
-        const wrap = document.createElement("div");
-        wrap.className = "row";
+        const grid = document.createElement("div");
+        grid.className = "mw-bookGrid";
 
         const watchBtnsByTitle = {};
         const voteBtnsByTitle = {};
 
-        pair.forEach((bookTitle) => {
+        pair.forEach((title) => {
           const block = document.createElement("div");
-          block.className = "p-3 rounded-2xl border bg-white";
+          block.className = "mw-bookBlock";
 
-          const name = document.createElement("div");
-          name.className = "font-extrabold";
-          name.textContent = bookTitle;
+          const t = document.createElement("div");
+          t.className = "mw-bookTitle";
+          t.textContent = title;
 
-          const watchedAlready = !!(ui.watchedMap[idx] && ui.watchedMap[idx][bookTitle]);
+          const watchedAlready = hasWatched(ui.watchedMap, idx, title);
 
           const watchBtn = document.createElement("button");
-          watchBtn.className = "bookBtn bg-blue-500 hover:bg-blue-600 text-white mt-3";
-          watchBtn.textContent = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
-          watchBtn.addEventListener("click", () => loadVideoFor(idx, bookTitle));
-          watchBtnsByTitle[bookTitle] = watchBtn;
+          watchBtn.className = "mw-btn mw-btn--watch";
+          watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
+          watchBtn.addEventListener("click", () => loadVideoFor(idx, title));
+          watchBtnsByTitle[title] = watchBtn;
 
           const voteBtn = document.createElement("button");
-          voteBtn.className = "bookBtn bg-green-500 text-white mt-2 locked";
+          voteBtn.className = "mw-btn mw-btn--vote mw-locked";
           voteBtn.disabled = true;
           voteBtn.textContent = "🔒 Vote";
 
           voteBtn.addEventListener("click", async () => {
-            if (ui.voteMap[idx]) return;
+            if (isVoted(ui.voteMap, idx)) return;
 
-            if (!watchedBoth(idx)) {
+            const [a, b] = MATCHUPS[idx];
+            if (!hasWatchedBoth(ui.watchedMap, idx, a, b)) {
               setStatus("🔒 Watch BOTH books in this battle before voting!");
               return;
             }
 
-            ui.voteMap[idx] = bookTitle;
-            await persistVote(idx, bookTitle);
+            // Save + lock
+            await saveVote({
+              matchIndex: idx,
+              title,
+              season: SEASON,
+              roundId: ROUND_ID,
+              saveProgress
+            });
 
-            lockMatchAfterVote(idx, bookTitle);
-            setProgressText();
+            // Refresh local state from localStorage
+            ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
 
-            if (Object.keys(ui.voteMap).length === MATCHUPS.length) {
-              await completeRound();
+            applyVotedUI({ voteBtnsByTitle, votedTitle: title });
+            updateMiniStatus(idx);
+
+            refreshProgressText();
+            confettiBurst({ durationMs: 700, particleCount: 90 });
+
+            if (countVotes(ui.voteMap) === MATCHUPS.length) {
+              setStatus("🎉 Round 1 complete! Returning to the map...");
+              setTimeout(() => window.location.href = "../monarchWorld.html", 900);
             } else {
               setStatus("✅ Vote saved! Go to the next battle!");
             }
           });
 
-          voteBtnsByTitle[bookTitle] = voteBtn;
+          voteBtnsByTitle[title] = voteBtn;
 
-          block.appendChild(name);
+          block.appendChild(t);
           block.appendChild(watchBtn);
           block.appendChild(voteBtn);
-          wrap.appendChild(block);
+          grid.appendChild(block);
         });
 
-        card.appendChild(wrap);
-        host.appendChild(card);
+        arena.appendChild(grid);
+        els.matches.appendChild(arena);
 
-        ui.matchCards[idx] = { card, watchBtnsByTitle, voteBtnsByTitle, miniStatusEl: miniStatus };
+        ui.matchCards[idx] = { card: arena, miniStatusEl: miniStatus, watchBtnsByTitle, voteBtnsByTitle };
 
-        if (ui.voteMap[idx]) {
-          lockMatchAfterVote(idx, ui.voteMap[idx]);
+        // Restore state
+        const votedTitle = getVoteForMatch(ui.voteMap, idx);
+        if (votedTitle) {
+          applyVotedUI({ voteBtnsByTitle, votedTitle });
         } else {
-          updateMiniStatus(idx);
-          if (watchedBoth(idx)) unlockVotes(idx);
-          else relockVotes(idx);
+          // unlock votes if both watched
+          const [a, b] = MATCHUPS[idx];
+          if (hasWatchedBoth(ui.watchedMap, idx, a, b)) unlockVoteUI({ voteBtnsByTitle });
+          else lockVoteUI({ voteBtnsByTitle });
         }
+
+        updateMiniStatus(idx);
       });
 
-      setProgressText();
+      refreshProgressText();
     }
 
-    async function completeRound() {
-      await saveProgress((progress) => {
-        progress = progress || {};
-        progress.monarchWorld = progress.monarchWorld || {};
-        progress.monarchWorld[SEASON] = progress.monarchWorld[SEASON] || {};
-        progress.monarchWorld[SEASON].map = progress.monarchWorld[SEASON].map || {
-          unlocked: { r1: true, r2: false, r3: false, rf: false, win: false },
-          completed: { r1: false, r2: false, r3: false, rf: false, win: false }
-        };
-
-        progress.monarchWorld[SEASON].map.completed.r1 = true;
-        progress.monarchWorld[SEASON].map.unlocked.r2 = true;
-
-        return progress;
-      });
-
-      alert("🎉 Round 1 Complete! You unlocked the next stepping stone!");
-      window.location.href = "../monarchWorld.html";
-    }
-
-    function boot() {
+    async function boot() {
+      // Require login (your core uses callback style)
       requireLogin(async () => {
-        loadFromLocalProgress();
-        render();
+        // Load state from local progress
+        ui.watchedMap = getWatchedMap(getLocalProgress, SEASON, ROUND_ID);
+        ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
+
+        renderMatches();
         setStatus("Pick a battle. Watch BOTH books. Then vote!");
+
+        // Attach watch-to-unlock behavior
+        attachVideoGate({
+          videoEl: els.video,
+          getContext: () => ({ matchIndex: currentMatchIndex, title: currentTitle }),
+          season: SEASON,
+          roundId: ROUND_ID,
+          getLocalProgress,
+          saveProgress,
+          onWatched: ({ matchIndex, title, watchedMap }) => {
+            ui.watchedMap = watchedMap;
+
+            // Update the watch button label
+            const wBtn = ui.matchCards?.[matchIndex]?.watchBtnsByTitle?.[title];
+            if (wBtn) wBtn.innerHTML = "🎥 Watch (✅ watched)";
+
+            updateMiniStatus(matchIndex);
+
+            const [a, b] = MATCHUPS[matchIndex];
+            const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
+
+            if (both) {
+              setWatchTag("✅ Watched — BOTH done!");
+              if (!isVoted(ui.voteMap, matchIndex)) {
+                unlockVoteUI({ voteBtnsByTitle: ui.matchCards[matchIndex].voteBtnsByTitle });
+              }
+              setStatus("✅ You watched BOTH books! Now vote for the winner!");
+            } else {
+              setWatchTag("✅ Watched (one done)");
+              setStatus("👍 Nice! Now watch the OTHER book in this battle.");
+            }
+          }
+        });
       });
     }
 
-    document.getElementById("video").addEventListener("ended", async () => {
-      if (currentMatch === null || !currentTitle) return;
-
-      ui.watchedMap[currentMatch] = ui.watchedMap[currentMatch] || {};
-      ui.watchedMap[currentMatch][currentTitle] = true;
-
-      await persistWatched(currentMatch);
-
-      const watchBtn = ui.matchCards[currentMatch]?.watchBtnsByTitle?.[currentTitle];
-      if (watchBtn) watchBtn.textContent = "🎥 Watch (✅ watched)";
-
-      updateMiniStatus(currentMatch);
-
-      if (watchedBoth(currentMatch)) {
-        setWatchTag("✅ Watched — BOTH done!");
-        unlockVotes(currentMatch);
-        setStatus("✅ You watched BOTH books! Now vote for the winner!");
-      } else {
-        setWatchTag("✅ Watched (one done)");
-        setStatus("👍 Nice! Now watch the OTHER book in this battle.");
-      }
+    boot().catch((err) => {
+      console.error(err);
+      setStatus("❌ Something went wrong. Check the console.");
     });
-
-    boot();
   </script>
 </body>
 </html>

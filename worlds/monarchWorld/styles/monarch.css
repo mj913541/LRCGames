@@ -1,0 +1,337 @@
+/* worlds/monarchWorld/styles/monarch.css
+   Core styling for Monarch World (layout + cards + buttons + video)
+   Pair with:
+     - styles/animations.css (motion + state)
+   Designed for:
+     - monarchWorld.html (map hub)
+     - rounds/round1.html, round2.html, round3.html, final.html
+*/
+
+:root{
+  --mw-bg-overlay: rgba(255,255,255,0.78);
+  --mw-bg-overlay-strong: rgba(255,255,255,0.90);
+  --mw-text: #111827;
+  --mw-muted: rgba(17,24,39,0.75);
+  --mw-border: rgba(0,0,0,0.10);
+  --mw-border-strong: rgba(0,0,0,0.14);
+  --mw-card-radius: 28px;
+  --mw-inner-radius: 22px;
+  --mw-shadow: 0 12px 30px rgba(0,0,0,0.12);
+}
+
+*{ box-sizing: border-box; }
+
+body{
+  color: var(--mw-text);
+  min-height: 100vh;
+  font-family: ui-sans-serif, system-ui;
+  /* Background image is set per-page (inline style or page-level CSS) */
+}
+
+/* ---------- Shared containers ---------- */
+
+.mw-shell{
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 18px;
+}
+
+@media (min-width: 768px){
+  .mw-shell{ padding: 26px; }
+}
+
+.mw-card{
+  background: var(--mw-bg-overlay-strong);
+  border: 1px solid var(--mw-border);
+  border-radius: var(--mw-card-radius);
+  box-shadow: var(--mw-shadow);
+}
+
+.mw-card--soft{
+  background: var(--mw-bg-overlay);
+  backdrop-filter: blur(6px);
+}
+
+.mw-section{
+  padding: 16px;
+}
+
+@media (min-width: 768px){
+  .mw-section{ padding: 22px; }
+}
+
+.mw-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.mw-title{
+  font-weight: 900;
+  letter-spacing: -0.01em;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+@media (min-width: 768px){
+  .mw-title{ font-size: 32px; }
+}
+
+.mw-subtitle{
+  margin-top: 6px;
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--mw-muted);
+}
+
+.mw-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.mw-status{
+  font-weight: 900;
+  font-size: 13px;
+  color: var(--mw-muted);
+}
+
+/* ---------- Links / pills ---------- */
+
+.mw-pill{
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 900;
+  border: 1px solid var(--mw-border);
+  background: rgba(255,255,255,0.92);
+  text-decoration: none;
+  color: var(--mw-text);
+  transition: transform 140ms ease, filter 140ms ease, background 140ms ease;
+}
+
+.mw-pill:hover{
+  transform: translateY(-1px);
+  filter: drop-shadow(0 8px 18px rgba(0,0,0,0.10));
+  background: rgba(255,255,255,0.98);
+}
+
+.mw-pill:active{
+  transform: translateY(0);
+}
+
+/* ---------- Tags ---------- */
+
+.mw-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-size: 12px;
+  font-weight: 900;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--mw-border);
+  background: rgba(255,255,255,0.85);
+}
+
+/* ---------- Buttons ---------- */
+
+.mw-btn{
+  width: 100%;
+  border: 0;
+  border-radius: 20px;
+  padding: 14px 14px;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 100ms ease, filter 140ms ease, box-shadow 140ms ease, opacity 140ms ease;
+  text-align: center;
+  user-select: none;
+}
+
+.mw-btn:active{
+  transform: scale(0.985);
+}
+
+.mw-btn:disabled{
+  cursor: not-allowed;
+}
+
+.mw-btn--watch{
+  background: rgba(59,130,246,0.92);
+  color: #fff;
+}
+.mw-btn--watch:hover{
+  filter: brightness(1.03);
+  box-shadow: 0 12px 24px rgba(59,130,246,0.20);
+}
+
+.mw-btn--vote{
+  background: rgba(34,197,94,0.92);
+  color: #fff;
+}
+.mw-btn--vote:hover{
+  filter: brightness(1.03);
+  box-shadow: 0 12px 24px rgba(34,197,94,0.20);
+}
+
+.mw-btn--ghost{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--mw-border);
+  color: var(--mw-text);
+}
+.mw-btn--ghost:hover{
+  box-shadow: 0 10px 22px rgba(0,0,0,0.10);
+}
+
+.mw-icon{
+  width: 22px;
+  height: 22px;
+  display:inline-block;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* ---------- Map layout ---------- */
+
+.mw-map{
+  position: relative;
+  padding: 18px;
+}
+
+.mw-mapOverlay{
+  background: var(--mw-bg-overlay);
+  border: 1px solid var(--mw-border);
+  border-radius: var(--mw-card-radius);
+  padding: 18px;
+  backdrop-filter: blur(6px);
+}
+
+@media (min-width: 768px){
+  .mw-mapOverlay{ padding: 24px; }
+}
+
+/* A friendly, responsive grid for stepstones */
+.mw-path{
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  justify-items: center;
+  align-items: center;
+  padding: 10px 0;
+}
+
+@media (min-width: 640px){
+  .mw-path{
+    grid-template-columns: repeat(2, 1fr);
+    gap: 22px;
+  }
+}
+
+@media (min-width: 1024px){
+  .mw-path{
+    grid-template-columns: repeat(4, 1fr);
+    gap: 26px;
+  }
+}
+
+/* Optional small caption under a stone */
+.mw-stoneCaption{
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--mw-muted);
+  text-align: center;
+}
+
+/* ---------- Battle arena cards (round pages) ---------- */
+
+.mw-arenas{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+@media (min-width: 768px){
+  .mw-arenas{
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+.mw-arena{
+  border-radius: var(--mw-card-radius);
+  border: 2px dashed rgba(0,0,0,0.12);
+  background: rgba(255,255,255,0.78);
+  padding: 16px;
+}
+
+.mw-arenaHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.mw-arenaTitle{
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.mw-miniStatus{
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--mw-muted);
+  margin-bottom: 10px;
+}
+
+/* Two-book blocks inside an arena */
+.mw-bookGrid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.mw-bookBlock{
+  background: rgba(255,255,255,0.92);
+  border: 1px solid var(--mw-border);
+  border-radius: var(--mw-inner-radius);
+  padding: 12px;
+}
+
+.mw-bookTitle{
+  font-weight: 900;
+}
+
+/* ---------- Video zone ---------- */
+
+.mw-video{
+  width: 100%;
+  border-radius: var(--mw-inner-radius);
+  background: #000;
+  border: 2px solid rgba(0,0,0,0.10);
+}
+
+/* ---------- Helpful state helpers (also used by JS) ---------- */
+
+.mw-hidden{ display:none !important; }
+
+/* If you want locked click areas to feel disabled */
+.mw-disabled{
+  opacity: 0.65;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ---------- Mobile touch comfort ---------- */
+button, a{
+  -webkit-tap-highlight-color: transparent;
+}
