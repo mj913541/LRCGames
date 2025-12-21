@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🪨 Monarch World | Round 1 Path</title>
+  <title>🦋 Monarch World | Round 1 🦋</title>
 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../styles/monarch.css">
@@ -306,6 +306,29 @@
     .r1-videoSection .mw-video{
       max-height: 50vh;
     }
+
+    /* Book cover styling */
+.mw-bookCover {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.10);
+  background: rgba(255,255,255,0.85);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.10);
+}
+
+@media (min-width: 640px) {
+  .mw-bookCover { height: 165px; }
+}
+
+.mw-coverRow {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
   </style>
 </head>
 
@@ -430,7 +453,8 @@
   <script type="module">
     import { requireLogin, getLocalProgress, saveProgress } from "../../../scripts/lrcQuestCore.js";
 
-    import { SEASON } from "../data/nominees-2026.js";
+ import { SEASON, coverPath2026 } from "../data/nominees-2026.js";
+
     import { ROUND1_MATCHUPS as MATCHUPS } from "../data/bracket-2026.js";
     import { getVideoUrl2026 } from "../data/video-map-2026.js";
 
@@ -724,84 +748,131 @@
       syncArenaLockUI(matchIndex);
     }
 
-    function buildBookCard(containerEl, matchIndex, title){
-      containerEl.innerHTML = "";
+ function buildBookCard(containerEl, matchIndex, title){
+  containerEl.innerHTML = "";
 
-      const titleEl = document.createElement("div");
-      titleEl.className = "r1-bookTitle";
-      titleEl.textContent = title;
+  // --- Cover + Title row (NEW) ---
+  const row = document.createElement("div");
+  row.className = "mw-coverRow";
 
-      const watchedAlready = hasWatched(ui.watchedMap, matchIndex, title);
+  const cover = document.createElement("img");
+  cover.className = "mw-bookCover";
+  cover.src = coverPath2026(title);
+  cover.alt = `${title} cover`;
 
-      const btnRow = document.createElement("div");
-      btnRow.className = "r1-btnRow";
+  // Optional: if a cover is missing, show a simple placeholder (no extra file required)
+  cover.onerror = () => {
+    cover.onerror = null;
+    cover.src =
+      "data:image/svg+xml;charset=UTF-8," +
+      encodeURIComponent(`
+        <svg xmlns='http://www.w3.org/2000/svg' width='400' height='250'>
+          <defs>
+            <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
+              <stop offset='0' stop-color='%23ffffff' stop-opacity='0.9'/>
+              <stop offset='1' stop-color='%23e5e7eb' stop-opacity='0.9'/>
+            </linearGradient>
+          </defs>
+          <rect width='100%' height='100%' rx='24' ry='24' fill='url(%23g)'/>
+          <text x='50%' y='45%' text-anchor='middle' font-family='system-ui, sans-serif'
+                font-size='18' fill='%23374151' font-weight='800'>Cover not found</text>
+          <text x='50%' y='60%' text-anchor='middle' font-family='system-ui, sans-serif'
+                font-size='12' fill='%236b7280' font-weight='700'>${title.replace(/&/g,"&amp;").slice(0,40)}</text>
+        </svg>
+      `);
+  };
 
-      const watchBtn = document.createElement("button");
-      watchBtn.className = "mw-btn mw-btn--watch";
-      watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
-      watchBtn.addEventListener("click", () => loadVideoFor(matchIndex, title));
-      ui.watchBtnsByTitle[title] = watchBtn;
+  const right = document.createElement("div");
 
-      const voteBtn = document.createElement("button");
-      voteBtn.className = "mw-btn mw-btn--vote mw-locked";
-      voteBtn.disabled = true;
-      voteBtn.textContent = "🔒 Vote";
+  const titleEl = document.createElement("div");
+  titleEl.className = "r1-bookTitle";
+  titleEl.textContent = title;
 
-      const [a,b] = MATCHUPS[matchIndex];
+  const sub = document.createElement("div");
+  sub.className = "text-xs font-bold opacity-70 mt-1";
+  sub.textContent = "Watch the video, then vote!";
 
-      voteBtn.addEventListener("click", async () => {
-        if (isVoted(ui.voteMap, matchIndex)) return;
+  right.appendChild(titleEl);
+  right.appendChild(sub);
 
-        if (!hasWatchedBoth(ui.watchedMap, matchIndex, a, b)) {
-          setStatus("🔒 Watch BOTH books in this battle before voting!");
-          return;
-        }
+  row.appendChild(cover);
+  row.appendChild(right);
 
-        await saveVote({
-          matchIndex,
-          title,
-          season: SEASON,
-          roundId: ROUND_ID,
-          saveProgress
-        });
+  // --- Buttons (existing logic) ---
+  const watchedAlready = hasWatched(ui.watchedMap, matchIndex, title);
 
-        ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
+  const btnRow = document.createElement("div");
+  btnRow.className = "r1-btnRow";
 
-        applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
-        confettiBurst({ durationMs: 700, particleCount: 90 });
+  const watchBtn = document.createElement("button");
+  watchBtn.className = "mw-btn mw-btn--watch";
+  watchBtn.innerHTML = watchedAlready ? `🎥 Watch (✅ watched)` : `🎥 Watch`;
+  watchBtn.addEventListener("click", () => loadVideoFor(matchIndex, title));
+  ui.watchBtnsByTitle[title] = watchBtn;
 
-        // Update this stone to completed
-        const s = ui.stones[matchIndex];
-        if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
+  const voteBtn = document.createElement("button");
+  voteBtn.className = "mw-btn mw-btn--vote mw-locked";
+  voteBtn.disabled = true;
+  voteBtn.textContent = "🔒 Vote";
 
-        // Re-render map so: next stone glows + locked ring updates + path progress updates
-        renderBattleMap();
-        highlightSelectedStone();
-        refreshTopProgress();
+  const [a,b] = MATCHUPS[matchIndex];
 
-        const nextNum = matchIndex + 2;
-        if (nextNum <= MATCHUPS.length){
-          setStatus(`✅ Vote saved! Battle ${nextNum} is now unlocked.`);
-        } else {
-          setStatus("✅ Vote saved!");
-        }
+  voteBtn.addEventListener("click", async () => {
+    if (isVoted(ui.voteMap, matchIndex)) return;
 
-        syncArenaLockUI(matchIndex);
-
-        if (voteCount() === MATCHUPS.length) {
-          setStatus("🎉 Round 1 complete! Returning to the main map...");
-          setTimeout(() => window.location.href = "../monarchWorld.html", 900);
-        }
-      });
-
-      ui.voteBtnsByTitle[title] = voteBtn;
-
-      btnRow.appendChild(watchBtn);
-      btnRow.appendChild(voteBtn);
-
-      containerEl.appendChild(titleEl);
-      containerEl.appendChild(btnRow);
+    if (!hasWatchedBoth(ui.watchedMap, matchIndex, a, b)) {
+      setStatus("🔒 Watch BOTH books in this battle before voting!");
+      return;
     }
+
+    await saveVote({
+      matchIndex,
+      title,
+      season: SEASON,
+      roundId: ROUND_ID,
+      saveProgress
+    });
+
+    ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
+
+    applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
+    confettiBurst({ durationMs: 700, particleCount: 90 });
+
+    // Update this stone to completed
+    const s = ui.stones[matchIndex];
+    if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
+
+    // Re-render map so: next stone glows + locked ring updates + path progress updates
+    renderBattleMap();
+    highlightSelectedStone();
+    refreshTopProgress();
+
+    const nextNum = matchIndex + 2;
+    if (nextNum <= MATCHUPS.length){
+      setStatus(`✅ Vote saved! Battle ${nextNum} is now unlocked.`);
+    } else {
+      setStatus("✅ Vote saved!");
+    }
+
+    syncArenaLockUI(matchIndex);
+
+    if (voteCount() === MATCHUPS.length) {
+      setStatus("🎉 Round 1 complete! Returning to the main map...");
+      setTimeout(() => window.location.href = "../monarchWorld.html", 900);
+    }
+  });
+
+  ui.voteBtnsByTitle[title] = voteBtn;
+
+  btnRow.appendChild(watchBtn);
+  btnRow.appendChild(voteBtn);
+
+  // --- Assemble card ---
+  containerEl.appendChild(row);
+  containerEl.appendChild(btnRow);
+}
+
+    
 
     function renderArena(matchIndex){
       ui.voteBtnsByTitle = {};
