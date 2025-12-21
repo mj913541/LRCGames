@@ -1,3 +1,4 @@
+<!-- worlds/monarchWorld/teacher/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,16 +16,16 @@
         <div>
           <h1 class="text-2xl md:text-3xl font-extrabold">👩‍🏫 Monarch Teacher Dashboard</h1>
           <p class="mt-1 text-sm opacity-80">
-            Admin tools to advance rounds + unlock the map (Firestore-backed).
+            Admin tools to preview/advance rounds + unlock the map (Firestore-backed).
           </p>
         </div>
         <a href="../monarchWorld.html" class="px-4 py-2 rounded-xl font-bold border bg-white hover:bg-gray-50">← Back to Map</a>
       </div>
 
       <div class="mt-4 p-4 rounded-2xl bg-yellow-50 border text-sm">
-        <div class="font-extrabold">Safety note</div>
+        <div class="font-extrabold">Security</div>
         <div class="opacity-80">
-          Only approved teacher accounts should access this page.
+          This page is restricted to approved teacher accounts.
         </div>
         <div id="authStatus" class="mt-2 font-bold"></div>
       </div>
@@ -43,19 +44,33 @@
 
         <div class="p-4 rounded-2xl border bg-white">
           <div class="font-extrabold text-lg">Round tools</div>
-          <button id="btnPreviewR2" class="mt-3 w-full px-4 py-3 rounded-2xl font-extrabold bg-indigo-600 text-white hover:bg-indigo-700">
+
+          <button id="btnPreviewR2"
+                  class="mt-3 w-full px-4 py-3 rounded-2xl font-extrabold bg-indigo-600 text-white hover:bg-indigo-700">
             👀 Preview Round 2 bracket (from Round 1 votes)
           </button>
 
-          <button id="btnGenerateR2" class="mt-3 w-full px-4 py-3 rounded-2xl font-extrabold bg-green-600 text-white hover:bg-green-700">
+          <button id="btnGenerateR2"
+                  class="mt-3 w-full px-4 py-3 rounded-2xl font-extrabold bg-green-600 text-white hover:bg-green-700">
             ✅ Generate + Unlock Round 2
           </button>
+
+          <button id="btnOpenSeasonDoc"
+                  class="mt-3 w-full px-4 py-3 rounded-2xl font-extrabold bg-gray-800 text-white hover:bg-gray-900">
+            📄 Show current season doc
+          </button>
+
+          <div class="mt-3 text-xs opacity-70">
+            Tip: If votes are tied or missing, winners will show as TBD.
+          </div>
         </div>
       </div>
 
       <div class="mt-6 p-4 rounded-2xl border bg-white">
         <div class="font-extrabold text-lg">Output</div>
-        <pre id="output" class="mt-3 text-xs bg-gray-50 border rounded-2xl p-3 overflow-auto" style="min-height: 180px;"></pre>
+        <pre id="output"
+             class="mt-3 text-xs bg-gray-50 border rounded-2xl p-3 overflow-auto"
+             style="min-height: 220px;"></pre>
       </div>
     </div>
 
@@ -63,7 +78,17 @@
 
   <script type="module">
     import { requireLogin } from "../../../scripts/lrcQuestCore.js";
-    import { previewRound2FromVotes, generateAndUnlockRound2 } from "./advanceRound.js";
+    import {
+      previewRound2FromVotes,
+      generateAndUnlockRound2,
+      readSeasonDoc
+    } from "./advanceRound.js";
+
+    // ✅ Teacher allowlist
+    const TEACHER_EMAILS = new Set([
+      "malbrecht@sd308.org",
+      "malbrecht3317@gmail.com"
+    ]);
 
     const output = document.getElementById("output");
     const authStatus = document.getElementById("authStatus");
@@ -73,21 +98,86 @@
       output.textContent = typeof obj === "string" ? obj : JSON.stringify(obj, null, 2);
     }
 
+    function isTeacher(user) {
+      const email = (user?.email || "").toLowerCase().trim();
+      return TEACHER_EMAILS.has(email);
+    }
+
+    function setButtonsEnabled(enabled) {
+      document.getElementById("btnPreviewR2").disabled = !enabled;
+      document.getElementById("btnGenerateR2").disabled = !enabled;
+      document.getElementById("btnOpenSeasonDoc").disabled = !enabled;
+
+      const buttons = [
+        document.getElementById("btnPreviewR2"),
+        document.getElementById("btnGenerateR2"),
+        document.getElementById("btnOpenSeasonDoc")
+      ];
+      buttons.forEach((b) => {
+        b.classList.toggle("opacity-60", !enabled);
+        b.classList.toggle("cursor-not-allowed", !enabled);
+      });
+    }
+
+    setButtonsEnabled(false);
+
     requireLogin(async (user) => {
-      authStatus.textContent = `✅ Logged in as: ${user.email}`;
+      const email = (user?.email || "").toLowerCase().trim();
+
+      if (!isTeacher(user)) {
+        authStatus.textContent = `⛔ Access denied for: ${email || "(no email)"}`;
+        log({
+          ok: false,
+          error: "AccessDenied",
+          message: "This dashboard is restricted to approved teacher accounts.",
+          email
+        });
+
+        // bounce back to map
+        setTimeout(() => {
+          window.location.href = "../monarchWorld.html";
+        }, 1800);
+
+        return;
+      }
+
+      authStatus.textContent = `✅ Teacher access granted: ${email}`;
+      setButtonsEnabled(true);
 
       document.getElementById("btnPreviewR2").addEventListener("click", async () => {
-        log("Loading Round 1 votes and computing winners...");
-        const season = seasonInput.value.trim() || "2026";
-        const res = await previewRound2FromVotes({ season });
-        log(res);
+        try {
+          log("Loading Round 1 votes and computing winners...");
+          const season = seasonInput.value.trim() || "2026";
+          const res = await previewRound2FromVotes({ season });
+          log(res);
+        } catch (err) {
+          console.error(err);
+          log({ ok: false, error: String(err?.message || err) });
+        }
       });
 
       document.getElementById("btnGenerateR2").addEventListener("click", async () => {
-        log("Generating Round 2 bracket + unlocking Round 2...");
-        const season = seasonInput.value.trim() || "2026";
-        const res = await generateAndUnlockRound2({ season });
-        log(res);
+        try {
+          log("Generating Round 2 bracket + unlocking Round 2...");
+          const season = seasonInput.value.trim() || "2026";
+          const res = await generateAndUnlockRound2({ season });
+          log(res);
+        } catch (err) {
+          console.error(err);
+          log({ ok: false, error: String(err?.message || err) });
+        }
+      });
+
+      document.getElementById("btnOpenSeasonDoc").addEventListener("click", async () => {
+        try {
+          log("Reading current season doc...");
+          const season = seasonInput.value.trim() || "2026";
+          const res = await readSeasonDoc({ season });
+          log(res);
+        } catch (err) {
+          console.error(err);
+          log({ ok: false, error: String(err?.message || err) });
+        }
       });
     });
   </script>
