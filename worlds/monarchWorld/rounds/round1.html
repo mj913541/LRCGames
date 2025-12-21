@@ -64,6 +64,7 @@
 
     /* now just a number badge */
     .r1-battleLabel{
+      margin-top: -3px;
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -213,20 +214,26 @@
       }
     }
 
-    .r1-vsPill{
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-weight: 1000;
-      letter-spacing: 0.08em;
-      border: 1px solid rgba(0,0,0,0.12);
-      background: rgba(255,255,255,0.75);
-      box-shadow: 0 10px 22px rgba(0,0,0,0.10);
-      user-select:none;
-      min-width: 74px;
-    }
+.r1-vsPill{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight: 1000;
+  letter-spacing: 0.14em;
+  user-select:none;
+
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+
+  font-size: 26px;
+  opacity: 0.95;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+  min-width: 52px;
+}
+
 
     .r1-bioCard{
       border: 1px solid rgba(0,0,0,0.10);
