@@ -676,14 +676,16 @@
       return p?.monarchWorld?.[SEASON]?.[ROUND_ID]?.avatarId || "lion";
     }
 
-    async function setAvatarId(avatarId){
-      const p = getLocalProgress?.() || {};
-      p.monarchWorld ||= {};
-      p.monarchWorld[SEASON] ||= {};
-      p.monarchWorld[SEASON][ROUND_ID] ||= {};
-      p.monarchWorld[SEASON][ROUND_ID].avatarId = avatarId;
-      await saveProgress(p);
-    }
+async function setAvatarId(avatarId){
+  await saveProgress((p = {}) => {
+    p.monarchWorld ||= {};
+    p.monarchWorld[SEASON] ||= {};
+    p.monarchWorld[SEASON][ROUND_ID] ||= {};
+    p.monarchWorld[SEASON][ROUND_ID].avatarId = avatarId;
+    return p;
+  });
+}
+
 
     function applyAvatarImage(){
       const id = getAvatarId();
@@ -703,12 +705,14 @@
           <img src="${a.src}" alt="">
           <div class="name">${a.name}${a.id === current ? " ✅" : ""}</div>
         `;
-        card.addEventListener("click", async () => {
-          await setAvatarId(a.id);
-          applyAvatarImage();
-          renderAvatarGrid();
-          closeAvatarModal();
-        });
+card.addEventListener("click", async () => {
+  await setAvatarId(a.id);
+  applyAvatarImage();
+  renderAvatarGrid();
+  setStatus(`✅ Avatar selected: ${a.name}`);
+  closeAvatarModal();
+});
+
         els.avatarGrid.appendChild(card);
       });
     }
