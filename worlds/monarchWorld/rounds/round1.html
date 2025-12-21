@@ -19,7 +19,7 @@
     .r1-mapWrap{
       position: relative;
       padding: 12px;
-      padding-bottom: 80px;
+      padding-bottom: 90px; /* optional upgrade: extra breathing room at bottom */
       border-radius: 0;
       background: transparent;
       border: none;
@@ -44,19 +44,16 @@
       opacity: 0.65;
     }
 
-    /* TALLER MAP so stones can be spaced out */
-.r1-mapArea{
-  position: relative;
-  height: 1200px; /* more vertical room */
-  z-index: 3;
-}
+    /* TALLER MAP */
+    .r1-mapArea{
+      position: relative;
+      height: 1200px;
+      z-index: 3;
+    }
 
-@media (max-width: 640px){
-  .r1-mapArea{
-    height: 1400px;
-  }
-}
-
+    @media (max-width: 640px){
+      .r1-mapArea{ height: 1400px; }
+    }
 
     .r1-stoneSlot{
       position: absolute;
@@ -83,6 +80,17 @@
       box-shadow: 0 10px 22px rgba(0,0,0,0.14);
       user-select: none;
       line-height: 1;
+      position: relative;
+    }
+
+    /* optional upgrade: little "finish" flag on #10 */
+    .r1-battleLabel .r1-finishBadge{
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      font-size: 16px;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+      transform: rotate(8deg);
     }
 
     .r1-selectedRing{
@@ -129,6 +137,46 @@
 
     @supports not (offset-path: path("M0,0 L1,1")) {
       .r1-fireflies{ display:none; }
+    }
+
+    /* ----------------- OPTION A: Locked stones are NOT grayed out ----------------- */
+    /* These selectors are intentionally broad to catch your stepStone component styles */
+    .mw-stepStone--locked,
+    .mw-stepStone--locked *,
+    .mw-stepStone.locked,
+    .mw-stepStone.locked *,
+    [data-state="locked"],
+    [data-state="locked"] *{
+      opacity: 1 !important;
+      filter: none !important;
+      -webkit-filter: none !important;
+      pointer-events: auto !important; /* IMPORTANT: let clicks still work so we can show "complete previous" */
+    }
+
+    /* optional upgrade: subtle "locked but tempting" ring */
+    .r1-stoneSlot.isLocked{
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.18));
+    }
+    .r1-stoneSlot.isLocked .r1-battleLabel{
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.25), 0 10px 22px rgba(0,0,0,0.14);
+    }
+
+    /* optional upgrade: NEXT stone glow */
+    .r1-stoneSlot.isNext{
+      animation: r1NextPulse 1.6s ease-in-out infinite;
+    }
+    @keyframes r1NextPulse{
+      0%,100% { filter: drop-shadow(0 0 0 rgba(251,191,36,0.0)) drop-shadow(0 14px 18px rgba(0,0,0,0.18)); }
+      50%     { filter: drop-shadow(0 0 18px rgba(251,191,36,0.38)) drop-shadow(0 18px 26px rgba(0,0,0,0.22)); }
+    }
+
+    /* optional upgrade: finish stone celebration pulse */
+    .r1-stoneSlot.isFinishPulse{
+      animation: r1FinishPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes r1FinishPulse{
+      0%,100% { transform: translate(-50%, -50%) scale(1); }
+      50%     { transform: translate(-50%, -50%) scale(1.05); }
     }
 
     /* ----------------- Battle Arena Modal ----------------- */
@@ -191,7 +239,6 @@
       opacity: 0.85;
     }
 
-    /* VS layout */
     .r1-topVsRow{
       display:grid;
       grid-template-columns: 1fr;
@@ -207,6 +254,7 @@
       }
     }
 
+    /* VS is text (not a pill) */
     .r1-vsPill{
       display:flex;
       align-items:center;
@@ -270,7 +318,7 @@
         <div>
           <div class="mw-title">🪨 Round 1: Battle Path</div>
           <div class="mw-subtitle">
-            Complete the battles IN ORDER. Tap the next number to continue.
+            Complete the battles IN ORDER. The next number will glow when it unlocks.
           </div>
         </div>
         <a class="mw-pill" href="../monarchWorld.html">← Map</a>
@@ -289,9 +337,11 @@
         <div class="mw-tag" id="mapMiniStatus">Loading…</div>
       </div>
 
-      <!-- S-CURVE PATH (top → bottom snake) -->
-      <svg class="r1-pathCanvas" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+      <!-- S-CURVE PATH -->
+      <svg class="r1-pathCanvas" id="pathSvg" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
+        <!-- base path -->
         <path
+          id="pathBase"
           d="M520,70
              C820,150 820,280 520,350
              C220,420 220,560 520,630
@@ -302,6 +352,7 @@
           stroke-linecap="round"
           stroke-dasharray="14 18"
         />
+        <!-- soft glow underlay -->
         <path
           d="M520,70
              C820,150 820,280 520,350
@@ -311,6 +362,20 @@
           stroke="rgba(251,191,36,0.025)"
           stroke-width="22"
           stroke-linecap="round"
+        />
+        <!-- optional upgrade: progress highlight that "fills" down the path -->
+        <path
+          id="pathProgress"
+          d="M520,70
+             C820,150 820,280 520,350
+             C220,420 220,560 520,630
+             C820,700 820,840 520,920"
+          fill="none"
+          stroke="rgba(251,191,36,0.22)"
+          stroke-width="10"
+          stroke-linecap="round"
+          stroke-dasharray="0 9999"
+          stroke-dashoffset="0"
         />
       </svg>
 
@@ -339,7 +404,6 @@
       </div>
 
       <div class="r1-modalBody">
-
         <!-- TOP: two books side-by-side with VS -->
         <div class="r1-topVsRow">
           <div class="r1-bioCard" id="bookCardA"></div>
@@ -363,7 +427,6 @@
             Watch both books in this battle to unlock voting.
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -398,6 +461,11 @@
       battleMap: document.getElementById("battleMap"),
       fireflies: document.getElementById("fireflies"),
 
+      // path progress
+      pathBase: document.getElementById("pathBase"),
+      pathProgress: document.getElementById("pathProgress"),
+
+      // Arena modal
       arenaModalBack: document.getElementById("arenaModalBack"),
       closeArenaBtn: document.getElementById("closeArenaBtn"),
       arenaTitle: document.getElementById("arenaTitle"),
@@ -424,33 +492,29 @@
       stones: [],
       selectedIndex: null,
       voteBtnsByTitle: {},
-      watchBtnsByTitle: {}
+      watchBtnsByTitle: {},
+      pathLen: 0
     };
 
     let currentMatchIndex = null;
     let currentTitle = null;
 
-    // SNAKE POSITIONS: more spacing + back-and-forth like an S
-const STONE_POS = [
-  { x: 52, y: 8 },
-  { x: 74, y: 16 },
-  { x: 62, y: 28 },
-  { x: 36, y: 40 },
-  { x: 44, y: 52 },
-  { x: 72, y: 64 },
-  { x: 60, y: 76 },
-  { x: 38, y: 86 },  // 8
-  { x: 58, y: 94 },  // 9
-  { x: 52, y: 102 }  // 10 (can go past 100 safely)
-];
+    // SNAKE positions (with extra bottom room so 8/9/10 don't smush)
+    const STONE_POS = [
+      { x: 52, y: 8  },   // 1
+      { x: 74, y: 16 },   // 2
+      { x: 62, y: 28 },   // 3
+      { x: 36, y: 40 },   // 4
+      { x: 44, y: 52 },   // 5
+      { x: 72, y: 64 },   // 6
+      { x: 60, y: 76 },   // 7
+      { x: 36, y: 86 },   // 8
+      { x: 58, y: 94 },   // 9
+      { x: 52, y: 102 }   // 10 (slightly past 100% is OK; map has bottom padding)
+    ];
 
     function voteCount(){
       return ui.voteMap ? Object.keys(ui.voteMap).length : 0;
-    }
-
-    function refreshTopProgress(){
-      setProgressTextUI(voteCount(), MATCHUPS.length);
-      els.mapMiniStatus.textContent = `Completed: ${voteCount()} / ${MATCHUPS.length}`;
     }
 
     // sequential unlocking: battle i unlocks only if battle i-1 is voted
@@ -462,6 +526,37 @@ const STONE_POS = [
     function stoneStateForBattle(i){
       if (isVoted(ui.voteMap, i)) return "completed";
       return isUnlockedBattle(i) ? "unlocked" : "locked";
+    }
+
+    function nextUnlockedIndex(){
+      return MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i) && isUnlockedBattle(i));
+    }
+
+    function refreshTopProgress(){
+      setProgressTextUI(voteCount(), MATCHUPS.length);
+      els.mapMiniStatus.textContent = `Completed: ${voteCount()} / ${MATCHUPS.length}`;
+      updatePathProgress();
+    }
+
+    /* optional upgrade: path highlight fill */
+    function initPathProgress(){
+      try{
+        if (!els.pathBase || !els.pathProgress) return;
+        const len = els.pathBase.getTotalLength();
+        ui.pathLen = len;
+
+        els.pathProgress.style.strokeDasharray = `${len} ${len}`;
+        els.pathProgress.style.strokeDashoffset = `${len}`; // start empty
+      }catch(e){
+        // ignore if SVG isn't measurable
+      }
+    }
+
+    function updatePathProgress(){
+      if (!els.pathProgress || !ui.pathLen) return;
+      const frac = Math.max(0, Math.min(1, voteCount() / MATCHUPS.length));
+      const remaining = ui.pathLen * (1 - frac);
+      els.pathProgress.style.strokeDashoffset = `${remaining}`;
     }
 
     function openArena(){
@@ -517,6 +612,8 @@ const STONE_POS = [
       els.battleMap.innerHTML = "";
       ui.stones = [];
 
+      const nextIdx = nextUnlockedIndex();
+
       MATCHUPS.forEach((pair, idx) => {
         const pos = STONE_POS[idx] || { x: 50, y: 50 };
 
@@ -527,9 +624,18 @@ const STONE_POS = [
 
         const state = stoneStateForBattle(idx);
 
+        // optional upgrades: classes for locked + next glow
+        if (state === "locked") slot.classList.add("isLocked");
+        if (idx === nextIdx) slot.classList.add("isNext");
+
+        // finish pulse once unlocked and not yet completed (fun “goal”)
+        if (idx === MATCHUPS.length - 1 && state !== "completed") {
+          slot.classList.add("isFinishPulse");
+        }
+
         const stone = createStepStone({
           assetBase: "../assets",
-          state,
+          state,                 // keep locked state for logic...
           href: "#",
           label: "",
           title: `${idx + 1}`,
@@ -539,6 +645,14 @@ const STONE_POS = [
         const label = document.createElement("div");
         label.className = "r1-battleLabel";
         label.textContent = `${idx + 1}`;
+
+        // optional finish badge on #10
+        if (idx === MATCHUPS.length - 1){
+          const badge = document.createElement("span");
+          badge.className = "r1-finishBadge";
+          badge.textContent = "🏁";
+          label.appendChild(badge);
+        }
 
         stone.root.addEventListener("click", (e) => {
           e.preventDefault();
@@ -664,10 +778,9 @@ const STONE_POS = [
         const s = ui.stones[matchIndex];
         if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
 
-        // unlock next stone immediately by rerendering
+        // Re-render map so: next stone glows + locked ring updates + path progress updates
         renderBattleMap();
         highlightSelectedStone();
-
         refreshTopProgress();
 
         const nextNum = matchIndex + 2;
@@ -740,12 +853,13 @@ const STONE_POS = [
         ui.watchedMap = getWatchedMap(getLocalProgress, SEASON, ROUND_ID);
         ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
 
+        initPathProgress();
         refreshTopProgress();
         renderFireflies();
         renderBattleMap();
 
         // highlight the next unlocked (not yet voted) battle
-        const nextToDo = MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i) && isUnlockedBattle(i));
+        const nextToDo = nextUnlockedIndex();
         ui.selectedIndex = nextToDo >= 0 ? nextToDo : 0;
         highlightSelectedStone();
 
