@@ -62,7 +62,7 @@
       gap: 0px;
     }
 
-    /* now just a number badge */
+    /* number badge */
     .r1-battleLabel{
       margin-top: -8px;
       display:inline-flex;
@@ -98,7 +98,8 @@
         0 0 22px rgba(251,191,36,0.25);
       opacity: 0.0;
 
-      offset-path: path("M130,620 C240,560 250,470 330,420 C430,360 520,390 600,330 C700,270 690,190 800,160 C900,135 930,80 860,60");
+      /* UPDATED: top-left → bottom-right curve (matches new path) */
+      offset-path: path("M140,80 C260,120 240,210 330,260 C440,320 520,290 610,360 C710,440 680,520 790,570 C890,615 930,670 860,640");
       offset-rotate: 0deg;
 
       animation:
@@ -185,20 +186,6 @@
       opacity: 0.85;
     }
 
-    /* NEW: VS layout */
-    .r1-vsGrid{
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-
-    @media (min-width: 900px){
-      .r1-vsGrid{
-        grid-template-columns: 1fr;
-        gap: 14px;
-      }
-    }
-
     .r1-topVsRow{
       display:grid;
       grid-template-columns: 1fr;
@@ -214,26 +201,25 @@
       }
     }
 
-.r1-vsPill{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight: 1000;
-  letter-spacing: 0.14em;
-  user-select:none;
+    .r1-vsPill{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 1000;
+      letter-spacing: 0.14em;
+      user-select:none;
 
-  padding: 0;
-  border: none;
-  background: transparent;
-  box-shadow: none;
-  border-radius: 0;
+      padding: 0;
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      border-radius: 0;
 
-  font-size: 26px;
-  opacity: 0.95;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.25);
-  min-width: 52px;
-}
-
+      font-size: 26px;
+      opacity: 0.95;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.25);
+      min-width: 52px;
+    }
 
     .r1-bioCard{
       border: 1px solid rgba(0,0,0,0.10);
@@ -278,7 +264,7 @@
         <div>
           <div class="mw-title">🪨 Round 1: Battle Path</div>
           <div class="mw-subtitle">
-            Tap a stepping stone to open the Battle Arena.
+            Complete the battles IN ORDER. Tap the next number to continue.
           </div>
         </div>
         <a class="mw-pill" href="../monarchWorld.html">← Map</a>
@@ -293,17 +279,17 @@
     <!-- MINI MAP -->
     <div class="r1-mapWrap mw-animate-fade-up">
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3 relative" style="z-index:4;">
-        <div class="font-extrabold text-lg text-white drop-shadow">🗺️ Choose a Battle</div>
+        <div class="font-extrabold text-lg text-white drop-shadow">🗺️ Battle Path (In Order)</div>
         <div class="mw-tag" id="mapMiniStatus">Loading…</div>
       </div>
 
-      <!-- Decorative curved path -->
+      <!-- UPDATED: Decorative curved path now flows top-left → bottom-right -->
       <svg class="r1-pathCanvas" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
         <path
-          d="M130,620 C240,560 250,470 330,420
-             C430,360 520,390 600,330
-             C700,270 690,190 800,160
-             C900,135 930,80 860,60"
+          d="M140,80 C260,120 240,210 330,260
+             C440,320 520,290 610,360
+             C710,440 680,520 790,570
+             C890,615 930,670 860,640"
           fill="none"
           stroke="rgba(255,255,255,0.10)"
           stroke-width="10"
@@ -311,10 +297,10 @@
           stroke-dasharray="14 18"
         />
         <path
-          d="M130,620 C240,560 250,470 330,420
-             C430,360 520,390 600,330
-             C700,270 690,190 800,160
-             C900,135 930,80 860,60"
+          d="M140,80 C260,120 240,210 330,260
+             C440,320 520,290 610,360
+             C710,440 680,520 790,570
+             C890,615 930,670 860,640"
           fill="none"
           stroke="rgba(251,191,36,0.025)"
           stroke-width="22"
@@ -350,13 +336,9 @@
 
         <!-- TOP: two books side-by-side with VS -->
         <div class="r1-topVsRow">
-
           <div class="r1-bioCard" id="bookCardA"></div>
-
           <div class="r1-vsPill">VS</div>
-
           <div class="r1-bioCard" id="bookCardB"></div>
-
         </div>
 
         <!-- BOTTOM: video player -->
@@ -410,7 +392,6 @@
       battleMap: document.getElementById("battleMap"),
       fireflies: document.getElementById("fireflies"),
 
-      // Arena modal
       arenaModalBack: document.getElementById("arenaModalBack"),
       closeArenaBtn: document.getElementById("closeArenaBtn"),
       arenaTitle: document.getElementById("arenaTitle"),
@@ -443,17 +424,18 @@
     let currentMatchIndex = null;
     let currentTitle = null;
 
+    // UPDATED: positions now move down as they move right (top-left → bottom-right)
     const STONE_POS = [
-      { x: 14, y: 86 },
-      { x: 26, y: 78 },
-      { x: 33, y: 66 },
-      { x: 42, y: 58 },
-      { x: 56, y: 55 },
-      { x: 64, y: 46 },
-      { x: 72, y: 38 },
-      { x: 80, y: 30 },
-      { x: 88, y: 18 },
-      { x: 86, y: 9  }
+      { x: 14, y: 14 },
+      { x: 26, y: 22 },
+      { x: 34, y: 34 },
+      { x: 44, y: 46 },
+      { x: 56, y: 52 },
+      { x: 64, y: 62 },
+      { x: 72, y: 72 },
+      { x: 80, y: 80 },
+      { x: 88, y: 88 },
+      { x: 86, y: 94 }
     ];
 
     function voteCount(){
@@ -465,8 +447,15 @@
       els.mapMiniStatus.textContent = `Completed: ${voteCount()} / ${MATCHUPS.length}`;
     }
 
+    // NEW: sequential unlocking
+    function isUnlockedBattle(i){
+      if (i === 0) return true;
+      return isVoted(ui.voteMap, i - 1); // unlock only if previous battle voted
+    }
+
     function stoneStateForBattle(i){
-      return isVoted(ui.voteMap, i) ? "completed" : "unlocked";
+      if (isVoted(ui.voteMap, i)) return "completed";
+      return isUnlockedBattle(i) ? "unlocked" : "locked";
     }
 
     function openArena(){
@@ -537,16 +526,23 @@
           state,
           href: "#",
           label: "",
-          title: `${idx + 1}`,  // was "Battle X"
+          title: `${idx + 1}`,
           allowCompletedClick: true
         });
 
         const label = document.createElement("div");
         label.className = "r1-battleLabel";
-        label.textContent = `${idx + 1}`; // JUST THE NUMBER
+        label.textContent = `${idx + 1}`;
 
         stone.root.addEventListener("click", (e) => {
           e.preventDefault();
+
+          // NEW: block locked battles
+          if (!isUnlockedBattle(idx) && !isVoted(ui.voteMap, idx)) {
+            setStatus(`🔒 Complete Battle ${idx} first!`);
+            return;
+          }
+
           selectBattle(idx);
         });
 
@@ -659,11 +655,16 @@
         applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
         confettiBurst({ durationMs: 700, particleCount: 90 });
 
+        // Update this stone
         const s = ui.stones[matchIndex];
         if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
 
+        // NEW: unlock next stone (and refresh map state)
+        renderBattleMap();
+        highlightSelectedStone();
+
         refreshTopProgress();
-        setStatus("✅ Vote saved! Pick another stepping stone!");
+        setStatus(`✅ Vote saved! Battle ${matchIndex + 2} is now unlocked.`);
         syncArenaLockUI(matchIndex);
 
         if (voteCount() === MATCHUPS.length) {
@@ -694,10 +695,8 @@
       buildBookCard(els.bookCardA, matchIndex, a);
       buildBookCard(els.bookCardB, matchIndex, b);
 
-      // lock/unlock + voted visuals
       syncArenaLockUI(matchIndex);
 
-      // Reset video when switching battles
       els.video.pause();
       els.video.currentTime = 0;
       els.video.removeAttribute("src");
@@ -706,9 +705,8 @@
       currentMatchIndex = matchIndex;
       currentTitle = null;
 
-      // Helpful status
       if (isVoted(ui.voteMap, matchIndex)) {
-        setStatus("✅ Already voted here. Choose another battle or rewatch.");
+        setStatus("✅ Already voted here. Close and continue to the next number.");
       } else if (hasWatchedBoth(ui.watchedMap, matchIndex, a, b)) {
         setStatus("✅ Both watched — vote is unlocked!");
       } else {
@@ -733,13 +731,10 @@
         renderFireflies();
         renderBattleMap();
 
-        // Auto-open first incomplete battle (optional). Comment out if you don't want it.
-        const firstIncomplete = MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i));
-        if (firstIncomplete >= 0) {
-          // don't auto-open modal on load; just select highlight
-          ui.selectedIndex = firstIncomplete;
-          highlightSelectedStone();
-        }
+        // highlight the first unlocked battle (next to do)
+        const nextToDo = MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i) && isUnlockedBattle(i));
+        ui.selectedIndex = nextToDo >= 0 ? nextToDo : 0;
+        highlightSelectedStone();
 
         attachVideoGate({
           videoEl: els.video,
@@ -768,7 +763,6 @@
               setStatus("👍 Nice! Now watch the OTHER book in this battle.");
             }
 
-            // Refresh lock tag + hint inside modal
             syncArenaLockUI(matchIndex);
           }
         });
