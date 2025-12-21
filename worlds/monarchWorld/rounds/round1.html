@@ -21,20 +21,20 @@
       padding: 18px;
       border-radius: 28px;
 
-      /* MORE SEE-THROUGH than before */
-      background: rgba(255,255,255,0.42);
-      border: 1px solid rgba(255,255,255,0.22);
-      backdrop-filter: blur(8px);
+      /* BARELY THERE / almost transparent */
+      background: rgba(255,255,255,0.14);
+      border: 1px solid rgba(255,255,255,0.10);
+      backdrop-filter: blur(6px);
       overflow: hidden;
-      box-shadow: 0 18px 44px rgba(0,0,0,0.16);
+      box-shadow: 0 14px 44px rgba(0,0,0,0.14);
     }
 
-    /* Optional subtle dark tint so stones pop on bright backgrounds */
+    /* ultra-subtle tint so stones still pop */
     .r1-mapWrap::before{
       content:"";
       position:absolute;
       inset:0;
-      background: rgba(17,24,39,0.10);
+      background: rgba(17,24,39,0.04);
       pointer-events:none;
       z-index:0;
     }
@@ -44,8 +44,8 @@
       inset: 0;
       pointer-events: none;
 
-      /* more see-through path */
-      opacity: 0.55;
+      /* BARELY THERE path */
+      opacity: 0.18;
 
       z-index: 1;
     }
@@ -56,7 +56,9 @@
       inset: 0;
       pointer-events: none;
       z-index: 2;
-      opacity: 0.9;
+
+      /* optional reduced intensity */
+      opacity: 0.65;
     }
 
     /* fixed-height map area so the curve has room */
@@ -133,6 +135,7 @@
         0 0 22px rgba(251,191,36,0.25);
       opacity: 0.0;
 
+      /* Follow the curve */
       offset-path: path("M130,620 C240,560 250,470 330,420 C430,360 520,390 600,330 C700,270 690,190 800,160 C900,135 930,80 860,60");
       offset-rotate: 0deg;
 
@@ -156,6 +159,7 @@
       50%     { transform: translateY(-2px) scale(0.95); opacity: 0.55; }
     }
 
+    /* If the browser doesn't support offset-path, hide fireflies gracefully */
     @supports not (offset-path: path("M0,0 L1,1")) {
       .r1-fireflies{ display:none; }
     }
@@ -271,7 +275,7 @@
              C700,270 690,190 800,160
              C900,135 930,80 860,60"
           fill="none"
-          stroke="rgba(17,24,39,0.14)"
+          stroke="rgba(17,24,39,0.07)"
           stroke-width="10"
           stroke-linecap="round"
           stroke-dasharray="14 18"
@@ -282,7 +286,7 @@
              C700,270 690,190 800,160
              C900,135 930,80 860,60"
           fill="none"
-          stroke="rgba(251,191,36,0.08)"
+          stroke="rgba(251,191,36,0.035)"
           stroke-width="22"
           stroke-linecap="round"
         />
@@ -308,8 +312,6 @@
 
         <div class="flex items-center gap-2 flex-wrap">
           <div class="mw-tag" id="watchTag">🔒 Not watched</div>
-
-          <!-- NEW: Open voting modal -->
           <button id="openVoteBtn" class="mw-pill" type="button">🗳️ Open Voting</button>
         </div>
       </div>
@@ -421,8 +423,6 @@
       voteMap: {},
       stones: [],
       selectedIndex: null,
-
-      // IMPORTANT: now these are the MODAL vote buttons
       voteBtnsByTitle: {},
       watchBtnsByTitle: {}
     };
@@ -542,7 +542,6 @@
       els.voteModalBack.classList.add("isOpen");
       document.body.style.overflow = "hidden";
 
-      // Refresh modal UI every open so it’s always accurate
       renderVoteModal(currentMatchIndex);
     }
 
@@ -551,13 +550,11 @@
       document.body.style.overflow = "";
     }
 
-    // close on backdrop click
     els.voteModalBack.addEventListener("click", (e) => {
       if (e.target === els.voteModalBack) closeVoteModal();
     });
     els.closeVoteBtn.addEventListener("click", closeVoteModal);
 
-    // close on ESC
     window.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && els.voteModalBack.classList.contains("isOpen")) closeVoteModal();
     });
@@ -593,7 +590,6 @@
       const [a,b] = MATCHUPS[matchIndex];
       const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
 
-      // voting is in modal, but we still keep lock/unlock state ready
       if (isVoted(ui.voteMap, matchIndex)) {
         setStatus("This battle is already voted. You can still watch videos!");
       } else if (both) {
@@ -723,7 +719,6 @@
         els.booksArea.appendChild(block);
       });
 
-      // keep status hints consistent
       if (isVoted(ui.voteMap, matchIndex)) {
         setStatus("✅ Already voted here. Choose another battle or rewatch.");
       } else {
@@ -769,7 +764,6 @@
             const [a, b] = MATCHUPS[matchIndex];
             const both = hasWatchedBoth(ui.watchedMap, matchIndex, a, b);
 
-            // If modal is open, re-render it so buttons unlock instantly
             if (els.voteModalBack.classList.contains("isOpen")) {
               renderVoteModal(matchIndex);
             }
@@ -777,7 +771,6 @@
             if (both) {
               setWatchTag("✅ Watched — BOTH done!");
               if (!isVoted(ui.voteMap, matchIndex)) {
-                // unlock modal vote buttons (if already rendered)
                 unlockVoteUI({ voteBtnsByTitle: ui.voteBtnsByTitle });
               }
               setStatus("✅ You watched BOTH books! Open 🗳️ Voting to vote for the winner!");
