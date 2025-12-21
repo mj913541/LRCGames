@@ -19,6 +19,7 @@
     .r1-mapWrap{
       position: relative;
       padding: 12px;
+      padding-bottom: 80px;
       border-radius: 0;
       background: transparent;
       border: none;
@@ -44,15 +45,18 @@
     }
 
     /* TALLER MAP so stones can be spaced out */
-    .r1-mapArea{
-      position: relative;
-      height: 980px; /* was 720 */
-      z-index: 3;
-    }
+.r1-mapArea{
+  position: relative;
+  height: 1200px; /* more vertical room */
+  z-index: 3;
+}
 
-    @media (max-width: 640px){
-      .r1-mapArea{ height: 1120px; } /* was 880 */
-    }
+@media (max-width: 640px){
+  .r1-mapArea{
+    height: 1400px;
+  }
+}
+
 
     .r1-stoneSlot{
       position: absolute;
@@ -427,18 +431,18 @@
     let currentTitle = null;
 
     // SNAKE POSITIONS: more spacing + back-and-forth like an S
-    const STONE_POS = [
-      { x: 52, y: 10 },
-      { x: 74, y: 18 },
-      { x: 62, y: 30 },
-      { x: 36, y: 42 },
-      { x: 44, y: 54 },
-      { x: 72, y: 66 },
-      { x: 60, y: 78 },
-      { x: 36, y: 88 },
-      { x: 46, y: 95 },
-      { x: 52, y: 99 }
-    ];
+const STONE_POS = [
+  { x: 52, y: 8 },
+  { x: 74, y: 16 },
+  { x: 62, y: 28 },
+  { x: 36, y: 40 },
+  { x: 44, y: 52 },
+  { x: 72, y: 64 },
+  { x: 60, y: 76 },
+  { x: 38, y: 86 },  // 8
+  { x: 58, y: 94 },  // 9
+  { x: 52, y: 102 }  // 10 (can go past 100 safely)
+];
 
     function voteCount(){
       return ui.voteMap ? Object.keys(ui.voteMap).length : 0;
