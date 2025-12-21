@@ -43,14 +43,15 @@
       opacity: 0.65;
     }
 
+    /* TALLER MAP so stones can be spaced out */
     .r1-mapArea{
       position: relative;
-      height: 720px;
+      height: 980px; /* was 720 */
       z-index: 3;
     }
 
     @media (max-width: 640px){
-      .r1-mapArea{ height: 880px; }
+      .r1-mapArea{ height: 1120px; } /* was 880 */
     }
 
     .r1-stoneSlot{
@@ -98,8 +99,8 @@
         0 0 22px rgba(251,191,36,0.25);
       opacity: 0.0;
 
-      /* UPDATED: top-left → bottom-right curve (matches new path) */
-      offset-path: path("M140,80 C260,120 240,210 330,260 C440,320 520,290 610,360 C710,440 680,520 790,570 C890,615 930,670 860,640");
+      /* S-CURVE PATH (matches SVG below) */
+      offset-path: path("M520,70 C820,150 820,280 520,350 C220,420 220,560 520,630 C820,700 820,840 520,920");
       offset-rotate: 0deg;
 
       animation:
@@ -186,6 +187,7 @@
       opacity: 0.85;
     }
 
+    /* VS layout */
     .r1-topVsRow{
       display:grid;
       grid-template-columns: 1fr;
@@ -283,13 +285,13 @@
         <div class="mw-tag" id="mapMiniStatus">Loading…</div>
       </div>
 
-      <!-- UPDATED: Decorative curved path now flows top-left → bottom-right -->
-      <svg class="r1-pathCanvas" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
+      <!-- S-CURVE PATH (top → bottom snake) -->
+      <svg class="r1-pathCanvas" viewBox="0 0 1000 1000" preserveAspectRatio="none" aria-hidden="true">
         <path
-          d="M140,80 C260,120 240,210 330,260
-             C440,320 520,290 610,360
-             C710,440 680,520 790,570
-             C890,615 930,670 860,640"
+          d="M520,70
+             C820,150 820,280 520,350
+             C220,420 220,560 520,630
+             C820,700 820,840 520,920"
           fill="none"
           stroke="rgba(255,255,255,0.10)"
           stroke-width="10"
@@ -297,10 +299,10 @@
           stroke-dasharray="14 18"
         />
         <path
-          d="M140,80 C260,120 240,210 330,260
-             C440,320 520,290 610,360
-             C710,440 680,520 790,570
-             C890,615 930,670 860,640"
+          d="M520,70
+             C820,150 820,280 520,350
+             C220,420 220,560 520,630
+             C820,700 820,840 520,920"
           fill="none"
           stroke="rgba(251,191,36,0.025)"
           stroke-width="22"
@@ -424,18 +426,18 @@
     let currentMatchIndex = null;
     let currentTitle = null;
 
-    // UPDATED: positions now move down as they move right (top-left → bottom-right)
+    // SNAKE POSITIONS: more spacing + back-and-forth like an S
     const STONE_POS = [
-      { x: 14, y: 14 },
-      { x: 26, y: 22 },
-      { x: 34, y: 34 },
-      { x: 44, y: 46 },
-      { x: 56, y: 52 },
-      { x: 64, y: 62 },
-      { x: 72, y: 72 },
-      { x: 80, y: 80 },
-      { x: 88, y: 88 },
-      { x: 86, y: 94 }
+      { x: 52, y: 10 },
+      { x: 74, y: 18 },
+      { x: 62, y: 30 },
+      { x: 36, y: 42 },
+      { x: 44, y: 54 },
+      { x: 72, y: 66 },
+      { x: 60, y: 78 },
+      { x: 36, y: 88 },
+      { x: 46, y: 95 },
+      { x: 52, y: 99 }
     ];
 
     function voteCount(){
@@ -447,10 +449,10 @@
       els.mapMiniStatus.textContent = `Completed: ${voteCount()} / ${MATCHUPS.length}`;
     }
 
-    // NEW: sequential unlocking
+    // sequential unlocking: battle i unlocks only if battle i-1 is voted
     function isUnlockedBattle(i){
       if (i === 0) return true;
-      return isVoted(ui.voteMap, i - 1); // unlock only if previous battle voted
+      return isVoted(ui.voteMap, i - 1);
     }
 
     function stoneStateForBattle(i){
@@ -537,7 +539,6 @@
         stone.root.addEventListener("click", (e) => {
           e.preventDefault();
 
-          // NEW: block locked battles
           if (!isUnlockedBattle(idx) && !isVoted(ui.voteMap, idx)) {
             setStatus(`🔒 Complete Battle ${idx} first!`);
             return;
@@ -655,16 +656,23 @@
         applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
         confettiBurst({ durationMs: 700, particleCount: 90 });
 
-        // Update this stone
+        // Update this stone to completed
         const s = ui.stones[matchIndex];
         if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
 
-        // NEW: unlock next stone (and refresh map state)
+        // unlock next stone immediately by rerendering
         renderBattleMap();
         highlightSelectedStone();
 
         refreshTopProgress();
-        setStatus(`✅ Vote saved! Battle ${matchIndex + 2} is now unlocked.`);
+
+        const nextNum = matchIndex + 2;
+        if (nextNum <= MATCHUPS.length){
+          setStatus(`✅ Vote saved! Battle ${nextNum} is now unlocked.`);
+        } else {
+          setStatus("✅ Vote saved!");
+        }
+
         syncArenaLockUI(matchIndex);
 
         if (voteCount() === MATCHUPS.length) {
@@ -697,6 +705,7 @@
 
       syncArenaLockUI(matchIndex);
 
+      // reset video when switching battles
       els.video.pause();
       els.video.currentTime = 0;
       els.video.removeAttribute("src");
@@ -731,7 +740,7 @@
         renderFireflies();
         renderBattleMap();
 
-        // highlight the first unlocked battle (next to do)
+        // highlight the next unlocked (not yet voted) battle
         const nextToDo = MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i) && isUnlockedBattle(i));
         ui.selectedIndex = nextToDo >= 0 ? nextToDo : 0;
         highlightSelectedStone();
