@@ -35,6 +35,21 @@ export const NOMINEES_2026 = [
   "Homegrown"
 ];
 
+export function slugify(title) {
+  return String(title || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-+/g, "-");
+}
+
+export function coverPath2026(title) {
+  return `../assets/covers/2026/${slugify(title)}.png`;
+}
+
+
 // Optional: richer objects (future covers, authors, etc.)
 export const NOMINEE_OBJECTS_2026 = NOMINEES_2026.map((title) => ({
   title,
