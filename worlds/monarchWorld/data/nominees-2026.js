@@ -2,16 +2,23 @@
 
 export const SEASON = "2026";
 
-// Simple slugifier for consistent filenames/IDs
+// ✅ Single slugifier (used everywhere)
 export function slugify(title) {
-  return String(title)
+  return String(title || "")
     .toLowerCase()
+    .normalize("NFKD")
     .replace(/['’]/g, "")          // remove apostrophes
     .replace(/[^a-z0-9]+/g, "-")   // non-alnum -> hyphen
-    .replace(/^-+|-+$/g, "");      // trim hyphens
+    .replace(/^-+|-+$/g, "")       // trim hyphens
+    .replace(/-+/g, "-");          // collapse repeats
 }
 
-// Your 2026 nominees (titles only; keep as the human-readable truth)
+// ✅ Cover path helper (THIS fixes your error)
+export function coverPath2026(title) {
+  return `../assets/covers/2026/${slugify(title)}.png`;
+}
+
+// Your 2026 nominees (human-readable truth)
 export const NOMINEES_2026 = [
   "Mr. S: A First Day of School Book",
   "Negative Cat",
@@ -35,25 +42,9 @@ export const NOMINEES_2026 = [
   "Homegrown"
 ];
 
-export function slugify(title) {
-  return String(title || "")
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-+/g, "-");
-}
-
-export function coverPath2026(title) {
-  return `../assets/covers/2026/${slugify(title)}.png`;
-}
-
-
-// Optional: richer objects (future covers, authors, etc.)
+// Optional richer objects (future-proofing)
 export const NOMINEE_OBJECTS_2026 = NOMINEES_2026.map((title) => ({
   title,
   slug: slugify(title),
-  // optional later:
-  // cover: `../assets/covers/2026/${slugify(title)}.png`
+  cover: coverPath2026(title)
 }));
