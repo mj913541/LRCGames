@@ -31,12 +31,23 @@
       inset: 0;
       pointer-events: none;
       opacity: 0.85;
+      z-index: 1;
+    }
+
+    /* Firefly layer sits above path but below stones */
+    .r1-fireflies{
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 2;
+      opacity: 0.9;
     }
 
     /* fixed-height map area so the curve has room */
     .r1-mapArea{
       position: relative;
       height: 720px;
+      z-index: 3; /* stones above fireflies */
     }
 
     @media (max-width: 640px){
@@ -83,7 +94,7 @@
     }
     @media (min-width: 900px){
       .r1-panelGrid{
-        grid-template-columns: 1.15fr 0.85fr; /* watch zone wider than controls */
+        grid-template-columns: 1.15fr 0.85fr;
         gap: 16px;
       }
     }
@@ -92,6 +103,49 @@
       font-weight: 900;
       font-size: 13px;
       opacity: 0.85;
+    }
+
+    /* ----------------- Fireflies ----------------- */
+    .r1-firefly{
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      /* no fixed colors: use soft white + warm glow via box-shadow */
+      background: rgba(255,255,255,0.95);
+      box-shadow:
+        0 0 10px rgba(255,255,255,0.55),
+        0 0 22px rgba(251,191,36,0.25);
+      opacity: 0.0;
+
+      /* Follow the curve (same as the path below) */
+      offset-path: path("M130,620 C240,560 250,470 330,420 C430,360 520,390 600,330 C700,270 690,190 800,160 C900,135 930,80 860,60");
+      offset-rotate: 0deg;
+
+      /* Subtle life motion */
+      animation:
+        r1Fly var(--dur, 8s) linear infinite,
+        r1Flicker 1.35s ease-in-out infinite;
+      animation-delay: var(--delay, 0s), calc(var(--delay, 0s) * 0.25);
+      filter: blur(0.2px);
+    }
+
+    @keyframes r1Fly{
+      0%   { offset-distance: 0%;   opacity: 0; transform: scale(0.75); }
+      8%   { opacity: 0.85; }
+      50%  { opacity: 0.95; transform: scale(1); }
+      92%  { opacity: 0.85; }
+      100% { offset-distance: 100%; opacity: 0; transform: scale(0.75); }
+    }
+
+    @keyframes r1Flicker{
+      0%,100% { transform: translateY(0) scale(1); opacity: 0.9; }
+      50%     { transform: translateY(-2px) scale(0.95); opacity: 0.55; }
+    }
+
+    /* If the browser doesn't support offset-path, hide fireflies gracefully */
+    @supports not (offset-path: path("M0,0 L1,1")) {
+      .r1-fireflies{ display:none; }
     }
   </style>
 </head>
@@ -117,7 +171,7 @@
       </div>
     </div>
 
-    <!-- MINI MAP (10 Battle Stones on a curved path) -->
+    <!-- MINI MAP -->
     <div class="r1-mapWrap mw-animate-fade-up">
       <div class="flex items-center justify-between gap-3 flex-wrap mb-3">
         <div class="font-extrabold text-lg">🗺️ Choose a Battle</div>
@@ -126,7 +180,6 @@
 
       <!-- Decorative curved path (SVG) -->
       <svg class="r1-pathCanvas" viewBox="0 0 1000 700" preserveAspectRatio="none" aria-hidden="true">
-        <!-- dashed trail -->
         <path
           d="M130,620 C240,560 250,470 330,420
              C430,360 520,390 600,330
@@ -138,7 +191,6 @@
           stroke-linecap="round"
           stroke-dasharray="14 18"
         />
-        <!-- soft glow under trail -->
         <path
           d="M130,620 C240,560 250,470 330,420
              C430,360 520,390 600,330
@@ -150,6 +202,9 @@
           stroke-linecap="round"
         />
       </svg>
+
+      <!-- Fireflies layer -->
+      <div id="fireflies" class="r1-fireflies" aria-hidden="true"></div>
 
       <div id="battleMap" class="r1-mapArea"></div>
 
@@ -190,7 +245,6 @@
         <!-- Battle controls -->
         <div>
           <div class="font-extrabold text-lg mb-2">📚 Battle Books</div>
-
           <div class="mw-bookGrid" id="booksArea"></div>
 
           <div class="mt-3 text-sm font-bold opacity-70">
@@ -202,15 +256,12 @@
   </div>
 
   <script type="module">
-    // ✅ Core (ES module)
     import { requireLogin, getLocalProgress, saveProgress } from "../../../scripts/lrcQuestCore.js";
 
-    // ✅ Data
     import { SEASON } from "../data/nominees-2026.js";
     import { ROUND1_MATCHUPS as MATCHUPS } from "../data/bracket-2026.js";
     import { getVideoUrl2026 } from "../data/video-map-2026.js";
 
-    // ✅ Components
     import { createStepStone } from "../components/stepStone.js";
     import { setProgressText as setProgressTextUI } from "../components/progressBar.js";
     import { attachVideoGate, getWatchedMap, hasWatchedBoth, hasWatched } from "../components/videoGate.js";
@@ -232,6 +283,7 @@
       progressText: document.getElementById("progressText"),
       mapMiniStatus: document.getElementById("mapMiniStatus"),
       battleMap: document.getElementById("battleMap"),
+      fireflies: document.getElementById("fireflies"),
 
       panelTitle: document.getElementById("panelTitle"),
       panelHint: document.getElementById("panelHint"),
@@ -246,23 +298,18 @@
     function setStatus(msg){ els.status.textContent = msg || ""; }
     function setWatchTag(msg){ els.watchTag.textContent = msg || ""; }
 
-    // UI state
     const ui = {
-      watchedMap: {}, // watched.m{idx}[title] = true
-      voteMap: {},    // votes.m{idx} = title
-      stones: [],     // array of { slotEl, stoneApi, imgEl }
+      watchedMap: {},
+      voteMap: {},
+      stones: [],
       selectedIndex: null,
       voteBtnsByTitle: {},
       watchBtnsByTitle: {}
     };
 
-    // current video context (for videoGate)
     let currentMatchIndex = null;
     let currentTitle = null;
 
-    // --- curved path positions (percent-based, responsive) ---
-    // These 10 points follow the curve drawn in the SVG.
-    // Tweak anytime: x/y from 0–100 (percent of map area).
     const STONE_POS = [
       { x: 14, y: 86 },
       { x: 26, y: 78 },
@@ -286,8 +333,45 @@
     }
 
     function stoneStateForBattle(i){
-      // Option A: all battles available; completed if voted
       return isVoted(ui.voteMap, i) ? "completed" : "unlocked";
+    }
+
+    function renderFireflies(){
+      // Clear + rebuild (safe on reload)
+      els.fireflies.innerHTML = "";
+
+      // Keep it subtle (too many looks noisy)
+      const count = 14;
+
+      for (let i = 0; i < count; i++){
+        const f = document.createElement("div");
+        f.className = "r1-firefly";
+
+        // Stagger duration + delay so they don't sync
+        const dur = 7 + Math.random() * 7;      // 7–14s
+        const delay = -(Math.random() * dur);   // negative = already in-progress
+
+        // Slight size variance
+        const size = 6 + Math.random() * 6;     // 6–12px
+        f.style.width = `${size}px`;
+        f.style.height = `${size}px`;
+
+        f.style.setProperty("--dur", `${dur}s`);
+        f.style.setProperty("--delay", `${delay}s`);
+
+        // Randomize starting offset too (optional)
+        f.style.offsetDistance = `${Math.random() * 100}%`;
+
+        // Randomize glow intensity subtly (still grayscale-ish)
+        const glowA = 8 + Math.random() * 10;
+        const glowB = 16 + Math.random() * 16;
+        f.style.boxShadow = `
+          0 0 ${glowA}px rgba(255,255,255,0.55),
+          0 0 ${glowB}px rgba(251,191,36,0.22)
+        `;
+
+        els.fireflies.appendChild(f);
+      }
     }
 
     function renderBattleMap(){
@@ -308,17 +392,15 @@
           assetBase: "../assets",
           state,
           href: "#",
-          label: "",             // we’ll use our own label pill below
+          label: "",
           title: `Battle ${idx + 1}`,
           allowCompletedClick: true
         });
 
-        // Label pill
         const label = document.createElement("div");
         label.className = "r1-battleLabel";
         label.textContent = `Battle ${idx + 1}`;
 
-        // Click -> select battle (no navigation)
         stone.root.addEventListener("click", (e) => {
           e.preventDefault();
           selectBattle(idx);
@@ -328,11 +410,9 @@
         slot.appendChild(label);
 
         els.battleMap.appendChild(slot);
-
         ui.stones.push({ slotEl: slot, stoneApi: stone });
       });
 
-      // Default select first incomplete battle
       const firstIncomplete = MATCHUPS.findIndex((_, i) => !isVoted(ui.voteMap, i));
       selectBattle(firstIncomplete >= 0 ? firstIncomplete : 0);
     }
@@ -383,19 +463,17 @@
       ui.watchBtnsByTitle = {};
       els.booksArea.innerHTML = "";
 
-      const pair = MATCHUPS[matchIndex];
-      const [a,b] = pair;
+      const [a,b] = MATCHUPS[matchIndex];
 
       els.panelTitle.textContent = `⚔️ Battle ${matchIndex + 1}`;
       els.panelHint.textContent = isVoted(ui.voteMap, matchIndex)
         ? "✅ You already voted in this battle (you can still rewatch videos)."
         : "Watch BOTH videos to unlock voting.";
 
-      // Reset watch zone labels
       els.nowPlaying.textContent = "Choose a book to watch";
       setWatchTag("🔒 Not watched");
 
-      pair.forEach((title) => {
+      MATCHUPS[matchIndex].forEach((title) => {
         const block = document.createElement("div");
         block.className = "mw-bookBlock";
 
@@ -437,7 +515,6 @@
           applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle: title });
           confettiBurst({ durationMs: 700, particleCount: 90 });
 
-          // update this stone to completed
           const s = ui.stones[matchIndex];
           if (s?.stoneApi?.setState) s.stoneApi.setState("completed");
 
@@ -458,7 +535,6 @@
         els.booksArea.appendChild(block);
       });
 
-      // Restore voted state or unlock state
       const votedTitle = getVoteForMatch(ui.voteMap, matchIndex);
       if (votedTitle) {
         applyVotedUI({ voteBtnsByTitle: ui.voteBtnsByTitle, votedTitle });
@@ -479,7 +555,6 @@
       highlightSelectedStone();
       renderBattlePanel(matchIndex);
 
-      // update current context (so videoGate knows where to store when video ends)
       currentMatchIndex = matchIndex;
       currentTitle = null;
     }
@@ -490,9 +565,9 @@
         ui.voteMap = getVoteMap(getLocalProgress, SEASON, ROUND_ID);
 
         refreshTopProgress();
+        renderFireflies();
         renderBattleMap();
 
-        // Attach watch-to-unlock behavior ONCE
         attachVideoGate({
           videoEl: els.video,
           getContext: () => ({ matchIndex: currentMatchIndex, title: currentTitle }),
@@ -503,7 +578,6 @@
           onWatched: ({ matchIndex, title, watchedMap }) => {
             ui.watchedMap = watchedMap;
 
-            // Update watch button label
             const wBtn = ui.watchBtnsByTitle?.[title];
             if (wBtn) wBtn.innerHTML = "🎥 Watch (✅ watched)";
 
