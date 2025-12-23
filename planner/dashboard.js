@@ -1,3 +1,47 @@
+// dashboard.js (cloud save version)
+// Requires: <script type="module" src="./dashboard.js"></script>
+
+// ---------------------------
+// Firebase (Auth + Firestore)
+// ---------------------------
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  onAuthStateChanged,
+  signInWithRedirect,
+  getRedirectResult,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+// ✅ PASTE YOUR EXISTING LRC QUEST FIREBASE CONFIG HERE
+const firebaseConfig = {
+  // apiKey: "...",
+  // authDomain: "...",
+  // projectId: "...",
+  // storageBucket: "...",
+  // messagingSenderId: "...",
+  // appId: "..."
+};
+
+const ALLOWED_EMAILS = new Set([
+  "malbrecht@sd308.org",
+  "malbrecht3317@gmail.com"
+]);
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
+
+let currentUser = null;
+
 // ---------------------------
 // Constants
 // ---------------------------
@@ -36,28 +80,19 @@ const LETTER_SCHEDULE = {
   "Break Day": []
 };
 
-// Bodyweight tracker list
+// Bodyweight trackers shown under your Movement card
 const BODY_TRACKERS = [
-  { key: "steps", label: "Steps", unit: "steps", target: 2000, step: 250 },
-  { key: "lunges", label: "Lunges", unit: "reps", target: 20, step: 5 },
-  { key: "squats", label: "Squats", unit: "reps", target: 20, step: 5 },
-  { key: "wallPushups", label: "Wall push-ups", unit: "reps", target: 20, step: 5 },
-  { key: "pushups", label: "Push-ups", unit: "reps", target: 20, step: 5 },
-  { key: "gluteBridges", label: "Glute bridges", unit: "reps", target: 20, step: 5 },
-  { key: "calfRaises", label: "Calf raises", unit: "reps", target: 20, step: 5 },
-  { key: "plankSeconds", label: "Plank", unit: "sec", target: 60, step: 10 },
-  { key: "birdDogs", label: "Bird dogs", unit: "reps", target: 20, step: 5 },
-  { key: "deadBugs", label: "Dead bugs", unit: "reps", target: 20, step: 5 }
+  { key: "steps", label: "Steps", target: 2000, step: 250 },
+  { key: "lunges", label: "Lunges", target: 20, step: 5 },
+  { key: "squats", label: "Squats", target: 20, step: 5 },
+  { key: "wallPushups", label: "Wall push-ups", target: 20, step: 5 },
+  { key: "pushups", label: "Push-ups", target: 20, step: 5 },
+  { key: "gluteBridges", label: "Glute bridges", target: 20, step: 5 },
+  { key: "calfRaises", label: "Calf raises", target: 20, step: 5 },
+  { key: "plankSeconds", label: "Plank (seconds)", target: 60, step: 10 },
+  { key: "birdDogs", label: "Bird dogs", target: 20, step: 5 },
+  { key: "deadBugs", label: "Dead bugs", target: 20, step: 5 }
 ];
-
-// Work Open anchor times
-const WORK_OPEN_ANCHOR = {
-  default: { h: 8, m: 55 },    // A/B/C/E
-  "D Day": { h: 14, m: 30 }    // D
-};
-
-const MIDDAY_ANCHOR = { h: 12, m: 5 };
-const BEDTIME_ANCHOR = { h: 21, m: 0 };
 
 // ---------------------------
 // Helpers
@@ -92,97 +127,57 @@ function coerceEnergy(n, fallback = 3) {
   return Math.min(5, Math.max(1, x));
 }
 
-function minutesFrom(h, m){ return h*60 + m; }
-
-function parseTimeStartMinutes(line){
-  const m = String(line).match(/^(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  let h1 = parseInt(m[1], 10);
-  const min1 = parseInt(m[2], 10);
-  if (h1 <= 3) h1 += 12;
-  return h1*60 + min1;
-}
-
-function parseTimeEndMinutes(line){
-  const m = String(line).match(/^(\d{1,2}):(\d{2})\s*[–-]\s*(\d{1,2}):(\d{2})/);
-  if (!m) return null;
-  let h2 = parseInt(m[3], 10);
-  const min2 = parseInt(m[4], 10);
-  if (h2 <= 3) h2 += 12;
-  return h2*60 + min2;
-}
-
-function formatMinutes(mins){
-  const h24 = Math.floor(mins / 60);
-  const m = mins % 60;
-  const ampm = h24 >= 12 ? "PM" : "AM";
-  let h = h24 % 12;
-  if (h === 0) h = 12;
-  return `${h}:${pad2(m)} ${ampm}`;
-}
-
-function tomorrowKeyFrom(keyStr){
-  const [y,m,d] = keyStr.split("-").map(n => parseInt(n,10));
-  const dt = new Date(y, m-1, d);
-  dt.setDate(dt.getDate() + 1);
-  return dateKey(dt);
+// Tiny debounce so Firestore isn’t spammed while typing
+function debounce(fn, ms=500){
+  let t = null;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), ms);
+  };
 }
 
 // ---------------------------
-// Storage
+// Firestore paths
+// plannerDashboards/{uid}/days/{YYYY-MM-DD}
+// plannerDashboards/{uid}/meta/templates
+// plannerDashboards/{uid}/meta/prefs
 // ---------------------------
-const STORE_KEY = "adhdDashboardData_v8";
-const TPL_KEY   = "adhdDashboardTemplates_v7";
-const PREF_KEY  = "adhdDashboardPrefs_v4";
+function dayDocRef(key) {
+  return doc(db, "plannerDashboards", currentUser.uid, "days", key);
+}
+function templatesDocRef() {
+  return doc(db, "plannerDashboards", currentUser.uid, "meta", "templates");
+}
+function prefsDocRef() {
+  return doc(db, "plannerDashboards", currentUser.uid, "meta", "prefs");
+}
 
+// ---------------------------
+// Cloud store (cached in memory)
+// ---------------------------
 const today = new Date();
 const KEY = dateKey(today);
 
-function loadStore() { return JSON.parse(localStorage.getItem(STORE_KEY) || "{}"); }
-function saveStore(store) { localStorage.setItem(STORE_KEY, JSON.stringify(store)); }
+let dayCache = null;        // current day doc data
+let templatesCache = null;  // templates doc data
+let prefsCache = null;      // prefs doc data
 
-function loadPrefs(){
-  const p = JSON.parse(localStorage.getItem(PREF_KEY) || "null");
-  return p || {
-    onlyUnchecked: false,
-    zoneVisibility: Object.fromEntries(ZONES.map(z => [z, true]))
-  };
-}
-function savePrefs(p){ localStorage.setItem(PREF_KEY, JSON.stringify(p)); }
-
-function getDayData(key = KEY) {
-  const store = loadStore();
-  return store[key] || {
+function defaultDayData(){
+  return {
     taskState: {},
     trackers: {},
     priorities: ["","",""],
-    school: { state: {}, customAppts: "" }
+    school: { state: {}, customAppts: "" },
+    notToday: "",
+    dow: "",
+    letterDay: "",
+    dayType: "Normal",
+    therapy: ""
   };
 }
 
-function setDayData(patch, key = KEY) {
-  const store = loadStore();
-  const current = getDayData(key);
-
-  store[key] = {
-    ...current,
-    ...patch,
-    taskState: { ...(current.taskState || {}), ...(patch.taskState || {}) },
-    trackers:  { ...(current.trackers  || {}), ...(patch.trackers  || {}) },
-    school:    { ...(current.school    || {}), ...(patch.school    || {}) }
-  };
-
-  saveStore(store);
-}
-
-// ---------------------------
-// Templates
-// ---------------------------
-function loadTemplates() {
-  const saved = JSON.parse(localStorage.getItem(TPL_KEY) || "null");
-  if (saved) return saved;
-
-  const defaults = {
+function defaultTemplates(){
+  return {
     daily: [
       "[Morning] Take meds / vitamins",
       "[Morning] Feed cat & refresh water",
@@ -218,17 +213,86 @@ function loadTemplates() {
       "[Arrive Home] Start laundry"
     ].join("\n")
   };
+}
 
-  localStorage.setItem(TPL_KEY, JSON.stringify(defaults));
+function defaultPrefs(){
+  return {
+    onlyUnchecked: false,
+    zoneVisibility: Object.fromEntries(ZONES.map(z => [z, true]))
+  };
+}
+
+async function getOrCreate(ref, defaults){
+  const snap = await getDoc(ref);
+  if (snap.exists()) return snap.data();
+  await setDoc(ref, defaults, { merge: true });
   return defaults;
 }
 
-function saveTemplates(tpl) { localStorage.setItem(TPL_KEY, JSON.stringify(tpl)); }
+async function loadCloudCaches(){
+  dayCache = await getOrCreate(dayDocRef(KEY), defaultDayData());
+  templatesCache = await getOrCreate(templatesDocRef(), defaultTemplates());
+  prefsCache = await getOrCreate(prefsDocRef(), defaultPrefs());
+}
+
+async function setDayPatch(patch){
+  // merge into cache first so UI can re-render instantly
+  const cur = dayCache || defaultDayData();
+  dayCache = {
+    ...cur,
+    ...patch,
+    taskState: { ...(cur.taskState||{}), ...(patch.taskState||{}) },
+    trackers:  { ...(cur.trackers||{}),  ...(patch.trackers||{})  },
+    school:    { ...(cur.school||{}),    ...(patch.school||{})    }
+  };
+  await setDoc(dayDocRef(KEY), { ...patch, savedAt: Date.now() }, { merge: true });
+}
+
+async function setTemplates(tpl){
+  templatesCache = { ...(templatesCache||defaultTemplates()), ...tpl };
+  await setDoc(templatesDocRef(), templatesCache, { merge: true });
+}
+
+async function setPrefs(p){
+  prefsCache = { ...(prefsCache||defaultPrefs()), ...p };
+  await setDoc(prefsDocRef(), prefsCache, { merge: true });
+}
+
+// ---------------------------
+// Auth gate (Google login)
+// ---------------------------
+async function requireDashboardLogin(){
+  try { await getRedirectResult(auth); } catch(e) { /* ignore */ }
+
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
+      const email = (user.email || "").toLowerCase();
+      if (!ALLOWED_EMAILS.has(email)) {
+        await signOut(auth);
+        document.body.innerHTML = `
+          <div style="padding:24px;font-family:system-ui;">
+            <h2>Access denied</h2>
+            <p>This dashboard is locked to your approved Google accounts only.</p>
+          </div>`;
+        return;
+      }
+
+      currentUser = user;
+      resolve(user);
+    });
+  });
+}
 
 // ---------------------------
 // DOM
 // ---------------------------
 const elDateLine = document.getElementById("dateLine");
+const elAccountLine = document.getElementById("accountLine");
 
 const elDow = document.getElementById("dow");
 const elLetter = document.getElementById("letterDay");
@@ -242,8 +306,6 @@ const prio3 = document.getElementById("prio3");
 
 const zonesWrap = document.getElementById("zonesWrap");
 const donePill = document.getElementById("donePill");
-const mergedPill = document.getElementById("mergedPill");
-const mergedWrap = document.getElementById("mergedWrap");
 
 const zoneToggles = document.getElementById("zoneToggles");
 
@@ -259,7 +321,6 @@ const tplThursday = document.getElementById("tplThursday");
 const tplTherapyNight = document.getElementById("tplTherapyNight");
 const tplHygiene = document.getElementById("tplHygiene");
 const tplCarryover = document.getElementById("tplCarryover");
-
 const saveTplBtn = document.getElementById("saveTplBtn");
 const customizeDetails = document.getElementById("customizeDetails");
 
@@ -271,6 +332,7 @@ const saveBtn = document.getElementById("saveBtn");
 
 const expandAllCardsBtn = document.getElementById("expandAllCardsBtn");
 const collapseAllCardsBtn = document.getElementById("collapseAllCardsBtn");
+const allCardDetails = Array.from(document.querySelectorAll(".cardDetails"));
 
 // Trackers
 const elWaterCount = document.getElementById("waterCount");
@@ -296,78 +358,78 @@ const bodyTrackersWrap = document.getElementById("bodyTrackersWrap");
 const exportBtn = document.getElementById("exportBtn");
 const importFile = document.getElementById("importFile");
 
-const allCardDetails = Array.from(document.querySelectorAll(".cardDetails"));
-
 // ---------------------------
-// Tasks (Hygiene ALWAYS INCLUDED)
+// Task generation
+// Hygiene ALWAYS included
 // ---------------------------
-function buildTasks() {
-  const t = loadTemplates();
+function buildTasks(){
+  const t = templatesCache || defaultTemplates();
   const tasks = [];
 
-  const selectedDow = elDow.value || dayName(today);
-  const selectedTherapy = elTherapy.value || defaultTherapyTonightByName(selectedDow);
+  const selectedDow = elDow.value || dayCache?.dow || dayName(today);
+  const selectedTherapy = elTherapy.value || dayCache?.therapy || defaultTherapyTonightByName(selectedDow);
 
   const daycare = isDaycareDayByName(selectedDow);
   const thursday = isThursdayByName(selectedDow);
   const therapyNight = (selectedTherapy === "Yes");
 
   splitLines(t.daily).forEach(line => {
-    const parsed = parseZonedLine(line);
-    tasks.push({ id: "daily-" + safeId(parsed.zone + "-" + parsed.text), zone: parsed.zone, text: parsed.text });
+    const p = parseZonedLine(line);
+    tasks.push({ id: "daily-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
   if (daycare) {
     splitLines(t.daycare).forEach(line => {
-      const parsed = parseZonedLine(line);
-      tasks.push({ id: "daycare-" + safeId(parsed.zone + "-" + parsed.text), zone: parsed.zone, text: parsed.text });
+      const p = parseZonedLine(line);
+      tasks.push({ id: "daycare-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
     });
   }
 
   if (thursday) {
     splitLines(t.thursday).forEach(line => {
-      const parsed = parseZonedLine(line);
-      tasks.push({ id: "thu-" + safeId(parsed.zone + "-" + parsed.text), zone: parsed.zone, text: parsed.text });
+      const p = parseZonedLine(line);
+      tasks.push({ id: "thu-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
     });
   }
 
   if (therapyNight) {
     splitLines(t.therapyNight).forEach(line => {
-      const parsed = parseZonedLine(line);
-      tasks.push({ id: "ther-" + safeId(parsed.zone + "-" + parsed.text), zone: parsed.zone, text: parsed.text });
+      const p = parseZonedLine(line);
+      tasks.push({ id: "ther-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
     });
   }
 
   splitLines(t.hygiene).forEach(line => {
-    const parsed = parseZonedLine(line);
-    tasks.push({ id: "hyg-" + safeId(parsed.zone + "-" + parsed.text), zone: parsed.zone, text: parsed.text });
+    const p = parseZonedLine(line);
+    tasks.push({ id: "hyg-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
   splitLines(t.carryover || "").forEach(line => {
-    const parsed = parseZonedLine(line);
-    tasks.push({ id: "car-" + safeId(parsed.zone + "-" + parsed.text), zone: parsed.zone, text: parsed.text });
+    const p = parseZonedLine(line);
+    tasks.push({ id: "car-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
   const seen = new Set();
   return tasks.filter(x => (seen.has(x.id) ? false : (seen.add(x.id), true)));
 }
 
-function getVisibleZones(prefs){
+function getVisibleZones(){
+  const prefs = prefsCache || defaultPrefs();
   return ZONES.filter(z => prefs.zoneVisibility?.[z] !== false);
 }
 
 // ---------------------------
 // Render MUST DO
 // ---------------------------
-function renderZones() {
-  const data = getDayData();
-  const prefs = loadPrefs();
+function renderZones(){
+  const data = dayCache || defaultDayData();
+  const prefs = prefsCache || defaultPrefs();
   const state = data.taskState || {};
   const tasks = buildTasks();
 
   zonesWrap.innerHTML = "";
 
-  const visibleZones = getVisibleZones(prefs);
+  const visibleZones = getVisibleZones();
   const byZone = {};
   ZONES.forEach(z => byZone[z] = []);
   tasks.forEach(t => (byZone[t.zone] || byZone["Morning"]).push(t));
@@ -410,10 +472,9 @@ function renderZones() {
       const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.checked = checked;
-      cb.addEventListener("change", () => {
-        setDayData({ taskState: { [task.id]: cb.checked } });
+      cb.addEventListener("change", async () => {
+        await setDayPatch({ taskState: { [task.id]: cb.checked } });
         renderZones();
-        renderMergedDay();
       });
 
       const main = document.createElement("div");
@@ -439,7 +500,7 @@ function renderZones() {
 // School checklist
 // ---------------------------
 function renderSchoolChecklist(){
-  const data = getDayData();
+  const data = dayCache || defaultDayData();
   const letter = elLetter.value || data.letterDay || "Break Day";
   const items = [...(LETTER_SCHEDULE[letter] || [])];
 
@@ -463,11 +524,11 @@ function renderSchoolChecklist(){
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = checked;
-    cb.addEventListener("change", () => {
-      const current = getDayData().school || { state: {}, customAppts: "" };
-      setDayData({ school: { ...current, state: { ...(current.state||{}), [id]: cb.checked } } });
+    cb.addEventListener("change", async () => {
+      const currentSchool = (dayCache?.school) || { state: {}, customAppts: "" };
+      const nextState = { ...(currentSchool.state||{}), [id]: cb.checked };
+      await setDayPatch({ school: { ...currentSchool, state: nextState } });
       renderSchoolChecklist();
-      renderMergedDay();
     });
 
     const main = document.createElement("div");
@@ -494,7 +555,7 @@ function renderSchoolChecklist(){
 // Zone toggles
 // ---------------------------
 function renderZoneToggles(){
-  const prefs = loadPrefs();
+  const prefs = prefsCache || defaultPrefs();
   zoneToggles.innerHTML = "";
 
   ZONES.forEach(z => {
@@ -505,12 +566,11 @@ function renderZoneToggles(){
     cb.type = "checkbox";
     cb.checked = prefs.zoneVisibility?.[z] !== false;
 
-    cb.addEventListener("change", () => {
-      const p2 = loadPrefs();
+    cb.addEventListener("change", async () => {
+      const p2 = { ...(prefsCache || defaultPrefs()) };
       p2.zoneVisibility = { ...(p2.zoneVisibility || {}), [z]: cb.checked };
-      savePrefs(p2);
+      await setPrefs(p2);
       renderZones();
-      renderMergedDay();
     });
 
     const txt = document.createElement("div");
@@ -523,204 +583,14 @@ function renderZoneToggles(){
 }
 
 // ---------------------------
-// Merged Day
+// Trackers + streaks (cloud)
+// We’ll do simple streaks from cached days later if you want;
+// for now, it’s still “today saves per day” without guilt.
 // ---------------------------
-function getLetterDay(){
-  const data = getDayData();
-  return elLetter.value || data.letterDay || "Break Day";
-}
-
-function getWorkOpenAnchorMinutes(letterDay){
-  const a = (letterDay === "D Day") ? WORK_OPEN_ANCHOR["D Day"] : WORK_OPEN_ANCHOR.default;
-  return minutesFrom(a.h, a.m);
-}
-
-function buildScheduleEvents(){
-  const letter = getLetterDay();
-  const base = (LETTER_SCHEDULE[letter] || []).map((line, idx) => {
-    const start = parseTimeStartMinutes(line);
-    const end = parseTimeEndMinutes(line);
-    return {
-      id: `sched-${safeId(letter)}-${idx}-${safeId(line)}`,
-      label: line,
-      startMin: start ?? 9999,
-      endMin: end ?? (start ?? 9999) + 30
-    };
-  });
-
-  const data = getDayData();
-  const customLines = splitLines(data.school?.customAppts || "");
-  const custom = customLines.map((line, idx) => {
-    const m = line.match(/^(\d{1,2}):(\d{2})\s*(.*)$/);
-    let start = 9998 + idx;
-    if (m){
-      let h = parseInt(m[1],10);
-      const mm = parseInt(m[2],10);
-      if (h <= 3) h += 12;
-      start = h*60 + mm;
-    }
-    return {
-      id: `cust-${idx}-${safeId(line)}`,
-      label: `🗓️ ${line}`,
-      startMin: start,
-      endMin: start + 20
-    };
-  });
-
-  return [...base, ...custom].sort((a,b) => a.startMin - b.startMin);
-}
-
-function groupTasksByZone(tasks, visibleZones){
-  const byZone = {};
-  visibleZones.forEach(z => byZone[z] = []);
-  tasks.forEach(t => {
-    if (!visibleZones.includes(t.zone)) return;
-    (byZone[t.zone] ||= []).push(t);
-  });
-  return byZone;
-}
-
-function addMergedBlock(container, mins, label, tagText){
-  const block = document.createElement("div");
-  block.className = "mergedBlock";
-
-  const head = document.createElement("div");
-  head.className = "mergedHead";
-
-  const left = document.createElement("div");
-  left.innerHTML = `<span class="mergedTime">${formatMinutes(mins)}</span> • <span class="mergedLabel">${label}</span>`;
-
-  const tag = document.createElement("div");
-  tag.className = "mergedTag";
-  tag.textContent = tagText;
-
-  head.appendChild(left);
-  head.appendChild(tag);
-  block.appendChild(head);
-
-  container.appendChild(block);
-  return block;
-}
-
-function renderMergedDay(){
-  const data = getDayData();
-  const prefs = loadPrefs();
-  const taskState = data.taskState || {};
-  const visibleZones = getVisibleZones(prefs);
-
-  const schedule = buildScheduleEvents();
-  const tasks = buildTasks();
-  const tasksByZone = groupTasksByZone(tasks, visibleZones);
-
-  mergedWrap.innerHTML = "";
-
-  const firstSched = schedule.length ? schedule[0].startMin : minutesFrom(8, 45);
-  const lastSchedEnd = schedule.length ? Math.max(...schedule.map(s => s.endMin || s.startMin)) : minutesFrom(15, 30);
-
-  const letter = getLetterDay();
-  const workOpenMin = getWorkOpenAnchorMinutes(letter);
-  const middayMin = minutesFrom(MIDDAY_ANCHOR.h, MIDDAY_ANCHOR.m);
-  const bedtimeMin = minutesFrom(BEDTIME_ANCHOR.h, BEDTIME_ANCHOR.m);
-
-  const anchors = [
-    { zone: "Morning", mins: Math.max(0, firstSched - 5), label: "Morning" },
-    { zone: "Work Open", mins: workOpenMin, label: "Work Open" },
-    { zone: "Midday", mins: middayMin, label: "Midday" },
-    { zone: "Work Close", mins: Math.max(lastSchedEnd, minutesFrom(15,0)), label: "Work Close" },
-    { zone: "Arrive Home", mins: Math.max(lastSchedEnd + 20, minutesFrom(16,0)), label: "Arrive Home" },
-    { zone: "Bedtime", mins: bedtimeMin, label: "Bedtime" }
-  ].filter(a => visibleZones.includes(a.zone));
-
-  const combined = [];
-  schedule.forEach(s => combined.push({ kind: "schedule", mins: s.startMin, event: s }));
-  anchors.forEach(a => combined.push({ kind: "zone", mins: a.mins, zone: a.zone, label: a.label }));
-
-  combined.sort((a,b) => a.mins - b.mins);
-
-  let mergedTotal = 0;
-  let mergedDone = 0;
-
-  combined.forEach(item => {
-    if (item.kind === "schedule"){
-      const b = addMergedBlock(mergedWrap, item.mins, item.event.label, "Schedule");
-      b.style.borderColor = "rgba(127,209,185,0.28)";
-      return;
-    }
-
-    const zone = item.zone;
-    const zoneTasksAll = (tasksByZone[zone] || []);
-    const zoneTasks = prefs.onlyUnchecked ? zoneTasksAll.filter(t => !taskState[t.id]) : zoneTasksAll;
-    if (!zoneTasksAll.length) return;
-
-    const block = addMergedBlock(mergedWrap, item.mins, zone, "Must Do");
-
-    const wrap = document.createElement("div");
-    wrap.className = "mergedTasks";
-
-    zoneTasks.forEach(t => {
-      mergedTotal++;
-      const checked = !!taskState[t.id];
-      if (checked) mergedDone++;
-
-      const row = document.createElement("div");
-      row.className = "task";
-
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = checked;
-      cb.addEventListener("change", () => {
-        setDayData({ taskState: { [t.id]: cb.checked } });
-        renderZones();
-        renderMergedDay();
-      });
-
-      const main = document.createElement("div");
-      main.className = "taskMain";
-
-      const text = document.createElement("div");
-      text.className = "taskText";
-      text.textContent = t.text;
-
-      main.appendChild(text);
-      row.appendChild(cb);
-      row.appendChild(main);
-      wrap.appendChild(row);
-    });
-
-    block.appendChild(wrap);
-  });
-
-  mergedPill.textContent = `${mergedDone} / ${mergedTotal}`;
-}
-
-// ---------------------------
-// Trackers + streaks
-// ---------------------------
-function streakCount(checkFn){
-  const store = loadStore();
-  let count = 0;
-  let cursor = new Date(today);
-  for (let i=0; i<365; i++){
-    const k = dateKey(cursor);
-    const day = store[k];
-    if (!day) break;
-    if (!checkFn(day)) break;
-    count++;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-  return count;
-}
-
-function setTracker(key, value) {
-  setDayData({ trackers: { [key]: value } });
-  renderTrackers();
-}
-
 function renderBodyTrackers(){
   if (!bodyTrackersWrap) return;
-  const data = getDayData();
+  const data = dayCache || defaultDayData();
   const tr = data.trackers || {};
-
   bodyTrackersWrap.innerHTML = "";
 
   BODY_TRACKERS.forEach(item => {
@@ -746,7 +616,7 @@ function renderBodyTrackers(){
 
     const hint = document.createElement("div");
     hint.className = "small muted";
-    hint.textContent = `Tap to build toward ${item.target}.`;
+    hint.textContent = `Build toward ${item.target}. Tap + anytime.`;
 
     const stepper = document.createElement("div");
     stepper.className = "stepper";
@@ -755,9 +625,11 @@ function renderBodyTrackers(){
     minus.type = "button";
     minus.className = "stepBtn";
     minus.textContent = "−";
-    minus.addEventListener("click", () => {
-      const next = Math.max(0, coerceInt(getDayData().trackers?.[item.key], 0) - item.step);
-      setTracker(item.key, next);
+    minus.addEventListener("click", async () => {
+      const now = coerceInt((dayCache?.trackers || {})[item.key], 0);
+      const next = Math.max(0, now - item.step);
+      await setDayPatch({ trackers: { [item.key]: next } });
+      renderTrackers();
     });
 
     const input = document.createElement("input");
@@ -766,15 +638,20 @@ function renderBodyTrackers(){
     input.min = "0";
     input.step = String(item.step);
     input.value = String(current);
-    input.addEventListener("input", () => setTracker(item.key, coerceInt(input.value, 0)));
+    input.addEventListener("input", debounce(async () => {
+      await setDayPatch({ trackers: { [item.key]: coerceInt(input.value, 0) } });
+      renderTrackers();
+    }, 350));
 
     const plus = document.createElement("button");
     plus.type = "button";
     plus.className = "stepBtn";
     plus.textContent = "+";
-    plus.addEventListener("click", () => {
-      const next = coerceInt(getDayData().trackers?.[item.key], 0) + item.step;
-      setTracker(item.key, next);
+    plus.addEventListener("click", async () => {
+      const now = coerceInt((dayCache?.trackers || {})[item.key], 0);
+      const next = now + item.step;
+      await setDayPatch({ trackers: { [item.key]: next } });
+      renderTrackers();
     });
 
     stepper.appendChild(minus);
@@ -789,8 +666,8 @@ function renderBodyTrackers(){
   });
 }
 
-function renderTrackers() {
-  const data = getDayData();
+function renderTrackers(){
+  const data = dayCache || defaultDayData();
   const tr = data.trackers || {};
 
   const water = coerceInt(tr.water, 0);
@@ -808,32 +685,32 @@ function renderTrackers() {
   elEnergy.value = String(energy);
   elEnergyPill.textContent = `${energy}/5`;
 
-  const waterStreak = streakCount(day => coerceInt(day.trackers?.water, 0) >= 4);
-  const moveStreak  = streakCount(day => coerceInt(day.trackers?.moveMinutes, 0) >= 10);
+  // streak placeholders (cloud streaks can be added later without clutter)
+  streakPill.textContent = `Saved to cloud ✅`;
 
-  streakPill.textContent = `Streaks: 💧${waterStreak}  🏃${moveStreak}`;
-  waterStreakLine.textContent = `Streak (≥4): ${waterStreak} day(s)`;
-  moveStreakLine.textContent  = `Streak (≥10 min): ${moveStreak} day(s)`;
+  waterStreakLine.textContent = `Goal idea: ≥4 drinks`;
+  moveStreakLine.textContent  = `Goal idea: ≥10 minutes`;
 
   renderBodyTrackers();
 }
 
 // ---------------------------
-// Backup / Restore
+// Backup / Restore (still useful)
 // ---------------------------
 function exportJSON(){
   const payload = {
-    STORE_KEY, TPL_KEY, PREF_KEY,
-    store: loadStore(),
-    templates: JSON.parse(localStorage.getItem(TPL_KEY) || "{}"),
-    prefs: loadPrefs()
+    version: "cloud-v1",
+    dayKey: KEY,
+    dayData: dayCache,
+    templates: templatesCache,
+    prefs: prefsCache
   };
 
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `adhd-dashboard-backup-${KEY}.json`;
+  a.download = `planner-dashboard-backup-${KEY}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -842,14 +719,17 @@ function exportJSON(){
 
 function importJSON(file){
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     try{
       const payload = JSON.parse(String(reader.result || "{}"));
-      if (payload.store) localStorage.setItem(STORE_KEY, JSON.stringify(payload.store));
-      if (payload.templates) localStorage.setItem(TPL_KEY, JSON.stringify(payload.templates));
-      if (payload.prefs) localStorage.setItem(PREF_KEY, JSON.stringify(payload.prefs));
+      if (payload.templates) await setTemplates(payload.templates);
+      if (payload.prefs) await setPrefs(payload.prefs);
+      if (payload.dayData) {
+        dayCache = { ...defaultDayData(), ...payload.dayData };
+        await setDoc(dayDocRef(KEY), dayCache, { merge: true });
+      }
       alert("Import complete ✅");
-      loadUI();
+      await loadUI();
     }catch(e){
       alert("Import failed. That file didn’t look like a dashboard backup.");
     }
@@ -865,18 +745,27 @@ function setAllCards(open){
 }
 
 // ---------------------------
-// Rollover to tomorrow
+// Rollover (Parking Lot + Priorities) to tomorrow
+// NOTE: This version is still cloud, but it writes tomorrow doc by date key.
 // ---------------------------
-function rolloverToTomorrow(){
-  const todayData = getDayData();
-  const tomorrowKey = tomorrowKeyFrom(KEY);
-  const tomorrowData = getDayData(tomorrowKey);
+function tomorrowKeyFrom(keyStr){
+  const [y,m,d] = keyStr.split("-").map(n => parseInt(n,10));
+  const dt = new Date(y, m-1, d);
+  dt.setDate(dt.getDate() + 1);
+  return dateKey(dt);
+}
 
-  const notToday = (todayData.notToday || "").trim();
+async function rolloverToTomorrow(){
+  const tomorrowKey = tomorrowKeyFrom(KEY);
+  const tomorrowRef = dayDocRef(tomorrowKey);
+  const snap = await getDoc(tomorrowRef);
+  const tomorrowData = snap.exists() ? snap.data() : defaultDayData();
+
+  const notToday = (dayCache?.notToday || "").trim();
   const nextNotToday = (tomorrowData.notToday || "").trim();
   const mergedNotToday = [nextNotToday, notToday].filter(Boolean).join("\n");
 
-  const pri = todayData.priorities || ["","",""];
+  const pri = dayCache?.priorities || ["","",""];
   const tPri = tomorrowData.priorities || ["","",""];
   const carriedPri = [
     tPri[0] || pri[0] || "",
@@ -884,15 +773,15 @@ function rolloverToTomorrow(){
     tPri[2] || pri[2] || ""
   ];
 
-  setDayData({ notToday: mergedNotToday, priorities: carriedPri }, tomorrowKey);
+  await setDoc(tomorrowRef, { notToday: mergedNotToday, priorities: carriedPri, savedAt: Date.now() }, { merge: true });
   alert("Rollover saved to tomorrow ✅");
 }
 
 // ---------------------------
 // Templates save
 // ---------------------------
-function saveTpls() {
-  saveTemplates({
+async function saveTpls(){
+  await setTemplates({
     daily: tplDaily.value,
     daycare: tplDaycare.value,
     thursday: tplThursday.value,
@@ -901,43 +790,65 @@ function saveTpls() {
     carryover: tplCarryover.value
   });
   renderZones();
-  renderMergedDay();
   alert("Templates saved.");
 }
 
 // ---------------------------
 // Start Here
 // ---------------------------
-function startHere(){
-  const data = getDayData();
+async function startHere(){
+  const data = dayCache || defaultDayData();
 
   if (!elDow.value) elDow.value = dayName(today);
   if (!elTherapy.value) elTherapy.value = defaultTherapyTonightByName(elDow.value);
   if (!elLetter.value) elLetter.value = data.letterDay || "Break Day";
+  if (!elDayType.value) elDayType.value = data.dayType || "Normal";
 
-  setDayData({
+  await setDayPatch({
     dow: elDow.value,
     therapy: elTherapy.value,
     letterDay: elLetter.value,
-    dayType: elDayType.value || "Normal"
+    dayType: elDayType.value
   });
 
   renderSchoolChecklist();
   renderZoneToggles();
   renderZones();
-  renderMergedDay();
 
-  const first = document.querySelector("#cardMerged");
-  if (first) first.scrollIntoView({ behavior:"smooth", block:"start" });
+  const firstZone = document.querySelector(".zone");
+  if (firstZone) firstZone.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
 // ---------------------------
 // Load UI
 // ---------------------------
-function loadUI() {
-  elDateLine.textContent = `Saved per day • Today is ${today.toDateString()}`;
+async function loadUI(){
+  elDateLine.textContent = `Saved to your Google account • ${today.toDateString()}`;
+  if (elAccountLine && currentUser?.email) elAccountLine.textContent = `Signed in: ${currentUser.email}`;
 
-  const t = loadTemplates();
+  // push caches into fields
+  const data = dayCache || defaultDayData();
+  const t = templatesCache || defaultTemplates();
+  const prefs = prefsCache || defaultPrefs();
+
+  // Context
+  elDow.value = data.dow || dayName(today);
+  elLetter.value = data.letterDay || "Break Day";
+  elDayType.value = data.dayType || "Normal";
+  elTherapy.value = data.therapy || defaultTherapyTonightByName(elDow.value);
+  elNotToday.value = data.notToday || "";
+
+  // Therapy hint
+  const defTher = defaultTherapyTonightByName(elDow.value);
+  elTherapyHint.textContent = (defTher === "Yes") ? "Default therapy night for Mon/Tue. Override if needed." : "";
+
+  // Priorities
+  const pri = data.priorities || ["","",""];
+  prio1.value = pri[0] || "";
+  prio2.value = pri[1] || "";
+  prio3.value = pri[2] || "";
+
+  // Templates
   tplDaily.value = t.daily || "";
   tplDaycare.value = t.daycare || "";
   tplThursday.value = t.thursday || "";
@@ -945,108 +856,112 @@ function loadUI() {
   tplHygiene.value = t.hygiene || "";
   tplCarryover.value = t.carryover || "";
 
-  const data = getDayData();
-  elDow.value = data.dow || dayName(today);
-  elLetter.value = data.letterDay || "Break Day";
-  elDayType.value = data.dayType || "Normal";
-  elTherapy.value = data.therapy || defaultTherapyTonightByName(elDow.value);
-  elNotToday.value = data.notToday || "";
+  // Prefs
+  if (onlyUnchecked) onlyUnchecked.checked = !!prefs.onlyUnchecked;
 
-  const pri = data.priorities || ["","",""];
-  prio1.value = pri[0] || "";
-  prio2.value = pri[1] || "";
-  prio3.value = pri[2] || "";
-
-  const prefs = loadPrefs();
-  onlyUnchecked.checked = !!prefs.onlyUnchecked;
-
-  // Customize hidden by default
+  // Customize hidden by default (no button)
   if (customizeDetails) customizeDetails.open = false;
-
-  const defTher = defaultTherapyTonightByName(elDow.value);
-  elTherapyHint.textContent = (defTher === "Yes") ? "Default therapy night for Mon/Tue. Override if needed." : "";
 
   renderZoneToggles();
   renderSchoolChecklist();
   renderTrackers();
   renderZones();
-  renderMergedDay();
 }
 
 // ---------------------------
 // Events
 // ---------------------------
-elDow.addEventListener("change", () => {
-  if (!getDayData().therapy) elTherapy.value = defaultTherapyTonightByName(elDow.value);
-  setDayData({ dow: elDow.value, therapy: elTherapy.value });
+elDow.addEventListener("change", async () => {
+  // If therapy was blank before, update to default
+  if (!dayCache?.therapy && !elTherapy.value) elTherapy.value = defaultTherapyTonightByName(elDow.value);
+  await setDayPatch({ dow: elDow.value, therapy: elTherapy.value });
   renderZones();
-  renderMergedDay();
 });
 
-elLetter.addEventListener("change", () => {
-  setDayData({ letterDay: elLetter.value });
+elLetter.addEventListener("change", async () => {
+  await setDayPatch({ letterDay: elLetter.value });
   renderSchoolChecklist();
-  renderMergedDay();
 });
 
-elDayType.addEventListener("change", () => setDayData({ dayType: elDayType.value }));
+elDayType.addEventListener("change", async () => {
+  await setDayPatch({ dayType: elDayType.value });
+});
 
-elTherapy.addEventListener("change", () => {
-  setDayData({ therapy: elTherapy.value });
+elTherapy.addEventListener("change", async () => {
+  await setDayPatch({ therapy: elTherapy.value });
   renderZones();
-  renderMergedDay();
 });
 
-customAppts.addEventListener("input", () => {
-  const current = getDayData().school || { state: {}, customAppts: "" };
-  setDayData({ school: { ...current, customAppts: customAppts.value } });
+customAppts.addEventListener("input", debounce(async () => {
+  const currentSchool = dayCache?.school || { state: {}, customAppts: "" };
+  await setDayPatch({ school: { ...currentSchool, customAppts: customAppts.value } });
   renderSchoolChecklist();
-  renderMergedDay();
-});
+}, 450));
 
-elNotToday.addEventListener("input", () => setDayData({ notToday: elNotToday.value }));
+elNotToday.addEventListener("input", debounce(async () => {
+  await setDayPatch({ notToday: elNotToday.value });
+}, 450));
 
 function savePriorities(){
-  setDayData({ priorities: [prio1.value, prio2.value, prio3.value] });
+  setDayPatch({ priorities: [prio1.value, prio2.value, prio3.value] });
 }
-[prio1, prio2, prio3].forEach(el => el.addEventListener("input", savePriorities));
+[prio1, prio2, prio3].forEach(el => el.addEventListener("input", debounce(savePriorities, 400)));
 
 saveTplBtn.addEventListener("click", saveTpls);
 startHereBtn.addEventListener("click", startHere);
 
-rolloverBtn.addEventListener("click", () => {
+rolloverBtn.addEventListener("click", async () => {
   const ok = confirm("Rollover Parking Lot + Priorities to tomorrow?");
-  if (ok) rolloverToTomorrow();
+  if (ok) await rolloverToTomorrow();
 });
 
-saveBtn.addEventListener("click", () => {
-  setDayData({
+saveBtn.addEventListener("click", async () => {
+  await setDayPatch({
     dow: elDow.value,
     letterDay: elLetter.value,
     dayType: elDayType.value,
     therapy: elTherapy.value,
-    notToday: elNotToday.value,
-    savedAt: Date.now()
+    notToday: elNotToday.value
   });
-  alert("Saved.");
+  alert("Saved ✅");
 });
 
-onlyUnchecked.addEventListener("change", () => {
-  const p = loadPrefs();
-  p.onlyUnchecked = !!onlyUnchecked.checked;
-  savePrefs(p);
+onlyUnchecked?.addEventListener("change", async () => {
+  const next = { ...(prefsCache || defaultPrefs()), onlyUnchecked: !!onlyUnchecked.checked };
+  await setPrefs(next);
   renderZones();
-  renderMergedDay();
 });
 
-// trackers
-elWaterMinus.addEventListener("click", () => setTracker("water", Math.max(0, coerceInt(elWaterCount.value, 0) - 1)));
-elWaterPlus.addEventListener("click", () => setTracker("water", coerceInt(elWaterCount.value, 0) + 1));
-elWaterCount.addEventListener("input", () => setTracker("water", coerceInt(elWaterCount.value, 0)));
+// trackers autosave
+elWaterMinus.addEventListener("click", async () => {
+  const now = coerceInt(elWaterCount.value, 0);
+  await setDayPatch({ trackers: { water: Math.max(0, now - 1) } });
+  renderTrackers();
+});
+elWaterPlus.addEventListener("click", async () => {
+  const now = coerceInt(elWaterCount.value, 0);
+  await setDayPatch({ trackers: { water: now + 1 } });
+  renderTrackers();
+});
+elWaterCount.addEventListener("input", debounce(async () => {
+  await setDayPatch({ trackers: { water: coerceInt(elWaterCount.value, 0) } });
+  renderTrackers();
+}, 250));
 
-elMoveMinutes.addEventListener("input", () => setTracker("moveMinutes", coerceInt(elMoveMinutes.value, 0)));
-elMood.addEventListener("change", () => setTracker("mood", elMood.value));
-elEnergy.addEventListener("input", () => setTracker("energy", coerceEnergy(elEnergy.value, 3)));
+elMoveMinutes.addEventListener("input", debounce(async () => {
+  await setDayPatch({ trackers: { moveMinutes: coerceInt(elMoveMinutes.value, 0) } });
+  renderTrackers();
+}, 300));
+
+elMood.addEventListener("change", async () => {
+  await setDayPatch({ trackers: { mood: elMood.value } });
+  renderTrackers();
+});
+
+elEnergy.addEventListener("input", debounce(async () => {
+  await setDayPatch({ trackers: { energy: coerceEnergy(elEnergy.value, 3) } });
+  renderTrackers();
+}, 250));
 
 exportBtn.addEventListener("click", exportJSON);
 importFile.addEventListener("change", () => {
@@ -1060,4 +975,6 @@ collapseAllCardsBtn.addEventListener("click", () => setAllCards(false));
 // ---------------------------
 // Boot
 // ---------------------------
-loadUI();
+await requireDashboardLogin();
+await loadCloudCaches();
+await loadUI();
