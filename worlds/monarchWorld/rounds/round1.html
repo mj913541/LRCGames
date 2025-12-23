@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🪨 Monarch World | Round 1 Path</title>
+  <title>🪨 AB Monarch World | Round 1 Path</title>
 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link rel="stylesheet" href="../styles/monarch.css">
@@ -331,6 +331,19 @@
       font-size: 13px;
       opacity: 0.9;
     }
+
+    /* --- Stone anchor ensures everything aligns --- */
+.r1-stoneAnchor {
+  position: relative;
+  width: max-content;
+  height: max-content;
+}
+
+/* Number sits just under the stone */
+.r1-battleLabel {
+  margin-top: -2px;   /* tighten gap */
+}
+
   </style>
 </head>
 
@@ -718,29 +731,34 @@ card.addEventListener("click", async () => {
     }
 
     /* ---------- Moving avatar logic ---------- */
-    function moveAvatarToIndex(idx, animate = true){
-      const stone = ui.stones?.[idx]?.slotEl;
-      if (!stone || !els.pathAvatar || !els.battleMap) return;
+function moveAvatarToIndex(idx, animate = true){
+  const slot = ui.stones?.[idx]?.slotEl;
+  if (!slot || !els.pathAvatar || !els.battleMap) return;
 
-      if (!animate) {
-        els.pathAvatar.style.transition = "none";
-      } else {
-        els.pathAvatar.style.transition = "";
-      }
+  const anchor = slot.querySelector(".r1-stoneAnchor");
+  if (!anchor) return;
 
-      const mapRect = els.battleMap.getBoundingClientRect();
-      const stoneRect = stone.getBoundingClientRect();
+  if (!animate) {
+    els.pathAvatar.style.transition = "none";
+  } else {
+    els.pathAvatar.style.transition = "";
+  }
 
-      const centerX = (stoneRect.left - mapRect.left) + (stoneRect.width / 2);
-      const centerY = (stoneRect.top  - mapRect.top)  + (stoneRect.height / 2);
+  const mapRect = els.battleMap.getBoundingClientRect();
+  const anchorRect = anchor.getBoundingClientRect();
 
-      els.pathAvatar.style.left = `${centerX}px`;
-      els.pathAvatar.style.top  = `${centerY}px`;
+  const centerX = (anchorRect.left - mapRect.left) + (anchorRect.width / 2);
+  const centerY = (anchorRect.top  - mapRect.top)  + (anchorRect.height / 2);
 
-      if (!animate) {
-        requestAnimationFrame(() => { els.pathAvatar.style.transition = ""; });
-      }
-    }
+  els.pathAvatar.style.left = `${centerX}px`;
+  els.pathAvatar.style.top  = `${centerY}px`;
+
+  if (!animate) {
+    requestAnimationFrame(() => { els.pathAvatar.style.transition = ""; });
+  }
+}
+
+    
 
     function moveAvatarToNext(animate = true){
       const nextIdx = nextUnlockedIndex();
@@ -833,8 +851,14 @@ card.addEventListener("click", async () => {
           selectBattle(idx);
         });
 
-        slot.appendChild(stone.root);
-        slot.appendChild(label);
+// Anchor wrapper around the stone graphic
+const stoneAnchor = document.createElement("div");
+stoneAnchor.className = "r1-stoneAnchor";
+stoneAnchor.appendChild(stone.root);
+
+slot.appendChild(stoneAnchor);
+slot.appendChild(label);
+
 
         els.battleMap.appendChild(slot);
         ui.stones.push({ slotEl: slot, stoneApi: stone });
