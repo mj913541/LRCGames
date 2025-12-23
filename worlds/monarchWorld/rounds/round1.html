@@ -64,9 +64,16 @@
       gap: 0px;
     }
 
+    /* --- Stone anchor ensures avatar aligns to the real stone --- */
+    .r1-stoneAnchor{
+      position: relative;
+      width: max-content;
+      height: max-content;
+    }
+
     /* number badge */
     .r1-battleLabel{
-      margin-top: -8px;
+      margin-top: -2px;  /* tighter + closer to stone */
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -169,7 +176,7 @@
       z-index: 6; /* above stones + labels */
       width: 56px;
       height: 56px;
-      transform: translate(-50%, -90%); /* hover slightly above the stone */
+      transform: translate(-50%, -75%); /* tuned so it sits above the stone */
       pointer-events: none;
       transition: left 520ms var(--mw-ease-pop, ease), top 520ms var(--mw-ease-pop, ease);
       filter: drop-shadow(0 14px 18px rgba(0,0,0,0.35));
@@ -331,19 +338,6 @@
       font-size: 13px;
       opacity: 0.9;
     }
-
-    /* --- Stone anchor ensures everything aligns --- */
-.r1-stoneAnchor {
-  position: relative;
-  width: max-content;
-  height: max-content;
-}
-
-/* Number sits just under the stone */
-.r1-battleLabel {
-  margin-top: -2px;   /* tighten gap */
-}
-
   </style>
 </head>
 
@@ -576,8 +570,6 @@
     let currentTitle = null;
 
     // Avatar options (place these PNGs in: worlds/monarchWorld/assets/avatars/)
-    // Filenames expected:
-    // lion.png, monarch.png, caterpillar.png, bear.png, book.png, owl.png
     const AVATAR_OPTIONS = [
       { id: "lion",        name: "Lion",        src: "../assets/avatars/lion.png" },
       { id: "monarch",     name: "Monarch",     src: "../assets/avatars/monarch.png" },
@@ -587,7 +579,7 @@
       { id: "owl",         name: "Owl",         src: "../assets/avatars/owl.png" }
     ];
 
-    // SNAKE positions (with extra bottom room so 8/9/10 don't smush)
+    // SNAKE positions (extra bottom room so 8/9/10 don't smush)
     const STONE_POS = [
       { x: 52, y: 8  },   // 1
       { x: 74, y: 16 },   // 2
@@ -689,16 +681,15 @@
       return p?.monarchWorld?.[SEASON]?.[ROUND_ID]?.avatarId || "lion";
     }
 
-async function setAvatarId(avatarId){
-  await saveProgress((p = {}) => {
-    p.monarchWorld ||= {};
-    p.monarchWorld[SEASON] ||= {};
-    p.monarchWorld[SEASON][ROUND_ID] ||= {};
-    p.monarchWorld[SEASON][ROUND_ID].avatarId = avatarId;
-    return p;
-  });
-}
-
+    async function setAvatarId(avatarId){
+      await saveProgress((p = {}) => {
+        p.monarchWorld ||= {};
+        p.monarchWorld[SEASON] ||= {};
+        p.monarchWorld[SEASON][ROUND_ID] ||= {};
+        p.monarchWorld[SEASON][ROUND_ID].avatarId = avatarId;
+        return p;
+      });
+    }
 
     function applyAvatarImage(){
       const id = getAvatarId();
@@ -718,47 +709,44 @@ async function setAvatarId(avatarId){
           <img src="${a.src}" alt="">
           <div class="name">${a.name}${a.id === current ? " ✅" : ""}</div>
         `;
-card.addEventListener("click", async () => {
-  await setAvatarId(a.id);
-  applyAvatarImage();
-  renderAvatarGrid();
-  setStatus(`✅ Avatar selected: ${a.name}`);
-  closeAvatarModal();
-});
+        card.addEventListener("click", async () => {
+          await setAvatarId(a.id);
+          applyAvatarImage();
+          renderAvatarGrid();
+          setStatus(`✅ Avatar selected: ${a.name}`);
+          closeAvatarModal();
+        });
 
         els.avatarGrid.appendChild(card);
       });
     }
 
-    /* ---------- Moving avatar logic ---------- */
-function moveAvatarToIndex(idx, animate = true){
-  const slot = ui.stones?.[idx]?.slotEl;
-  if (!slot || !els.pathAvatar || !els.battleMap) return;
+    /* ---------- Moving avatar logic (correct anchor) ---------- */
+    function moveAvatarToIndex(idx, animate = true){
+      const slot = ui.stones?.[idx]?.slotEl;
+      if (!slot || !els.pathAvatar || !els.battleMap) return;
 
-  const anchor = slot.querySelector(".r1-stoneAnchor");
-  if (!anchor) return;
+      // Prefer the actual visible stone element if it exists; fallback to the anchor wrapper.
+      const anchor =
+        slot.querySelector(".r1-stoneAnchor img") ||
+        slot.querySelector(".r1-stoneAnchor svg") ||
+        slot.querySelector(".r1-stoneAnchor") ||
+        slot;
 
-  if (!animate) {
-    els.pathAvatar.style.transition = "none";
-  } else {
-    els.pathAvatar.style.transition = "";
-  }
+      if (!animate) els.pathAvatar.style.transition = "none";
+      else els.pathAvatar.style.transition = "";
 
-  const mapRect = els.battleMap.getBoundingClientRect();
-  const anchorRect = anchor.getBoundingClientRect();
+      const mapRect = els.battleMap.getBoundingClientRect();
+      const aRect = anchor.getBoundingClientRect();
 
-  const centerX = (anchorRect.left - mapRect.left) + (anchorRect.width / 2);
-  const centerY = (anchorRect.top  - mapRect.top)  + (anchorRect.height / 2);
+      const centerX = (aRect.left - mapRect.left) + (aRect.width / 2);
+      const centerY = (aRect.top  - mapRect.top)  + (aRect.height / 2);
 
-  els.pathAvatar.style.left = `${centerX}px`;
-  els.pathAvatar.style.top  = `${centerY}px`;
+      els.pathAvatar.style.left = `${centerX}px`;
+      els.pathAvatar.style.top  = `${centerY}px`;
 
-  if (!animate) {
-    requestAnimationFrame(() => { els.pathAvatar.style.transition = ""; });
-  }
-}
-
-    
+      if (!animate) requestAnimationFrame(() => { els.pathAvatar.style.transition = ""; });
+    }
 
     function moveAvatarToNext(animate = true){
       const nextIdx = nextUnlockedIndex();
@@ -826,6 +814,11 @@ function moveAvatarToIndex(idx, animate = true){
           allowCompletedClick: true
         });
 
+        // Anchor wrapper around the stone graphic
+        const stoneAnchor = document.createElement("div");
+        stoneAnchor.className = "r1-stoneAnchor";
+        stoneAnchor.appendChild(stone.root);
+
         const label = document.createElement("div");
         label.className = "r1-battleLabel";
         label.textContent = `${idx + 1}`;
@@ -840,7 +833,7 @@ function moveAvatarToIndex(idx, animate = true){
         stone.root.addEventListener("click", (e) => {
           e.preventDefault();
 
-          // move avatar to the tapped stone (even if locked, it "shows them" where they tried)
+          // move avatar to the tapped stone (even if locked)
           moveAvatarToIndex(idx, true);
 
           if (!isUnlockedBattle(idx) && !isVoted(ui.voteMap, idx)) {
@@ -851,14 +844,8 @@ function moveAvatarToIndex(idx, animate = true){
           selectBattle(idx);
         });
 
-// Anchor wrapper around the stone graphic
-const stoneAnchor = document.createElement("div");
-stoneAnchor.className = "r1-stoneAnchor";
-stoneAnchor.appendChild(stone.root);
-
-slot.appendChild(stoneAnchor);
-slot.appendChild(label);
-
+        slot.appendChild(stoneAnchor);
+        slot.appendChild(label);
 
         els.battleMap.appendChild(slot);
         ui.stones.push({ slotEl: slot, stoneApi: stone });
