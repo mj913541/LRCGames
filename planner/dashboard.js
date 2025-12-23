@@ -1,5 +1,5 @@
-// dashboard.js
-// Cloud-save version (Google Auth + Firestore) + Color Day pill + Merged Day card + Hide checked in merged
+// dashboard.js (FIXED)
+// Cloud-save (Google Auth + Firestore) + Color Day pill + Merged Day + Hide checked in merged
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
@@ -17,15 +17,19 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-// ✅ PASTE your existing config
+/* =========================
+   ✅ PASTE YOUR REAL CONFIG
+   ========================= */
 const firebaseConfig = {
-  // apiKey: "...",
-  // authDomain: "...",
-  // projectId: "...",
-  // storageBucket: "...",
-  // messagingSenderId: "...",
-  // appId: "..."
+  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
+  authDomain: "lrcquest-3039e.firebaseapp.com",
+  projectId: "lrcquest-3039e",
+  storageBucket: "lrcquest-3039e.firebasestorage.app",
+  messagingSenderId: "72063656342",
+  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
+  measurementId: "G-5VXRYJ733C"
 };
+
 
 const ALLOWED_EMAILS = new Set([
   "malbrecht@sd308.org",
@@ -76,7 +80,7 @@ const LETTER_SCHEDULE = {
   "Break Day": []
 };
 
-// Your mapping: Therapy days = Red; A=Red; BCE=Yellow; D=Green
+// Your mapping: Therapy=Red, A=Red, B/C/E=Yellow, D=Green
 const COLOR_DAY_BY_LETTER = {
   "A Day": "Red Day",
   "B Day": "Yellow Day",
@@ -86,14 +90,11 @@ const COLOR_DAY_BY_LETTER = {
   "Break Day": "—"
 };
 
-// Work Open start rule:
-// ABCE: 8:55
-// D: 2:30
 function workOpenStart(letterDay){
   return (letterDay === "D Day") ? "2:30" : "8:55";
 }
 
-// Trackers
+// Body trackers
 const BODY_TRACKERS = [
   { key: "steps", label: "Steps", target: 2000, step: 250 },
   { key: "lunges", label: "Lunges", target: 20, step: 5 },
@@ -102,9 +103,7 @@ const BODY_TRACKERS = [
   { key: "pushups", label: "Push-ups", target: 20, step: 5 },
   { key: "gluteBridges", label: "Glute bridges", target: 20, step: 5 },
   { key: "calfRaises", label: "Calf raises", target: 20, step: 5 },
-  { key: "plankSeconds", label: "Plank (seconds)", target: 60, step: 10 },
-  { key: "birdDogs", label: "Bird dogs", target: 20, step: 5 },
-  { key: "deadBugs", label: "Dead bugs", target: 20, step: 5 }
+  { key: "plankSeconds", label: "Plank (seconds)", target: 60, step: 10 }
 ];
 
 // ---------------------------
@@ -142,23 +141,23 @@ function debounce(fn, ms=500){
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-// Time helpers for merged view
 function toMinutes(hm){
-  // accepts "8:55" or "2:30"
-  const [hRaw, mRaw] = String(hm).split(":");
-  let h = parseInt(hRaw,10);
-  const m = parseInt(mRaw,10);
-  if (!Number.isFinite(h) || !Number.isFinite(m)) return 0;
-  // assume morning if 6-11, afternoon if 1-5 and context suggests
-  // We'll keep it simple: if hour < 7, treat as morning; else as given.
-  return h*60 + m;
+  const m = String(hm || "").match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return 9999;
+  const h = parseInt(m[1],10);
+  const min = parseInt(m[2],10);
+  return h*60 + min;
 }
 
-function parseScheduleTime(line){
-  // "9:05–9:50 • ..." -> take first time
+function parseScheduleStartTime(line){
   const m = String(line).match(/^(\d{1,2}):(\d{2})/);
   if (!m) return null;
   return `${m[1]}:${m[2]}`;
+}
+
+// ✅ ONE consistent ID function for schedule lines
+function scheduleItemId(letter, idx, label){
+  return `school-${safeId(letter)}-${idx}-${safeId(label)}`;
 }
 
 // ---------------------------
@@ -398,8 +397,7 @@ function renderColorDay(){
 }
 
 // ---------------------------
-// Tasks
-// Hygiene ALWAYS included
+// Tasks (hygiene always included)
 // ---------------------------
 function buildTasks(){
   const t = templatesCache || defaultTemplates();
@@ -438,16 +436,19 @@ function buildTasks(){
     });
   }
 
+  // ALWAYS include hygiene
   splitLines(t.hygiene).forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "hyg-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
+  // Carryover always included
   splitLines(t.carryover || "").forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "car-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
+  // de-dupe
   const seen = new Set();
   return tasks.filter(x => (seen.has(x.id) ? false : (seen.add(x.id), true)));
 }
@@ -469,12 +470,10 @@ function renderZones(){
   zonesWrap.innerHTML = "";
 
   const visibleZones = getVisibleZones();
-  const byZone = {};
-  ZONES.forEach(z => byZone[z] = []);
+  const byZone = Object.fromEntries(ZONES.map(z => [z, []]));
   tasks.forEach(t => (byZone[t.zone] || byZone["Morning"]).push(t));
 
-  let total = 0;
-  let done = 0;
+  let total = 0, done = 0;
 
   visibleZones.forEach(zone => {
     const listAll = byZone[zone] || [];
@@ -537,15 +536,19 @@ function renderZones(){
 }
 
 // ---------------------------
-// School checklist
+// School checklist (IDs now consistent)
 // ---------------------------
 function renderSchoolChecklist(){
   const data = dayCache || defaultDayData();
   const letter = elLetter.value || data.letterDay || "Break Day";
-  const items = [...(LETTER_SCHEDULE[letter] || [])];
 
-  const custom = splitLines((data.school?.customAppts ?? ""));
-  custom.forEach(line => items.push(`🗓️ ${line}`));
+  // base schedule lines
+  const base = [...(LETTER_SCHEDULE[letter] || [])];
+
+  // custom appts appended after base (stable IDs)
+  const custom = splitLines((data.school?.customAppts ?? "")).map(line => `🗓️ ${line}`);
+
+  const items = [...base, ...custom];
 
   const state = (data.school?.state) || {};
   schoolWrap.innerHTML = "";
@@ -554,7 +557,7 @@ function renderSchoolChecklist(){
 
   items.forEach((label, idx) => {
     total++;
-    const id = `school-${safeId(letter)}-${idx}-${safeId(label)}`;
+    const id = scheduleItemId(letter, idx, label);
     const checked = !!state[id];
     if (checked) done++;
 
@@ -593,39 +596,37 @@ function renderSchoolChecklist(){
 }
 
 // ---------------------------
-// Merged Day (schedule + anchored zones)
+// Merged Day (now uses SAME schedule IDs as School)
 // ---------------------------
 function buildMergedItems(){
   const data = dayCache || defaultDayData();
   const prefs = prefsCache || defaultPrefs();
   const letter = elLetter.value || data.letterDay || "Break Day";
 
-  const scheduleLines = [
-    ...(LETTER_SCHEDULE[letter] || []),
-    ...splitLines(data.school?.customAppts || "").map(x => `🗓️ ${x}`)
-  ];
+  const base = [...(LETTER_SCHEDULE[letter] || [])];
+  const custom = splitLines((data.school?.customAppts ?? "")).map(line => `🗓️ ${line}`);
+  const scheduleLines = [...base, ...custom];
 
-  // schedule items
+  const schoolState = (data.school?.state || {});
+
   const schedule = scheduleLines.map((line, idx) => {
-    const t = parseScheduleTime(line);
+    const start = parseScheduleStartTime(line);
+    const id = scheduleItemId(letter, idx, line);
     return {
       kind: "schedule",
-      id: `sched-${safeId(letter)}-${idx}-${safeId(line)}`,
-      time: t ? t : null,
-      minutes: t ? toMinutes(t) : 9999,
+      id,
+      minutes: start ? toMinutes(start) : 9999,
       text: line,
-      checked: !!(data.school?.state || {})[`school-${safeId(letter)}-${idx}-${safeId(line)}`] // for customs this won't match; ok
+      checked: !!schoolState[id]
     };
   });
 
-  // tasks grouped by zone
   const tasks = buildTasks();
   const state = data.taskState || {};
   const byZone = Object.fromEntries(ZONES.map(z => [z, []]));
   tasks.forEach(t => (byZone[t.zone] || byZone["Morning"]).push(t));
 
-  // anchors
-  const openAt = workOpenStart(letter); // "8:55" or "2:30"
+  const openAt = workOpenStart(letter); // 8:55 or 2:30
   const anchors = [
     { zone: "Morning", time: "7:00" },
     { zone: "Work Open", time: openAt },
@@ -645,17 +646,14 @@ function buildMergedItems(){
     merged.push({
       kind: "zoneHeader",
       id: `zonehdr-${safeId(a.zone)}`,
-      time: a.time,
       minutes: toMinutes(a.time),
-      text: `${a.zone}`,
-      checked: false
+      text: `${a.zone} • ${a.time}`
     });
 
     list.forEach(task => {
       merged.push({
         kind: "task",
         id: task.id,
-        time: a.time,
         minutes: toMinutes(a.time) + 1,
         text: task.text,
         checked: !!state[task.id]
@@ -663,9 +661,7 @@ function buildMergedItems(){
     });
   });
 
-  // sort by minutes, keep zone headers before their tasks
   merged.sort((a,b) => (a.minutes - b.minutes) || (a.kind === "zoneHeader" ? -1 : 0));
-
   return merged;
 }
 
@@ -692,31 +688,18 @@ function renderMergedDay(){
       const div = document.createElement("div");
       div.className = "zoneHeader";
       div.style.marginTop = "10px";
-
-      const left = document.createElement("div");
-      left.textContent = `${item.text} • ${item.time}`;
-
-      const pill = document.createElement("span");
-      pill.className = "pill";
-      pill.textContent = "tasks";
-
-      div.appendChild(left);
-      div.appendChild(pill);
+      div.textContent = item.text;
       mergedWrap.appendChild(div);
       return;
     }
 
-    // schedule rows (render as "school style")
     if (item.kind === "schedule"){
       const row = document.createElement("div");
       row.className = "task taskSchoolRow";
 
       const cb = document.createElement("input");
       cb.type = "checkbox";
-      // we will track schedule checkboxes using their own id in dayCache.school.state
-      const schoolState = (data.school?.state || {});
-      const schedChecked = !!schoolState[item.id];
-      cb.checked = schedChecked;
+      cb.checked = !!item.checked;
 
       cb.addEventListener("change", async () => {
         const currentSchool = (dayCache?.school) || { state: {}, customAppts: "" };
@@ -740,7 +723,6 @@ function renderMergedDay(){
       return;
     }
 
-    // task rows
     if (item.kind === "task"){
       const row = document.createElement("div");
       row.className = "task";
@@ -766,7 +748,6 @@ function renderMergedDay(){
       row.appendChild(cb);
       row.appendChild(main);
       mergedWrap.appendChild(row);
-      return;
     }
   });
 
@@ -830,14 +811,10 @@ function renderBodyTrackers(){
 
     const pill = document.createElement("div");
     pill.className = "pill";
-    pill.textContent = `${current} / ${item.target} • ${pct}%`;
+    pill.textContent = `${current}/${item.target} • ${pct}%`;
 
     head.appendChild(title);
     head.appendChild(pill);
-
-    const hint = document.createElement("div");
-    hint.className = "small muted";
-    hint.textContent = `Build toward ${item.target}. Tap + anytime.`;
 
     const stepper = document.createElement("div");
     stepper.className = "stepper";
@@ -880,7 +857,6 @@ function renderBodyTrackers(){
     stepper.appendChild(plus);
 
     card.appendChild(head);
-    card.appendChild(hint);
     card.appendChild(stepper);
 
     bodyTrackersWrap.appendChild(card);
@@ -906,7 +882,7 @@ function renderTrackers(){
   elEnergy.value = String(energy);
   elEnergyPill.textContent = `${energy}/5`;
 
-  streakPill.textContent = `Saved to cloud ✅`;
+  streakPill.textContent = `Cloud save ✅`;
   waterStreakLine.textContent = `Goal idea: ≥4 drinks`;
   moveStreakLine.textContent  = `Goal idea: ≥10 minutes`;
 
@@ -914,7 +890,7 @@ function renderTrackers(){
 }
 
 // ---------------------------
-// Backup / Restore (simple)
+// Backup / Restore
 // ---------------------------
 function exportJSON(){
   const payload = {
@@ -963,7 +939,7 @@ function setAllCards(open){
 }
 
 // ---------------------------
-// Rollover (Parking Lot + Priorities)
+// Rollover
 // ---------------------------
 function tomorrowKeyFrom(keyStr){
   const [y,m,d] = keyStr.split("-").map(n => parseInt(n,10));
@@ -1030,13 +1006,12 @@ async function startHere(){
   });
 
   renderColorDay();
-  renderSchoolChecklist();
   renderZoneToggles();
+  renderSchoolChecklist();
   renderZones();
   renderMergedDay();
 
-  const first = document.querySelector("#cardMerged");
-  if (first) first.scrollIntoView({ behavior:"smooth", block:"start" });
+  document.getElementById("cardMerged")?.scrollIntoView({ behavior:"smooth", block:"start" });
 }
 
 // ---------------------------
@@ -1074,7 +1049,8 @@ async function loadUI(){
   if (onlyUnchecked) onlyUnchecked.checked = !!prefs.onlyUnchecked;
   if (mergedHideChecked) mergedHideChecked.checked = !!prefs.mergedHideChecked;
 
-  if (customizeDetails) customizeDetails.open = false; // hide by default
+  // Customize hidden by default
+  if (customizeDetails) customizeDetails.open = false;
 
   renderColorDay();
   renderZoneToggles();
@@ -1124,10 +1100,9 @@ elNotToday.addEventListener("input", debounce(async () => {
   await setDayPatch({ notToday: elNotToday.value });
 }, 450));
 
-function savePriorities(){
-  setDayPatch({ priorities: [prio1.value, prio2.value, prio3.value] });
-}
-[prio1, prio2, prio3].forEach(el => el.addEventListener("input", debounce(savePriorities, 400)));
+[prio1, prio2, prio3].forEach(el => el.addEventListener("input", debounce(async () => {
+  await setDayPatch({ priorities: [prio1.value, prio2.value, prio3.value] });
+}, 400)));
 
 saveTplBtn.addEventListener("click", saveTpls);
 startHereBtn.addEventListener("click", startHere);
