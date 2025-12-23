@@ -1,3 +1,4 @@
+<!-- dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,11 +13,19 @@
     <div>
       <h1>Daily Dashboard</h1>
       <p class="sub" id="dateLine"></p>
+
+      <!-- NEW: Red/Yellow/Green day pill -->
+      <div class="dayBadges">
+        <span class="pill" id="colorDayPill">—</span>
+      </div>
+
+      <!-- OPTIONAL: show signed-in account -->
+      <p class="small muted" id="accountLine"></p>
     </div>
 
     <div class="topActions">
-      <button class="ghostBtn" id="expandAllCardsBtn" type="button">Expand all</button>
-      <button class="ghostBtn" id="collapseAllCardsBtn" type="button">Collapse all</button>
+      <button class="ghostBtn tinyBtn" id="expandAllCardsBtn" type="button">Expand</button>
+      <button class="ghostBtn tinyBtn" id="collapseAllCardsBtn" type="button">Collapse</button>
     </div>
   </header>
 
@@ -86,7 +95,6 @@
                 <option value="Sick">Sick day</option>
                 <option value="Chaos">Chaos day</option>
               </select>
-              <div class="small muted">A gentle label, not a rule.</div>
             </div>
 
             <div>
@@ -109,19 +117,24 @@
         </div>
       </details>
 
-      <!-- NEW: Merged Day (collapsible) -->
+      <!-- NEW: Merged Day card -->
       <details class="cardDetails" id="cardMerged" open>
         <summary class="cardSummary">
           <span>Merged Day</span>
-          <span class="summaryHint">timeline + must do in the right spots</span>
+          <span class="summaryHint">schedule + must do in order</span>
         </summary>
-        <div class="card cardMerged">
+        <div class="card">
           <div class="headerRow">
-            <div class="small muted">Work Open anchors at <b>8:55</b> (A/B/C/E) or <b>2:30</b> (D).</div>
-            <div class="pill" id="mergedPill">0 / 0</div>
+            <div class="small muted">Shows schedule first, then inserts Must Do zones at their anchor times.</div>
+            <div class="row" style="grid-template-columns:1fr auto;gap:10px;align-items:center;">
+              <div class="toggleMini" style="justify-content:flex-end;">
+                <input id="mergedHideChecked" type="checkbox" />
+                <label for="mergedHideChecked">Hide checked</label>
+              </div>
+              <div class="pill" id="mergedPill">0 / 0</div>
+            </div>
           </div>
-
-          <div id="mergedWrap" class="mergedWrap"></div>
+          <div id="mergedWrap"></div>
         </div>
       </details>
 
@@ -151,11 +164,10 @@
       <details class="cardDetails" id="cardTasks" open>
         <summary class="cardSummary">
           <span>MUST DO</span>
-          <span class="summaryHint">time-zone list</span>
+          <span class="summaryHint">by time zone</span>
         </summary>
         <div class="card" id="tasksCard">
           <div class="headerRow">
-            <div class="small muted">Check off what matters. Everything else is optional.</div>
             <div class="pill" id="donePill">0 / 0</div>
           </div>
 
@@ -166,7 +178,6 @@
             </div>
           </div>
 
-          <!-- Zone visibility toggles -->
           <details class="miniDetails" id="zonesDetails" open>
             <summary>Show/Hide time zones</summary>
             <div class="zoneToggles" id="zoneToggles"></div>
@@ -174,6 +185,7 @@
 
           <div id="zonesWrap"></div>
 
+          <!-- Customize hidden by default; no toggle -->
           <details id="customizeDetails">
             <summary>Customize tasks (optional)</summary>
             <div class="small muted">Format: <b>[Zone] Task</b> — Example: <b>[Morning] Feed cat</b>. One per line.</div>
@@ -187,7 +199,7 @@
             <label>Thursday only</label>
             <textarea id="tplThursday"></textarea>
 
-            <label>Therapy night (Mon/Tue or when toggled Yes)</label>
+            <label>Therapy night</label>
             <textarea id="tplTherapyNight"></textarea>
 
             <label>Hygiene Pack tasks (always included)</label>
@@ -215,7 +227,7 @@
 
     </main>
 
-    <!-- RIGHT: trackers sidebar -->
+    <!-- RIGHT: trackers sidebar (your existing) -->
     <aside class="sideCol">
       <details class="cardDetails" id="cardTrackers" open>
         <summary class="cardSummary">
@@ -225,11 +237,10 @@
         <div class="card">
           <div class="headerRow">
             <div class="small muted">Tiny wins count. Saves per day.</div>
-            <div class="pill" id="streakPill">Streaks: —</div>
+            <div class="pill" id="streakPill">Saved to cloud ✅</div>
           </div>
 
           <div class="trackerStack">
-            <!-- Water -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Water</div>
@@ -244,7 +255,6 @@
               <div class="small muted" id="waterStreakLine"></div>
             </div>
 
-            <!-- Movement -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Movement</div>
@@ -254,11 +264,10 @@
               <input id="moveMinutes" type="number" inputmode="numeric" min="0" step="5" placeholder="0" />
               <div class="small muted" id="moveStreakLine"></div>
 
-              <div class="small muted" style="margin-top:10px;font-weight:800;">Bodyweight (build to 20)</div>
+              <div class="small muted" style="margin-top:10px;font-weight:800;">Bodyweight reps (build to 20)</div>
               <div id="bodyTrackersWrap" class="trackerStack"></div>
             </div>
 
-            <!-- Mood -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Mood</div>
@@ -274,7 +283,6 @@
               </select>
             </div>
 
-            <!-- Energy -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Energy</div>
@@ -304,7 +312,6 @@
     </aside>
   </div>
 
-<script type="module" src="./dashboard.js"></script>
-
+  <script type="module" src="./dashboard.js"></script>
 </body>
 </html>
