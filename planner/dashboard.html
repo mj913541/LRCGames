@@ -11,36 +11,30 @@
 <body>
   <header class="topBar">
     <div>
-      <h1>Daily Dashboard</h1>
+      <h1>AAADaily Dashboard</h1>
       <p class="sub" id="dateLine"></p>
-
-      <!-- NEW: Red/Yellow/Green day pill -->
-      <div class="dayBadges">
-        <span class="pill" id="colorDayPill">—</span>
-      </div>
-
-      <!-- OPTIONAL: show signed-in account -->
       <p class="small muted" id="accountLine"></p>
     </div>
 
     <div class="topActions">
-      <button class="ghostBtn tinyBtn" id="expandAllCardsBtn" type="button">Expand</button>
-      <button class="ghostBtn tinyBtn" id="collapseAllCardsBtn" type="button">Collapse</button>
+      <div class="pill" id="colorDayPill">—</div>
+      <button class="ghostBtn" id="expandAllCardsBtn" type="button">Expand</button>
+      <button class="ghostBtn" id="collapseAllCardsBtn" type="button">Collapse</button>
     </div>
   </header>
 
   <div class="layout">
-    <!-- LEFT: main content -->
+    <!-- LEFT -->
     <main class="mainCol">
 
-      <!-- Top 3 Priorities (collapsible) -->
+      <!-- Top 3 Priorities -->
       <details class="cardDetails" id="cardPriorities" open>
         <summary class="cardSummary">
           <span>Top 3 Priorities</span>
-          <span class="summaryHint">optional • 3 lines only</span>
+          <span class="summaryHint">optional • 3 lines</span>
         </summary>
         <div class="card">
-          <div class="small muted">Keep it tiny. Auto-saves as you type.</div>
+          <div class="small muted">Auto-saves as you type.</div>
           <div class="prioGrid">
             <input id="prio1" placeholder="1) One thing that matters" />
             <input id="prio2" placeholder="2) Next best thing" />
@@ -49,7 +43,7 @@
         </div>
       </details>
 
-      <!-- Context (collapsible) -->
+      <!-- Context -->
       <details class="cardDetails" id="cardContext" open>
         <summary class="cardSummary">
           <span>Context</span>
@@ -61,13 +55,8 @@
               <label>What day of the week is it?</label>
               <select id="dow">
                 <option value="">— choose —</option>
-                <option>Monday</option>
-                <option>Tuesday</option>
-                <option>Wednesday</option>
-                <option>Thursday</option>
-                <option>Friday</option>
-                <option>Saturday</option>
-                <option>Sunday</option>
+                <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+                <option>Thursday</option><option>Friday</option><option>Saturday</option><option>Sunday</option>
               </select>
             </div>
 
@@ -75,12 +64,8 @@
               <label>What school letter day is it?</label>
               <select id="letterDay">
                 <option value="">— choose —</option>
-                <option>A Day</option>
-                <option>B Day</option>
-                <option>C Day</option>
-                <option>D Day</option>
-                <option>E Day</option>
-                <option>Break Day</option>
+                <option>A Day</option><option>B Day</option><option>C Day</option>
+                <option>D Day</option><option>E Day</option><option>Break Day</option>
               </select>
             </div>
           </div>
@@ -117,36 +102,15 @@
         </div>
       </details>
 
-      <!-- NEW: Merged Day card -->
-      <details class="cardDetails" id="cardMerged" open>
-        <summary class="cardSummary">
-          <span>Merged Day</span>
-          <span class="summaryHint">schedule + must do in order</span>
-        </summary>
-        <div class="card">
-          <div class="headerRow">
-            <div class="small muted">Shows schedule first, then inserts Must Do zones at their anchor times.</div>
-            <div class="row" style="grid-template-columns:1fr auto;gap:10px;align-items:center;">
-              <div class="toggleMini" style="justify-content:flex-end;">
-                <input id="mergedHideChecked" type="checkbox" />
-                <label for="mergedHideChecked">Hide checked</label>
-              </div>
-              <div class="pill" id="mergedPill">0 / 0</div>
-            </div>
-          </div>
-          <div id="mergedWrap"></div>
-        </div>
-      </details>
-
-      <!-- Appointments / Classes -->
+      <!-- Today at School -->
       <details class="cardDetails" id="cardSchool" open>
         <summary class="cardSummary">
           <span>Today at School</span>
-          <span class="summaryHint">classes + appointments checklist</span>
+          <span class="summaryHint">classes + appointments</span>
         </summary>
         <div class="card cardSchool">
           <div class="headerRow">
-            <div class="small muted">Auto-loads from your letter-day schedule. Check off as you go.</div>
+            <div class="small muted">Auto-loads from your letter-day schedule.</div>
             <div class="pill" id="schoolPill">0 / 0</div>
           </div>
 
@@ -160,7 +124,25 @@
         </div>
       </details>
 
-      <!-- Routine / MUST DO -->
+      <!-- Merged Day (Appointments + MUST DO) -->
+      <details class="cardDetails" id="cardMerged" open>
+        <summary class="cardSummary">
+          <span>Merged Day</span>
+          <span class="summaryHint">appointments + tasks</span>
+        </summary>
+        <div class="card">
+          <div class="headerRow">
+            <div class="toggleMini">
+              <input id="mergedHideChecked" type="checkbox" />
+              <label for="mergedHideChecked">Hide checked</label>
+            </div>
+            <div class="pill" id="mergedPill">0 / 0</div>
+          </div>
+          <div id="mergedWrap"></div>
+        </div>
+      </details>
+
+      <!-- MUST DO -->
       <details class="cardDetails" id="cardTasks" open>
         <summary class="cardSummary">
           <span>MUST DO</span>
@@ -168,14 +150,11 @@
         </summary>
         <div class="card" id="tasksCard">
           <div class="headerRow">
-            <div class="pill" id="donePill">0 / 0</div>
-          </div>
-
-          <div class="todayModeRow">
             <div class="toggleMini">
               <input id="onlyUnchecked" type="checkbox" />
               <label for="onlyUnchecked">Show only unchecked</label>
             </div>
+            <div class="pill" id="donePill">0 / 0</div>
           </div>
 
           <details class="miniDetails" id="zonesDetails" open>
@@ -185,12 +164,11 @@
 
           <div id="zonesWrap"></div>
 
-          <!-- Customize hidden by default; no toggle -->
           <details id="customizeDetails">
             <summary>Customize tasks (optional)</summary>
             <div class="small muted">Format: <b>[Zone] Task</b> — Example: <b>[Morning] Feed cat</b>. One per line.</div>
 
-            <label>Daily tasks (one per line)</label>
+            <label>Daily tasks</label>
             <textarea id="tplDaily"></textarea>
 
             <label>Daycare days only (Tue / Thu / Fri)</label>
@@ -213,6 +191,26 @@
         </div>
       </details>
 
+      <!-- Last Time I -->
+      <details class="cardDetails" id="cardLastTime">
+        <summary class="cardSummary">
+          <span>When was the last time I…?</span>
+          <span class="summaryHint">memory helper</span>
+        </summary>
+        <div class="card">
+          <div class="small muted">Tap “Just did it” — we remember the date.</div>
+
+          <div id="lastTimeWrap" class="lastTimeList"></div>
+
+          <details class="miniDetails">
+            <summary>Customize items</summary>
+            <div class="small muted">One per line.</div>
+            <textarea id="lastTimeCustom" placeholder="Shave legs&#10;Wash hair&#10;Trim nails"></textarea>
+            <button id="saveLastTimeBtn" type="button">Save items</button>
+          </details>
+        </div>
+      </details>
+
       <!-- Parking Lot -->
       <details class="cardDetails" id="cardParking" open>
         <summary class="cardSummary">
@@ -227,20 +225,21 @@
 
     </main>
 
-    <!-- RIGHT: trackers sidebar (your existing) -->
+    <!-- RIGHT -->
     <aside class="sideCol">
       <details class="cardDetails" id="cardTrackers" open>
         <summary class="cardSummary">
           <span>Trackers</span>
-          <span class="summaryHint">quick daily inputs</span>
+          <span class="summaryHint">quick inputs</span>
         </summary>
         <div class="card">
           <div class="headerRow">
             <div class="small muted">Tiny wins count. Saves per day.</div>
-            <div class="pill" id="streakPill">Saved to cloud ✅</div>
+            <div class="pill" id="streakPill">—</div>
           </div>
 
           <div class="trackerStack">
+            <!-- Water -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Water</div>
@@ -255,6 +254,7 @@
               <div class="small muted" id="waterStreakLine"></div>
             </div>
 
+            <!-- Movement -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Movement</div>
@@ -264,10 +264,11 @@
               <input id="moveMinutes" type="number" inputmode="numeric" min="0" step="5" placeholder="0" />
               <div class="small muted" id="moveStreakLine"></div>
 
-              <div class="small muted" style="margin-top:10px;font-weight:800;">Bodyweight reps (build to 20)</div>
+              <div class="small muted" style="margin-top:10px;font-weight:800;">Bodyweight reps (build gently)</div>
               <div id="bodyTrackersWrap" class="trackerStack"></div>
             </div>
 
+            <!-- Mood -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Mood</div>
@@ -283,6 +284,7 @@
               </select>
             </div>
 
+            <!-- Energy -->
             <div class="trackerCard">
               <div class="trackerHead">
                 <div class="trackerTitle">Energy</div>

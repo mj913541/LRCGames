@@ -398,3 +398,35 @@ button:active{ transform: translateY(1px); }
   margin-top: 10px;
 }
 .mergedTasks .task{ margin-top: 8px; }
+
+.lastTimeRight{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.lastTimePill{
+  min-width: 46px;
+  text-align:center;
+  font-weight:800;
+}
+
+/* soft, calming status colors */
+.lt-green{
+  background: #f6fbf7;
+  border-color: #dbeee0;
+}
+.lt-yellow{
+  background: #fffaf0;
+  border-color: #f0e1b9;
+}
+.lt-red{
+  background: #fff5f5;
+  border-color: #f2c7c7;
+}
+
+/* apply border color to row too */
+.lastTimeRow.lt-green{ border: 1px solid #dbeee0; }
+.lastTimeRow.lt-yellow{ border: 1px solid #f0e1b9; }
+.lastTimeRow.lt-red{ border: 1px solid #f2c7c7; }
+
