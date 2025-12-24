@@ -1,16 +1,22 @@
 // dashboard.js (module) — Cloud save + merged day + last-time color thresholds
+// ✅ Dashboard redirects to login.html if not signed in (instead of prompting inside dashboard)
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getAuth,
-  GoogleAuthProvider,
   onAuthStateChanged,
-  signInWithRedirect,
-  getRedirectResult,
   signOut
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+// ---------------------------
+// CONFIG
+// ---------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
   authDomain: "lrcquest-3039e.firebaseapp.com",
@@ -18,16 +24,20 @@ const firebaseConfig = {
   storageBucket: "lrcquest-3039e.appspot.com",
   messagingSenderId: "72063656342",
   appId: "1:72063656342:web:bc08c6538437f50b53bdb7"
-  // measurementId optional; not needed for this dashboard
 };
 
+// If your dashboard lives in a folder, adjust this path (e.g. "../login.html")
+const LOGIN_URL = "/login.html";
 
 const ALLOWED_EMAILS = new Set(["malbrecht@sd308.org", "malbrecht3317@gmail.com"]);
 
+// ---------------------------
+// Firebase init
+// ---------------------------
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
+
 let currentUser = null;
 
 // ---------------------------
@@ -78,7 +88,9 @@ const COLOR_DAY_BY_LETTER = {
   "Break Day": "—"
 };
 
-function workOpenStart(letterDay){ return (letterDay === "D Day") ? "2:30" : "8:55"; }
+function workOpenStart(letterDay) {
+  return (letterDay === "D Day") ? "2:30" : "8:55";
+}
 
 // Trackers
 const BODY_TRACKERS = [
@@ -114,9 +126,9 @@ const LAST_TIME_THRESHOLDS = {
 // ---------------------------
 // Helpers
 // ---------------------------
-function pad2(n){ return String(n).padStart(2, "0"); }
-function dateKey(d = new Date()) { return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-function dayName(d = new Date()) { return ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][d.getDay()]; }
+function pad2(n) { return String(n).padStart(2, "0"); }
+function dateKey(d = new Date()) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
+function dayName(d = new Date()) { return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]; }
 function isDaycareDayByName(name) { return name === "Tuesday" || name === "Thursday" || name === "Friday"; }
 function isThursdayByName(name) { return name === "Thursday"; }
 function defaultTherapyTonightByName(name) { return (name === "Monday" || name === "Tuesday") ? "Yes" : "No"; }
@@ -125,8 +137,8 @@ function splitLines(text) { return String(text || "").split("\n").map(s => s.tri
 function safeId(str) { return String(str).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
 
 function parseZonedLine(line) {
-  const m = line.match(/^\[(.+?)\]\s*(.+)$/);
-  if (!m) return { zone: "Morning", text: line };
+  const m = String(line || "").match(/^\[(.+?)\]\s*(.+)$/);
+  if (!m) return { zone: "Morning", text: String(line || "").trim() };
   const zoneRaw = m[1].trim();
   const text = m[2].trim();
   const zone = ZONES.includes(zoneRaw) ? zoneRaw : "Morning";
@@ -142,46 +154,46 @@ function coerceEnergy(n, fallback = 3) {
   if (!Number.isFinite(x)) return fallback;
   return Math.min(5, Math.max(1, x));
 }
-function debounce(fn, ms=450){
-  let t=null;
-  return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), ms); };
+function debounce(fn, ms = 450) {
+  let t = null;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
 
-function toMinutes(hm){
-  const m = String(hm||"").match(/^(\d{1,2}):(\d{2})$/);
+function toMinutes(hm) {
+  const m = String(hm || "").match(/^(\d{1,2}):(\d{2})$/);
   if (!m) return 9999;
-  return parseInt(m[1],10)*60 + parseInt(m[2],10);
+  return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
 }
-function parseScheduleStartTime(line){
-  const m = String(line).match(/^(\d{1,2}):(\d{2})/);
+function parseScheduleStartTime(line) {
+  const m = String(line || "").match(/^(\d{1,2}):(\d{2})/);
   if (!m) return null;
   return `${m[1]}:${m[2]}`;
 }
 
 // schedule checkbox IDs must be stable + shared across cards
-function scheduleItemId(letter, idx, label){
+function scheduleItemId(letter, idx, label) {
   return `school-${safeId(letter)}-${idx}-${safeId(label)}`;
 }
 
 // last-time helpers
-function formatDaysAgo(dateStr){
+function formatDaysAgo(dateStr) {
   if (!dateStr) return "—";
   const then = new Date(dateStr);
   const now = new Date();
-  const MS = 24*60*60*1000;
+  const MS = 24 * 60 * 60 * 1000;
   const days = Math.floor((now - then) / MS);
   if (days <= 0) return "Today";
   if (days === 1) return "Yesterday";
   return `${days} days ago`;
 }
-function daysSince(dateStr){
+function daysSince(dateStr) {
   if (!dateStr) return null;
   const then = new Date(dateStr);
   const now = new Date();
-  const MS = 24*60*60*1000;
+  const MS = 24 * 60 * 60 * 1000;
   return Math.floor((now - then) / MS);
 }
-function lastTimeStatus(label, lastDoneStr){
+function lastTimeStatus(label, lastDoneStr) {
   const key = safeId(label);
   const rule = LAST_TIME_THRESHOLDS[key] || LAST_TIME_THRESHOLDS["_default"];
   const d = daysSince(lastDoneStr);
@@ -192,11 +204,14 @@ function lastTimeStatus(label, lastDoneStr){
 }
 
 // ---------------------------
-// Firestore paths
+// Date + keys
 // ---------------------------
 const today = new Date();
 const KEY = dateKey(today);
 
+// ---------------------------
+// Firestore paths
+// ---------------------------
 function dayDocRef(key) { return doc(db, "plannerDashboards", currentUser.uid, "days", key); }
 function templatesDocRef() { return doc(db, "plannerDashboards", currentUser.uid, "meta", "templates"); }
 function prefsDocRef() { return doc(db, "plannerDashboards", currentUser.uid, "meta", "prefs"); }
@@ -208,11 +223,11 @@ let dayCache = null;
 let templatesCache = null;
 let prefsCache = null;
 
-function defaultDayData(){
+function defaultDayData() {
   return {
     taskState: {},
     trackers: {},
-    priorities: ["","",""],
+    priorities: ["", "", ""],
     school: { state: {}, customAppts: "" },
     lastTime: { items: DEFAULT_LAST_TIME_ITEMS, dates: {} },
     notToday: "",
@@ -223,7 +238,7 @@ function defaultDayData(){
   };
 }
 
-function defaultTemplates(){
+function defaultTemplates() {
   return {
     daily: [
       "[Morning] Take meds / vitamins",
@@ -262,7 +277,7 @@ function defaultTemplates(){
   };
 }
 
-function defaultPrefs(){
+function defaultPrefs() {
   return {
     onlyUnchecked: false,
     mergedHideChecked: false,
@@ -270,64 +285,72 @@ function defaultPrefs(){
   };
 }
 
-async function getOrCreate(ref, defaults){
+async function getOrCreate(ref, defaults) {
   const snap = await getDoc(ref);
   if (snap.exists()) return snap.data();
   await setDoc(ref, defaults, { merge: true });
   return defaults;
 }
 
-async function loadCloudCaches(){
+async function loadCloudCaches() {
   dayCache = { ...defaultDayData(), ...(await getOrCreate(dayDocRef(KEY), defaultDayData())) };
   templatesCache = { ...defaultTemplates(), ...(await getOrCreate(templatesDocRef(), defaultTemplates())) };
   prefsCache = { ...defaultPrefs(), ...(await getOrCreate(prefsDocRef(), defaultPrefs())) };
 }
 
-async function setDayPatch(patch){
+async function setDayPatch(patch) {
   const cur = dayCache || defaultDayData();
   dayCache = {
     ...cur,
     ...patch,
-    taskState: { ...(cur.taskState||{}), ...(patch.taskState||{}) },
-    trackers:  { ...(cur.trackers||{}),  ...(patch.trackers||{})  },
-    school:    { ...(cur.school||{}),    ...(patch.school||{})    },
-    lastTime:  { ...(cur.lastTime||{}),  ...(patch.lastTime||{})  }
+    taskState: { ...(cur.taskState || {}), ...(patch.taskState || {}) },
+    trackers: { ...(cur.trackers || {}), ...(patch.trackers || {}) },
+    school: { ...(cur.school || {}), ...(patch.school || {}) },
+    lastTime: { ...(cur.lastTime || {}), ...(patch.lastTime || {}) }
   };
   await setDoc(dayDocRef(KEY), { ...patch, savedAt: Date.now() }, { merge: true });
 }
 
-async function setTemplates(patch){
-  templatesCache = { ...(templatesCache||defaultTemplates()), ...patch };
+async function setTemplates(patch) {
+  templatesCache = { ...(templatesCache || defaultTemplates()), ...patch };
   await setDoc(templatesDocRef(), templatesCache, { merge: true });
 }
 
-async function setPrefs(patch){
-  prefsCache = { ...(prefsCache||defaultPrefs()), ...patch };
+async function setPrefs(patch) {
+  prefsCache = { ...(prefsCache || defaultPrefs()), ...patch };
   await setDoc(prefsDocRef(), prefsCache, { merge: true });
 }
 
 // ---------------------------
-// Auth gate
+// Auth gate (redirect to login.html)
 // ---------------------------
-async function requireDashboardLogin(){
-  try { await getRedirectResult(auth); } catch(e) {}
+function redirectToLogin() {
+  const redirectTo = `${location.pathname}${location.search}${location.hash || ""}`;
+  const url = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectTo)}`;
+  location.replace(url);
+}
 
+async function requireDashboardLogin() {
   return new Promise((resolve) => {
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        await signInWithRedirect(auth, provider);
+        redirectToLogin();
         return;
       }
+
       const email = (user.email || "").toLowerCase();
       if (!ALLOWED_EMAILS.has(email)) {
         await signOut(auth);
         document.body.innerHTML = `
-          <div style="padding:24px;font-family:system-ui;">
-            <h2>Access denied</h2>
-            <p>This dashboard is locked to your approved Google accounts only.</p>
+          <div style="padding:24px;font-family:system-ui;max-width:720px;margin:0 auto;">
+            <h2 style="margin:0 0 8px;">Access denied</h2>
+            <p style="margin:0 0 12px;">This dashboard is locked to your approved Google accounts only.</p>
+            <p style="margin:0 0 12px;"><b>Signed in as:</b> ${email || "unknown"}</p>
+            <a href="${LOGIN_URL}" style="text-decoration:underline;">Go to login</a>
           </div>`;
         return;
       }
+
       currentUser = user;
       resolve(user);
     });
@@ -335,121 +358,121 @@ async function requireDashboardLogin(){
 }
 
 // ---------------------------
-// DOM
+// DOM (safe getter)
 // ---------------------------
-const elDateLine = document.getElementById("dateLine");
-const elAccountLine = document.getElementById("accountLine");
-const colorDayPill = document.getElementById("colorDayPill");
+const $ = (id) => document.getElementById(id);
 
-const elDow = document.getElementById("dow");
-const elLetter = document.getElementById("letterDay");
-const elDayType = document.getElementById("dayType");
-const elTherapy = document.getElementById("therapy");
-const elTherapyHint = document.getElementById("therapyHint");
+const elDateLine = $("dateLine");
+const elAccountLine = $("accountLine");
+const colorDayPill = $("colorDayPill");
 
-const prio1 = document.getElementById("prio1");
-const prio2 = document.getElementById("prio2");
-const prio3 = document.getElementById("prio3");
+const elDow = $("dow");
+const elLetter = $("letterDay");
+const elDayType = $("dayType");
+const elTherapy = $("therapy");
+const elTherapyHint = $("therapyHint");
 
-const zonesWrap = document.getElementById("zonesWrap");
-const donePill = document.getElementById("donePill");
-const zoneToggles = document.getElementById("zoneToggles");
+const prio1 = $("prio1");
+const prio2 = $("prio2");
+const prio3 = $("prio3");
 
-const schoolWrap = document.getElementById("schoolWrap");
-const schoolPill = document.getElementById("schoolPill");
-const customAppts = document.getElementById("customAppts");
+const zonesWrap = $("zonesWrap");
+const donePill = $("donePill");
+const zoneToggles = $("zoneToggles");
 
-const mergedWrap = document.getElementById("mergedWrap");
-const mergedPill = document.getElementById("mergedPill");
-const mergedHideChecked = document.getElementById("mergedHideChecked");
+const schoolWrap = $("schoolWrap");
+const schoolPill = $("schoolPill");
+const customAppts = $("customAppts");
 
-const elNotToday = document.getElementById("notToday");
+const mergedWrap = $("mergedWrap");
+const mergedPill = $("mergedPill");
+const mergedHideChecked = $("mergedHideChecked");
 
-const tplDaily = document.getElementById("tplDaily");
-const tplDaycare = document.getElementById("tplDaycare");
-const tplThursday = document.getElementById("tplThursday");
-const tplTherapyNight = document.getElementById("tplTherapyNight");
-const tplHygiene = document.getElementById("tplHygiene");
-const tplCarryover = document.getElementById("tplCarryover");
-const saveTplBtn = document.getElementById("saveTplBtn");
-const customizeDetails = document.getElementById("customizeDetails");
+const elNotToday = $("notToday");
 
-const onlyUnchecked = document.getElementById("onlyUnchecked");
+const tplDaily = $("tplDaily");
+const tplDaycare = $("tplDaycare");
+const tplThursday = $("tplThursday");
+const tplTherapyNight = $("tplTherapyNight");
+const tplHygiene = $("tplHygiene");
+const tplCarryover = $("tplCarryover");
+const saveTplBtn = $("saveTplBtn");
+const customizeDetails = $("customizeDetails");
 
-const startHereBtn = document.getElementById("startHereBtn");
-const rolloverBtn = document.getElementById("rolloverBtn");
-const saveBtn = document.getElementById("saveBtn");
+const onlyUnchecked = $("onlyUnchecked");
 
-const expandAllCardsBtn = document.getElementById("expandAllCardsBtn");
-const collapseAllCardsBtn = document.getElementById("collapseAllCardsBtn");
+const startHereBtn = $("startHereBtn");
+const rolloverBtn = $("rolloverBtn");
+const saveBtn = $("saveBtn");
+
+const expandAllCardsBtn = $("expandAllCardsBtn");
+const collapseAllCardsBtn = $("collapseAllCardsBtn");
 const allCardDetails = Array.from(document.querySelectorAll(".cardDetails"));
 
 // Trackers
-const elWaterCount = document.getElementById("waterCount");
-const elWaterMinus = document.getElementById("waterMinus");
-const elWaterPlus  = document.getElementById("waterPlus");
-const elWaterPill  = document.getElementById("waterPill");
+const elWaterCount = $("waterCount");
+const elWaterMinus = $("waterMinus");
+const elWaterPlus = $("waterPlus");
+const elWaterPill = $("waterPill");
 
-const elMoveMinutes = document.getElementById("moveMinutes");
-const elMovePill = document.getElementById("movePill");
+const elMoveMinutes = $("moveMinutes");
+const elMovePill = $("movePill");
 
-const elMood = document.getElementById("mood");
-const elMoodPill = document.getElementById("moodPill");
+const elMood = $("mood");
+const elMoodPill = $("moodPill");
 
-const elEnergy = document.getElementById("energy");
-const elEnergyPill = document.getElementById("energyPill");
+const elEnergy = $("energy");
+const elEnergyPill = $("energyPill");
 
-const streakPill = document.getElementById("streakPill");
-const waterStreakLine = document.getElementById("waterStreakLine");
-const moveStreakLine = document.getElementById("moveStreakLine");
+const streakPill = $("streakPill");
+const waterStreakLine = $("waterStreakLine");
+const moveStreakLine = $("moveStreakLine");
 
-const bodyTrackersWrap = document.getElementById("bodyTrackersWrap");
+const bodyTrackersWrap = $("bodyTrackersWrap");
 
-const exportBtn = document.getElementById("exportBtn");
-const importFile = document.getElementById("importFile");
+const exportBtn = $("exportBtn");
+const importFile = $("importFile");
 
 // Last time
-const lastTimeWrap = document.getElementById("lastTimeWrap");
-const lastTimeCustom = document.getElementById("lastTimeCustom");
-const saveLastTimeBtn = document.getElementById("saveLastTimeBtn");
+const lastTimeWrap = $("lastTimeWrap");
+const lastTimeCustom = $("lastTimeCustom");
+const saveLastTimeBtn = $("saveLastTimeBtn");
 
 // ---------------------------
 // Color day
 // ---------------------------
-function renderColorDay(){
+function renderColorDay() {
   if (!colorDayPill) return;
-  const letter = elLetter.value || dayCache?.letterDay || "Break Day";
-  const therapy = elTherapy.value || dayCache?.therapy || "";
+  const letter = elLetter?.value || dayCache?.letterDay || "Break Day";
+  const therapy = elTherapy?.value || dayCache?.therapy || "";
   const label = (therapy === "Yes") ? "Red Day (Therapy)" : (COLOR_DAY_BY_LETTER[letter] || "—");
 
   colorDayPill.textContent = label;
-  colorDayPill.classList.remove("pill-red","pill-yellow","pill-green");
+  colorDayPill.classList.remove("pill-red", "pill-yellow", "pill-green");
   if (/red/i.test(label)) colorDayPill.classList.add("pill-red");
   if (/yellow/i.test(label)) colorDayPill.classList.add("pill-yellow");
   if (/green/i.test(label)) colorDayPill.classList.add("pill-green");
 }
 
 // ---------------------------
-// Tasks (hygiene always included)
+// Tasks
 // ---------------------------
-function buildTasks(){
+function buildTasks() {
   const t = templatesCache || defaultTemplates();
   const tasks = [];
 
-  const selectedDow = elDow.value || dayCache?.dow || dayName(today);
-  const selectedTherapy = elTherapy.value || dayCache?.therapy || defaultTherapyTonightByName(selectedDow);
+  const selectedDow = elDow?.value || dayCache?.dow || dayName(today);
+  const selectedTherapy = elTherapy?.value || dayCache?.therapy || defaultTherapyTonightByName(selectedDow);
 
   const daycare = isDaycareDayByName(selectedDow);
   const thursday = isThursdayByName(selectedDow);
   const therapyNight = (selectedTherapy === "Yes");
 
-  // Daily
   splitLines(t.daily).forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "daily-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
-  // Daycare
   if (daycare) {
     splitLines(t.daycare).forEach(line => {
       const p = parseZonedLine(line);
@@ -457,7 +480,6 @@ function buildTasks(){
     });
   }
 
-  // Thursday
   if (thursday) {
     splitLines(t.thursday).forEach(line => {
       const p = parseZonedLine(line);
@@ -465,7 +487,6 @@ function buildTasks(){
     });
   }
 
-  // Therapy night
   if (therapyNight) {
     splitLines(t.therapyNight).forEach(line => {
       const p = parseZonedLine(line);
@@ -473,32 +494,30 @@ function buildTasks(){
     });
   }
 
-  // Hygiene ALWAYS
+  // hygiene ALWAYS
   splitLines(t.hygiene).forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "hyg-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
-  // Carryover ALWAYS included
+  // carryover ALWAYS
   splitLines(t.carryover || "").forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "car-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
-  // De-dupe
   const seen = new Set();
   return tasks.filter(x => (seen.has(x.id) ? false : (seen.add(x.id), true)));
 }
 
-function getVisibleZones(){
+function getVisibleZones() {
   const prefs = prefsCache || defaultPrefs();
   return ZONES.filter(z => prefs.zoneVisibility?.[z] !== false);
 }
 
-// ---------------------------
-// Render zones
-// ---------------------------
-function renderZones(){
+function renderZones() {
+  if (!zonesWrap || !donePill) return;
+
   const data = dayCache || defaultDayData();
   const prefs = prefsCache || defaultPrefs();
   const state = data.taskState || {};
@@ -575,9 +594,11 @@ function renderZones(){
 // ---------------------------
 // School checklist
 // ---------------------------
-function renderSchoolChecklist(){
+function renderSchoolChecklist() {
+  if (!schoolWrap || !schoolPill) return;
+
   const data = dayCache || defaultDayData();
-  const letter = elLetter.value || data.letterDay || "Break Day";
+  const letter = elLetter?.value || data.letterDay || "Break Day";
 
   const base = [...(LETTER_SCHEDULE[letter] || [])];
   const custom = splitLines((data.school?.customAppts ?? "")).map(line => `🗓️ ${line}`);
@@ -602,7 +623,7 @@ function renderSchoolChecklist(){
     cb.checked = checked;
     cb.addEventListener("change", async () => {
       const currentSchool = (dayCache?.school) || { state: {}, customAppts: "" };
-      const nextState = { ...(currentSchool.state||{}), [id]: cb.checked };
+      const nextState = { ...(currentSchool.state || {}), [id]: cb.checked };
       await setDayPatch({ school: { ...currentSchool, state: nextState } });
       renderSchoolChecklist();
       renderMergedDay();
@@ -623,7 +644,7 @@ function renderSchoolChecklist(){
 
   schoolPill.textContent = `${done} / ${total}`;
 
-  if (document.activeElement !== customAppts) {
+  if (customAppts && document.activeElement !== customAppts) {
     customAppts.value = data.school?.customAppts || "";
   }
 }
@@ -631,15 +652,14 @@ function renderSchoolChecklist(){
 // ---------------------------
 // Merged Day (appointments + tasks)
 // ---------------------------
-function buildMergedItems(){
+function buildMergedItems() {
   const data = dayCache || defaultDayData();
   const prefs = prefsCache || defaultPrefs();
-  const letter = elLetter.value || data.letterDay || "Break Day";
+  const letter = elLetter?.value || data.letterDay || "Break Day";
 
   const base = [...(LETTER_SCHEDULE[letter] || [])];
   const custom = splitLines((data.school?.customAppts ?? "")).map(line => `🗓️ ${line}`);
   const scheduleLines = [...base, ...custom];
-
   const schoolState = data.school?.state || {};
 
   const schedule = scheduleLines.map((line, idx) => {
@@ -695,14 +715,13 @@ function buildMergedItems(){
     });
   });
 
-  merged.sort((a,b) => (a.minutes - b.minutes) || (a.kind === "zoneHeader" ? -1 : 0));
+  merged.sort((a, b) => (a.minutes - b.minutes) || (a.kind === "zoneHeader" ? -1 : 0));
   return merged;
 }
 
-function renderMergedDay(){
+function renderMergedDay() {
   if (!mergedWrap) return;
 
-  const data = dayCache || defaultDayData();
   const prefs = prefsCache || defaultPrefs();
   const hideChecked = !!prefs.mergedHideChecked;
 
@@ -712,13 +731,13 @@ function renderMergedDay(){
   let total = 0, done = 0;
 
   items.forEach(item => {
-    if (item.kind === "task"){
+    if (item.kind === "task") {
       total++;
       if (item.checked) done++;
       if (hideChecked && item.checked) return;
     }
 
-    if (item.kind === "zoneHeader"){
+    if (item.kind === "zoneHeader") {
       const div = document.createElement("div");
       div.className = "zoneHeader";
       div.style.marginTop = "10px";
@@ -727,7 +746,7 @@ function renderMergedDay(){
       return;
     }
 
-    if (item.kind === "schedule"){
+    if (item.kind === "schedule") {
       const row = document.createElement("div");
       row.className = "task taskSchoolRow";
 
@@ -736,7 +755,7 @@ function renderMergedDay(){
       cb.checked = !!item.checked;
       cb.addEventListener("change", async () => {
         const currentSchool = (dayCache?.school) || { state: {}, customAppts: "" };
-        const nextState = { ...(currentSchool.state||{}), [item.id]: cb.checked };
+        const nextState = { ...(currentSchool.state || {}), [item.id]: cb.checked };
         await setDayPatch({ school: { ...currentSchool, state: nextState } });
         renderSchoolChecklist();
         renderMergedDay();
@@ -756,7 +775,7 @@ function renderMergedDay(){
       return;
     }
 
-    if (item.kind === "task"){
+    if (item.kind === "task") {
       const row = document.createElement("div");
       row.className = "task";
 
@@ -789,7 +808,9 @@ function renderMergedDay(){
 // ---------------------------
 // Zone toggles
 // ---------------------------
-function renderZoneToggles(){
+function renderZoneToggles() {
+  if (!zoneToggles) return;
+
   const prefs = prefsCache || defaultPrefs();
   zoneToggles.innerHTML = "";
 
@@ -819,8 +840,9 @@ function renderZoneToggles(){
 // ---------------------------
 // Trackers
 // ---------------------------
-function renderBodyTrackers(){
+function renderBodyTrackers() {
   if (!bodyTrackersWrap) return;
+
   const tr = (dayCache?.trackers || {});
   bodyTrackersWrap.innerHTML = "";
 
@@ -891,35 +913,43 @@ function renderBodyTrackers(){
   });
 }
 
-function renderTrackers(){
+function renderTrackers() {
   const tr = (dayCache?.trackers || {});
 
-  const water = coerceInt(tr.water, 0);
-  elWaterCount.value = String(water);
-  elWaterPill.textContent = String(water);
+  if (elWaterCount && elWaterPill) {
+    const water = coerceInt(tr.water, 0);
+    elWaterCount.value = String(water);
+    elWaterPill.textContent = String(water);
+  }
 
-  const move = coerceInt(tr.moveMinutes, 0);
-  elMoveMinutes.value = String(move);
-  elMovePill.textContent = `${move} min`;
+  if (elMoveMinutes && elMovePill) {
+    const move = coerceInt(tr.moveMinutes, 0);
+    elMoveMinutes.value = String(move);
+    elMovePill.textContent = `${move} min`;
+  }
 
-  elMood.value = tr.mood || "";
-  elMoodPill.textContent = tr.mood ? tr.mood : "—";
+  if (elMood && elMoodPill) {
+    elMood.value = tr.mood || "";
+    elMoodPill.textContent = tr.mood ? tr.mood : "—";
+  }
 
-  const energy = coerceEnergy(tr.energy, 3);
-  elEnergy.value = String(energy);
-  elEnergyPill.textContent = `${energy}/5`;
+  if (elEnergy && elEnergyPill) {
+    const energy = coerceEnergy(tr.energy, 3);
+    elEnergy.value = String(energy);
+    elEnergyPill.textContent = `${energy}/5`;
+  }
 
-  streakPill.textContent = "Cloud save ✅";
-  waterStreakLine.textContent = "Goal idea: ≥4 drinks";
-  moveStreakLine.textContent  = "Goal idea: ≥10 minutes";
+  if (streakPill) streakPill.textContent = "Cloud save ✅";
+  if (waterStreakLine) waterStreakLine.textContent = "Goal idea: ≥4 drinks";
+  if (moveStreakLine) moveStreakLine.textContent = "Goal idea: ≥10 minutes";
 
   renderBodyTrackers();
 }
 
 // ---------------------------
 // Last Time I…
-/* uses lt-green / lt-yellow / lt-red classes from your CSS */
-function renderLastTimeCard(){
+// ---------------------------
+function renderLastTimeCard() {
   if (!lastTimeWrap) return;
 
   const lt = (dayCache?.lastTime) || { items: DEFAULT_LAST_TIME_ITEMS, dates: {} };
@@ -955,7 +985,7 @@ function renderLastTimeCard(){
     btn.className = "ghostBtn";
     btn.textContent = "Just did it";
     btn.addEventListener("click", async () => {
-      const todayStr = new Date().toISOString().slice(0,10);
+      const todayStr = new Date().toISOString().slice(0, 10);
       const nextDates = { ...(dates || {}), [key]: todayStr };
       await setDayPatch({ lastTime: { items, dates: nextDates } });
       renderLastTimeCard();
@@ -970,16 +1000,15 @@ function renderLastTimeCard(){
     lastTimeWrap.appendChild(row);
   });
 
-  // keep textarea in sync
   if (lastTimeCustom && document.activeElement !== lastTimeCustom) {
     lastTimeCustom.value = items.join("\n");
   }
 }
 
 // ---------------------------
-// Backup / Restore (cloud snapshot)
+// Backup / Restore
 // ---------------------------
-function exportJSON(){
+function exportJSON() {
   const payload = {
     version: "planner-dashboard-cloud-v1",
     dayKey: KEY,
@@ -998,10 +1027,10 @@ function exportJSON(){
   URL.revokeObjectURL(url);
 }
 
-function importJSON(file){
+function importJSON(file) {
   const reader = new FileReader();
   reader.onload = async () => {
-    try{
+    try {
       const payload = JSON.parse(String(reader.result || "{}"));
       if (payload.templates) await setTemplates(payload.templates);
       if (payload.prefs) await setPrefs(payload.prefs);
@@ -1011,7 +1040,7 @@ function importJSON(file){
       }
       alert("Import complete ✅");
       await loadUI();
-    }catch(e){
+    } catch (e) {
       alert("Import failed. That file didn’t look like a dashboard backup.");
     }
   };
@@ -1021,19 +1050,21 @@ function importJSON(file){
 // ---------------------------
 // Collapse/Expand
 // ---------------------------
-function setAllCards(open){ allCardDetails.forEach(d => d.open = !!open); }
+function setAllCards(open) {
+  allCardDetails.forEach(d => d.open = !!open);
+}
 
 // ---------------------------
 // Rollover
 // ---------------------------
-function tomorrowKeyFrom(keyStr){
-  const [y,m,d] = keyStr.split("-").map(n => parseInt(n,10));
-  const dt = new Date(y, m-1, d);
+function tomorrowKeyFrom(keyStr) {
+  const [y, m, d] = keyStr.split("-").map(n => parseInt(n, 10));
+  const dt = new Date(y, m - 1, d);
   dt.setDate(dt.getDate() + 1);
   return dateKey(dt);
 }
 
-async function rolloverToTomorrow(){
+async function rolloverToTomorrow() {
   const tomorrowKey = tomorrowKeyFrom(KEY);
   const tomorrowRef = dayDocRef(tomorrowKey);
   const snap = await getDoc(tomorrowRef);
@@ -1043,8 +1074,8 @@ async function rolloverToTomorrow(){
   const nextNotToday = (tomorrowData.notToday || "").trim();
   const mergedNotToday = [nextNotToday, notToday].filter(Boolean).join("\n");
 
-  const pri = dayCache?.priorities || ["","",""];
-  const tPri = tomorrowData.priorities || ["","",""];
+  const pri = dayCache?.priorities || ["", "", ""];
+  const tPri = tomorrowData.priorities || ["", "", ""];
   const carriedPri = [tPri[0] || pri[0] || "", tPri[1] || pri[1] || "", tPri[2] || pri[2] || ""];
 
   await setDoc(tomorrowRef, { notToday: mergedNotToday, priorities: carriedPri, savedAt: Date.now() }, { merge: true });
@@ -1054,14 +1085,14 @@ async function rolloverToTomorrow(){
 // ---------------------------
 // Save templates
 // ---------------------------
-async function saveTpls(){
+async function saveTpls() {
   await setTemplates({
-    daily: tplDaily.value,
-    daycare: tplDaycare.value,
-    thursday: tplThursday.value,
-    therapyNight: tplTherapyNight.value,
-    hygiene: tplHygiene.value,
-    carryover: tplCarryover.value
+    daily: tplDaily?.value ?? "",
+    daycare: tplDaycare?.value ?? "",
+    thursday: tplThursday?.value ?? "",
+    therapyNight: tplTherapyNight?.value ?? "",
+    hygiene: tplHygiene?.value ?? "",
+    carryover: tplCarryover?.value ?? ""
   });
   renderZones();
   renderMergedDay();
@@ -1071,15 +1102,20 @@ async function saveTpls(){
 // ---------------------------
 // Start Here
 // ---------------------------
-async function startHere(){
+async function startHere() {
   const data = dayCache || defaultDayData();
 
-  if (!elDow.value) elDow.value = dayName(today);
-  if (!elTherapy.value) elTherapy.value = defaultTherapyTonightByName(elDow.value);
-  if (!elLetter.value) elLetter.value = data.letterDay || "Break Day";
-  if (!elDayType.value) elDayType.value = data.dayType || "Normal";
+  if (elDow && !elDow.value) elDow.value = dayName(today);
+  if (elTherapy && !elTherapy.value) elTherapy.value = defaultTherapyTonightByName(elDow?.value || dayName(today));
+  if (elLetter && !elLetter.value) elLetter.value = data.letterDay || "Break Day";
+  if (elDayType && !elDayType.value) elDayType.value = data.dayType || "Normal";
 
-  await setDayPatch({ dow: elDow.value, therapy: elTherapy.value, letterDay: elLetter.value, dayType: elDayType.value });
+  await setDayPatch({
+    dow: elDow?.value || "",
+    therapy: elTherapy?.value || "",
+    letterDay: elLetter?.value || "",
+    dayType: elDayType?.value || "Normal"
+  });
 
   renderColorDay();
   renderZoneToggles();
@@ -1087,45 +1123,47 @@ async function startHere(){
   renderZones();
   renderMergedDay();
 
-  document.getElementById("cardMerged")?.scrollIntoView({ behavior:"smooth", block:"start" });
+  document.getElementById("cardMerged")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 // ---------------------------
 // Load UI
 // ---------------------------
-async function loadUI(){
-  elDateLine.textContent = `Saved to your Google account • ${today.toDateString()}`;
+async function loadUI() {
+  if (elDateLine) elDateLine.textContent = `Saved to your Google account • ${today.toDateString()}`;
   if (elAccountLine && currentUser?.email) elAccountLine.textContent = `Signed in: ${currentUser.email}`;
 
   const data = dayCache || defaultDayData();
   const t = templatesCache || defaultTemplates();
   const prefs = prefsCache || defaultPrefs();
 
-  elDow.value = data.dow || dayName(today);
-  elLetter.value = data.letterDay || "Break Day";
-  elDayType.value = data.dayType || "Normal";
-  elTherapy.value = data.therapy || defaultTherapyTonightByName(elDow.value);
-  elNotToday.value = data.notToday || "";
+  if (elDow) elDow.value = data.dow || dayName(today);
+  if (elLetter) elLetter.value = data.letterDay || "Break Day";
+  if (elDayType) elDayType.value = data.dayType || "Normal";
+  if (elTherapy) elTherapy.value = data.therapy || defaultTherapyTonightByName(elDow?.value || dayName(today));
+  if (elNotToday) elNotToday.value = data.notToday || "";
 
-  const defTher = defaultTherapyTonightByName(elDow.value);
-  elTherapyHint.textContent = (defTher === "Yes") ? "Default therapy night for Mon/Tue. Override if needed." : "";
+  const defTher = defaultTherapyTonightByName(elDow?.value || dayName(today));
+  if (elTherapyHint) elTherapyHint.textContent = (defTher === "Yes")
+    ? "Default therapy night for Mon/Tue. Override if needed."
+    : "";
 
-  const pri = data.priorities || ["","",""];
-  prio1.value = pri[0] || "";
-  prio2.value = pri[1] || "";
-  prio3.value = pri[2] || "";
+  const pri = data.priorities || ["", "", ""];
+  if (prio1) prio1.value = pri[0] || "";
+  if (prio2) prio2.value = pri[1] || "";
+  if (prio3) prio3.value = pri[2] || "";
 
-  tplDaily.value = t.daily || "";
-  tplDaycare.value = t.daycare || "";
-  tplThursday.value = t.thursday || "";
-  tplTherapyNight.value = t.therapyNight || "";
-  tplHygiene.value = t.hygiene || "";
-  tplCarryover.value = t.carryover || "";
+  if (tplDaily) tplDaily.value = t.daily || "";
+  if (tplDaycare) tplDaycare.value = t.daycare || "";
+  if (tplThursday) tplThursday.value = t.thursday || "";
+  if (tplTherapyNight) tplTherapyNight.value = t.therapyNight || "";
+  if (tplHygiene) tplHygiene.value = t.hygiene || "";
+  if (tplCarryover) tplCarryover.value = t.carryover || "";
 
-  onlyUnchecked.checked = !!prefs.onlyUnchecked;
-  mergedHideChecked.checked = !!prefs.mergedHideChecked;
+  if (onlyUnchecked) onlyUnchecked.checked = !!prefs.onlyUnchecked;
+  if (mergedHideChecked) mergedHideChecked.checked = !!prefs.mergedHideChecked;
 
-  // Hide Customize by default (no toggle UI)
+  // Hide Customize by default (no UI toggle)
   if (customizeDetails) customizeDetails.open = false;
 
   renderColorDay();
@@ -1138,106 +1176,108 @@ async function loadUI(){
 }
 
 // ---------------------------
-// Events
+// Events (guarded)
 // ---------------------------
-elDow.addEventListener("change", async () => {
-  if (!dayCache?.therapy && !elTherapy.value) elTherapy.value = defaultTherapyTonightByName(elDow.value);
-  await setDayPatch({ dow: elDow.value, therapy: elTherapy.value });
+elDow?.addEventListener("change", async () => {
+  if (!dayCache?.therapy && elTherapy && !elTherapy.value) {
+    elTherapy.value = defaultTherapyTonightByName(elDow.value);
+  }
+  await setDayPatch({ dow: elDow.value, therapy: elTherapy?.value || "" });
   renderColorDay();
   renderZones();
   renderMergedDay();
 });
 
-elLetter.addEventListener("change", async () => {
+elLetter?.addEventListener("change", async () => {
   await setDayPatch({ letterDay: elLetter.value });
   renderColorDay();
   renderSchoolChecklist();
   renderMergedDay();
 });
 
-elDayType.addEventListener("change", async () => {
+elDayType?.addEventListener("change", async () => {
   await setDayPatch({ dayType: elDayType.value });
 });
 
-elTherapy.addEventListener("change", async () => {
+elTherapy?.addEventListener("change", async () => {
   await setDayPatch({ therapy: elTherapy.value });
   renderColorDay();
   renderZones();
   renderMergedDay();
 });
 
-customAppts.addEventListener("input", debounce(async () => {
+customAppts?.addEventListener("input", debounce(async () => {
   const currentSchool = dayCache?.school || { state: {}, customAppts: "" };
   await setDayPatch({ school: { ...currentSchool, customAppts: customAppts.value } });
   renderSchoolChecklist();
   renderMergedDay();
 }, 450));
 
-elNotToday.addEventListener("input", debounce(async () => {
+elNotToday?.addEventListener("input", debounce(async () => {
   await setDayPatch({ notToday: elNotToday.value });
 }, 450));
 
-[prio1, prio2, prio3].forEach(el => el.addEventListener("input", debounce(async () => {
-  await setDayPatch({ priorities: [prio1.value, prio2.value, prio3.value] });
+[prio1, prio2, prio3].filter(Boolean).forEach(el => el.addEventListener("input", debounce(async () => {
+  await setDayPatch({ priorities: [prio1?.value || "", prio2?.value || "", prio3?.value || ""] });
 }, 400)));
 
-saveTplBtn.addEventListener("click", saveTpls);
-startHereBtn.addEventListener("click", startHere);
+saveTplBtn?.addEventListener("click", saveTpls);
+startHereBtn?.addEventListener("click", startHere);
 
-rolloverBtn.addEventListener("click", async () => {
+rolloverBtn?.addEventListener("click", async () => {
   const ok = confirm("Rollover Parking Lot + Priorities to tomorrow?");
   if (ok) await rolloverToTomorrow();
 });
 
-saveBtn.addEventListener("click", async () => {
+saveBtn?.addEventListener("click", async () => {
   await setDayPatch({
-    dow: elDow.value,
-    letterDay: elLetter.value,
-    dayType: elDayType.value,
-    therapy: elTherapy.value,
-    notToday: elNotToday.value
+    dow: elDow?.value || "",
+    letterDay: elLetter?.value || "",
+    dayType: elDayType?.value || "Normal",
+    therapy: elTherapy?.value || "",
+    notToday: elNotToday?.value || ""
   });
   alert("Saved ✅");
 });
 
-onlyUnchecked.addEventListener("change", async () => {
+onlyUnchecked?.addEventListener("change", async () => {
   await setPrefs({ onlyUnchecked: !!onlyUnchecked.checked });
   renderZones();
   renderMergedDay();
 });
 
-mergedHideChecked.addEventListener("change", async () => {
+mergedHideChecked?.addEventListener("change", async () => {
   await setPrefs({ mergedHideChecked: !!mergedHideChecked.checked });
   renderMergedDay();
 });
 
 // trackers autosave
-elWaterMinus.addEventListener("click", async () => {
-  const now = coerceInt(elWaterCount.value, 0);
+elWaterMinus?.addEventListener("click", async () => {
+  const now = coerceInt(elWaterCount?.value, 0);
   await setDayPatch({ trackers: { water: Math.max(0, now - 1) } });
   renderTrackers();
 });
-elWaterPlus.addEventListener("click", async () => {
-  const now = coerceInt(elWaterCount.value, 0);
+elWaterPlus?.addEventListener("click", async () => {
+  const now = coerceInt(elWaterCount?.value, 0);
   await setDayPatch({ trackers: { water: now + 1 } });
   renderTrackers();
 });
-elWaterCount.addEventListener("input", debounce(async () => {
+elWaterCount?.addEventListener("input", debounce(async () => {
   await setDayPatch({ trackers: { water: coerceInt(elWaterCount.value, 0) } });
   renderTrackers();
 }, 250));
 
-elMoveMinutes.addEventListener("input", debounce(async () => {
+elMoveMinutes?.addEventListener("input", debounce(async () => {
   await setDayPatch({ trackers: { moveMinutes: coerceInt(elMoveMinutes.value, 0) } });
   renderTrackers();
 }, 300));
 
-elMood.addEventListener("change", async () => {
+elMood?.addEventListener("change", async () => {
   await setDayPatch({ trackers: { mood: elMood.value } });
   renderTrackers();
 });
 
-elEnergy.addEventListener("input", debounce(async () => {
+elEnergy?.addEventListener("input", debounce(async () => {
   await setDayPatch({ trackers: { energy: coerceEnergy(elEnergy.value, 3) } });
   renderTrackers();
 }, 250));
@@ -1245,42 +1285,43 @@ elEnergy.addEventListener("input", debounce(async () => {
 saveLastTimeBtn?.addEventListener("click", async () => {
   const items = splitLines(lastTimeCustom?.value || "");
   const lt = dayCache?.lastTime || { items: DEFAULT_LAST_TIME_ITEMS, dates: {} };
-  // keep existing dates for matching labels
+
   const nextDates = {};
   items.forEach(lbl => {
     const k = safeId(lbl);
     if (lt.dates?.[k]) nextDates[k] = lt.dates[k];
   });
+
   await setDayPatch({ lastTime: { items, dates: nextDates } });
   renderLastTimeCard();
 });
 
-exportBtn.addEventListener("click", exportJSON);
-importFile.addEventListener("change", () => {
+exportBtn?.addEventListener("click", exportJSON);
+importFile?.addEventListener("change", () => {
   const f = importFile.files && importFile.files[0];
   if (f) importJSON(f);
 });
 
-expandAllCardsBtn.addEventListener("click", () => setAllCards(true));
-collapseAllCardsBtn.addEventListener("click", () => setAllCards(false));
+expandAllCardsBtn?.addEventListener("click", () => setAllCards(true));
+collapseAllCardsBtn?.addEventListener("click", () => setAllCards(false));
 
 // ---------------------------
-// Boot
+// Boot (with visible error screen)
 // ---------------------------
-await requireDashboardLogin();
-await loadCloudCaches();
-await loadUI();
 try {
-  await requireDashboardLogin();
+  await requireDashboardLogin();   // redirects to login.html if needed
   await loadCloudCaches();
   await loadUI();
 } catch (e) {
   console.error(e);
   document.body.innerHTML = `
-    <div style="padding:24px;font-family:system-ui;">
-      <h2>Dashboard error</h2>
-      <pre style="white-space:pre-wrap;background:#111;color:#0f0;padding:12px;border-radius:8px;">
+    <div style="padding:24px;font-family:system-ui;max-width:900px;margin:0 auto;">
+      <h2 style="margin:0 0 8px;">Dashboard error</h2>
+      <pre style="white-space:pre-wrap;background:#111;color:#0f0;padding:12px;border-radius:8px;overflow:auto;">
 ${String(e?.code || e?.message || e)}
       </pre>
+      <p style="margin-top:12px;">
+        <a href="${LOGIN_URL}" style="text-decoration:underline;">Go to login</a>
+      </p>
     </div>`;
 }
