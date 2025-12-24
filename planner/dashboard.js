@@ -1270,3 +1270,17 @@ collapseAllCardsBtn.addEventListener("click", () => setAllCards(false));
 await requireDashboardLogin();
 await loadCloudCaches();
 await loadUI();
+try {
+  await requireDashboardLogin();
+  await loadCloudCaches();
+  await loadUI();
+} catch (e) {
+  console.error(e);
+  document.body.innerHTML = `
+    <div style="padding:24px;font-family:system-ui;">
+      <h2>Dashboard error</h2>
+      <pre style="white-space:pre-wrap;background:#111;color:#0f0;padding:12px;border-radius:8px;">
+${String(e?.code || e?.message || e)}
+      </pre>
+    </div>`;
+}
