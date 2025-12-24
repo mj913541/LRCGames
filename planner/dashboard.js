@@ -27,7 +27,7 @@ const firebaseConfig = {
 };
 
 // If your dashboard lives in a folder, adjust this path (e.g. "../login.html")
-const LOGIN_URL = "/login.html";
+const LOGIN_URL = "./login.html";
 
 const ALLOWED_EMAILS = new Set(["malbrecht@sd308.org", "malbrecht3317@gmail.com"]);
 
