@@ -325,7 +325,10 @@ async function setPrefs(patch) {
 // Auth gate (redirect to login.html)
 // ---------------------------
 function redirectToLogin() {
-  const redirectTo = `${location.pathname}${location.search}${location.hash || ""}`;
+  const cur = new URL(location.href);
+  // Avoid nesting redirect parameters if something triggers this twice.
+  const existing = cur.searchParams.get("redirect");
+  const redirectTo = existing || `${location.pathname}${location.search}${location.hash || ""}`;
   const url = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectTo)}`;
   location.replace(url);
 }
