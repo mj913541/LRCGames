@@ -50,30 +50,30 @@ const LETTER_SCHEDULE = {
     "9:05–9:50 • 4th Rosenthal",
     "10:05–10:50 • 2nd Peterson",
     "11:05–11:50 • 3rd Hossain",
-    "1:45–2:30 • 5th Altruismo",
-    "2:45–3:30 • 1st Rogers"
+    "13:45–14:30 • 5th Altruismo",
+    "14:45–15:30 • 1st Rogers"
   ],
   "B Day": [
     "9:05–9:50 • 4th Cavello",
     "10:05–10:50 • 2nd Schmidt",
-    "1:45–2:30 • 5th Isibindi"
+    "13:45–14:30 • 5th Isibindi"
   ],
   "C Day": [
     "8:45–9:05 • AM Duty & Opening",
     "10:05–10:50 • 2nd Adams",
     "11:05–12:05 • 3rd Pulsa",
-    "1:45–2:30 • 5th Amistad"
+    "13:45–14:30 • 5th Amistad"
   ],
   "D Day": [
     "9:20–10:05 • HC 5th Green",
     "10:05–10:50 • HC 1st Green",
-    "2:45–3:30 • 1st Wilson"
+    "14:45–15:30 • 1st Wilson"
   ],
   "E Day": [
     "9:05–9:50 • 4th Tomter",
     "11:05–12:05 • 3rd Carroll",
-    "1:45–2:30 • 5th Reveur",
-    "2:45–3:30 • 1st Day"
+    "13:45–14:30 • 5th Reveur",
+    "14:45–15:30 • 1st Day"
   ],
   "Break Day": []
 };
@@ -89,47 +89,84 @@ const COLOR_DAY_BY_LETTER = {
 };
 
 function workOpenStart(letterDay) {
-  return (letterDay === "D Day") ? "2:30" : "8:55";
+  return (letterDay === "D Day") ? "14:30" : "8:55";
 }
 
 // Trackers
 const BODY_TRACKERS = [
-  { key: "steps", label: "Steps", target: 2000, step: 250 },
-  { key: "lunges", label: "Lunges", target: 20, step: 5 },
-  { key: "squats", label: "Squats", target: 20, step: 5 },
-  { key: "wallPushups", label: "Wall push-ups", target: 20, step: 5 },
-  { key: "pushups", label: "Push-ups", target: 20, step: 2 },
-  { key: "gluteBridges", label: "Glute bridges", target: 20, step: 5 },
-  { key: "calfRaises", label: "Calf raises", target: 20, step: 10 },
-  { key: "plankSeconds", label: "Plank (seconds)", target: 60, step: 10 }
+  // Habits
+  { key: "steps", label: "Steps", target: 6000, step: 500 },
+  { key: "stretching", label: "Stretching (minutes)", target: 10, step: 5 },
+  { key: "meditate", label: "Meditate (minutes)", target: 10, step: 5 },
+
+  // Shoulders
+  { key: "frontLift", label: "Front lift – shoulders", target: 20, step: 5, withWeight: true },
+  { key: "sideLift", label: "Side lift – shoulders", target: 20, step: 5, withWeight: true },
+  { key: "reverseFlys", label: "Reverse flys – shoulders", target: 20, step: 5, withWeight: true },
+
+  // Chest
+  { key: "press", label: "Press – chest", target: 20, step: 5, withWeight: true },
+  { key: "fly", label: "Fly – chest", target: 20, step: 5, withWeight: true },
+  { key: "pushups", label: "Push ups", target: 20, step: 2 },
+
+  // Core / abs
+  { key: "heelTaps", label: "Heel taps – abs", target: 20, step: 5 },
+  { key: "hipBridge", label: "Hip bridge – abs", target: 20, step: 5 },
+  { key: "birdDog", label: "Bird dog – abs", target: 20, step: 5 },
+  { key: "deadBug", label: "Dead bug – abs", target: 20, step: 5 },
+  { key: "catCow", label: "Cat cow – abs", target: 20, step: 5 },
+
+  // Legs & glutes
+  { key: "squats", label: "Squats", target: 20, step: 5, withWeight: true },
+  { key: "altReverseLunges", label: "Alternating reverse lunges", target: 20, step: 2, withWeight: true },
+  { key: "sumoSquats", label: "Sumo squats", target: 20, step: 5, withWeight: true },
+  { key: "altSideSquats", label: "Alt side squats", target: 20, step: 5, withWeight: true },
+  { key: "rdlRight", label: "RDL right", target: 20, step: 5, withWeight: true },
+  { key: "rdlLeft", label: "RDL left", target: 20, step: 5, withWeight: true },
+  { key: "calfRaises", label: "Calf raises", target: 20, step: 10, withWeight: true },
+
+  // Back
+  { key: "rows", label: "Wide row / rows – back", target: 20, step: 5, withWeight: true },
+  { key: "pullDown", label: "Pull down – back", target: 20, step: 5, withWeight: true },
+  { key: "facePulls", label: "Face pulls – back", target: 20, step: 5, withWeight: true },
+
+  // Arms
+  { key: "bicepCurls", label: "Bicep curls", target: 20, step: 5, withWeight: true },
+  { key: "hammerCurls", label: "Hammer curls", target: 20, step: 5, withWeight: true },
+  { key: "tricepKickbacksRight", label: "Tricep kickbacks right", target: 20, step: 5, withWeight: true },
+  { key: "tricepKickbacksLeft", label: "Tricep kickbacks left", target: 20, step: 5, withWeight: true },
+  { key: "skullCrushers", label: "Skull crushers", target: 20, step: 5, withWeight: true }
 ];
 
 // Last-time items + thresholds
+// Last-time items + thresholds
 const DEFAULT_LAST_TIME_ITEMS = [
-  "Wash hair",
-  "Shave legs",
-  "Trim nails",
-  "Change sheets",
-  "Clean makeup brushes"
+  "Shaved my armpits?",
+  "Cleaned eyebrows?",
+  "Shaved lips?",
+  "Shaved 🐱?",
+  "Washed Hair?",
+  "Shaved Legs?",
+  "Toenails?",
+  "Nails?"
 ];
 
-// Yellow after 2, Red after 3 for wash hair (example). Others are gentle defaults.
+// Gentle defaults; override a few specific ones
 const LAST_TIME_THRESHOLDS = {
-  "wash-hair": { yellow: 2, red: 3 },
-  "shave-legs": { yellow: 5, red: 8 },
-  "trim-nails": { yellow: 7, red: 10 },
-  "change-sheets": { yellow: 7, red: 10 },
-  "clean-makeup-brushes": { yellow: 10, red: 14 },
-  "_default": { yellow: 2, red: 3 }
+  "washed-hair": { yellow: 2, red: 3 },
+  "shaved-legs": { yellow: 5, red: 8 },
+  "Shaved my armpits?": { yellow: 2, red: 3 },
+  "Cleaned eyebrows?": { yellow: 4, red: 6 },
+  "Shaved lips?": { yellow: 2, red: 3 },
+  "Shaved 🐱?": { yellow: 6, red: 7 },
+  "Toenails?": { yellow: 7, red: 10 },
+  "Nails?": { yellow: 7, red: 10 },
 };
 
-// ---------------------------
-// Helpers
-// ---------------------------
 function pad2(n) { return String(n).padStart(2, "0"); }
 function dateKey(d = new Date()) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
 function dayName(d = new Date()) { return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]; }
-function isDaycareDayByName(name) { return name === "Tuesday" || name === "Thursday" || name === "Friday"; }
+function isWeekdayByName(name) { return name === "Monday" || name === "Tuesday" || name === "Wednesday" || name === "Thursday" || name === "Friday"; }
 function isThursdayByName(name) { return name === "Thursday"; }
 function defaultTherapyTonightByName(name) { return (name === "Monday" || name === "Tuesday") ? "Yes" : "No"; }
 
@@ -163,6 +200,16 @@ function toMinutes(hm) {
   const m = String(hm || "").match(/^(\d{1,2}):(\d{2})$/);
   if (!m) return 9999;
   return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+function formatTimeLabel(hm) {
+  const m = String(hm || "").match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return String(hm || "");
+  let hour = parseInt(m[1], 10);
+  const minute = m[2];
+  const suffix = hour >= 12 ? "PM" : "AM";
+  if (hour === 0) hour = 12;
+  if (hour > 12) hour -= 12;
+  return `${hour}:${minute} ${suffix}`;
 }
 function parseScheduleStartTime(line) {
   const m = String(line || "").match(/^(\d{1,2}):(\d{2})/);
@@ -234,49 +281,60 @@ function defaultDayData() {
     dow: "",
     letterDay: "",
     dayType: "Normal",
-    therapy: ""
+    therapy: "",
+    daycare: ""
   };
 }
 
 function defaultTemplates() {
   return {
     daily: [
-      "[Morning] Take meds / vitamins",
-      "[Morning] Feed cat & refresh water",
+      // AM must-do
+      "[Morning] Switch Dishwasher",
+      "[Morning] Clean Glasses",
+      "[Morning] Deodorant",
+      "[Morning] Eat Breakfast",
+      "[Morning] Levothyroxine",
+      "[Morning] Brush teeth",
+      "[Morning] Floss",
+      "[Morning] Get Dressed",
+      "[Morning] Wash Face",
+      "[Morning] Style Hair",
+      "[Morning] Feed Cat & Refresh Water",
 
-      "[Work Open] Projector on",
-      "[Work Open] Sign in",
-      "[Work Open] Pull up Destiny Discover for class",
-      "[Work Open] Name tags out",
-      "[Work Open] Lunch away",
-
-      "[Midday] Eat something (real enough)",
-
-      "[Work Close] 5-minute classroom straighten",
-      "[Work Close] Everything signed out and off",
-      "[Work Close] Plug in Chromebooks",
-      "[Work Close] Name tags away",
-      "[Work Close] Desk cleared"
+      // PM must-do
+      "[Bedtime] Brush teeth",
+      "[Bedtime] Floss",
+      "[Bedtime] Wash Face",
+      "[Arrive Home] Water Bottle & Lunch dishes in dishwasher"
     ].join("\n"),
-    daycare: ["[Morning] Prep daycare bag"].join("\n"),
-    thursday: ["[Arrive Home] Trash / recycling out"].join("\n"),
+
+    // Daycare-only items (triggered by the daycare question in Context)
+    daycare: [
+      "[Morning] Lincoln Diaper Changed",
+      "[Morning] Lincoln Bottle",
+      "[Morning] Daycare bag packed",
+      "[Morning] Daycare Notebook Filled Out"
+    ].join("\n"),
+
+    wednesday: ["[Arrive Home] Trash / recycling out"].join("\n"),
+
     therapyNight: [
       "[Arrive Home] Therapy night: easy food + comfort only",
       "[Bedtime] No extra tasks after therapy (sleep is the win)"
     ].join("\n"),
+
+    // Hygiene is now baked into daily; leave this empty so the UI still works.
     hygiene: [
-      "[Morning] Brush teeth + wash face",
-      "[Morning] Deodorant",
-      "[Arrive Home] Shower (or quick rinse)",
-      "[Bedtime] Brush teeth + floss"
+
     ].join("\n"),
+
     carryover: [
       "[Arrive Home] Dishes",
       "[Arrive Home] Start laundry"
     ].join("\n")
   };
 }
-
 function defaultPrefs() {
   return {
     onlyUnchecked: false,
@@ -325,10 +383,7 @@ async function setPrefs(patch) {
 // Auth gate (redirect to login.html)
 // ---------------------------
 function redirectToLogin() {
-  const cur = new URL(location.href);
-  // Avoid nesting redirect parameters if something triggers this twice.
-  const existing = cur.searchParams.get("redirect");
-  const redirectTo = existing || `${location.pathname}${location.search}${location.hash || ""}`;
+  const redirectTo = `${location.pathname}${location.search}${location.hash || ""}`;
   const url = `${LOGIN_URL}?redirect=${encodeURIComponent(redirectTo)}`;
   location.replace(url);
 }
@@ -374,6 +429,7 @@ const elLetter = $("letterDay");
 const elDayType = $("dayType");
 const elTherapy = $("therapy");
 const elTherapyHint = $("therapyHint");
+const elDaycareFlag = $("daycareFlag");
 
 const prio1 = $("prio1");
 const prio2 = $("prio2");
@@ -460,6 +516,12 @@ function renderColorDay() {
 // ---------------------------
 // Tasks
 // ---------------------------
+const WEEKDAY_AM_TASKS = [
+  { zone: "Morning", text: "Water Bottle" },
+  { zone: "Morning", text: "Pack Lunch" },
+  { zone: "Morning", text: "Pack School bag" }
+];
+
 function buildTasks() {
   const t = templatesCache || defaultTemplates();
   const tasks = [];
@@ -467,16 +529,26 @@ function buildTasks() {
   const selectedDow = elDow?.value || dayCache?.dow || dayName(today);
   const selectedTherapy = elTherapy?.value || dayCache?.therapy || defaultTherapyTonightByName(selectedDow);
 
-  const daycare = isDaycareDayByName(selectedDow);
+  const isWeekday = isWeekdayByName(selectedDow);
+  const isDaycare = (dayCache?.daycare || elDaycareFlag?.value || "") === "Yes";
   const thursday = isThursdayByName(selectedDow);
   const therapyNight = (selectedTherapy === "Yes");
 
+  // Daily template (AM + PM must-do)
   splitLines(t.daily).forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "daily-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
-  if (daycare) {
+  // Weekday-only AM add-ons (Water bottle, lunch, school bag)
+  if (isWeekday) {
+    WEEKDAY_AM_TASKS.forEach(({ zone, text }) => {
+      tasks.push({ id: "wk-am-" + safeId(zone + "-" + text), zone, text });
+    });
+  }
+
+  // Daycare-only items triggered by the context question
+  if (isDaycare) {
     splitLines(t.daycare).forEach(line => {
       const p = parseZonedLine(line);
       tasks.push({ id: "daycare-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
@@ -497,13 +569,14 @@ function buildTasks() {
     });
   }
 
-  // hygiene ALWAYS
+  // Hygiene is effectively baked into daily now, but keep this in case
+  // you add anything back into the Hygiene template from the UI.
   splitLines(t.hygiene).forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "hyg-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
   });
 
-  // carryover ALWAYS
+  // Carryover ALWAYS
   splitLines(t.carryover || "").forEach(line => {
     const p = parseZonedLine(line);
     tasks.push({ id: "car-" + safeId(p.zone + "-" + p.text), zone: p.zone, text: p.text });
@@ -512,7 +585,6 @@ function buildTasks() {
   const seen = new Set();
   return tasks.filter(x => (seen.has(x.id) ? false : (seen.add(x.id), true)));
 }
-
 function getVisibleZones() {
   const prefs = prefsCache || defaultPrefs();
   return ZONES.filter(z => prefs.zoneVisibility?.[z] !== false);
@@ -688,9 +760,9 @@ function buildMergedItems() {
     { zone: "Morning", time: "7:00" },
     { zone: "Work Open", time: openAt },
     { zone: "Midday", time: "12:00" },
-    { zone: "Work Close", time: "3:15" },
-    { zone: "Arrive Home", time: "4:00" },
-    { zone: "Bedtime", time: "8:30" }
+    { zone: "Work Close", time: "15:15" },
+    { zone: "Arrive Home", time: "16:00" },
+    { zone: "Bedtime", time: "20:30" }
   ];
 
   const merged = [...schedule];
@@ -704,7 +776,7 @@ function buildMergedItems() {
       kind: "zoneHeader",
       id: `zonehdr-${safeId(a.zone)}`,
       minutes: toMinutes(a.time),
-      text: `${a.zone} • ${a.time}`
+      text: `${a.zone} • ${formatTimeLabel(a.time)}`
     });
 
     list.forEach(task => {
@@ -912,6 +984,37 @@ function renderBodyTrackers() {
 
     card.appendChild(head);
     card.appendChild(stepper);
+
+    // Optional: weight used for strength moves
+    if (item.withWeight) {
+      const weightWrap = document.createElement("div");
+      weightWrap.className = "small muted";
+      weightWrap.style.marginTop = "6px";
+
+      const label = document.createElement("div");
+      label.style.fontWeight = "600";
+      label.textContent = "Weight used (lbs)";
+
+      const weightInput = document.createElement("input");
+      weightInput.type = "number";
+      weightInput.inputMode = "decimal";
+      weightInput.min = "0";
+      weightInput.step = "1";
+      const weightKey = `${item.key}_weight`;
+      const stored = tr[weightKey];
+      weightInput.value = (stored === undefined || stored === null) ? "" : String(stored);
+
+      weightInput.addEventListener("input", debounce(async () => {
+        const raw = weightInput.value;
+        const val = raw === "" ? null : Number(raw);
+        await setDayPatch({ trackers: { [weightKey]: val } });
+      }, 300));
+
+      weightWrap.appendChild(label);
+      weightWrap.appendChild(weightInput);
+      card.appendChild(weightWrap);
+    }
+
     bodyTrackersWrap.appendChild(card);
   });
 }
@@ -1144,6 +1247,7 @@ async function loadUI() {
   if (elLetter) elLetter.value = data.letterDay || "Break Day";
   if (elDayType) elDayType.value = data.dayType || "Normal";
   if (elTherapy) elTherapy.value = data.therapy || defaultTherapyTonightByName(elDow?.value || dayName(today));
+  if (elDaycareFlag) elDaycareFlag.value = data.daycare || "";
   if (elNotToday) elNotToday.value = data.notToday || "";
 
   const defTher = defaultTherapyTonightByName(elDow?.value || dayName(today));
@@ -1209,6 +1313,12 @@ elTherapy?.addEventListener("change", async () => {
   renderMergedDay();
 });
 
+elDaycareFlag?.addEventListener("change", async () => {
+  await setDayPatch({ daycare: elDaycareFlag.value });
+  renderZones();
+  renderMergedDay();
+});
+
 customAppts?.addEventListener("input", debounce(async () => {
   const currentSchool = dayCache?.school || { state: {}, customAppts: "" };
   await setDayPatch({ school: { ...currentSchool, customAppts: customAppts.value } });
@@ -1238,6 +1348,7 @@ saveBtn?.addEventListener("click", async () => {
     letterDay: elLetter?.value || "",
     dayType: elDayType?.value || "Normal",
     therapy: elTherapy?.value || "",
+    daycare: elDaycareFlag?.value || "",
     notToday: elNotToday?.value || ""
   });
   alert("Saved ✅");
