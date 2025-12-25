@@ -1,4 +1,4 @@
-// Planner Dashboard logic here// LRCGames/plannerDashboard/dashboard.js
+// LRCGames/plannerDashboard/dashboard.js
 import {
   initializeApp
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
@@ -19,13 +19,10 @@ import {
  * Paste your own Firebase config here (same project as the rest of LRCQuest/LRCGames).
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
-  authDomain: "lrcquest-3039e.firebaseapp.com",
-  projectId: "lrcquest-3039e",
-  storageBucket: "lrcquest-3039e.firebasestorage.app",
-  messagingSenderId: "72063656342",
-  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
-  measurementId: "G-5VXRYJ733C"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  // ...rest of your config here
 };
 
 const app = initializeApp(firebaseConfig);
@@ -39,15 +36,16 @@ const ALLOWED_EMAILS = [
 ];
 
 // Simple helper to format YYYY-MM-DD
-function dateKeyFromInput(inputEl) {
-  return inputEl.value;
-}
 function todayDateKey() {
   const d = new Date();
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
   const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function dateKeyFromInput(inputEl) {
+  return inputEl.value;
 }
 
 // Map time-of-day blocks
@@ -94,7 +92,7 @@ const SCHEDULE_BY_LETTER_DAY = {
   ]
 };
 
-// State shape
+// === STATE ===
 let currentUser = null;
 let currentDateKey = todayDateKey();
 
@@ -105,7 +103,7 @@ let state = {
     daycareDay: false,
     therapyTonight: false
   },
-  tasks: [],       // { id, label, block, type: 'task' | 'appointment', time24?, completed }
+  tasks: [],       // { id, label, block, type: 'task'|'appointment', time24?, completed, auto? }
   parkingLot: [],  // strings
   habits: [],      // { id, label, done }
   water: 0,
@@ -115,7 +113,7 @@ let state = {
   note: ""
 };
 
-// === DOM refs ===
+// === DOM REFS ===
 const daySummaryEl = document.getElementById("daySummary");
 const logoutBtn = document.getElementById("logoutBtn");
 
@@ -155,14 +153,13 @@ const addLastTimeBtn = document.getElementById("addLastTimeBtn");
 
 const noteBox = document.getElementById("noteBox");
 
-// === AUTH SETUP ===
-
+// === AUTH ===
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    // Not logged in: send to login page
     window.location.href = "../login.html";
     return;
   }
+
   if (!ALLOWED_EMAILS.includes(user.email)) {
     alert("This planner is only available to Mrs. A.");
     await signOut(auth);
@@ -171,6 +168,7 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   currentUser = user;
+
   // Initialize date input to today if empty
   if (!planDateInput.value) {
     planDateInput.value = todayDateKey();
@@ -187,7 +185,6 @@ logoutBtn.addEventListener("click", async () => {
 });
 
 // === HELPERS ===
-
 function uuid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
@@ -220,6 +217,7 @@ function lastTimeColor(days) {
   return "red";
 }
 
+// Map a 24hr time to one of the blocks
 function blockForTime(time24) {
   if (!time24) return "midday";
   const [hStr, mStr] = time24.split(":");
@@ -235,7 +233,6 @@ function blockForTime(time24) {
 }
 
 function welcomeDefaultsIfEmpty() {
-  // if brand new, seed some helpful defaults
   if (!state.habits.length) {
     state.habits = [
       { id: uuid(), label: "Take meds", done: false },
@@ -252,31 +249,31 @@ function welcomeDefaultsIfEmpty() {
 }
 
 // === FIRESTORE LOAD / SAVE ===
-
 async function loadDayFromFirestore() {
   if (!currentUser || !currentDateKey) return;
+
   const docRef = doc(db, "plannerDays", `${currentUser.uid}_${currentDateKey}`);
   const snap = await getDoc(docRef);
+
   if (snap.exists()) {
-    state = { ...state, ...snap.data() };
-  } else {
-    // New day: keep existing defaults but generate tasks from context if context already chosen
-    generateTasksFromContext();
+    const data = snap.data() || {};
+    // Merge stored data into current state
+    state = { ...state, ...data };
   }
+
+  // Always re-generate auto tasks & appointments
+  generateTasksFromContext();
   welcomeDefaultsIfEmpty();
 }
 
 async function saveDayToFirestore() {
   if (!currentUser || !currentDateKey) return;
   const docRef = doc(db, "plannerDays", `${currentUser.uid}_${currentDateKey}`);
-  const payload = {
-    ...state
-  };
+  const payload = { ...state };
   await setDoc(docRef, payload, { merge: true });
 }
 
 // === CONTEXT HANDLERS ===
-
 function updateDaySummary() {
   const parts = [];
   if (state.context.dayOfWeek) parts.push(state.context.dayOfWeek);
@@ -302,8 +299,8 @@ daycareToggle.addEventListener("click", () => {
   const currentlyYes = daycareToggle.dataset.value === "yes";
   setToggle(daycareToggle, !currentlyYes);
   state.context.daycareDay = !currentlyYes;
-  saveDayToFirestore();
   generateTasksFromContext();
+  saveDayToFirestore();
   renderTasksAndAppointments();
 });
 
@@ -311,8 +308,8 @@ therapyToggle.addEventListener("click", () => {
   const currentlyYes = therapyToggle.dataset.value === "yes";
   setToggle(therapyToggle, !currentlyYes);
   state.context.therapyTonight = !currentlyYes;
-  saveDayToFirestore();
   generateTasksFromContext();
+  saveDayToFirestore();
   renderTasksAndAppointments();
 });
 
@@ -322,6 +319,7 @@ contextForm.addEventListener("submit", async (e) => {
   state.context.letterDay = letterDaySelect.value;
   state.context.daycareDay = daycareToggle.dataset.value === "yes";
   state.context.therapyTonight = therapyToggle.dataset.value === "yes";
+
   currentDateKey = dateKeyFromInput(planDateInput);
 
   generateTasksFromContext();
@@ -331,17 +329,16 @@ contextForm.addEventListener("submit", async (e) => {
 
 reloadDayBtn.addEventListener("click", async () => {
   currentDateKey = dateKeyFromInput(planDateInput);
-  // reset tasks so we don't double-add
+  // reset tasks so we don't double-add old auto ones
   state.tasks = [];
   await loadDayFromFirestore();
   renderAll();
 });
 
 // === TASK / APPOINTMENT GENERATION ===
-
 function generateTasksFromContext() {
   // Remove previous auto-generated tasks/appointments, keep manual
-  state.tasks = state.tasks.filter(t => !t.auto);
+  state.tasks = state.tasks.filter((t) => !t.auto);
 
   const blockTasks = [];
 
@@ -388,7 +385,10 @@ function generateTasksFromContext() {
       block: "evening"
     });
   }
-  blockTasks.push({ label: "Lay out clothes for tomorrow", block: "evening" });
+  blockTasks.push({
+    label: "Lay out clothes for tomorrow",
+    block: "evening"
+  });
 
   // Bedtime
   blockTasks.push({
@@ -396,7 +396,7 @@ function generateTasksFromContext() {
     block: "bedtime"
   });
 
-  blockTasks.forEach(t => {
+  blockTasks.forEach((t) => {
     state.tasks.push({
       id: uuid(),
       label: t.label,
@@ -407,10 +407,10 @@ function generateTasksFromContext() {
     });
   });
 
-  // Appointments from letter day schedule
+  // Letter-day class schedule → appointments
   const letter = state.context.letterDay;
   if (letter && SCHEDULE_BY_LETTER_DAY[letter]) {
-    SCHEDULE_BY_LETTER_DAY[letter].forEach(appt => {
+    SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
       state.tasks.push({
         id: uuid(),
         label: appt.title,
@@ -425,18 +425,16 @@ function generateTasksFromContext() {
 }
 
 // === RENDER FUNCTIONS ===
-
 function renderTasksAndAppointments() {
   timelineContainer.innerHTML = "";
 
   const hideCompleted = hideCompletedTasksCheckbox.checked;
 
-  // group by block in defined order
   const blocks = Object.keys(TIME_BLOCK_LABELS);
 
-  blocks.forEach(block => {
+  blocks.forEach((block) => {
     const items = state.tasks
-      .filter(t => t.block === block)
+      .filter((t) => t.block === block)
       .sort((a, b) => {
         const ta = a.time24 || "99:99";
         const tb = b.time24 || "99:99";
@@ -457,7 +455,7 @@ function renderTasksAndAppointments() {
 
     const countSpan = document.createElement("span");
     const total = items.length;
-    const done = items.filter(i => i.completed).length;
+    const done = items.filter((i) => i.completed).length;
     countSpan.textContent = `${total - done}/${total} left`;
 
     headerDiv.appendChild(labelSpan);
@@ -466,7 +464,7 @@ function renderTasksAndAppointments() {
     const listDiv = document.createElement("div");
     listDiv.className = "time-block-list";
 
-    items.forEach(item => {
+    items.forEach((item) => {
       if (hideCompleted && item.completed) return;
 
       const row = document.createElement("div");
@@ -535,7 +533,7 @@ function renderParkingLot() {
 
 function renderHabits() {
   habitListEl.innerHTML = "";
-  state.habits.forEach(habit => {
+  state.habits.forEach((habit) => {
     const row = document.createElement("div");
     row.className = "habit-row";
 
@@ -619,13 +617,14 @@ function renderWorkouts() {
 
 function renderLastTimeList() {
   lastTimeListEl.innerHTML = "";
-  state.lastTimeItems.forEach(item => {
+  state.lastTimeItems.forEach((item) => {
     const row = document.createElement("div");
     row.className = "last-time-row";
 
-    const dot = document.createElement("div");
     const days = daysBetween(item.lastDone);
     const color = lastTimeColor(days);
+
+    const dot = document.createElement("div");
     dot.className = `last-time-color-dot ${color}`;
 
     const label = document.createElement("span");
@@ -686,9 +685,9 @@ function renderAll() {
   renderNote();
 }
 
-// === EVENT WIRES FOR OTHER CONTROLS ===
+// === EVENT WIRES ===
 
-// Tasks
+// Add manual task
 addTaskBtn.addEventListener("click", async () => {
   const text = newTaskTextInput.value.trim();
   if (!text) return;
@@ -736,11 +735,13 @@ waterPlusBtn.addEventListener("click", async () => {
   await saveDayToFirestore();
   renderWaterAndSteps();
 });
+
 waterMinusBtn.addEventListener("click", async () => {
   state.water = Math.max(0, (state.water || 0) - 1);
   await saveDayToFirestore();
   renderWaterAndSteps();
 });
+
 stepCountInput.addEventListener("input", () => {
   state.steps = parseInt(stepCountInput.value || "0", 10);
   saveDayToFirestore();
@@ -767,13 +768,13 @@ addLastTimeBtn.addEventListener("click", async () => {
   renderLastTimeList();
 });
 
-// Note
+// Note box
 noteBox.addEventListener("input", () => {
   state.note = noteBox.value;
   saveDayToFirestore();
 });
 
-// Initialize default date immediately for visual niceness
+// Initialize default date value for visual niceness if empty
 if (!planDateInput.value) {
   planDateInput.value = todayDateKey();
 }
