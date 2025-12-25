@@ -11,7 +11,7 @@
 <body>
   <header class="topBar">
     <div>
-      <h1>hhh Daily Dashboard</h1>
+      <h1>eee Daily Dashboard</h1>
       <p class="sub" id="dateLine"></p>
       <p class="small muted" id="accountLine"></p>
     </div>
@@ -26,6 +26,22 @@
   <div class="layout">
     <!-- LEFT -->
     <main class="mainCol">
+
+      <!-- Top 3 Priorities -->
+      <details class="cardDetails" id="cardPriorities" open>
+        <summary class="cardSummary">
+          <span>Top 3 Priorities</span>
+          <span class="summaryHint">optional • 3 lines</span>
+        </summary>
+        <div class="card">
+          <div class="small muted">Auto-saves as you type.</div>
+          <div class="prioGrid">
+            <input id="prio1" placeholder="1) One thing that matters" />
+            <input id="prio2" placeholder="2) Next best thing" />
+            <input id="prio3" placeholder="3) If I can" />
+          </div>
+        </div>
+      </details>
 
       <!-- Context -->
       <details class="cardDetails" id="cardContext" open>
@@ -77,17 +93,6 @@
             </div>
           </div>
 
-<div class="row">
-  <div>
-    <label>Is today a daycare day?</label>
-    <select id="daycareFlag">
-      <option value="">— choose —</option>
-      <option value="No">No</option>
-      <option value="Yes">Yes</option>
-    </select>
-  </div>
-</div>
-
           <div class="buttonRow">
             <button id="startHereBtn" type="button">Start here</button>
             <button class="ghostBtn" id="rolloverBtn" type="button">Rollover → Tomorrow</button>
@@ -97,41 +102,6 @@
         </div>
       </details>
 
-
-      <!-- Merged Day (Appointments + MUST DO) -->
-      <details class="cardDetails" id="cardMerged" open>
-        <summary class="cardSummary">
-          <span>Merged Day</span>
-          <span class="summaryHint">appointments + tasks</span>
-        </summary>
-        <div class="card">
-          <div class="headerRow">
-            <div class="toggleMini">
-              <input id="mergedHideChecked" type="checkbox" />
-              <label for="mergedHideChecked">Hide checked</label>
-            </div>
-            <div class="pill" id="mergedPill">0 / 0</div>
-          </div>
-          <div id="mergedWrap"></div>
-        </div>
-      </details>
-
-
-      <!-- Top 3 Priorities -->
-      <details class="cardDetails" id="cardPriorities" open>
-        <summary class="cardSummary">
-          <span>Top 3 Priorities</span>
-          <span class="summaryHint">optional • 3 lines</span>
-        </summary>
-        <div class="card">
-          <div class="small muted">Auto-saves as you type.</div>
-          <div class="prioGrid">
-            <input id="prio1" placeholder="1) One thing that matters" />
-            <input id="prio2" placeholder="2) Next best thing" />
-            <input id="prio3" placeholder="3) If I can" />
-          </div>
-        </div>
-      </details>
       <!-- Today at School -->
       <details class="cardDetails" id="cardSchool" open>
         <summary class="cardSummary">
@@ -154,7 +124,23 @@
         </div>
       </details>
 
-
+      <!-- Merged Day (Appointments + MUST DO) -->
+      <details class="cardDetails" id="cardMerged" open>
+        <summary class="cardSummary">
+          <span>Merged Day</span>
+          <span class="summaryHint">appointments + tasks</span>
+        </summary>
+        <div class="card">
+          <div class="headerRow">
+            <div class="toggleMini">
+              <input id="mergedHideChecked" type="checkbox" />
+              <label for="mergedHideChecked">Hide checked</label>
+            </div>
+            <div class="pill" id="mergedPill">0 / 0</div>
+          </div>
+          <div id="mergedWrap"></div>
+        </div>
+      </details>
 
       <!-- MUST DO -->
       <details class="cardDetails" id="cardTasks" open>
@@ -278,7 +264,7 @@
               <input id="moveMinutes" type="number" inputmode="numeric" min="0" step="5" placeholder="0" />
               <div class="small muted" id="moveStreakLine"></div>
 
-              <div class="small muted" style="margin-top:10px;font-weight:800;">Movement & strength (build gently)</div>
+              <div class="small muted" style="margin-top:10px;font-weight:800;">Bodyweight reps (build gently)</div>
               <div id="bodyTrackersWrap" class="trackerStack"></div>
             </div>
 
@@ -328,6 +314,6 @@
     </aside>
   </div>
 
-  <script type="module" src="./dashboard.js"></script>
+  <script type="module" src="./dashboard.js"></script>>
 </body>
 </html>

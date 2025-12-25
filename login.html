@@ -73,14 +73,14 @@
     // Change this if your hub page has a different name
     const urlParams = new URLSearchParams(window.location.search);
 // If redirected here from another protected page (like /planner/dashboard.html),
-// send the user back there after login; otherwise default to hub.
+// we’ll send you back there after login.
 const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
 
     const btn = document.getElementById("googleLoginBtn");
     const statusEl = document.getElementById("status");
 
     btn.addEventListener("click", async () => {
-      statusEl.textContent = "Opening Google sign-in...";
+      statusEl.textContent = "Opening Google sign-in.....";
 
       try {
         const result = await signInWithPopup(auth, provider);
@@ -95,7 +95,7 @@ const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
         // Save identity locally (shared for all pages)
         setLocalStudent(student);
 
-        statusEl.textContent = "Loading your progress...";
+        statusEl.textContent = "Loading your progress.....";
 
         // Load or create the player document (progress + tier)
         const playerData = await loadOrCreatePlayer(
@@ -107,7 +107,7 @@ const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
         setLocalProgress(playerData.progress || {});
         setLocalTier(playerData.subscriptionTier || "free");
 
-        statusEl.textContent = "Heading into the jungle...";
+        statusEl.textContent = "Heading into the jungle.....";
 
         const [firstName, ...rest] = (student.fullName || "").split(" ");
         const lastName = rest.join(" ");
