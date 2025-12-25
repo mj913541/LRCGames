@@ -50,30 +50,30 @@ const LETTER_SCHEDULE = {
     "9:05–9:50 • 4th Rosenthal",
     "10:05–10:50 • 2nd Peterson",
     "11:05–11:50 • 3rd Hossain",
-    "1:45–2:30 • 5th Altruismo",
-    "2:45–3:30 • 1st Rogers"
+    "13:45–14:30 • 5th Altruismo",
+    "14:45–15:30 • 1st Rogers"
   ],
   "B Day": [
     "9:05–9:50 • 4th Cavello",
     "10:05–10:50 • 2nd Schmidt",
-    "1:45–2:30 • 5th Isibindi"
+    "13:45–14:30 • 5th Isibindi"
   ],
   "C Day": [
     "8:45–9:05 • AM Duty & Opening",
     "10:05–10:50 • 2nd Adams",
     "11:05–12:05 • 3rd Pulsa",
-    "1:45–2:30 • 5th Amistad"
+    "13:45–14:30 • 5th Amistad"
   ],
   "D Day": [
     "9:20–10:05 • HC 5th Green",
     "10:05–10:50 • HC 1st Green",
-    "2:45–3:30 • 1st Wilson"
+    "14:45–15:30 • 1st Wilson"
   ],
   "E Day": [
     "9:05–9:50 • 4th Tomter",
     "11:05–12:05 • 3rd Carroll",
-    "1:45–2:30 • 5th Reveur",
-    "2:45–3:30 • 1st Day"
+    "13:45–14:30 • 5th Reveur",
+    "14:45–15:30 • 1st Day"
   ],
   "Break Day": []
 };
@@ -89,7 +89,7 @@ const COLOR_DAY_BY_LETTER = {
 };
 
 function workOpenStart(letterDay) {
-  return (letterDay === "D Day") ? "2:30" : "8:55";
+  return (letterDay === "D Day") ? "14:30" : "8:55";
 }
 
 // Trackers
@@ -117,13 +117,13 @@ const BODY_TRACKERS = [
   { key: "catCow", label: "Cat cow – abs", target: 20, step: 5 },
 
   // Legs & glutes
-  { key: "squats", label: "Squats", target: 20, step: 5 },
-  { key: "altReverseLunges", label: "Alternating reverse lunges", target: 20, step: 2 },
-  { key: "sumoSquats", label: "Sumo squats", target: 20, step: 5 },
-  { key: "altSideSquats", label: "Alt side squats", target: 20, step: 5 },
+  { key: "squats", label: "Squats", target: 20, step: 5, withWeight: true },
+  { key: "altReverseLunges", label: "Alternating reverse lunges", target: 20, step: 2, withWeight: true },
+  { key: "sumoSquats", label: "Sumo squats", target: 20, step: 5, withWeight: true },
+  { key: "altSideSquats", label: "Alt side squats", target: 20, step: 5, withWeight: true },
   { key: "rdlRight", label: "RDL right", target: 20, step: 5, withWeight: true },
   { key: "rdlLeft", label: "RDL left", target: 20, step: 5, withWeight: true },
-  { key: "calfRaises", label: "Calf raises", target: 20, step: 10 },
+  { key: "calfRaises", label: "Calf raises", target: 20, step: 10, withWeight: true },
 
   // Back
   { key: "rows", label: "Wide row / rows – back", target: 20, step: 5, withWeight: true },
@@ -155,7 +155,12 @@ const DEFAULT_LAST_TIME_ITEMS = [
 const LAST_TIME_THRESHOLDS = {
   "washed-hair": { yellow: 2, red: 3 },
   "shaved-legs": { yellow: 5, red: 8 },
-  "_default": { yellow: 2, red: 3 }
+  "Shaved my armpits?": { yellow: 2, red: 3 },
+  "Cleaned eyebrows?": { yellow: 4, red: 6 },
+  "Shaved lips?": { yellow: 2, red: 3 },
+  "Shaved 🐱?": { yellow: 6, red: 7 },
+  "Toenails?": { yellow: 7, red: 10 },
+  "Nails?": { yellow: 7, red: 10 },
 };
 
 function pad2(n) { return String(n).padStart(2, "0"); }
@@ -312,7 +317,7 @@ function defaultTemplates() {
       "[Morning] Daycare Notebook Filled Out"
     ].join("\n"),
 
-    thursday: ["[Arrive Home] Trash / recycling out"].join("\n"),
+    wednesday: ["[Arrive Home] Trash / recycling out"].join("\n"),
 
     therapyNight: [
       "[Arrive Home] Therapy night: easy food + comfort only",
@@ -755,9 +760,9 @@ function buildMergedItems() {
     { zone: "Morning", time: "7:00" },
     { zone: "Work Open", time: openAt },
     { zone: "Midday", time: "12:00" },
-    { zone: "Work Close", time: "3:15" },
-    { zone: "Arrive Home", time: "4:00" },
-    { zone: "Bedtime", time: "8:30" }
+    { zone: "Work Close", time: "15:15" },
+    { zone: "Arrive Home", time: "16:00" },
+    { zone: "Bedtime", time: "20:30" }
   ];
 
   const merged = [...schedule];
