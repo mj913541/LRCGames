@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Quest – Login</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(to bottom, #ecfeff, #d1fae5);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .card {
+      background: white;
+      border-radius: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.14);
+      max-width: 420px;
+      width: 100%;
+      padding: 2rem 1.75rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1 class="text-2xl font-bold mb-2">
+      🦁 Welcome to <span class="text-green-700">LRC Quest</span>
+    </h1>
+
+    <p class="text-gray-600 mb-4 text-sm">
+      Sign in with your school Google account to enter the jungle.
+    </p>
+
+    <button
+      id="googleLoginBtn"
+      class="w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition"
+    >
+      Continue with Google
+    </button>
+
+    <p id="status" class="mt-4 text-sm text-gray-600"></p>
+
+    <p class="mt-4 text-xs text-gray-400">
+      Need help? Raise your hand and tell <strong>Mrs. A</strong>.
+    </p>
+  </div>
+
+  <!-- Firebase + Core Logic -->
+  <script type="module">
+    import {
+      getAuthInstance,
+      loadOrCreatePlayer,
+      setLocalStudent,
+      setLocalProgress,
+      setLocalTier
+    } from "./scripts/lrcQuestCore.js";
+
+    import {
+      GoogleAuthProvider,
+      signInWithPopup
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
+    const auth = getAuthInstance();
+    const provider = new GoogleAuthProvider();
+
+    // Change this if your hub page has a different name
+    const urlParams = new URLSearchParams(window.location.search);
+// If redirected here from another protected page (like /planner/dashboard.html),
+// send the user back there after login; otherwise default to hub.
+const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
+
+    const btn = document.getElementById("googleLoginBtn");
+    const statusEl = document.getElementById("status");
+
+    btn.addEventListener("click", async () => {
+      statusEl.textContent = "Opening Google sign-in...";
+
+      try {
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+
+        const student = {
+          uid: user.uid,
+          fullName: user.displayName || "",
+          email: user.email || ""
+        };
+
+        // Save identity locally (shared for all pages)
+        setLocalStudent(student);
+
+        statusEl.textContent = "Loading your progress...";
+
+        // Load or create the player document (progress + tier)
+        const playerData = await loadOrCreatePlayer(
+          student.uid,
+          student.email,
+          student.fullName
+        );
+
+        setLocalProgress(playerData.progress || {});
+        setLocalTier(playerData.subscriptionTier || "free");
+
+        statusEl.textContent = "Heading into the jungle...";
+
+        const [firstName, ...rest] = (student.fullName || "").split(" ");
+        const lastName = rest.join(" ");
+
+        const params = new URLSearchParams({
+          fn: firstName || "",
+          ln: lastName || "",
+          email: student.email || "",
+          uid: student.uid || ""
+        });
+
+        window.location.href = `${DESTINATION_PAGE}?${params.toString()}`;
+      } catch (err) {
+        console.error(err);
+        statusEl.textContent = "Login failed or was canceled. Try again.";
+      }
+    });
+  </script>
+
+</body>
+</html>
