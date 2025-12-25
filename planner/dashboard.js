@@ -139,6 +139,7 @@ const BODY_TRACKERS = [
 ];
 
 // Last-time items + thresholds
+// Last-time items + thresholds
 const DEFAULT_LAST_TIME_ITEMS = [
   "Shaved my armpits?",
   "Cleaned eyebrows?",
@@ -157,16 +158,10 @@ const LAST_TIME_THRESHOLDS = {
   "_default": { yellow: 2, red: 3 }
 };
 
-
-// ---------------------------
-// Helpers
-// ---------------------------
 function pad2(n) { return String(n).padStart(2, "0"); }
 function dateKey(d = new Date()) { return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`; }
 function dayName(d = new Date()) { return ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][d.getDay()]; }
-function isWeekdayByName(name) {
-  return name === "Monday" || name === "Tuesday" || name === "Wednesday" || name === "Thursday" || name === "Friday";
-}
+function isWeekdayByName(name) { return name === "Monday" || name === "Tuesday" || name === "Wednesday" || name === "Thursday" || name === "Friday"; }
 function isThursdayByName(name) { return name === "Thursday"; }
 function defaultTherapyTonightByName(name) { return (name === "Monday" || name === "Tuesday") ? "Yes" : "No"; }
 
@@ -200,6 +195,16 @@ function toMinutes(hm) {
   const m = String(hm || "").match(/^(\d{1,2}):(\d{2})$/);
   if (!m) return 9999;
   return parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+}
+function formatTimeLabel(hm) {
+  const m = String(hm || "").match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return String(hm || "");
+  let hour = parseInt(m[1], 10);
+  const minute = m[2];
+  const suffix = hour >= 12 ? "PM" : "AM";
+  if (hour === 0) hour = 12;
+  if (hour > 12) hour -= 12;
+  return `${hour}:${minute} ${suffix}`;
 }
 function parseScheduleStartTime(line) {
   const m = String(line || "").match(/^(\d{1,2}):(\d{2})/);
@@ -766,7 +771,7 @@ function buildMergedItems() {
       kind: "zoneHeader",
       id: `zonehdr-${safeId(a.zone)}`,
       minutes: toMinutes(a.time),
-      text: `${a.zone} • ${a.time}`
+      text: `${a.zone} • ${formatTimeLabel(a.time)}`
     });
 
     list.forEach(task => {
