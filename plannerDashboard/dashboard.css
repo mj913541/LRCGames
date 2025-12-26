@@ -93,8 +93,7 @@ body {
 .primary-btn,
 .ghost-btn,
 .tiny-btn,
-.circle-btn,
-.tiny-circle {
+.circle-btn {
   font-family: inherit;
   border-radius: 999px;
   border: none;
@@ -142,8 +141,7 @@ body {
   border-color: var(--accent);
 }
 
-.circle-btn,
-.tiny-circle {
+.circle-btn {
   width: 26px;
   height: 26px;
   border-radius: 999px;
@@ -152,8 +150,7 @@ body {
   color: var(--text-main);
 }
 
-.circle-btn:active,
-.tiny-circle:active {
+.circle-btn:active {
   transform: translateY(1px) scale(0.98);
 }
 
@@ -434,79 +431,91 @@ body {
   gap: 8px;
 }
 
-.trackers-grid > .tracker-block {
-  background: rgba(15, 23, 42, 0.9);
-  border-radius: 16px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tracker-block h3 {
-  margin: 0 0 2px;
-  font-size: 0.85rem;
-}
-
-/* Habits */
-.habit-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.habit-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.8rem;
-}
-
-.habit-row input[type="checkbox"] {
-  width: 14px;
-  height: 14px;
-}
-
-/* Trackers: water + steps + goals */
-.water-steps-row {
+/* Daily wins pills */
+.daily-wins-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  align-items: flex-start;
+  gap: 6px;
+  margin-bottom: 4px;
 }
 
-.water-chip,
-.steps-chip {
-  flex: 1 1 140px;
+.win-pill {
+  flex: 1 1 120px;
+  min-width: 120px;
+  border-radius: 999px;
+  padding: 4px 8px;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.9);
 }
 
-.small-label {
+.win-label {
+  opacity: 0.9;
+}
+
+.win-value {
+  font-weight: 600;
+}
+
+.win-pill.empty {
+  opacity: 0.6;
+}
+
+.win-pill.partial {
+  border-color: rgba(56, 189, 248, 0.7);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.win-pill.done {
+  border-color: rgba(34, 197, 94, 0.9);
+  background: rgba(34, 197, 94, 0.15);
+}
+
+/* Metric rows (water-style trackers) */
+.metric-row {
+  display: grid;
+  grid-template-columns: 1.3fr 1.3fr 1.1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 6px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(51, 65, 85, 0.9);
+}
+
+.metric-label {
   font-size: 0.8rem;
-  color: rgba(148, 163, 184, 0.9);
 }
 
-.chip-row {
+.metric-label small {
+  display: block;
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.metric-controls {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 .big-number {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   font-weight: 600;
 }
 
-.goal-row {
+.metric-goal {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 2px;
+  font-size: 0.75rem;
+  opacity: 0.9;
 }
 
-.goal-row input {
+.metric-goal input {
   width: 70px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
@@ -516,38 +525,9 @@ body {
   color: var(--text-main);
 }
 
-.tiny-label {
-  font-size: 0.7rem;
-  color: rgba(148, 163, 184, 0.9);
-}
-
-/* Reps summary */
-.reps-summary-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 4px 0 6px;
-}
-
-.reps-summary-row input {
-  width: 70px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  padding: 2px 6px;
-  font-size: 0.75rem;
-  background: rgba(15, 23, 42, 0.95);
-  color: var(--text-main);
-}
-
-.tiny-strong {
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-/* Celebration pill */
-#movementWinBanner {
-  display: none;
-  margin-top: 6px;
+/* Movement banner */
+.movement-banner {
+  margin-top: 4px;
   padding: 6px 10px;
   border-radius: 999px;
   background: rgba(34, 197, 94, 0.12);
@@ -555,52 +535,70 @@ body {
   border: 1px solid rgba(34, 197, 94, 0.6);
   font-size: 0.8rem;
   text-align: center;
+  display: none;
 }
 
-#movementWinBanner.show {
+.movement-banner.show {
   display: block;
-  animation: popIn 0.3s ease-out;
 }
 
-@keyframes popIn {
-  0% {
-    transform: scale(0.9);
-    opacity: 0;
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+/* Strength exercises subsection */
+.tracker-subsection {
+  border-radius: 14px;
+  padding: 6px 6px 8px;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(51, 65, 85, 0.9);
+  margin-top: 4px;
 }
 
-/* Workout table */
+.tracker-subsection h3 {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+}
+
 .workout-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.75rem;
 }
 
-.workout-table th,
-.workout-table td {
-  border-bottom: 1px solid rgba(51, 65, 85, 0.9);
-  padding: 3px 4px;
-  text-align: left;
+.workout-table thead {
+  border-bottom: 1px solid rgba(75, 85, 99, 0.9);
+  color: var(--text-soft);
 }
 
-.workout-table th {
-  font-weight: 600;
-  color: rgba(148, 163, 184, 0.95);
+.workout-table th,
+.workout-table td {
+  padding: 4px 4px;
+  text-align: left;
 }
 
 .workout-table input[type="text"],
 .workout-table input[type="number"] {
   width: 100%;
-  border-radius: 10px;
-  border: 1px solid rgba(55, 65, 81, 0.9);
-  padding: 3px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  padding: 2px 6px;
   font-size: 0.75rem;
   background: rgba(15, 23, 42, 0.95);
   color: var(--text-main);
+}
+
+.workout-reps-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workout-goal-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: var(--text-soft);
 }
 
 /* Last time list */
@@ -696,5 +694,9 @@ body {
 
   .context-row {
     flex-direction: column;
+  }
+
+  .metric-row {
+    grid-template-columns: 1fr;
   }
 }

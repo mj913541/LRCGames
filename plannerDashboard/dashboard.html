@@ -49,17 +49,16 @@
           </label>
           <label>
             <span>What school letter day is it? (A–E)</span>
-                <select id="letterDay" required>
-                    <option value="">Select…</option>
-                    <option value="NONE">No school today</option>
-                    <option value="A">A Day</option>
-                    <option value="B">B Day</option>
-                    <option value="C">C Day</option>
-                    <option value="D">D Day</option>
-                    <option value="E">E Day</option>
-                </select>
-            </label>
-
+            <select id="letterDay" required>
+              <option value="">Select…</option>
+              <option value="NONE">No school today</option>
+              <option value="A">A Day</option>
+              <option value="B">B Day</option>
+              <option value="C">C Day</option>
+              <option value="D">D Day</option>
+              <option value="E">E Day</option>
+            </select>
+          </label>
         </div>
 
         <div class="context-row">
@@ -147,85 +146,153 @@
           </header>
 
           <div class="trackers-grid">
-            <!-- Habits -->
-            <div class="tracker-block">
-              <h3>Habits</h3>
-              <div id="habitList" class="habit-list">
-                <!-- Habit checkboxes -->
+            <!-- Daily wins summary -->
+            <div class="daily-wins-row">
+              <div class="win-pill" id="winWater">
+                <span class="win-label">💧 Water</span>
+                <span class="win-value">
+                  <span id="winWaterValue">0</span> /
+                  <span id="winWaterGoal">8</span>
+                </span>
               </div>
-              <div class="add-row">
-                <input type="text" id="newHabitText" placeholder="Add habit…" />
-                <button type="button" id="addHabitBtn" class="tiny-btn">Add</button>
+              <div class="win-pill" id="winSteps">
+                <span class="win-label">👣 Steps</span>
+                <span class="win-value">
+                  <span id="winStepsValue">0</span> /
+                  <span id="winStepsGoal">6000</span>
+                </span>
               </div>
-            </div>
-
-            <!-- Water / Steps + goals + celebration -->
-            <div class="tracker-block">
-              <h3>Water, Steps & Movement Goals</h3>
-
-              <div class="water-steps-row">
-                <!-- Water -->
-                <div class="water-chip">
-                  <span class="small-label">Water</span>
-                  <div class="chip-row">
-                    <button type="button" id="waterMinus" class="circle-btn">−</button>
-                    <span id="waterCount" class="big-number">0</span>
-                    <button type="button" id="waterPlus" class="circle-btn">+</button>
-                  </div>
-                  <div class="goal-row">
-                    <span class="tiny-label">Goal:</span>
-                    <input id="waterGoal" type="number" min="0" step="1" />
-                    <span class="tiny-label">cups</span>
-                  </div>
-                </div>
-
-                <!-- Steps -->
-                <div class="steps-chip">
-                  <span class="small-label">Steps</span>
-                  <div class="chip-row">
-                    <input id="stepCount" type="number" min="0" step="100" />
-                  </div>
-                  <div class="goal-row">
-                    <span class="tiny-label">Goal:</span>
-                    <input id="stepGoal" type="number" min="0" step="500" />
-                    <span class="tiny-label">steps</span>
-                  </div>
-                </div>
+              <div class="win-pill" id="winStretch">
+                <span class="win-label">🤸 Stretch</span>
+                <span class="win-value">
+                  <span id="winStretchValue">0</span> /
+                  <span id="winStretchGoal">10</span>
+                </span>
               </div>
-
-              <!-- Celebration banner when ALL movement goals are met -->
-              <div id="movementWinBanner">
-                🎉 Daily movement goals complete! You did it.
+              <div class="win-pill" id="winReps">
+                <span class="win-label">💪 Reps</span>
+                <span class="win-value">
+                  <span id="winRepsValue">0</span> /
+                  <span id="winRepsGoal">100</span>
+                </span>
+              </div>
+              <div class="win-pill" id="winMeditate">
+                <span class="win-label">🧘 Meditate</span>
+                <span class="win-value">
+                  <span id="winMedValue">0</span> /
+                  <span id="winMedGoal">10</span>
+                </span>
               </div>
             </div>
 
-            <!-- Workouts + reps total + reps goal -->
-            <div class="tracker-block">
-              <h3>Workout Moves</h3>
+            <!-- Each tracker like the water cup -->
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>💧 Water</span>
+                <small>cups</small>
+              </div>
+              <div class="metric-controls">
+                <button type="button" id="waterMinus" class="circle-btn">−</button>
+                <span id="waterCount" class="big-number">0</span>
+                <button type="button" id="waterPlus" class="circle-btn">+</button>
+              </div>
+              <div class="metric-goal">
+                <span>Goal</span>
+                <input id="waterGoal" type="number" min="0" step="1" />
+              </div>
+            </div>
 
-              <div class="reps-summary-row">
-                <span class="tiny-label">Reps today:</span>
-                <span id="repsTotalDisplay" class="tiny-strong">0</span>
-                <span class="tiny-label">Goal:</span>
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>👣 Steps</span>
+                <small>steps</small>
+              </div>
+              <div class="metric-controls">
+                <button type="button" id="stepMinus" class="circle-btn">−</button>
+                <span id="stepCount" class="big-number">0</span>
+                <button type="button" id="stepPlus" class="circle-btn">+</button>
+              </div>
+              <div class="metric-goal">
+                <span>Goal</span>
+                <input id="stepGoal" type="number" min="0" step="500" />
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>🤸 Stretching</span>
+                <small>minutes</small>
+              </div>
+              <div class="metric-controls">
+                <button type="button" id="stretchMinus" class="circle-btn">−</button>
+                <span id="stretchCount" class="big-number">0</span>
+                <button type="button" id="stretchPlus" class="circle-btn">+</button>
+              </div>
+              <div class="metric-goal">
+                <span>Goal</span>
+                <input id="stretchGoal" type="number" min="0" step="5" />
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>🧘 Meditate</span>
+                <small>minutes</small>
+              </div>
+              <div class="metric-controls">
+                <button type="button" id="medMinus" class="circle-btn">−</button>
+                <span id="medCount" class="big-number">0</span>
+                <button type="button" id="medPlus" class="circle-btn">+</button>
+              </div>
+              <div class="metric-goal">
+                <span>Goal</span>
+                <input id="medGoal" type="number" min="0" step="5" />
+              </div>
+            </div>
+
+            <div class="metric-row">
+              <div class="metric-label">
+                <span>💪 Reps</span>
+                <small>total</small>
+              </div>
+              <div class="metric-controls">
+                <!-- This total is computed from the exercises below -->
+                <span id="repsCount" class="big-number">0</span>
+              </div>
+              <div class="metric-goal">
+                <span>Goal</span>
                 <input id="repsGoal" type="number" min="0" step="5" />
               </div>
+            </div>
 
+            <div id="movementWinBanner" class="movement-banner">
+              🎉 You hit all today’s movement goals!
+            </div>
+
+            <!-- Strength exercises (each with 30 reps goal) -->
+            <div class="tracker-subsection">
+              <h3>Strength Exercises</h3>
               <table class="workout-table">
                 <thead>
                   <tr>
                     <th>Move</th>
                     <th>Weight</th>
                     <th>Reps</th>
-                    <th>Notes</th>
+                    <th>Goal</th>
                     <th></th>
                   </tr>
                 </thead>
                 <tbody id="workoutBody">
-                  <!-- Rows via JS -->
+                  <!-- Rows rendered via JS -->
                 </tbody>
               </table>
               <div class="add-row">
-                <button type="button" id="addWorkoutRowBtn" class="tiny-btn">Add move</button>
+                <input
+                  type="text"
+                  id="newWorkoutMove"
+                  placeholder="Add exercise (e.g., Squats)"
+                />
+                <button type="button" id="addWorkoutRowBtn" class="tiny-btn">Add</button>
               </div>
             </div>
           </div>
@@ -240,7 +307,11 @@
             <!-- Items via JS -->
           </div>
           <div class="card-footer-row">
-            <input type="text" id="newLastTimeText" placeholder="Add routine (ex: Changed sheets)" />
+            <input
+              type="text"
+              id="newLastTimeText"
+              placeholder="Add routine (ex: Changed sheets)"
+            />
             <button type="button" id="addLastTimeBtn" class="tiny-btn">Add</button>
           </div>
           <p class="hint-text">

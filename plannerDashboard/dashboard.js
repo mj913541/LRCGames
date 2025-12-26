@@ -106,17 +106,23 @@ let state = {
   },
   tasks: [],          // { id, label, block, type: 'task'|'appointment', time24?, completed, auto? }
   parkingLot: [],     // strings
-  habits: [],         // { id, label, done }
-  water: 0,
-  steps: 0,
-  workouts: [],       // { id, move, weight, reps, notes }
-  lastTimeItems: [],  // { id, label, lastDone }
-  note: "",
+  metrics: {          // all trackers "like the water cup"
+    water: 0,
+    steps: 0,
+    stretch: 0,
+    meditate: 0,
+    reps: 0          // computed from workouts
+  },
   trackerGoals: {
     water: 8,
     steps: 6000,
-    repsTotal: 100
+    stretch: 10,
+    meditate: 10,
+    reps: 100       // global daily reps goal (per-move goal is 30 below)
   },
+  workouts: [],       // { id, move, weight, reps, goal: 30 }
+  lastTimeItems: [],  // { id, label, lastDone }
+  note: "",
   celebration: {
     movementWin: false
   }
@@ -144,23 +150,36 @@ const parkingListEl = document.getElementById("parkingList");
 const parkingInput = document.getElementById("parkingInput");
 const addParkingBtn = document.getElementById("addParkingBtn");
 
-const habitListEl = document.getElementById("habitList");
-const newHabitTextInput = document.getElementById("newHabitText");
-const addHabitBtn = document.getElementById("addHabitBtn");
-
+// Trackers
 const waterMinusBtn = document.getElementById("waterMinus");
 const waterPlusBtn = document.getElementById("waterPlus");
 const waterCountEl = document.getElementById("waterCount");
-const stepCountInput = document.getElementById("stepCount");
-
 const waterGoalInput = document.getElementById("waterGoal");
+
+const stepMinusBtn = document.getElementById("stepMinus");
+const stepPlusBtn = document.getElementById("stepPlus");
+const stepCountEl = document.getElementById("stepCount");
 const stepGoalInput = document.getElementById("stepGoal");
+
+const stretchMinusBtn = document.getElementById("stretchMinus");
+const stretchPlusBtn = document.getElementById("stretchPlus");
+const stretchCountEl = document.getElementById("stretchCount");
+const stretchGoalInput = document.getElementById("stretchGoal");
+
+const medMinusBtn = document.getElementById("medMinus");
+const medPlusBtn = document.getElementById("medPlus");
+const medCountEl = document.getElementById("medCount");
+const medGoalInput = document.getElementById("medGoal");
+
+const repsCountEl = document.getElementById("repsCount");
+const repsGoalInput = document.getElementById("repsGoal");
+
+// Daily wins banner
 const movementWinBanner = document.getElementById("movementWinBanner");
 
-const repsGoalInput = document.getElementById("repsGoal");
-const repsTotalDisplay = document.getElementById("repsTotalDisplay");
-
+// Workouts
 const workoutBody = document.getElementById("workoutBody");
+const newWorkoutMoveInput = document.getElementById("newWorkoutMove");
 const addWorkoutRowBtn = document.getElementById("addWorkoutRowBtn");
 
 const lastTimeListEl = document.getElementById("lastTimeList");
@@ -252,19 +271,45 @@ function isWeekday() {
   return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(d);
 }
 
-function welcomeDefaultsIfEmpty() {
-  // Habits
-  if (!state.habits.length) {
-    state.habits = [
-      { id: uuid(), label: "Water", done: false },
-      { id: uuid(), label: "Steps", done: false },
-      { id: uuid(), label: "Stretching", done: false },
-      { id: uuid(), label: "Meditate", done: false }
-    ];
+// Compute total reps from workouts into metrics.reps
+function updateRepsFromWorkouts() {
+  const total = (state.workouts || []).reduce((sum, w) => {
+    const r = parseInt(w.reps || 0, 10);
+    return sum + (isNaN(r) ? 0 : r);
+  }, 0);
+  if (!state.metrics) state.metrics = {};
+  state.metrics.reps = total;
+}
+
+function ensureDefaults() {
+  if (!state.metrics) {
+    state.metrics = {
+      water: 0,
+      steps: 0,
+      stretch: 0,
+      meditate: 0,
+      reps: 0
+    };
   }
 
-  // Workouts
-  if (!state.workouts.length) {
+  if (!state.trackerGoals) {
+    state.trackerGoals = {
+      water: 8,
+      steps: 6000,
+      stretch: 10,
+      meditate: 10,
+      reps: 100
+    };
+  } else {
+    if (state.trackerGoals.water == null) state.trackerGoals.water = 8;
+    if (state.trackerGoals.steps == null) state.trackerGoals.steps = 6000;
+    if (state.trackerGoals.stretch == null) state.trackerGoals.stretch = 10;
+    if (state.trackerGoals.meditate == null) state.trackerGoals.meditate = 10;
+    if (state.trackerGoals.reps == null) state.trackerGoals.reps = 100;
+  }
+
+  // Default exercises list (goal 30 reps each)
+  if (!state.workouts || !state.workouts.length) {
     const defaultMoves = [
       "front lift - shoulders",
       "side lift - shoulders",
@@ -298,12 +343,11 @@ function welcomeDefaultsIfEmpty() {
       move: m,
       weight: "",
       reps: 0,
-      notes: ""
+      goal: 30
     }));
   }
 
-  // Last time items
-  if (!state.lastTimeItems.length) {
+  if (!state.lastTimeItems || !state.lastTimeItems.length) {
     state.lastTimeItems = [
       { id: uuid(), label: "Changed sheets", lastDone: todayDateKey() },
       { id: uuid(), label: "Cleaned car", lastDone: "" },
@@ -318,22 +362,11 @@ function welcomeDefaultsIfEmpty() {
     ];
   }
 
-  // Goals
-  if (!state.trackerGoals) {
-    state.trackerGoals = {
-      water: 8,
-      steps: 6000,
-      repsTotal: 100
-    };
-  } else {
-    if (state.trackerGoals.water == null) state.trackerGoals.water = 8;
-    if (state.trackerGoals.steps == null) state.trackerGoals.steps = 6000;
-    if (state.trackerGoals.repsTotal == null) state.trackerGoals.repsTotal = 100;
-  }
-
   if (!state.celebration) {
     state.celebration = { movementWin: false };
   }
+
+  updateRepsFromWorkouts();
 }
 
 // === FIRESTORE LOAD / SAVE ===
@@ -349,7 +382,7 @@ async function loadDayFromFirestore() {
   }
 
   generateTasksFromContext();
-  welcomeDefaultsIfEmpty();
+  ensureDefaults();
 }
 
 async function saveDayToFirestore() {
@@ -522,10 +555,13 @@ function generateTasksFromContext() {
   });
 
   // ----- BEDTIME / PM MUST-DO -----
-  blockTasks.push({ label: "Brush teeth", block: "bedtime" });
-  blockTasks.push({ label: "Floss", block: "bedtime" });
-  blockTasks.push({ label: "Wash face", block: "bedtime" });
-  blockTasks.push({ label: "Water bottle & lunch dishes in dishwasher", block: "bedtime" });
+  blockTasks.push({ label: "Brush teeth (PM)", block: "bedtime" });
+  blockTasks.push({ label: "Floss (PM)", block: "bedtime" });
+  blockTasks.push({ label: "Wash face (PM)", block: "bedtime" });
+  blockTasks.push({
+    label: "Water bottle & lunch dishes in dishwasher",
+    block: "bedtime"
+  });
 
   blockTasks.push({
     label: "Wind-down routine (no scrolling last 15 mins)",
@@ -544,7 +580,7 @@ function generateTasksFromContext() {
     });
   });
 
-  // Letter-day class schedule → appointments
+  // Letter-day class schedule → appointments (skip "NONE")
   const letter = state.context.letterDay;
   if (letter && SCHEDULE_BY_LETTER_DAY[letter]) {
     SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
@@ -667,86 +703,83 @@ function renderParkingLot() {
   });
 }
 
-function renderHabits() {
-  habitListEl.innerHTML = "";
-  state.habits.forEach((habit) => {
-    const row = document.createElement("div");
-    row.className = "habit-row";
-
-    const cb = document.createElement("input");
-    cb.type = "checkbox";
-    cb.checked = habit.done;
-    cb.addEventListener("change", () => {
-      habit.done = cb.checked;
-      saveDayToFirestore();
-      renderWaterAndSteps(); // update celebration when habits change
-    });
-
-    const label = document.createElement("span");
-    label.textContent = habit.label;
-
-    row.appendChild(cb);
-    row.appendChild(label);
-    habitListEl.appendChild(row);
-  });
+// Trackers "like water cup"
+function setMetric(value, goal, countEl, goalEl) {
+  if (countEl) countEl.textContent = value ?? 0;
+  if (goalEl && goal != null) goalEl.value = goal;
 }
 
-function getTotalRepsToday() {
-  if (!Array.isArray(state.workouts)) return 0;
-  return state.workouts.reduce((sum, w) => {
-    const r = parseInt(w.reps || 0, 10);
-    return sum + (isNaN(r) ? 0 : r);
-  }, 0);
+function setWinPillState(pillId, current, goal) {
+  const pill = document.getElementById(pillId);
+  if (!pill) return;
+  pill.classList.remove("empty", "partial", "done");
+
+  if (!goal || current === 0) {
+    pill.classList.add("empty");
+  } else if (current >= goal) {
+    pill.classList.add("done");
+  } else {
+    pill.classList.add("partial");
+  }
 }
 
-function renderWaterAndSteps() {
-  waterCountEl.textContent = state.water || 0;
-  stepCountInput.value = state.steps || 0;
+function renderTrackers() {
+  const m = state.metrics;
+  const g = state.trackerGoals;
 
-  // goals
-  if (waterGoalInput) {
-    waterGoalInput.value =
-      state.trackerGoals && state.trackerGoals.water != null
-        ? state.trackerGoals.water
-        : 8;
-  }
+  // Main metric rows
+  setMetric(m.water, g.water, waterCountEl, waterGoalInput);
+  setMetric(m.steps, g.steps, stepCountEl, stepGoalInput);
+  setMetric(m.stretch, g.stretch, stretchCountEl, stretchGoalInput);
+  setMetric(m.meditate, g.meditate, medCountEl, medGoalInput);
+  setMetric(m.reps, g.reps, repsCountEl, repsGoalInput);
 
-  if (stepGoalInput) {
-    stepGoalInput.value =
-      state.trackerGoals && state.trackerGoals.steps != null
-        ? state.trackerGoals.steps
-        : 6000;
-  }
+  // Daily wins values
+  const winWaterValue = document.getElementById("winWaterValue");
+  const winWaterGoal = document.getElementById("winWaterGoal");
+  const winStepsValue = document.getElementById("winStepsValue");
+  const winStepsGoal = document.getElementById("winStepsGoal");
+  const winStretchValue = document.getElementById("winStretchValue");
+  const winStretchGoal = document.getElementById("winStretchGoal");
+  const winRepsValue = document.getElementById("winRepsValue");
+  const winRepsGoal = document.getElementById("winRepsGoal");
+  const winMedValue = document.getElementById("winMedValue");
+  const winMedGoal = document.getElementById("winMedGoal");
 
-  if (repsGoalInput) {
-    repsGoalInput.value =
-      state.trackerGoals && state.trackerGoals.repsTotal != null
-        ? state.trackerGoals.repsTotal
-        : 100;
-  }
+  if (winWaterValue) winWaterValue.textContent = m.water ?? 0;
+  if (winWaterGoal) winWaterGoal.textContent = g.water ?? 0;
 
-  // total reps
-  const totalReps = getTotalRepsToday();
-  if (repsTotalDisplay) {
-    repsTotalDisplay.textContent = totalReps;
-  }
+  if (winStepsValue) winStepsValue.textContent = m.steps ?? 0;
+  if (winStepsGoal) winStepsGoal.textContent = g.steps ?? 0;
 
-  // goal checks
-  const waterGoal = state.trackerGoals?.water ?? 0;
-  const stepGoal = state.trackerGoals?.steps ?? 0;
-  const repsGoal = state.trackerGoals?.repsTotal ?? 0;
+  if (winStretchValue) winStretchValue.textContent = m.stretch ?? 0;
+  if (winStretchGoal) winStretchGoal.textContent = g.stretch ?? 0;
 
-  const waterHit = waterGoal > 0 && state.water >= waterGoal;
-  const stepsHit = stepGoal > 0 && state.steps >= stepGoal;
-  const repsHit = repsGoal > 0 && totalReps >= repsGoal;
-  const allHabitsDone =
-    state.habits.length > 0 && state.habits.every((h) => h.done);
+  if (winRepsValue) winRepsValue.textContent = m.reps ?? 0;
+  if (winRepsGoal) winRepsGoal.textContent = g.reps ?? 0;
 
-  const movementWin = waterHit && stepsHit && repsHit && allHabitsDone;
-  state.celebration.movementWin = movementWin;
+  if (winMedValue) winMedValue.textContent = m.meditate ?? 0;
+  if (winMedGoal) winMedGoal.textContent = g.meditate ?? 0;
+
+  // Pill states
+  setWinPillState("winWater", m.water, g.water);
+  setWinPillState("winSteps", m.steps, g.steps);
+  setWinPillState("winStretch", m.stretch, g.stretch);
+  setWinPillState("winReps", m.reps, g.reps);
+  setWinPillState("winMeditate", m.meditate, g.meditate);
+
+  // Movement win: all metrics hit their goals
+  const waterHit = g.water > 0 && m.water >= g.water;
+  const stepsHit = g.steps > 0 && m.steps >= g.steps;
+  const stretchHit = g.stretch > 0 && m.stretch >= g.stretch;
+  const medHit = g.meditate > 0 && m.meditate >= g.meditate;
+  const repsHit = g.reps > 0 && m.reps >= g.reps;
+
+  const win = waterHit && stepsHit && stretchHit && medHit && repsHit;
+  state.celebration.movementWin = win;
 
   if (movementWinBanner) {
-    movementWinBanner.classList.toggle("show", movementWin);
+    movementWinBanner.classList.toggle("show", win);
   }
 }
 
@@ -777,31 +810,56 @@ function renderWorkouts() {
     });
     weightTd.appendChild(weightInput);
 
-    // Reps
+    // Reps controls (like water cup)
     const repsTd = document.createElement("td");
-    const repsInput = document.createElement("input");
-    repsInput.type = "number";
-    repsInput.min = "0";
-    repsInput.step = "1";
-    repsInput.value = w.reps != null ? w.reps : 0;
-    repsInput.addEventListener("input", () => {
-      const val = parseInt(repsInput.value || "0", 10);
-      w.reps = isNaN(val) ? 0 : val;
-      saveDayToFirestore();
-      renderWaterAndSteps();
-    });
-    repsTd.appendChild(repsInput);
+    const repsControls = document.createElement("div");
+    repsControls.className = "workout-reps-controls";
 
-    // Notes
-    const notesTd = document.createElement("td");
-    const notesInput = document.createElement("input");
-    notesInput.type = "text";
-    notesInput.value = w.notes || "";
-    notesInput.addEventListener("input", () => {
-      w.notes = notesInput.value;
-      saveDayToFirestore();
+    const minusBtn = document.createElement("button");
+    minusBtn.type = "button";
+    minusBtn.className = "circle-btn";
+    minusBtn.textContent = "−";
+
+    const repsSpan = document.createElement("span");
+    repsSpan.className = "big-number";
+    repsSpan.style.fontSize = "0.85rem";
+    repsSpan.textContent = w.reps ?? 0;
+
+    const plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.className = "circle-btn";
+    plusBtn.textContent = "+";
+
+    minusBtn.addEventListener("click", async () => {
+      const current = parseInt(w.reps || 0, 10);
+      w.reps = Math.max(0, isNaN(current) ? 0 : current - 5);
+      updateRepsFromWorkouts();
+      await saveDayToFirestore();
+      renderWorkouts();
+      renderTrackers();
     });
-    notesTd.appendChild(notesInput);
+
+    plusBtn.addEventListener("click", async () => {
+      const current = parseInt(w.reps || 0, 10);
+      w.reps = (isNaN(current) ? 0 : current) + 5;
+      updateRepsFromWorkouts();
+      await saveDayToFirestore();
+      renderWorkouts();
+      renderTrackers();
+    });
+
+    repsControls.appendChild(minusBtn);
+    repsControls.appendChild(repsSpan);
+    repsControls.appendChild(plusBtn);
+    repsTd.appendChild(repsControls);
+
+    // Goal (fixed 30 reps)
+    const goalTd = document.createElement("td");
+    const goalPill = document.createElement("div");
+    goalPill.className = "workout-goal-pill";
+    const goalVal = w.goal != null ? w.goal : 30;
+    goalPill.textContent = `${goalVal} reps`;
+    goalTd.appendChild(goalPill);
 
     // Remove
     const removeTd = document.createElement("td");
@@ -809,18 +867,19 @@ function renderWorkouts() {
     removeBtn.type = "button";
     removeBtn.textContent = "×";
     removeBtn.className = "tiny-btn";
-    removeBtn.addEventListener("click", () => {
+    removeBtn.addEventListener("click", async () => {
       state.workouts.splice(idx, 1);
-      saveDayToFirestore();
+      updateRepsFromWorkouts();
+      await saveDayToFirestore();
       renderWorkouts();
-      renderWaterAndSteps();
+      renderTrackers();
     });
     removeTd.appendChild(removeBtn);
 
     tr.appendChild(moveTd);
     tr.appendChild(weightTd);
     tr.appendChild(repsTd);
-    tr.appendChild(notesTd);
+    tr.appendChild(goalTd);
     tr.appendChild(removeTd);
 
     workoutBody.appendChild(tr);
@@ -890,8 +949,7 @@ function renderAll() {
   updateDaySummary();
   renderTasksAndAppointments();
   renderParkingLot();
-  renderHabits();
-  renderWaterAndSteps();
+  renderTrackers();
   renderWorkouts();
   renderLastTimeList();
   renderNote();
@@ -931,72 +989,107 @@ addParkingBtn.addEventListener("click", async () => {
   renderParkingLot();
 });
 
-// Habits
-addHabitBtn.addEventListener("click", async () => {
-  const text = newHabitTextInput.value.trim();
-  if (!text) return;
-  state.habits.push({ id: uuid(), label: text, done: false });
-  newHabitTextInput.value = "";
-  await saveDayToFirestore();
-  renderHabits();
-});
-
-// Water / steps
+// Trackers: water-style controls
 waterPlusBtn.addEventListener("click", async () => {
-  state.water = (state.water || 0) + 1;
+  state.metrics.water = (state.metrics.water || 0) + 1;
   await saveDayToFirestore();
-  renderWaterAndSteps();
+  renderTrackers();
 });
 
 waterMinusBtn.addEventListener("click", async () => {
-  state.water = Math.max(0, (state.water || 0) - 1);
+  state.metrics.water = Math.max(0, (state.metrics.water || 0) - 1);
   await saveDayToFirestore();
-  renderWaterAndSteps();
+  renderTrackers();
 });
 
-stepCountInput.addEventListener("input", () => {
-  state.steps = parseInt(stepCountInput.value || "0", 10);
+stepPlusBtn.addEventListener("click", async () => {
+  state.metrics.steps = (state.metrics.steps || 0) + 500;
+  await saveDayToFirestore();
+  renderTrackers();
+});
+
+stepMinusBtn.addEventListener("click", async () => {
+  state.metrics.steps = Math.max(0, (state.metrics.steps || 0) - 500);
+  await saveDayToFirestore();
+  renderTrackers();
+});
+
+stretchPlusBtn.addEventListener("click", async () => {
+  state.metrics.stretch = (state.metrics.stretch || 0) + 5;
+  await saveDayToFirestore();
+  renderTrackers();
+});
+
+stretchMinusBtn.addEventListener("click", async () => {
+  state.metrics.stretch = Math.max(0, (state.metrics.stretch || 0) - 5);
+  await saveDayToFirestore();
+  renderTrackers();
+});
+
+medPlusBtn.addEventListener("click", async () => {
+  state.metrics.meditate = (state.metrics.meditate || 0) + 5;
+  await saveDayToFirestore();
+  renderTrackers();
+});
+
+medMinusBtn.addEventListener("click", async () => {
+  state.metrics.meditate = Math.max(0, (state.metrics.meditate || 0) - 5);
+  await saveDayToFirestore();
+  renderTrackers();
+});
+
+// Goals inputs
+waterGoalInput.addEventListener("input", () => {
+  const v = parseInt(waterGoalInput.value || "0", 10);
+  state.trackerGoals.water = isNaN(v) ? 0 : v;
   saveDayToFirestore();
-  renderWaterAndSteps();
+  renderTrackers();
 });
 
-// Goal inputs
-if (waterGoalInput) {
-  waterGoalInput.addEventListener("input", () => {
-    const v = parseInt(waterGoalInput.value || "0", 10);
-    if (!state.trackerGoals) state.trackerGoals = {};
-    state.trackerGoals.water = isNaN(v) ? 0 : v;
-    saveDayToFirestore();
-    renderWaterAndSteps();
-  });
-}
+stepGoalInput.addEventListener("input", () => {
+  const v = parseInt(stepGoalInput.value || "0", 10);
+  state.trackerGoals.steps = isNaN(v) ? 0 : v;
+  saveDayToFirestore();
+  renderTrackers();
+});
 
-if (stepGoalInput) {
-  stepGoalInput.addEventListener("input", () => {
-    const v = parseInt(stepGoalInput.value || "0", 10);
-    if (!state.trackerGoals) state.trackerGoals = {};
-    state.trackerGoals.steps = isNaN(v) ? 0 : v;
-    saveDayToFirestore();
-    renderWaterAndSteps();
-  });
-}
+stretchGoalInput.addEventListener("input", () => {
+  const v = parseInt(stretchGoalInput.value || "0", 10);
+  state.trackerGoals.stretch = isNaN(v) ? 0 : v;
+  saveDayToFirestore();
+  renderTrackers();
+});
 
-if (repsGoalInput) {
-  repsGoalInput.addEventListener("input", () => {
-    const v = parseInt(repsGoalInput.value || "0", 10);
-    if (!state.trackerGoals) state.trackerGoals = {};
-    state.trackerGoals.repsTotal = isNaN(v) ? 0 : v;
-    saveDayToFirestore();
-    renderWaterAndSteps();
-  });
-}
+medGoalInput.addEventListener("input", () => {
+  const v = parseInt(medGoalInput.value || "0", 10);
+  state.trackerGoals.meditate = isNaN(v) ? 0 : v;
+  saveDayToFirestore();
+  renderTrackers();
+});
+
+repsGoalInput.addEventListener("input", () => {
+  const v = parseInt(repsGoalInput.value || "0", 10);
+  state.trackerGoals.reps = isNaN(v) ? 0 : v;
+  saveDayToFirestore();
+  renderTrackers();
+});
 
 // Workouts
 addWorkoutRowBtn.addEventListener("click", async () => {
-  state.workouts.push({ id: uuid(), move: "", weight: "", reps: 0, notes: "" });
+  const text = newWorkoutMoveInput.value.trim();
+  const label = text || "New move";
+  state.workouts.push({
+    id: uuid(),
+    move: label,
+    weight: "",
+    reps: 0,
+    goal: 30
+  });
+  newWorkoutMoveInput.value = "";
+  updateRepsFromWorkouts();
   await saveDayToFirestore();
   renderWorkouts();
-  renderWaterAndSteps();
+  renderTrackers();
 });
 
 // Last time I...
