@@ -64,24 +64,23 @@ const SCHEDULE_BY_LETTER_DAY = {
     { time24: "09:05", title: "4th Rosenthal" },
     { time24: "10:05", title: "2nd Peterson" },
     { time24: "11:05", title: "3rd Hossain" },
-    { time24: "13:45", title: "5th Ultimo" },
+    { time24: "13:45", title: "5th Altruismo" },
     { time24: "14:45", title: "1st Rogers" }
   ],
   B: [
     { time24: "09:05", title: "4th Cavello" },
     { time24: "10:05", title: "2nd Schmidt" },
-    { time24: "11:05", title: "Admin" },
     { time24: "13:45", title: "5th Isibindi" }
   ],
   C: [
-    { time24: "09:05", title: "Admin" },
+    { time24: "08:45", title: "AM Duty" },
     { time24: "10:05", title: "2nd Adams" },
     { time24: "11:05", title: "3rd Pulsa" },
     { time24: "13:45", title: "5th Amistad" }
   ],
   D: [
-    { time24: "12:45", title: "Prep" },
-    { time24: "13:45", title: "Prep" },
+    { time24: "09:20", title: "HC 5th Green" },
+    { time24: "10:05", title: "HC 1st Green" },
     { time24: "14:45", title: "1st Wilson" }
   ],
   E: [
@@ -232,18 +231,73 @@ function blockForTime(time24) {
   return "bedtime";                                // 21:00+
 }
 
+function isWeekday() {
+  const d = state.context.dayOfWeek;
+  return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(d);
+}
+
 function welcomeDefaultsIfEmpty() {
+  // Default habits (in tracker card)
   if (!state.habits.length) {
     state.habits = [
-      { id: uuid(), label: "Take meds", done: false },
-      { id: uuid(), label: "Check school email", done: false },
-      { id: uuid(), label: "Tidy 5 minutes", done: false }
+      { id: uuid(), label: "Water", done: false },
+      { id: uuid(), label: "Steps", done: false },
+      { id: uuid(), label: "Stretching", done: false },
+      { id: uuid(), label: "Meditate", done: false }
     ];
   }
+
+  // Default workouts (weight lifting tracker)
+  if (!state.workouts.length) {
+    const defaultMoves = [
+      "front lift - shoulders",
+      "side lift - shoulders",
+      "reverse flys - shoulders",
+      "press - chest",
+      "fly - chest",
+      "push ups",
+      "heel taps - abs",
+      "hip bridge - abs",
+      "bird dog - abs",
+      "dead bug - abs",
+      "cat cow - abs",
+      "squats",
+      "alternating reverse lunges",
+      "sumo squats",
+      "Alt side squats",
+      "RDL right",
+      "RDL left",
+      "Calf Raises",
+      "wide row / rows - back",
+      "pull down - back",
+      "face pulls - back",
+      "bicep curls",
+      "hammer curls",
+      "tricep kickbacks right",
+      "tricep kickbacks left",
+      "skull crushers"
+    ];
+    state.workouts = defaultMoves.map(m => ({
+      id: uuid(),
+      move: m,
+      weight: "",
+      notes: ""
+    }));
+  }
+
+  // "When was the last time I..."
   if (!state.lastTimeItems.length) {
     state.lastTimeItems = [
       { id: uuid(), label: "Changed sheets", lastDone: todayDateKey() },
-      { id: uuid(), label: "Cleaned car", lastDone: "" }
+      { id: uuid(), label: "Cleaned car", lastDone: "" },
+      { id: uuid(), label: "Shaved my armpits", lastDone: "" },
+      { id: uuid(), label: "Cleaned eyebrows", lastDone: "" },
+      { id: uuid(), label: "Shaved lips", lastDone: "" },
+      { id: uuid(), label: "Shaved 🐱", lastDone: "" },
+      { id: uuid(), label: "Washed hair", lastDone: "" },
+      { id: uuid(), label: "Shaved legs", lastDone: "" },
+      { id: uuid(), label: "Toenails", lastDone: "" },
+      { id: uuid(), label: "Nails", lastDone: "" }
     ];
   }
 }
@@ -342,17 +396,50 @@ function generateTasksFromContext() {
 
   const blockTasks = [];
 
-  // Morning
+  // ----- MORNING -----
   blockTasks.push({
     label: "Check dashboard & pick top 3 priorities",
     block: "morning"
   });
-  if (state.context.daycareDay) {
-    blockTasks.push({ label: "Pack daycare bag", block: "morning" });
+
+  // AM Must-Do
+  blockTasks.push({ label: "Switch dishwasher", block: "morning" });
+  blockTasks.push({ label: "Clean glasses", block: "morning" });
+  blockTasks.push({ label: "Deodorant", block: "morning" });
+  blockTasks.push({ label: "Eat breakfast", block: "morning" });
+  blockTasks.push({ label: "Levothyroxine", block: "morning" });
+  blockTasks.push({ label: "Brush teeth (AM)", block: "morning" });
+  blockTasks.push({ label: "Floss (AM)", block: "morning" });
+  blockTasks.push({ label: "Get dressed", block: "morning" });
+  blockTasks.push({ label: "Wash face (AM)", block: "morning" });
+  blockTasks.push({ label: "Style hair", block: "morning" });
+  blockTasks.push({ label: "Feed cat & refresh water", block: "morning" });
+
+  if (isWeekday()) {
+    blockTasks.push({ label: "Fill water bottle", block: "morning" });
+    blockTasks.push({ label: "Pack lunch", block: "morning" });
+    blockTasks.push({ label: "Pack school bag", block: "morning" });
   }
+
+  if (state.context.daycareDay) {
+    blockTasks.push({ label: "Lincoln diaper changed", block: "morning" });
+    blockTasks.push({ label: "Lincoln bottle prepped", block: "morning" });
+    blockTasks.push({ label: "Daycare bag packed", block: "morning" });
+    blockTasks.push({ label: "Daycare notebook filled out", block: "morning" });
+  }
+
+  // Old generic morning tasks
   blockTasks.push({ label: "Take meds", block: "morning" });
 
-  // Work open
+  // ----- WORK OPEN -----
+  blockTasks.push({ label: "Projector on", block: "workOpen" });
+  blockTasks.push({ label: "Lunch in fridge", block: "workOpen" });
+  blockTasks.push({
+    label: "Sign into laptops & pull up Destiny",
+    block: "workOpen"
+  });
+  blockTasks.push({ label: "Name tags out", block: "workOpen" });
+
   blockTasks.push({
     label: "Open email / calendar, skim for surprises",
     block: "workOpen"
@@ -362,13 +449,21 @@ function generateTasksFromContext() {
     block: "workOpen"
   });
 
-  // Midday
+  // ----- MIDDAY -----
   blockTasks.push({
     label: "Midday reset (5-min tidy / water / stretch)",
     block: "midday"
   });
 
-  // Work close
+  // ----- WORK CLOSE -----
+  blockTasks.push({ label: "Sign out / projector off", block: "workClose" });
+  blockTasks.push({ label: "Collect name tags", block: "workClose" });
+  blockTasks.push({
+    label: "5 minutes classroom straighten",
+    block: "workClose"
+  });
+  blockTasks.push({ label: "Clear desk", block: "workClose" });
+
   blockTasks.push({
     label: "Look at tomorrow’s letter day",
     block: "workClose"
@@ -378,7 +473,7 @@ function generateTasksFromContext() {
     block: "workClose"
   });
 
-  // Evening
+  // ----- EVENING / ARRIVE HOME -----
   if (state.context.therapyTonight) {
     blockTasks.push({
       label: "Prep notes & questions for therapy",
@@ -390,12 +485,22 @@ function generateTasksFromContext() {
     block: "evening"
   });
 
-  // Bedtime
+  // ----- BEDTIME / PM MUST-DO -----
+  blockTasks.push({ label: "Brush teeth (PM)", block: "bedtime" });
+  blockTasks.push({ label: "Floss (PM)", block: "bedtime" });
+  blockTasks.push({ label: "Wash face (PM)", block: "bedtime" });
+  blockTasks.push({
+    label: "Water bottle & lunch dishes in dishwasher",
+    block: "bedtime"
+  });
+
+  // Wind-down
   blockTasks.push({
     label: "Wind-down routine (no scrolling last 15 mins)",
     block: "bedtime"
   });
 
+  // Push all auto tasks into state
   blockTasks.forEach((t) => {
     state.tasks.push({
       id: uuid(),
