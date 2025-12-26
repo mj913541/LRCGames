@@ -1,1158 +1,842 @@
 // LRCGames/plannerDashboard/dashboard.js
-import {
-  initializeApp
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import {
-  getAuth,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  setDoc
-} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+// Simple, localStorage-based planner dashboard logic
 
-/**
- * FIREBASE INIT
- */
-const firebaseConfig = {
-  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
-  authDomain: "lrcquest-3039e.firebaseapp.com",
-  projectId: "lrcquest-3039e",
-  storageBucket: "lrcquest-3039e.firebasestorage.app",
-  messagingSenderId: "72063656342",
-  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
-  measurementId: "G-5VXRYJ733C"
-};
+const STORAGE_KEY = "plannerDashboard_v1";
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Only allow these emails
-const ALLOWED_EMAILS = [
-  "malbrecht@sd308.org",
-  "malbrecht3317@gmail.com"
+const TIME_BLOCKS = [
+  { id: "morning", label: "🌅 Morning" },
+  { id: "workOpen", label: "🏫 Work open" },
+  { id: "midday", label: "🌤 Midday" },
+  { id: "workClose", label: "🏁 Work close" },
+  { id: "evening", label: "🏠 Arrive home" },
+  { id: "bedtime", label: "🌙 Bedtime" },
 ];
 
-// Simple helper to format YYYY-MM-DD
-function todayDateKey() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function dateKeyFromInput(inputEl) {
-  return inputEl.value;
-}
-
-// Map time-of-day blocks
-const TIME_BLOCK_LABELS = {
-  morning: "Morning",
-  workOpen: "Work open",
-  midday: "Midday",
-  workClose: "Work close",
-  evening: "Arrive home",
-  bedtime: "Bedtime"
-};
-
-// SCHOOL LETTER DAY SCHEDULE (24-hr times for correct ordering)
-const SCHEDULE_BY_LETTER_DAY = {
-  A: [
-    { time24: "09:05", title: "4th Rosenthal" },
-    { time24: "10:05", title: "2nd Peterson" },
-    { time24: "11:05", title: "3rd Hossain" },
-    { time24: "13:45", title: "5th Altruismo" },
-    { time24: "14:45", title: "1st Rogers" }
-  ],
-  B: [
-    { time24: "09:05", title: "4th Cavello" },
-    { time24: "10:05", title: "2nd Schmidt" },
-    { time24: "13:45", title: "5th Isibindi" }
-  ],
-  C: [
-    { time24: "08:45", title: "AM Duty" },
-    { time24: "10:05", title: "2nd Adams" },
-    { time24: "11:05", title: "3rd Pulsa" },
-    { time24: "13:45", title: "5th Amistad" }
-  ],
-  D: [
-    { time24: "09:20", title: "HC 5th Green" },
-    { time24: "10:05", title: "HC 1st Green" },
-    { time24: "14:45", title: "1st Wilson" }
-  ],
-  E: [
-    { time24: "09:05", title: "4th Tomter" },
-    { time24: "11:05", title: "3rd Carroll" },
-    { time24: "13:45", title: "5th Reveur" },
-    { time24: "14:45", title: "1st Day" }
-  ]
-};
-
-// === STATE ===
-let currentUser = null;
-let currentDateKey = todayDateKey();
-
-let state = {
+// Base shape of state
+const DEFAULT_STATE = {
   context: {
     dayOfWeek: "",
     letterDay: "",
-    daycareDay: false,
-    therapyTonight: false
+    daycare: "no",
+    therapy: "no",
+    planDate: "",
   },
-  tasks: [],          // { id, label, block, type: 'task'|'appointment', time24?, completed, auto? }
-  parkingLot: [],     // strings
-  metrics: {          // all trackers "like the water cup"
-    water: 0,
-    steps: 0,
-    stretch: 0,
-    meditate: 0,
-    reps: 0          // computed from workouts
+  tasks: TIME_BLOCKS.reduce((acc, b) => {
+    acc[b.id] = [];
+    return acc;
+  }, {}),
+  parking: [],
+  lastTime: [],
+  trackers: {
+    // daily ones
+    water: { count: 0, goal: 8 },
+    steps: { count: 0, goal: 6000 },
+    med: { count: 0, goal: 10 },
+    stretch: { count: 0, goal: 10 },
+    // reps exercises (all default 0 / 30)
+    frontLifts: { count: 0, goal: 30 },
+    sideLifts: { count: 0, goal: 30 },
+    reverseFlys: { count: 0, goal: 30 },
+    pressChest: { count: 0, goal: 30 },
+    flyChest: { count: 0, goal: 30 },
+    pushUps: { count: 0, goal: 30 },
+    heelTapsAbs: { count: 0, goal: 30 },
+    hipBridgeAbs: { count: 0, goal: 30 },
+    birdDogAbs: { count: 0, goal: 30 },
+    deadBugAbs: { count: 0, goal: 30 },
+    catCowAbs: { count: 0, goal: 30 },
+    squats: { count: 0, goal: 30 },
+    alternatingReverseLunges: { count: 0, goal: 30 },
+    sumoSquats: { count: 0, goal: 30 },
+    altSideSquats: { count: 0, goal: 30 },
+    rdlRight: { count: 0, goal: 30 },
+    rdlLeft: { count: 0, goal: 30 },
+    calfRaises: { count: 0, goal: 30 },
+    wideRowBack: { count: 0, goal: 30 },
+    pullDownBack: { count: 0, goal: 30 },
+    facePullsBack: { count: 0, goal: 30 },
+    bicepCurls: { count: 0, goal: 30 },
+    hammerCurls: { count: 0, goal: 30 },
+    tricepKickbacksRight: { count: 0, goal: 30 },
+    tricepKickbacksLeft: { count: 0, goal: 30 },
+    skullCrushers: { count: 0, goal: 30 },
   },
-  trackerGoals: {
-    water: 8,
-    steps: 6000,
-    stretch: 10,
-    meditate: 10,
-    reps: 100       // global daily reps goal (per-move goal is 30 below)
-  },
-  workouts: [],       // { id, move, weight, reps, goal }
-  lastTimeItems: [],  // { id, label, lastDone }
-  note: "",
-  celebration: {
-    movementWin: false
-  }
 };
 
-// === DOM REFS ===
-const daySummaryEl = document.getElementById("daySummary");
-const logoutBtn = document.getElementById("logoutBtn");
+let state = loadState();
 
-const contextForm = document.getElementById("contextForm");
-const dayOfWeekSelect = document.getElementById("dayOfWeek");
-const letterDaySelect = document.getElementById("letterDay");
-const daycareToggle = document.getElementById("daycareToggle");
-const therapyToggle = document.getElementById("therapyToggle");
-const planDateInput = document.getElementById("planDate");
-const reloadDayBtn = document.getElementById("reloadDayBtn");
+// ---------- Storage helpers ----------
 
-const hideCompletedTasksCheckbox = document.getElementById("hideCompletedTasks");
-const timelineContainer = document.getElementById("timelineContainer");
-const newTaskBlockSelect = document.getElementById("newTaskBlock");
-const newTaskTextInput = document.getElementById("newTaskText");
-const addTaskBtn = document.getElementById("addTaskBtn");
-
-const parkingListEl = document.getElementById("parkingList");
-const parkingInput = document.getElementById("parkingInput");
-const addParkingBtn = document.getElementById("addParkingBtn");
-
-// Trackers
-const waterMinusBtn = document.getElementById("waterMinus");
-const waterPlusBtn = document.getElementById("waterPlus");
-const waterCountEl = document.getElementById("waterCount");
-const waterGoalInput = document.getElementById("waterGoal");
-
-const stepMinusBtn = document.getElementById("stepMinus");
-const stepPlusBtn = document.getElementById("stepPlus");
-const stepCountEl = document.getElementById("stepCount");
-const stepGoalInput = document.getElementById("stepGoal");
-
-const stretchMinusBtn = document.getElementById("stretchMinus");
-const stretchPlusBtn = document.getElementById("stretchPlus");
-const stretchCountEl = document.getElementById("stretchCount");
-const stretchGoalInput = document.getElementById("stretchGoal");
-
-const medMinusBtn = document.getElementById("medMinus");
-const medPlusBtn = document.getElementById("medPlus");
-const medCountEl = document.getElementById("medCount");
-const medGoalInput = document.getElementById("medGoal");
-
-const repsCountEl = document.getElementById("repsCount");
-const repsGoalInput = document.getElementById("repsGoal");
-
-// Daily wins banner
-const movementWinBanner = document.getElementById("movementWinBanner");
-
-// Strength exercise metric container
-const exerciseMetricsEl = document.getElementById("exerciseMetrics");
-
-const lastTimeListEl = document.getElementById("lastTimeList");
-const newLastTimeTextInput = document.getElementById("newLastTimeText");
-const addLastTimeBtn = document.getElementById("addLastTimeBtn");
-
-const noteBox = document.getElementById("noteBox");
-
-// === AUTH ===
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    window.location.href = "../login.html";
-    return;
-  }
-
-  if (!ALLOWED_EMAILS.includes(user.email)) {
-    alert("This planner is only available to Mrs. A.");
-    await signOut(auth);
-    window.location.href = "../login.html";
-    return;
-  }
-
-  currentUser = user;
-
-  if (!planDateInput.value) {
-    planDateInput.value = todayDateKey();
-  }
-  currentDateKey = dateKeyFromInput(planDateInput);
-
-  await loadDayFromFirestore();
-  renderAll();
-});
-
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "../login.html";
-});
-
-// === HELPERS ===
-function uuid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-function formatTime12h(time24) {
-  if (!time24) return "";
-  const [hStr, mStr] = time24.split(":");
-  let h = parseInt(hStr, 10);
-  const m = mStr;
-  const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${h}:${m} ${ampm}`;
-}
-
-function daysBetween(dateKey) {
-  if (!dateKey) return null;
-  const parts = dateKey.split("-");
-  if (parts.length !== 3) return null;
-  const [y, m, d] = parts.map(Number);
-  const then = new Date(y, m - 1, d);
-  const now = new Date();
-  const diffMs = now - then;
-  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
-}
-
-function lastTimeColor(days) {
-  if (days === null) return "green";
-  if (days <= 2) return "green";
-  if (days <= 6) return "yellow";
-  return "red";
-}
-
-// Map a 24hr time to one of the blocks
-function blockForTime(time24) {
-  if (!time24) return "midday";
-  const [hStr, mStr] = time24.split(":");
-  const h = parseInt(hStr, 10);
-  const mins = h * 60 + parseInt(mStr, 10);
-
-  if (mins < 8 * 60) return "morning";              // before 8:00
-  if (mins < 11 * 60) return "workOpen";           // 9:00–10:59
-  if (mins < 13 * 60) return "midday";             // 11:00–12:59
-  if (mins < 16 * 60) return "workClose";          // 13:00–15:59
-  if (mins < 21 * 60) return "evening";            // 16:00–20:59
-  return "bedtime";                                // 21:00+
-}
-
-function isWeekday() {
-  const d = state.context.dayOfWeek;
-  return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(d);
-}
-
-// Compute total reps from workouts into metrics.reps
-function updateRepsFromWorkouts() {
-  const total = (state.workouts || []).reduce((sum, w) => {
-    const r = parseInt(w.reps || 0, 10);
-    return sum + (isNaN(r) ? 0 : r);
-  }, 0);
-  if (!state.metrics) state.metrics = {};
-  state.metrics.reps = total;
-}
-
-function ensureDefaults() {
-  if (!state.metrics) {
-    state.metrics = {
-      water: 0,
-      steps: 0,
-      stretch: 0,
-      meditate: 0,
-      reps: 0
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return structuredClone(DEFAULT_STATE);
+    const parsed = JSON.parse(raw);
+    // cheap merge to make sure new fields exist
+    return {
+      ...structuredClone(DEFAULT_STATE),
+      ...parsed,
+      context: { ...DEFAULT_STATE.context, ...(parsed.context || {}) },
+      tasks: { ...DEFAULT_STATE.tasks, ...(parsed.tasks || {}) },
+      parking: parsed.parking || [],
+      lastTime: parsed.lastTime || [],
+      trackers: { ...DEFAULT_STATE.trackers, ...(parsed.trackers || {}) },
     };
+  } catch (e) {
+    console.error("Error loading planner state:", e);
+    return structuredClone(DEFAULT_STATE);
   }
-
-  if (!state.trackerGoals) {
-    state.trackerGoals = {
-      water: 8,
-      steps: 6000,
-      stretch: 10,
-      meditate: 10,
-      reps: 100
-    };
-  } else {
-    if (state.trackerGoals.water == null) state.trackerGoals.water = 8;
-    if (state.trackerGoals.steps == null) state.trackerGoals.steps = 6000;
-    if (state.trackerGoals.stretch == null) state.trackerGoals.stretch = 10;
-    if (state.trackerGoals.meditate == null) state.trackerGoals.meditate = 10;
-    if (state.trackerGoals.reps == null) state.trackerGoals.reps = 100;
-  }
-
-  // Default exercises list (goal 30 reps each)
-  if (!state.workouts || !state.workouts.length) {
-    const defaultMoves = [
-      "front lift - shoulders",
-      "side lift - shoulders",
-      "reverse flys - shoulders",
-      "press - chest",
-      "fly - chest",
-      "push ups",
-      "heel taps - abs",
-      "hip bridge - abs",
-      "bird dog - abs",
-      "dead bug - abs",
-      "cat cow - abs",
-      "squats",
-      "alternating reverse lunges",
-      "sumo squats",
-      "Alt side squats",
-      "RDL right",
-      "RDL left",
-      "Calf Raises",
-      "wide row / rows - back",
-      "pull down - back",
-      "face pulls - back",
-      "bicep curls",
-      "hammer curls",
-      "tricep kickbacks right",
-      "tricep kickbacks left",
-      "skull crushers"
-    ];
-    state.workouts = defaultMoves.map((m) => ({
-      id: uuid(),
-      move: m,
-      weight: "",
-      reps: 0,
-      goal: 30
-    }));
-  }
-
-  if (!state.lastTimeItems || !state.lastTimeItems.length) {
-    state.lastTimeItems = [
-      { id: uuid(), label: "Changed sheets", lastDone: todayDateKey() },
-      { id: uuid(), label: "Cleaned car", lastDone: "" },
-      { id: uuid(), label: "Shaved my armpits", lastDone: "" },
-      { id: uuid(), label: "Cleaned eyebrows", lastDone: "" },
-      { id: uuid(), label: "Shaved lips", lastDone: "" },
-      { id: uuid(), label: "Shaved 🐱", lastDone: "" },
-      { id: uuid(), label: "Washed hair", lastDone: "" },
-      { id: uuid(), label: "Shaved legs", lastDone: "" },
-      { id: uuid(), label: "Toenails", lastDone: "" },
-      { id: uuid(), label: "Nails", lastDone: "" }
-    ];
-  }
-
-  if (!state.celebration) {
-    state.celebration = { movementWin: false };
-  }
-
-  updateRepsFromWorkouts();
 }
 
-// === FIRESTORE LOAD / SAVE ===
-async function loadDayFromFirestore() {
-  if (!currentUser || !currentDateKey) return;
-
-  const docRef = doc(db, "plannerDays", `${currentUser.uid}_${currentDateKey}`);
-  const snap = await getDoc(docRef);
-
-  if (snap.exists()) {
-    const data = snap.data() || {};
-    state = { ...state, ...data };
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error("Error saving planner state:", e);
   }
-
-  generateTasksFromContext();
-  ensureDefaults();
 }
 
-async function saveDayToFirestore() {
-  if (!currentUser || !currentDateKey) return;
-  const docRef = doc(db, "plannerDays", `${currentUser.uid}_${currentDateKey}`);
-  const payload = { ...state };
-  await setDoc(docRef, payload, { merge: true });
+// ---------- DOM helpers ----------
+
+function $(id) {
+  return document.getElementById(id);
 }
 
-// === CONTEXT HANDLERS ===
-function updateDaySummary() {
-  const parts = [];
-  if (state.context.dayOfWeek) parts.push(state.context.dayOfWeek);
+// ---------- Context + summary ----------
 
-  if (state.context.letterDay === "NONE") {
-    parts.push("No school");
-  } else if (state.context.letterDay) {
-    parts.push(`${state.context.letterDay} Day`);
-  }
+function initContextForm() {
+  const form = $("contextForm");
+  const dayOfWeek = $("dayOfWeek");
+  const letterDay = $("letterDay");
+  const planDate = $("planDate");
+  const daycareToggle = $("daycareToggle");
+  const therapyToggle = $("therapyToggle");
+  const reloadBtn = $("reloadDayBtn");
 
-  parts.push(state.context.daycareDay ? "Daycare ✓" : "No daycare");
-  parts.push(state.context.therapyTonight ? "Therapy tonight" : "No therapy");
-  parts.push(currentDateKey);
-  daySummaryEl.textContent = parts.join(" · ");
+  if (!form) return;
+
+  // hydrate form from state
+  dayOfWeek.value = state.context.dayOfWeek || "";
+  letterDay.value = state.context.letterDay || "";
+  planDate.value = state.context.planDate || "";
+
+  updateToggleButton(daycareToggle, state.context.daycare);
+  updateToggleButton(therapyToggle, state.context.therapy);
+  renderDaySummary();
+
+  daycareToggle.addEventListener("click", () => {
+    toggleBtnValue(daycareToggle);
+    state.context.daycare = daycareToggle.dataset.value;
+    saveState();
+    renderDaySummary();
+  });
+
+  therapyToggle.addEventListener("click", () => {
+    toggleBtnValue(therapyToggle);
+    state.context.therapy = therapyToggle.dataset.value;
+    saveState();
+    renderDaySummary();
+  });
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    state.context.dayOfWeek = dayOfWeek.value;
+    state.context.letterDay = letterDay.value;
+    state.context.planDate = planDate.value;
+    saveState();
+    renderDaySummary();
+  });
+
+  reloadBtn.addEventListener("click", () => {
+    const fresh = loadState();
+    state = fresh;
+    // rehydrate
+    dayOfWeek.value = state.context.dayOfWeek || "";
+    letterDay.value = state.context.letterDay || "";
+    planDate.value = state.context.planDate || "";
+    updateToggleButton(daycareToggle, state.context.daycare);
+    updateToggleButton(therapyToggle, state.context.therapy);
+    renderDaySummary();
+    renderTimeline();
+    renderParking();
+    renderLastTime();
+    hydrateTrackersDom();
+    updateMovementSummaryAndBanner();
+  });
 }
 
-function setToggle(btn, isOn) {
-  btn.dataset.value = isOn ? "yes" : "no";
-  if (isOn) {
-    btn.classList.add("is-on");
+function toggleBtnValue(btn) {
+  const current = btn.dataset.value === "yes" ? "no" : "yes";
+  updateToggleButton(btn, current);
+}
+
+function updateToggleButton(btn, value) {
+  btn.dataset.value = value;
+  if (value === "yes") {
+    btn.classList.add("toggle-on");
     btn.textContent = "Yes";
   } else {
-    btn.classList.remove("is-on");
+    btn.classList.remove("toggle-on");
     btn.textContent = "No";
   }
 }
 
-daycareToggle.addEventListener("click", () => {
-  const currentlyYes = daycareToggle.dataset.value === "yes";
-  setToggle(daycareToggle, !currentlyYes);
-  state.context.daycareDay = !currentlyYes;
-  generateTasksFromContext();
-  saveDayToFirestore();
-  renderTasksAndAppointments();
-});
+function renderDaySummary() {
+  const el = $("daySummary");
+  if (!el) return;
+  const { dayOfWeek, letterDay, daycare, therapy, planDate } = state.context;
 
-therapyToggle.addEventListener("click", () => {
-  const currentlyYes = therapyToggle.dataset.value === "yes";
-  setToggle(therapyToggle, !currentlyYes);
-  state.context.therapyTonight = !currentlyYes;
-  generateTasksFromContext();
-  saveDayToFirestore();
-  renderTasksAndAppointments();
-});
+  const bits = [];
+  if (dayOfWeek) bits.push(dayOfWeek);
+  if (letterDay) bits.push(letterDay === "NONE" ? "No school" : `${letterDay} Day`);
+  if (planDate) bits.push(planDate);
+  bits.push(`Daycare: ${daycare === "yes" ? "✅" : "❌"}`);
+  bits.push(`Therapy: ${therapy === "yes" ? "✅" : "❌"}`);
 
-contextForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  state.context.dayOfWeek = dayOfWeekSelect.value;
-  state.context.letterDay = letterDaySelect.value;
-  state.context.daycareDay = daycareToggle.dataset.value === "yes";
-  state.context.therapyTonight = therapyToggle.dataset.value === "yes";
-
-  currentDateKey = dateKeyFromInput(planDateInput);
-
-  generateTasksFromContext();
-  await saveDayToFirestore();
-  renderAll();
-});
-
-reloadDayBtn.addEventListener("click", async () => {
-  currentDateKey = dateKeyFromInput(planDateInput);
-  state.tasks = [];
-  await loadDayFromFirestore();
-  renderAll();
-});
-
-// === TASK / APPOINTMENT GENERATION ===
-function generateTasksFromContext() {
-  // Remove previous auto-generated tasks/appointments, keep manual ones
-  state.tasks = state.tasks.filter((t) => !t.auto);
-
-  const blockTasks = [];
-
-  // ----- MORNING -----
-  blockTasks.push({
-    label: "Check dashboard & pick top 3 priorities",
-    block: "morning"
-  });
-
-  // AM Must-Do
-  blockTasks.push({ label: "Switch dishwasher", block: "morning" });
-  blockTasks.push({ label: "Clean glasses", block: "morning" });
-  blockTasks.push({ label: "Deodorant", block: "morning" });
-  blockTasks.push({ label: "Eat breakfast", block: "morning" });
-  blockTasks.push({ label: "Levothyroxine", block: "morning" });
-  blockTasks.push({ label: "Brush teeth (AM)", block: "morning" });
-  blockTasks.push({ label: "Floss (AM)", block: "morning" });
-  blockTasks.push({ label: "Get dressed", block: "morning" });
-  blockTasks.push({ label: "Wash face (AM)", block: "morning" });
-  blockTasks.push({ label: "Style hair", block: "morning" });
-  blockTasks.push({ label: "Feed cat & refresh water", block: "morning" });
-
-  if (isWeekday()) {
-    blockTasks.push({ label: "Fill water bottle", block: "morning" });
-    blockTasks.push({ label: "Pack lunch", block: "morning" });
-    blockTasks.push({ label: "Pack school bag", block: "morning" });
-  }
-
-  if (state.context.daycareDay) {
-    blockTasks.push({ label: "Lincoln diaper changed", block: "morning" });
-    blockTasks.push({ label: "Lincoln bottle prepped", block: "morning" });
-    blockTasks.push({ label: "Daycare bag packed", block: "morning" });
-    blockTasks.push({ label: "Daycare notebook filled out", block: "morning" });
-  }
-
-  blockTasks.push({ label: "Take meds", block: "morning" });
-
-  // ----- WORK OPEN -----
-  blockTasks.push({ label: "Projector on", block: "workOpen" });
-  blockTasks.push({ label: "Lunch in fridge", block: "workOpen" });
-  blockTasks.push({
-    label: "Sign into laptops & pull up Destiny",
-    block: "workOpen"
-  });
-  blockTasks.push({ label: "Name tags out", block: "workOpen" });
-
-  blockTasks.push({
-    label: "Open email / calendar, skim for surprises",
-    block: "workOpen"
-  });
-  blockTasks.push({
-    label: "Prep first class of the day",
-    block: "workOpen"
-  });
-
-  // ----- MIDDAY -----
-  blockTasks.push({
-    label: "Midday reset (5-min tidy / water / stretch)",
-    block: "midday"
-  });
-
-  // ----- WORK CLOSE -----
-  blockTasks.push({ label: "Sign out / projector off", block: "workClose" });
-  blockTasks.push({ label: "Collect name tags", block: "workClose" });
-  blockTasks.push({
-    label: "5 minutes classroom straighten",
-    block: "workClose"
-  });
-  blockTasks.push({ label: "Clear desk", block: "workClose" });
-
-  blockTasks.push({
-    label: "Look at tomorrow’s letter day",
-    block: "workClose"
-  });
-  blockTasks.push({
-    label: "Stack materials for first class tomorrow",
-    block: "workClose"
-  });
-
-  // ----- EVENING -----
-  if (state.context.therapyTonight) {
-    blockTasks.push({
-      label: "Prep notes & questions for therapy",
-      block: "evening"
-    });
-  }
-  blockTasks.push({
-    label: "Lay out clothes for tomorrow",
-    block: "evening"
-  });
-
-  // ----- BEDTIME / PM MUST-DO -----
-  blockTasks.push({ label: "Brush teeth (PM)", block: "bedtime" });
-  blockTasks.push({ label: "Floss (PM)", block: "bedtime" });
-  blockTasks.push({ label: "Wash face (PM)", block: "bedtime" });
-  blockTasks.push({
-    label: "Water bottle & lunch dishes in dishwasher",
-    block: "bedtime"
-  });
-
-  blockTasks.push({
-    label: "Wind-down routine (no scrolling last 15 mins)",
-    block: "bedtime"
-  });
-
-  // Push auto tasks into state
-  blockTasks.forEach((t) => {
-    state.tasks.push({
-      id: uuid(),
-      label: t.label,
-      block: t.block,
-      type: "task",
-      completed: false,
-      auto: true
-    });
-  });
-
-  // Letter-day class schedule → appointments (skip "NONE")
-  const letter = state.context.letterDay;
-  if (letter && letter !== "NONE" && SCHEDULE_BY_LETTER_DAY[letter]) {
-    SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
-      state.tasks.push({
-        id: uuid(),
-        label: appt.title,
-        block: blockForTime(appt.time24),
-        time24: appt.time24,
-        type: "appointment",
-        completed: false,
-        auto: true
-      });
-    });
-  }
+  el.textContent = bits.join(" · ");
 }
 
-// === RENDER FUNCTIONS ===
-function renderTasksAndAppointments() {
-  timelineContainer.innerHTML = "";
+// ---------- Logout (stub) ----------
 
-  const hideCompleted = hideCompletedTasksCheckbox.checked;
-  const blocks = Object.keys(TIME_BLOCK_LABELS);
-
-  blocks.forEach((block) => {
-    const items = state.tasks
-      .filter((t) => t.block === block)
-      .sort((a, b) => {
-        const ta = a.time24 || "99:99";
-        const tb = b.time24 || "99:99";
-        return ta.localeCompare(tb);
-      });
-
-    if (!items.length) return;
-
-    const groupDiv = document.createElement("div");
-    groupDiv.className = "time-block-group";
-
-    const headerDiv = document.createElement("div");
-    headerDiv.className = "time-block-header";
-
-    const labelSpan = document.createElement("span");
-    labelSpan.className = "time-block-label";
-    labelSpan.textContent = TIME_BLOCK_LABELS[block];
-
-    const countSpan = document.createElement("span");
-    const total = items.length;
-    const done = items.filter((i) => i.completed).length;
-    countSpan.textContent = `${total - done}/${total} left`;
-
-    headerDiv.appendChild(labelSpan);
-    headerDiv.appendChild(countSpan);
-
-    const listDiv = document.createElement("div");
-    listDiv.className = "time-block-list";
-
-    items.forEach((item) => {
-      if (hideCompleted && item.completed) return;
-
-      const row = document.createElement("div");
-      row.className = "timeline-item";
-      if (item.completed) row.classList.add("completed");
-
-      const cb = document.createElement("input");
-      cb.type = "checkbox";
-      cb.checked = item.completed;
-      cb.addEventListener("change", () => {
-        item.completed = cb.checked;
-        saveDayToFirestore();
-        renderTasksAndAppointments();
-      });
-
-      const timeSpan = document.createElement("span");
-      timeSpan.className = "time";
-      timeSpan.textContent =
-        item.type === "appointment" && item.time24
-          ? formatTime12h(item.time24)
-          : "";
-
-      const titleSpan = document.createElement("span");
-      titleSpan.className = "title";
-      titleSpan.textContent = item.label;
-
-      const badgeSpan = document.createElement("span");
-      badgeSpan.className = "badge";
-      badgeSpan.textContent =
-        item.type === "appointment" ? "Class" : "Task";
-
-      row.appendChild(cb);
-      row.appendChild(timeSpan);
-      row.appendChild(titleSpan);
-      row.appendChild(badgeSpan);
-
-      listDiv.appendChild(row);
-    });
-
-    groupDiv.appendChild(headerDiv);
-    groupDiv.appendChild(listDiv);
-    timelineContainer.appendChild(groupDiv);
+function initLogout() {
+  const btn = $("logoutBtn");
+  if (!btn) return;
+  btn.addEventListener("click", () => {
+    // If you wire Firebase, replace this with signOut(...)
+    // For now, just clear state & reload
+    if (confirm("Sign out and clear saved planner data?")) {
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
   });
 }
 
-function renderParkingLot() {
-  parkingListEl.innerHTML = "";
-  state.parkingLot.forEach((text, index) => {
+// ---------- Timeline: merged tasks & appointments ----------
+
+function initTimeline() {
+  const addBtn = $("addTaskBtn");
+  const hideCompleted = $("hideCompletedTasks");
+  if (addBtn) {
+    addBtn.addEventListener("click", () => {
+      const blockSel = $("newTaskBlock");
+      const textInput = $("newTaskText");
+      const blockId = blockSel.value;
+      const text = textInput.value.trim();
+      if (!text) return;
+      const item = {
+        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        text,
+        done: false,
+      };
+      state.tasks[blockId].push(item);
+      textInput.value = "";
+      saveState();
+      renderTimeline();
+    });
+  }
+  if (hideCompleted) {
+    hideCompleted.addEventListener("change", () => {
+      renderTimeline();
+    });
+  }
+  renderTimeline();
+}
+
+function renderTimeline() {
+  const container = $("timelineContainer");
+  const hideCompleted = $("hideCompletedTasks")?.checked;
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  TIME_BLOCKS.forEach((block) => {
+    const wrapper = document.createElement("div");
+    wrapper.className = "time-block";
+
+    const header = document.createElement("div");
+    header.className = "time-block-header";
+    header.textContent = block.label;
+    wrapper.appendChild(header);
+
+    const list = document.createElement("div");
+    list.className = "time-block-list";
+
+    const items = state.tasks[block.id] || [];
+    items
+      .filter((item) => !(hideCompleted && item.done))
+      .forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "timeline-item";
+
+        const left = document.createElement("label");
+        left.className = "timeline-item-left";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = item.done;
+        checkbox.addEventListener("change", () => {
+          item.done = checkbox.checked;
+          saveState();
+          renderTimeline();
+        });
+
+        const span = document.createElement("span");
+        span.textContent = item.text;
+
+        left.appendChild(checkbox);
+        left.appendChild(span);
+
+        const delBtn = document.createElement("button");
+        delBtn.type = "button";
+        delBtn.className = "tiny-icon-btn";
+        delBtn.textContent = "✕";
+        delBtn.addEventListener("click", () => {
+          state.tasks[block.id] = state.tasks[block.id].filter((t) => t.id !== item.id);
+          saveState();
+          renderTimeline();
+        });
+
+        row.appendChild(left);
+        row.appendChild(delBtn);
+        list.appendChild(row);
+      });
+
+    wrapper.appendChild(list);
+    container.appendChild(wrapper);
+  });
+}
+
+// ---------- Parking lot ----------
+
+function initParkingLot() {
+  const addBtn = $("addParkingBtn");
+  const input = $("parkingInput");
+  if (!addBtn || !input) return;
+
+  addBtn.addEventListener("click", () => {
+    const text = input.value.trim();
+    if (!text) return;
+    state.parking.push({
+      id: Date.now().toString() + Math.random().toString(16).slice(2),
+      text,
+    });
+    input.value = "";
+    saveState();
+    renderParking();
+  });
+
+  renderParking();
+}
+
+function renderParking() {
+  const container = $("parkingList");
+  if (!container) return;
+  container.innerHTML = "";
+
+  state.parking.forEach((item) => {
     const pill = document.createElement("div");
-    pill.className = "pill";
-    pill.textContent = text;
+    pill.className = "pill-item";
 
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.textContent = "×";
-    removeBtn.addEventListener("click", () => {
-      state.parkingLot.splice(index, 1);
-      saveDayToFirestore();
-      renderParkingLot();
+    const span = document.createElement("span");
+    span.textContent = item.text;
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "tiny-icon-btn";
+    delBtn.textContent = "✕";
+    delBtn.addEventListener("click", () => {
+      state.parking = state.parking.filter((p) => p.id !== item.id);
+      saveState();
+      renderParking();
     });
 
-    pill.appendChild(removeBtn);
-    parkingListEl.appendChild(pill);
+    pill.appendChild(span);
+    pill.appendChild(delBtn);
+
+    container.appendChild(pill);
   });
 }
 
-// Trackers "like water cup"
-function setMetric(value, goal, countEl, goalEl) {
-  if (countEl) countEl.textContent = value ?? 0;
-  if (goalEl && goal != null) goalEl.value = goal;
-}
+// ---------- “When was the last time I…” ----------
 
-function setWinPillState(pillId, current, goal) {
-  const pill = document.getElementById(pillId);
-  if (!pill) return;
-  pill.classList.remove("empty", "partial", "done");
+function initLastTime() {
+  const addBtn = $("addLastTimeBtn");
+  const input = $("newLastTimeText");
+  if (!addBtn || !input) return;
 
-  if (!goal || current === 0) {
-    pill.classList.add("empty");
-  } else if (current >= goal) {
-    pill.classList.add("done");
-  } else {
-    pill.classList.add("partial");
-  }
-}
-
-function renderTrackers() {
-  const m = state.metrics;
-  const g = state.trackerGoals;
-
-  // Main metric rows
-  setMetric(m.water, g.water, waterCountEl, waterGoalInput);
-  setMetric(m.steps, g.steps, stepCountEl, stepGoalInput);
-  setMetric(m.stretch, g.stretch, stretchCountEl, stretchGoalInput);
-  setMetric(m.meditate, g.meditate, medCountEl, medGoalInput);
-  setMetric(m.reps, g.reps, repsCountEl, repsGoalInput);
-
-  // Daily wins values
-  const winWaterValue = document.getElementById("winWaterValue");
-  const winWaterGoal = document.getElementById("winWaterGoal");
-  const winStepsValue = document.getElementById("winStepsValue");
-  const winStepsGoal = document.getElementById("winStepsGoal");
-  const winStretchValue = document.getElementById("winStretchValue");
-  const winStretchGoal = document.getElementById("winStretchGoal");
-  const winRepsValue = document.getElementById("winRepsValue");
-  const winRepsGoal = document.getElementById("winRepsGoal");
-  const winMedValue = document.getElementById("winMedValue");
-  const winMedGoal = document.getElementById("winMedGoal");
-
-  if (winWaterValue) winWaterValue.textContent = m.water ?? 0;
-  if (winWaterGoal) winWaterGoal.textContent = g.water ?? 0;
-
-  if (winStepsValue) winStepsValue.textContent = m.steps ?? 0;
-  if (winStepsGoal) winStepsGoal.textContent = g.steps ?? 0;
-
-  if (winStretchValue) winStretchValue.textContent = m.stretch ?? 0;
-  if (winStretchGoal) winStretchGoal.textContent = g.stretch ?? 0;
-
-  if (winRepsValue) winRepsValue.textContent = m.reps ?? 0;
-  if (winRepsGoal) winRepsGoal.textContent = g.reps ?? 0;
-
-  if (winMedValue) winMedValue.textContent = m.meditate ?? 0;
-  if (winMedGoal) winMedGoal.textContent = g.meditate ?? 0;
-
-  // Pill states
-  setWinPillState("winWater", m.water, g.water);
-  setWinPillState("winSteps", m.steps, g.steps);
-  setWinPillState("winStretch", m.stretch, g.stretch);
-  setWinPillState("winReps", m.reps, g.reps);
-  setWinPillState("winMeditate", m.meditate, g.meditate);
-
-  // Movement win: all metrics hit their goals
-  const waterHit = g.water > 0 && m.water >= g.water;
-  const stepsHit = g.steps > 0 && m.steps >= g.steps;
-  const stretchHit = g.stretch > 0 && m.stretch >= g.stretch;
-  const medHit = g.meditate > 0 && m.meditate >= g.meditate;
-  const repsHit = g.reps > 0 && m.reps >= g.reps;
-
-  const win = waterHit && stepsHit && stretchHit && medHit && repsHit;
-  state.celebration.movementWin = win;
-
-  if (movementWinBanner) {
-    movementWinBanner.classList.toggle("show", win);
-  }
-}
-
-function renderWorkouts() {
-  if (!exerciseMetricsEl) return;
-  exerciseMetricsEl.innerHTML = "";
-
-  state.workouts.forEach((w, idx) => {
-    const row = document.createElement("div");
-    row.className = "metric-row";
-
-    // LEFT COLUMN: label + optional weight
-    const labelDiv = document.createElement("div");
-    labelDiv.className = "metric-label";
-
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = w.move || "Exercise";
-
-    const weightInput = document.createElement("input");
-    weightInput.type = "text";
-    weightInput.placeholder = "weight / band";
-    weightInput.value = w.weight || "";
-    weightInput.addEventListener("input", () => {
-      w.weight = weightInput.value;
-      saveDayToFirestore();
+  addBtn.addEventListener("click", () => {
+    const text = input.value.trim();
+    if (!text) return;
+    state.lastTime.push({
+      id: Date.now().toString() + Math.random().toString(16).slice(2),
+      text,
+      lastDone: null, // not yet done
     });
-
-    labelDiv.appendChild(nameSpan);
-    labelDiv.appendChild(weightInput);
-
-    // MIDDLE COLUMN: reps controls (like water)
-    const controlsDiv = document.createElement("div");
-    controlsDiv.className = "metric-controls";
-
-    const minusBtn = document.createElement("button");
-    minusBtn.type = "button";
-    minusBtn.className = "circle-btn";
-    minusBtn.textContent = "−";
-
-    const repsSpan = document.createElement("span");
-    repsSpan.className = "big-number";
-    repsSpan.style.fontSize = "1rem";
-    repsSpan.textContent = w.reps ?? 0;
-
-    const plusBtn = document.createElement("button");
-    plusBtn.type = "button";
-    plusBtn.className = "circle-btn";
-    plusBtn.textContent = "+";
-
-    minusBtn.addEventListener("click", async () => {
-      const current = parseInt(w.reps || 0, 10);
-      w.reps = Math.max(0, isNaN(current) ? 0 : current - 5);
-      updateRepsFromWorkouts();
-      await saveDayToFirestore();
-      renderWorkouts();
-      renderTrackers();
-    });
-
-    plusBtn.addEventListener("click", async () => {
-      const current = parseInt(w.reps || 0, 10);
-      w.reps = (isNaN(current) ? 0 : current) + 5;
-      updateRepsFromWorkouts();
-      await saveDayToFirestore();
-      renderWorkouts();
-      renderTrackers();
-    });
-
-    controlsDiv.appendChild(minusBtn);
-    controlsDiv.appendChild(repsSpan);
-    controlsDiv.appendChild(plusBtn);
-
-    // RIGHT COLUMN: goal + remove
-    const goalDiv = document.createElement("div");
-    goalDiv.className = "metric-goal";
-
-    const goalLabel = document.createElement("span");
-    goalLabel.textContent = "Goal";
-
-    const goalInput = document.createElement("input");
-    goalInput.type = "number";
-    goalInput.min = "0";
-    goalInput.step = "5";
-    goalInput.value = w.goal != null ? w.goal : 30;
-
-    goalInput.addEventListener("input", () => {
-      const v = parseInt(goalInput.value || "0", 10);
-      w.goal = isNaN(v) ? 0 : v;
-      saveDayToFirestore();
-    });
-
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "tiny-btn";
-    removeBtn.textContent = "×";
-    removeBtn.style.marginLeft = "4px";
-    removeBtn.addEventListener("click", async () => {
-      state.workouts.splice(idx, 1);
-      updateRepsFromWorkouts();
-      await saveDayToFirestore();
-      renderWorkouts();
-      renderTrackers();
-    });
-
-    goalDiv.appendChild(goalLabel);
-    goalDiv.appendChild(goalInput);
-    goalDiv.appendChild(removeBtn);
-
-    // Assemble row
-    row.appendChild(labelDiv);
-    row.appendChild(controlsDiv);
-    row.appendChild(goalDiv);
-
-    exerciseMetricsEl.appendChild(row);
+    input.value = "";
+    saveState();
+    renderLastTime();
   });
+
+  renderLastTime();
 }
 
-function renderLastTimeList() {
-  lastTimeListEl.innerHTML = "";
-  state.lastTimeItems.forEach((item) => {
+function renderLastTime() {
+  const container = $("lastTimeList");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  state.lastTime.forEach((item) => {
     const row = document.createElement("div");
-    row.className = "last-time-row";
+    row.className = "last-time-item";
 
-    const days = daysBetween(item.lastDone);
-    const color = lastTimeColor(days);
+    const info = document.createElement("div");
+    info.className = "last-time-info";
 
-    const dot = document.createElement("div");
-    dot.className = `last-time-color-dot ${color}`;
+    const title = document.createElement("div");
+    title.className = "last-time-title";
+    title.textContent = item.text;
 
-    const label = document.createElement("span");
-    label.className = "last-time-label";
-    label.textContent = item.label;
+    const detail = document.createElement("div");
+    detail.className = "last-time-detail";
 
-    const age = document.createElement("span");
-    age.className = "last-time-age";
-    if (!item.lastDone) {
-      age.textContent = "No date yet";
-    } else if (days === 0) {
-      age.textContent = "Today";
-    } else if (days === 1) {
-      age.textContent = "Yesterday";
-    } else {
-      age.textContent = `${days} days ago`;
+    let days = null;
+    if (item.lastDone) {
+      const lastDate = new Date(item.lastDone);
+      lastDate.setHours(0, 0, 0, 0);
+      const diffMs = today - lastDate;
+      days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     }
 
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "tiny-btn";
-    button.textContent = "Just did it";
-    button.addEventListener("click", async () => {
-      item.lastDone = todayDateKey();
-      await saveDayToFirestore();
-      renderLastTimeList();
-    });
-
-    row.appendChild(dot);
-    row.appendChild(label);
-    row.appendChild(age);
-    row.appendChild(button);
-    lastTimeListEl.appendChild(row);
-  });
-}
-
-function renderNote() {
-  noteBox.value = state.note || "";
-}
-
-function renderContextControls() {
-  dayOfWeekSelect.value = state.context.dayOfWeek || "";
-  letterDaySelect.value = state.context.letterDay || "";
-  planDateInput.value = currentDateKey || todayDateKey();
-  setToggle(daycareToggle, state.context.daycareDay);
-  setToggle(therapyToggle, state.context.therapyTonight);
-}
-
-function renderAll() {
-  renderContextControls();
-  updateDaySummary();
-  renderTasksAndAppointments();
-  renderParkingLot();
-  renderTrackers();
-  renderWorkouts();
-  renderLastTimeList();
-  renderNote();
-}
-
-// === COLLAPSIBLE CARDS ===
-function setupCardCollapsing() {
-  const cards = document.querySelectorAll(".card");
-  cards.forEach((card) => {
-    const header = card.querySelector(".card-header");
-    const body = card.querySelector(".card-body");
-    if (!header || !body) return;
-
-    header.addEventListener("click", (e) => {
-      const target = e.target;
-      if (!target) return;
-
-      // Don’t collapse when interacting with controls
-      const tag = target.tagName.toLowerCase();
-      if (["button", "input", "select", "textarea", "label"].includes(tag)) {
-        if (!target.classList.contains("card-toggle-icon")) {
-          return;
-        }
+    if (days === null) {
+      detail.textContent = "Not done yet";
+      row.classList.add("status-overdue");
+    } else {
+      detail.textContent = days === 0 ? "Today" : `${days} day(s) ago`;
+      if (days <= 7) {
+        row.classList.add("status-ok"); // green
+      } else if (days <= 14) {
+        row.classList.add("status-warning"); // yellow
+      } else {
+        row.classList.add("status-overdue"); // red
       }
-      if (target.closest(".no-collapse")) return;
+    }
 
-      card.classList.toggle("collapsed");
+    info.appendChild(title);
+    info.appendChild(detail);
+
+    const actions = document.createElement("div");
+    actions.className = "last-time-actions";
+
+    const didBtn = document.createElement("button");
+    didBtn.type = "button";
+    didBtn.className = "tiny-btn";
+    didBtn.textContent = "Just did it";
+    didBtn.addEventListener("click", () => {
+      item.lastDone = new Date().toISOString().slice(0, 10);
+      saveState();
+      renderLastTime();
+    });
+
+    const delBtn = document.createElement("button");
+    delBtn.type = "button";
+    delBtn.className = "tiny-icon-btn";
+    delBtn.textContent = "✕";
+    delBtn.addEventListener("click", () => {
+      state.lastTime = state.lastTime.filter((x) => x.id !== item.id);
+      saveState();
+      renderLastTime();
+    });
+
+    actions.appendChild(didBtn);
+    actions.appendChild(delBtn);
+
+    row.appendChild(info);
+    row.appendChild(actions);
+    container.appendChild(row);
+  });
+}
+
+// ---------- Trackers ----------
+
+// config for the “simple” four
+const SIMPLE_TRACKERS = {
+  water: {
+    minusId: "waterMinus",
+    plusId: "waterPlus",
+    countId: "waterCount",
+    goalInputId: "waterGoal",
+    winValueId: "winWaterValue",
+    winGoalId: "winWaterGoal",
+    defaultGoal: 8,
+    step: 1,
+  },
+  steps: {
+    minusId: "stepMinus",
+    plusId: "stepPlus",
+    countId: "stepCount",
+    goalInputId: "stepGoal",
+    winValueId: "winStepsValue",
+    winGoalId: "winStepsGoal",
+    defaultGoal: 6000,
+    step: 500,
+  },
+  med: {
+    minusId: "medMinus",
+    plusId: "medPlus",
+    countId: "medCount",
+    goalInputId: "medGoal",
+    winValueId: "winMedValue",
+    winGoalId: "winMedGoal",
+    defaultGoal: 10,
+    step: 5,
+  },
+  stretch: {
+    minusId: "stretchMinus",
+    plusId: "stretchPlus",
+    countId: "stretchCount",
+    goalInputId: "stretchGoal",
+    winValueId: "winStretchValue",
+    winGoalId: "winStretchGoal",
+    defaultGoal: 10,
+    step: 5,
+  },
+};
+
+// config for all the rep-based exercise rows
+const REP_TRACKERS = {
+  frontLifts: {
+    minusId: "frontLiftsRepsMinus",
+    plusId: "frontLiftsRepsPlus",
+    countId: "frontLiftsRepsCount",
+    goalInputId: "frontLiftsGoal",
+  },
+  sideLifts: {
+    minusId: "sideLiftsRepsMinus",
+    plusId: "sideLiftsRepsPlus",
+    countId: "sideLiftsRepsCount",
+    goalInputId: "sideLiftsGoal",
+  },
+  reverseFlys: {
+    minusId: "reverseFlysRepsMinus",
+    plusId: "reverseFlysRepsPlus",
+    countId: "reverseFlysRepsCount",
+    goalInputId: "reverseFlysGoal",
+  },
+  pressChest: {
+    minusId: "pressChestRepsMinus",
+    plusId: "pressChestRepsPlus",
+    countId: "pressChestRepsCount",
+    goalInputId: "pressChestGoal",
+  },
+  flyChest: {
+    minusId: "flyChestRepsMinus",
+    plusId: "flyChestRepsPlus",
+    countId: "flyChestRepsCount",
+    goalInputId: "flyChestGoal",
+  },
+  pushUps: {
+    minusId: "pushUpsRepsMinus",
+    plusId: "pushUpsRepsPlus",
+    countId: "pushUpsRepsCount",
+    goalInputId: "pushUpsGoal",
+  },
+  heelTapsAbs: {
+    minusId: "heelTapsAbsRepsMinus",
+    plusId: "heelTapsAbsRepsPlus",
+    countId: "heelTapsAbsRepsCount",
+    goalInputId: "heelTapsAbsGoal",
+  },
+  hipBridgeAbs: {
+    minusId: "hipBridgeAbsRepsMinus",
+    plusId: "hipBridgeAbsRepsPlus",
+    countId: "hipBridgeAbsRepsCount",
+    goalInputId: "hipBridgeAbsGoal",
+  },
+  birdDogAbs: {
+    minusId: "birdDogAbsRepsMinus",
+    plusId: "birdDogAbsRepsPlus",
+    countId: "birdDogAbsRepsCount",
+    goalInputId: "birdDogAbsGoal",
+  },
+  deadBugAbs: {
+    minusId: "deadBugAbsRepsMinus",
+    plusId: "deadBugAbsRepsPlus",
+    countId: "deadBugAbsRepsCount",
+    goalInputId: "deadBugAbsGoal",
+  },
+  catCowAbs: {
+    minusId: "catCowAbsRepsMinus",
+    plusId: "catCowAbsRepsPlus",
+    countId: "catCowAbsRepsCount",
+    goalInputId: "catCowAbsGoal",
+  },
+  squats: {
+    minusId: "squatsRepsMinus",
+    plusId: "squatsRepsPlus",
+    countId: "squatsRepsCount",
+    goalInputId: "squatsGoal",
+  },
+  alternatingReverseLunges: {
+    minusId: "alternatingReverseLungesRepsMinus",
+    plusId: "alternatingReverseLungesRepsPlus",
+    countId: "alternatingReverseLungesRepsCount",
+    goalInputId: "alternatingReverseLungesGoal",
+  },
+  sumoSquats: {
+    minusId: "sumoSquatsRepsMinus",
+    plusId: "sumoSquatsRepsPlus",
+    countId: "sumoSquatsRepsCount",
+    goalInputId: "sumoSquatsGoal",
+  },
+  altSideSquats: {
+    minusId: "altSideSquatsRepsMinus",
+    plusId: "altSideSquatsRepsPlus",
+    countId: "altSideSquatsRepsCount",
+    goalInputId: "altSideSquatsGoal",
+  },
+  rdlRight: {
+    minusId: "rdlRightRepsMinus",
+    plusId: "rdlRightRepsPlus",
+    countId: "rdlRightRepsCount",
+    goalInputId: "rdlRightGoal",
+  },
+  rdlLeft: {
+    minusId: "rdlLeftRepsMinus",
+    plusId: "rdlLeftRepsPlus",
+    countId: "rdlLeftRepsCount",
+    goalInputId: "rdlLeftGoal",
+  },
+  calfRaises: {
+    minusId: "calfRaisesRepsMinus",
+    plusId: "calfRaisesRepsPlus",
+    countId: "calfRaisesRepsCount",
+    goalInputId: "calfRaisesGoal",
+  },
+  wideRowBack: {
+    minusId: "wideRowBackRepsMinus",
+    plusId: "wideRowBackRepsPlus",
+    countId: "wideRowBackRepsCount",
+    goalInputId: "wideRowBackGoal",
+  },
+  pullDownBack: {
+    minusId: "pullDownBackRepsMinus",
+    plusId: "pullDownBackRepsPlus",
+    countId: "pullDownBackRepsCount",
+    goalInputId: "pullDownBackGoal",
+  },
+  facePullsBack: {
+    minusId: "facePullsBackRepsMinus",
+    plusId: "facePullsBackRepsPlus",
+    countId: "facePullsBackRepsCount",
+    goalInputId: "facePullsBackGoal",
+  },
+  bicepCurls: {
+    minusId: "bicepCurlsRepsMinus",
+    plusId: "bicepCurlsRepsPlus",
+    countId: "bicepCurlsRepsCount",
+    goalInputId: "bicepCurlsGoal",
+  },
+  hammerCurls: {
+    minusId: "hammerCurlsRepsMinus",
+    plusId: "hammerCurlsRepsPlus",
+    countId: "hammerCurlsRepsCount",
+    goalInputId: "hammerCurlsGoal",
+  },
+  tricepKickbacksRight: {
+    minusId: "tricepKickbacksRightRepsMinus",
+    plusId: "tricepKickbacksRightRepsPlus",
+    countId: "tricepKickbacksRightRepsCount",
+    goalInputId: "tricepKickbacksRightGoal",
+  },
+  tricepKickbacksLeft: {
+    minusId: "tricepKickbacksLeftRepsMinus",
+    plusId: "tricepKickbacksLeftRepsPlus",
+    countId: "tricepKickbacksLeftRepsCount",
+    goalInputId: "tricepKickbacksLeftGoal",
+  },
+  skullCrushers: {
+    minusId: "skullCrushersRepsMinus",
+    plusId: "skullCrushersRepsPlus",
+    countId: "skullCrushersRepsCount",
+    goalInputId: "skullCrushersGoal",
+  },
+};
+
+function initTrackers() {
+  // simple trackers (water/steps/med/stretch)
+  Object.entries(SIMPLE_TRACKERS).forEach(([key, cfg]) => {
+    const minusBtn = $(cfg.minusId);
+    const plusBtn = $(cfg.plusId);
+    const countSpan = $(cfg.countId);
+    const goalInput = $(cfg.goalInputId);
+    const winValueSpan = $(cfg.winValueId);
+    const winGoalSpan = $(cfg.winGoalId);
+
+    if (!state.trackers[key]) {
+      state.trackers[key] = { count: 0, goal: cfg.defaultGoal };
+    }
+
+    // hydrate DOM from state
+    const t = state.trackers[key];
+    if (countSpan) countSpan.textContent = t.count ?? 0;
+    if (goalInput) {
+      if (!goalInput.value) {
+        goalInput.value = t.goal ?? cfg.defaultGoal;
+      }
+    }
+    if (winValueSpan) winValueSpan.textContent = t.count ?? 0;
+    if (winGoalSpan) winGoalSpan.textContent = t.goal ?? cfg.defaultGoal;
+
+    minusBtn?.addEventListener("click", () => {
+      t.count = Math.max(0, (t.count ?? 0) - cfg.step);
+      if (countSpan) countSpan.textContent = t.count;
+      if (winValueSpan) winValueSpan.textContent = t.count;
+      saveState();
+      updateMovementSummaryAndBanner();
+    });
+
+    plusBtn?.addEventListener("click", () => {
+      t.count = (t.count ?? 0) + cfg.step;
+      if (countSpan) countSpan.textContent = t.count;
+      if (winValueSpan) winValueSpan.textContent = t.count;
+      saveState();
+      updateMovementSummaryAndBanner();
+    });
+
+    goalInput?.addEventListener("change", () => {
+      const val = parseInt(goalInput.value, 10);
+      const goal = Number.isFinite(val) ? val : cfg.defaultGoal;
+      t.goal = goal;
+      goalInput.value = goal;
+      if (winGoalSpan) winGoalSpan.textContent = goal;
+      saveState();
+      updateMovementSummaryAndBanner();
     });
   });
+
+  // rep-based trackers
+  Object.entries(REP_TRACKERS).forEach(([key, cfg]) => {
+    const minusBtn = $(cfg.minusId);
+    const plusBtn = $(cfg.plusId);
+    const countSpan = $(cfg.countId);
+    const goalInput = $(cfg.goalInputId);
+
+    if (!state.trackers[key]) {
+      state.trackers[key] = { count: 0, goal: 30 };
+    }
+
+    const t = state.trackers[key];
+    if (countSpan) countSpan.textContent = t.count ?? 0;
+    if (goalInput && !goalInput.value) goalInput.value = t.goal ?? 30;
+
+    minusBtn?.addEventListener("click", () => {
+      t.count = Math.max(0, (t.count ?? 0) - 1);
+      if (countSpan) countSpan.textContent = t.count;
+      saveState();
+      updateMovementSummaryAndBanner();
+    });
+
+    plusBtn?.addEventListener("click", () => {
+      t.count = (t.count ?? 0) + 1;
+      if (countSpan) countSpan.textContent = t.count;
+      saveState();
+      updateMovementSummaryAndBanner();
+    });
+
+    goalInput?.addEventListener("change", () => {
+      const val = parseInt(goalInput.value, 10);
+      const goal = Number.isFinite(val) ? val : 30;
+      t.goal = goal;
+      goalInput.value = goal;
+      saveState();
+      updateMovementSummaryAndBanner();
+    });
+  });
+
+  updateMovementSummaryAndBanner();
 }
 
-// === EVENT WIRES ===
+function hydrateTrackersDom() {
+  // re-hydrate counts/goals from state (used on reload)
+  Object.entries(SIMPLE_TRACKERS).forEach(([key, cfg]) => {
+    const countSpan = $(cfg.countId);
+    const goalInput = $(cfg.goalInputId);
+    const winValueSpan = $(cfg.winValueId);
+    const winGoalSpan = $(cfg.winGoalId);
+    const t = state.trackers[key] || { count: 0, goal: cfg.defaultGoal };
 
-// Add manual task
-addTaskBtn.addEventListener("click", async () => {
-  const text = newTaskTextInput.value.trim();
-  if (!text) return;
-  const block = newTaskBlockSelect.value || "midday";
-  state.tasks.push({
-    id: uuid(),
-    label: text,
-    block,
-    type: "task",
-    completed: false,
-    auto: false
+    if (countSpan) countSpan.textContent = t.count ?? 0;
+    if (goalInput) goalInput.value = t.goal ?? cfg.defaultGoal;
+    if (winValueSpan) winValueSpan.textContent = t.count ?? 0;
+    if (winGoalSpan) winGoalSpan.textContent = t.goal ?? cfg.defaultGoal;
   });
-  newTaskTextInput.value = "";
-  await saveDayToFirestore();
-  renderTasksAndAppointments();
-});
 
-hideCompletedTasksCheckbox.addEventListener("change", () => {
-  renderTasksAndAppointments();
-});
-
-// Parking lot
-addParkingBtn.addEventListener("click", async () => {
-  const text = parkingInput.value.trim();
-  if (!text) return;
-  state.parkingLot.push(text);
-  parkingInput.value = "";
-  await saveDayToFirestore();
-  renderParkingLot();
-});
-
-// Trackers: water-style controls
-waterPlusBtn.addEventListener("click", async () => {
-  state.metrics.water = (state.metrics.water || 0) + 1;
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-waterMinusBtn.addEventListener("click", async () => {
-  state.metrics.water = Math.max(0, (state.metrics.water || 0) - 1);
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-stepPlusBtn.addEventListener("click", async () => {
-  state.metrics.steps = (state.metrics.steps || 0) + 500;
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-stepMinusBtn.addEventListener("click", async () => {
-  state.metrics.steps = Math.max(0, (state.metrics.steps || 0) - 500);
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-stretchPlusBtn.addEventListener("click", async () => {
-  state.metrics.stretch = (state.metrics.stretch || 0) + 5;
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-stretchMinusBtn.addEventListener("click", async () => {
-  state.metrics.stretch = Math.max(0, (state.metrics.stretch || 0) - 5);
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-medPlusBtn.addEventListener("click", async () => {
-  state.metrics.meditate = (state.metrics.meditate || 0) + 5;
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-medMinusBtn.addEventListener("click", async () => {
-  state.metrics.meditate = Math.max(0, (state.metrics.meditate || 0) - 5);
-  await saveDayToFirestore();
-  renderTrackers();
-});
-
-// Goals inputs
-waterGoalInput.addEventListener("input", () => {
-  const v = parseInt(waterGoalInput.value || "0", 10);
-  state.trackerGoals.water = isNaN(v) ? 0 : v;
-  saveDayToFirestore();
-  renderTrackers();
-});
-
-stepGoalInput.addEventListener("input", () => {
-  const v = parseInt(stepGoalInput.value || "0", 10);
-  state.trackerGoals.steps = isNaN(v) ? 0 : v;
-  saveDayToFirestore();
-  renderTrackers();
-});
-
-stretchGoalInput.addEventListener("input", () => {
-  const v = parseInt(stretchGoalInput.value || "0", 10);
-  state.trackerGoals.stretch = isNaN(v) ? 0 : v;
-  saveDayToFirestore();
-  renderTrackers();
-});
-
-medGoalInput.addEventListener("input", () => {
-  const v = parseInt(medGoalInput.value || "0", 10);
-  state.trackerGoals.meditate = isNaN(v) ? 0 : v;
-  saveDayToFirestore();
-  renderTrackers();
-});
-
-repsGoalInput.addEventListener("input", () => {
-  const v = parseInt(repsGoalInput.value || "0", 10);
-  state.trackerGoals.reps = isNaN(v) ? 0 : v;
-  saveDayToFirestore();
-  renderTrackers();
-});
-
-// Workouts
-const newWorkoutMoveInput = document.getElementById("newWorkoutMove");
-const addWorkoutRowBtn = document.getElementById("addWorkoutRowBtn");
-
-addWorkoutRowBtn.addEventListener("click", async () => {
-  const text = newWorkoutMoveInput.value.trim();
-  const label = text || "New move";
-  state.workouts.push({
-    id: uuid(),
-    move: label,
-    weight: "",
-    reps: 0,
-    goal: 30
+  Object.entries(REP_TRACKERS).forEach(([key, cfg]) => {
+    const countSpan = $(cfg.countId);
+    const goalInput = $(cfg.goalInputId);
+    const t = state.trackers[key] || { count: 0, goal: 30 };
+    if (countSpan) countSpan.textContent = t.count ?? 0;
+    if (goalInput) goalInput.value = t.goal ?? 30;
   });
-  newWorkoutMoveInput.value = "";
-  updateRepsFromWorkouts();
-  await saveDayToFirestore();
-  renderWorkouts();
-  renderTrackers();
-});
-
-// Last time I...
-addLastTimeBtn.addEventListener("click", async () => {
-  const text = newLastTimeTextInput.value.trim();
-  if (!text) return;
-  state.lastTimeItems.push({
-    id: uuid(),
-    label: text,
-    lastDone: ""
-  });
-  newLastTimeTextInput.value = "";
-  await saveDayToFirestore();
-  renderLastTimeList();
-});
-
-// Note box
-noteBox.addEventListener("input", () => {
-  state.note = noteBox.value;
-  saveDayToFirestore();
-});
-
-// Setup collapsible cards now that DOM is ready
-setupCardCollapsing();
-
-// Initialize default date value for visual niceness if empty
-if (!planDateInput.value) {
-  planDateInput.value = todayDateKey();
+  updateMovementSummaryAndBanner();
 }
+
+function updateMovementSummaryAndBanner() {
+  const movementWin = $("movementWinBanner");
+  const winRepsValue = $("winRepsValue");
+  const winRepsGoal = $("winRepsGoal");
+
+  // simple trackers
+  const w = state.trackers.water || { count: 0, goal: 0 };
+  const s = state.trackers.steps || { count: 0, goal: 0 };
+  const m = state.trackers.med || { count: 0, goal: 0 };
+  const st = state.trackers.stretch || { count: 0, goal: 0 };
+
+  const wGoal = w.goal ?? 0;
+  const sGoal = s.goal ?? 0;
+  const mGoal = m.goal ?? 0;
+  const stGoal = st.goal ?? 0;
+
+  // reps totals
+  let totalReps = 0;
+  let totalRepsGoal = 0;
+  Object.keys(REP_TRACKERS).forEach((key) => {
+    const t = state.trackers[key] || { count: 0, goal: 0 };
+    totalReps += t.count ?? 0;
+    totalRepsGoal += t.goal ?? 0;
+  });
+
+  if (winRepsValue) winRepsValue.textContent = totalReps;
+  if (winRepsGoal) winRepsGoal.textContent = totalRepsGoal || 0;
+
+  const hitWater = wGoal > 0 && w.count >= wGoal;
+  const hitSteps = sGoal > 0 && s.count >= sGoal;
+  const hitMed = mGoal > 0 && m.count >= mGoal;
+  const hitStretch = stGoal > 0 && st.count >= stGoal;
+  const hitReps = totalRepsGoal > 0 && totalReps >= totalRepsGoal;
+
+  const allHit = hitWater && hitSteps && hitMed && hitStretch && hitReps;
+
+  if (movementWin) {
+    if (allHit) {
+      movementWin.classList.add("movement-banner-visible");
+    } else {
+      movementWin.classList.remove("movement-banner-visible");
+    }
+  }
+}
+
+// ---------- Init ----------
+
+document.addEventListener("DOMContentLoaded", () => {
+  initContextForm();
+  initLogout();
+  initTimeline();
+  initParkingLot();
+  initLastTime();
+  initTrackers();
+});

@@ -154,9 +154,80 @@ body {
   transform: translateY(1px) scale(0.98);
 }
 
-/* Context card (shares card styling) */
+/* Context card */
 .context-card {
   margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 12px 25px rgba(15, 23, 42, 0.6);
+}
+
+.context-card h2 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.context-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.context-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.context-row label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.context-row select,
+.context-row input[type="date"] {
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  padding: 6px 10px;
+  font-size: 0.8rem;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text-main);
+}
+
+.context-actions {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Toggle buttons */
+.toggle-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.toggle-btn {
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  padding: 5px 14px;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text-main);
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.toggle-btn.is-on {
+  border-color: var(--accent-strong);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 /* Main layout */
@@ -187,8 +258,7 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  margin-bottom: 4px;
-  cursor: pointer;
+  margin-bottom: 6px;
 }
 
 .card-header h2 {
@@ -200,25 +270,6 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-
-.card-body {
-  margin-top: 4px;
-}
-
-.card-toggle-icon {
-  font-size: 0.9rem;
-  opacity: 0.7;
-  transition: transform 0.15s ease, opacity 0.15s ease;
-}
-
-.card.collapsed .card-body {
-  display: none;
-}
-
-.card.collapsed .card-toggle-icon {
-  transform: rotate(-90deg);
-  opacity: 0.5;
 }
 
 .inline-checkbox {
@@ -347,68 +398,6 @@ body {
   flex: 0 0 110px;
 }
 
-/* Context form */
-.context-form {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.context-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.context-row label {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 0.8rem;
-  color: var(--text-soft);
-}
-
-.context-row select,
-.context-row input[type="date"] {
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  padding: 6px 10px;
-  font-size: 0.8rem;
-  background: rgba(15, 23, 42, 0.95);
-  color: var(--text-main);
-}
-
-.context-actions {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-}
-
-/* Toggle buttons */
-.toggle-label {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 0.8rem;
-  color: var(--text-soft);
-}
-
-.toggle-btn {
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  padding: 5px 14px;
-  background: rgba(15, 23, 42, 0.95);
-  color: var(--text-main);
-  cursor: pointer;
-  font-size: 0.8rem;
-}
-
-.toggle-btn.is-on {
-  border-color: var(--accent-strong);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
-
 /* Parking lot pills */
 .pill-list {
   display: flex;
@@ -507,17 +496,6 @@ body {
   opacity: 0.7;
 }
 
-/* weight / band input under exercise name */
-.metric-label input[type="text"] {
-  margin-top: 3px;
-  border-radius: 999px;
-  border: 1px solid var(--border-subtle);
-  padding: 2px 6px;
-  font-size: 0.7rem;
-  background: rgba(15, 23, 42, 0.95);
-  color: var(--text-main);
-}
-
 .metric-controls {
   display: flex;
   align-items: center;
@@ -576,6 +554,51 @@ body {
 .tracker-subsection h3 {
   margin: 0 0 4px;
   font-size: 0.85rem;
+}
+
+.workout-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.workout-table thead {
+  border-bottom: 1px solid rgba(75, 85, 99, 0.9);
+  color: var(--text-soft);
+}
+
+.workout-table th,
+.workout-table td {
+  padding: 4px 4px;
+  text-align: left;
+}
+
+.workout-table input[type="text"],
+.workout-table input[type="number"] {
+  width: 100%;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  background: rgba(15, 23, 42, 0.95);
+  color: var(--text-main);
+}
+
+.workout-reps-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.workout-goal-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  color: var(--text-soft);
 }
 
 /* Last time list */
