@@ -18,7 +18,7 @@
     <!-- Top bar with day summary -->
     <header class="top-bar">
       <div class="top-bar-left">
-        <h1 class="app-title">cc Planner Dashboard</h1>
+        <h1 class="app-title">Planner Dashboard</h1>
         <div class="subtitle">Gentle focus for Mrs. A 💛</div>
       </div>
       <div class="top-bar-right">
@@ -49,15 +49,17 @@
           </label>
           <label>
             <span>What school letter day is it? (A–E)</span>
-            <select id="letterDay" required>
-              <option value="">Select…</option>
-              <option value="A">A Day</option>
-              <option value="B">B Day</option>
-              <option value="C">C Day</option>
-              <option value="D">D Day</option>
-              <option value="E">E Day</option>
-            </select>
-          </label>
+                <select id="letterDay" required>
+                    <option value="">Select…</option>
+                    <option value="NONE">No school today</option>
+                    <option value="A">A Day</option>
+                    <option value="B">B Day</option>
+                    <option value="C">C Day</option>
+                    <option value="D">D Day</option>
+                    <option value="E">E Day</option>
+                </select>
+            </label>
+
         </div>
 
         <div class="context-row">
@@ -157,35 +159,63 @@
               </div>
             </div>
 
-            <!-- Water / Steps -->
+            <!-- Water / Steps + goals + celebration -->
             <div class="tracker-block">
-              <h3>Water & Steps</h3>
-              <div class="metric-row">
-                <span>Water</span>
-                <div class="metric-controls">
-                  <button type="button" id="waterMinus" class="tiny-circle">−</button>
-                  <span id="waterCount" class="metric-value">0</span>
-                  <button type="button" id="waterPlus" class="tiny-circle">+</button>
-                  <span class="metric-unit">cups</span>
+              <h3>Water, Steps & Movement Goals</h3>
+
+              <div class="water-steps-row">
+                <!-- Water -->
+                <div class="water-chip">
+                  <span class="small-label">Water</span>
+                  <div class="chip-row">
+                    <button type="button" id="waterMinus" class="circle-btn">−</button>
+                    <span id="waterCount" class="big-number">0</span>
+                    <button type="button" id="waterPlus" class="circle-btn">+</button>
+                  </div>
+                  <div class="goal-row">
+                    <span class="tiny-label">Goal:</span>
+                    <input id="waterGoal" type="number" min="0" step="1" />
+                    <span class="tiny-label">cups</span>
+                  </div>
+                </div>
+
+                <!-- Steps -->
+                <div class="steps-chip">
+                  <span class="small-label">Steps</span>
+                  <div class="chip-row">
+                    <input id="stepCount" type="number" min="0" step="100" />
+                  </div>
+                  <div class="goal-row">
+                    <span class="tiny-label">Goal:</span>
+                    <input id="stepGoal" type="number" min="0" step="500" />
+                    <span class="tiny-label">steps</span>
+                  </div>
                 </div>
               </div>
-              <div class="metric-row">
-                <span>Steps</span>
-                <div class="metric-controls">
-                  <input type="number" id="stepCount" min="0" step="100" />
-                  <span class="metric-unit">steps</span>
-                </div>
+
+              <!-- Celebration banner when ALL movement goals are met -->
+              <div id="movementWinBanner">
+                🎉 Daily movement goals complete! You did it.
               </div>
             </div>
 
-            <!-- Workouts -->
+            <!-- Workouts + reps total + reps goal -->
             <div class="tracker-block">
               <h3>Workout Moves</h3>
+
+              <div class="reps-summary-row">
+                <span class="tiny-label">Reps today:</span>
+                <span id="repsTotalDisplay" class="tiny-strong">0</span>
+                <span class="tiny-label">Goal:</span>
+                <input id="repsGoal" type="number" min="0" step="5" />
+              </div>
+
               <table class="workout-table">
                 <thead>
                   <tr>
                     <th>Move</th>
                     <th>Weight</th>
+                    <th>Reps</th>
                     <th>Notes</th>
                     <th></th>
                   </tr>
@@ -218,12 +248,16 @@
           </p>
         </article>
 
-        <!-- Card 3: Tiny notes / feelings (optional extra calming space) -->
+        <!-- Card 3: Tiny notes / feelings -->
         <article class="card">
           <header class="card-header">
             <h2>Note to Future Me</h2>
           </header>
-          <textarea id="noteBox" class="note-box" placeholder="One gentle thing to remember today…"></textarea>
+          <textarea
+            id="noteBox"
+            class="note-box"
+            placeholder="One gentle thing to remember today…"
+          ></textarea>
         </article>
       </section>
     </main>

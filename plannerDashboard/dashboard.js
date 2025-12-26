@@ -14,6 +14,9 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
+/**
+ * FIREBASE INIT
+ */
 const firebaseConfig = {
   apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
   authDomain: "lrcquest-3039e.firebaseapp.com",
@@ -23,7 +26,6 @@ const firebaseConfig = {
   appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
   measurementId: "G-5VXRYJ733C"
 };
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -102,14 +104,22 @@ let state = {
     daycareDay: false,
     therapyTonight: false
   },
-  tasks: [],       // { id, label, block, type: 'task'|'appointment', time24?, completed, auto? }
-  parkingLot: [],  // strings
-  habits: [],      // { id, label, done }
+  tasks: [],          // { id, label, block, type: 'task'|'appointment', time24?, completed, auto? }
+  parkingLot: [],     // strings
+  habits: [],         // { id, label, done }
   water: 0,
   steps: 0,
-  workouts: [],    // { id, move, weight, notes }
-  lastTimeItems: [], // { id, label, lastDone (yyyy-mm-dd) }
-  note: ""
+  workouts: [],       // { id, move, weight, reps, notes }
+  lastTimeItems: [],  // { id, label, lastDone }
+  note: "",
+  trackerGoals: {
+    water: 8,
+    steps: 6000,
+    repsTotal: 100
+  },
+  celebration: {
+    movementWin: false
+  }
 };
 
 // === DOM REFS ===
@@ -143,6 +153,13 @@ const waterPlusBtn = document.getElementById("waterPlus");
 const waterCountEl = document.getElementById("waterCount");
 const stepCountInput = document.getElementById("stepCount");
 
+const waterGoalInput = document.getElementById("waterGoal");
+const stepGoalInput = document.getElementById("stepGoal");
+const movementWinBanner = document.getElementById("movementWinBanner");
+
+const repsGoalInput = document.getElementById("repsGoal");
+const repsTotalDisplay = document.getElementById("repsTotalDisplay");
+
 const workoutBody = document.getElementById("workoutBody");
 const addWorkoutRowBtn = document.getElementById("addWorkoutRowBtn");
 
@@ -168,7 +185,6 @@ onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
 
-  // Initialize date input to today if empty
   if (!planDateInput.value) {
     planDateInput.value = todayDateKey();
   }
@@ -237,7 +253,7 @@ function isWeekday() {
 }
 
 function welcomeDefaultsIfEmpty() {
-  // Default habits (in tracker card)
+  // Habits
   if (!state.habits.length) {
     state.habits = [
       { id: uuid(), label: "Water", done: false },
@@ -247,7 +263,7 @@ function welcomeDefaultsIfEmpty() {
     ];
   }
 
-  // Default workouts (weight lifting tracker)
+  // Workouts
   if (!state.workouts.length) {
     const defaultMoves = [
       "front lift - shoulders",
@@ -277,15 +293,16 @@ function welcomeDefaultsIfEmpty() {
       "tricep kickbacks left",
       "skull crushers"
     ];
-    state.workouts = defaultMoves.map(m => ({
+    state.workouts = defaultMoves.map((m) => ({
       id: uuid(),
       move: m,
       weight: "",
+      reps: 0,
       notes: ""
     }));
   }
 
-  // "When was the last time I..."
+  // Last time items
   if (!state.lastTimeItems.length) {
     state.lastTimeItems = [
       { id: uuid(), label: "Changed sheets", lastDone: todayDateKey() },
@@ -300,6 +317,23 @@ function welcomeDefaultsIfEmpty() {
       { id: uuid(), label: "Nails", lastDone: "" }
     ];
   }
+
+  // Goals
+  if (!state.trackerGoals) {
+    state.trackerGoals = {
+      water: 8,
+      steps: 6000,
+      repsTotal: 100
+    };
+  } else {
+    if (state.trackerGoals.water == null) state.trackerGoals.water = 8;
+    if (state.trackerGoals.steps == null) state.trackerGoals.steps = 6000;
+    if (state.trackerGoals.repsTotal == null) state.trackerGoals.repsTotal = 100;
+  }
+
+  if (!state.celebration) {
+    state.celebration = { movementWin: false };
+  }
 }
 
 // === FIRESTORE LOAD / SAVE ===
@@ -311,11 +345,9 @@ async function loadDayFromFirestore() {
 
   if (snap.exists()) {
     const data = snap.data() || {};
-    // Merge stored data into current state
     state = { ...state, ...data };
   }
 
-  // Always re-generate auto tasks & appointments
   generateTasksFromContext();
   welcomeDefaultsIfEmpty();
 }
@@ -331,7 +363,13 @@ async function saveDayToFirestore() {
 function updateDaySummary() {
   const parts = [];
   if (state.context.dayOfWeek) parts.push(state.context.dayOfWeek);
-  if (state.context.letterDay) parts.push(`${state.context.letterDay} Day`);
+
+  if (state.context.letterDay === "NONE") {
+    parts.push("No school");
+  } else if (state.context.letterDay) {
+    parts.push(`${state.context.letterDay} Day`);
+  }
+
   parts.push(state.context.daycareDay ? "Daycare ✓" : "No daycare");
   parts.push(state.context.therapyTonight ? "Therapy tonight" : "No therapy");
   parts.push(currentDateKey);
@@ -383,7 +421,6 @@ contextForm.addEventListener("submit", async (e) => {
 
 reloadDayBtn.addEventListener("click", async () => {
   currentDateKey = dateKeyFromInput(planDateInput);
-  // reset tasks so we don't double-add old auto ones
   state.tasks = [];
   await loadDayFromFirestore();
   renderAll();
@@ -391,7 +428,7 @@ reloadDayBtn.addEventListener("click", async () => {
 
 // === TASK / APPOINTMENT GENERATION ===
 function generateTasksFromContext() {
-  // Remove previous auto-generated tasks/appointments, keep manual
+  // Remove previous auto-generated tasks/appointments, keep manual ones
   state.tasks = state.tasks.filter((t) => !t.auto);
 
   const blockTasks = [];
@@ -428,7 +465,6 @@ function generateTasksFromContext() {
     blockTasks.push({ label: "Daycare notebook filled out", block: "morning" });
   }
 
-  // Old generic morning tasks
   blockTasks.push({ label: "Take meds", block: "morning" });
 
   // ----- WORK OPEN -----
@@ -473,7 +509,7 @@ function generateTasksFromContext() {
     block: "workClose"
   });
 
-  // ----- EVENING / ARRIVE HOME -----
+  // ----- EVENING -----
   if (state.context.therapyTonight) {
     blockTasks.push({
       label: "Prep notes & questions for therapy",
@@ -486,21 +522,17 @@ function generateTasksFromContext() {
   });
 
   // ----- BEDTIME / PM MUST-DO -----
-  blockTasks.push({ label: "Brush teeth (PM)", block: "bedtime" });
-  blockTasks.push({ label: "Floss (PM)", block: "bedtime" });
-  blockTasks.push({ label: "Wash face (PM)", block: "bedtime" });
-  blockTasks.push({
-    label: "Water bottle & lunch dishes in dishwasher",
-    block: "bedtime"
-  });
+  blockTasks.push({ label: "Brush teeth", block: "bedtime" });
+  blockTasks.push({ label: "Floss", block: "bedtime" });
+  blockTasks.push({ label: "Wash face", block: "bedtime" });
+  blockTasks.push({ label: "Water bottle & lunch dishes in dishwasher", block: "bedtime" });
 
-  // Wind-down
   blockTasks.push({
     label: "Wind-down routine (no scrolling last 15 mins)",
     block: "bedtime"
   });
 
-  // Push all auto tasks into state
+  // Push auto tasks into state
   blockTasks.forEach((t) => {
     state.tasks.push({
       id: uuid(),
@@ -534,7 +566,6 @@ function renderTasksAndAppointments() {
   timelineContainer.innerHTML = "";
 
   const hideCompleted = hideCompletedTasksCheckbox.checked;
-
   const blocks = Object.keys(TIME_BLOCK_LABELS);
 
   blocks.forEach((block) => {
@@ -648,6 +679,7 @@ function renderHabits() {
     cb.addEventListener("change", () => {
       habit.done = cb.checked;
       saveDayToFirestore();
+      renderWaterAndSteps(); // update celebration when habits change
     });
 
     const label = document.createElement("span");
@@ -659,9 +691,63 @@ function renderHabits() {
   });
 }
 
+function getTotalRepsToday() {
+  if (!Array.isArray(state.workouts)) return 0;
+  return state.workouts.reduce((sum, w) => {
+    const r = parseInt(w.reps || 0, 10);
+    return sum + (isNaN(r) ? 0 : r);
+  }, 0);
+}
+
 function renderWaterAndSteps() {
   waterCountEl.textContent = state.water || 0;
   stepCountInput.value = state.steps || 0;
+
+  // goals
+  if (waterGoalInput) {
+    waterGoalInput.value =
+      state.trackerGoals && state.trackerGoals.water != null
+        ? state.trackerGoals.water
+        : 8;
+  }
+
+  if (stepGoalInput) {
+    stepGoalInput.value =
+      state.trackerGoals && state.trackerGoals.steps != null
+        ? state.trackerGoals.steps
+        : 6000;
+  }
+
+  if (repsGoalInput) {
+    repsGoalInput.value =
+      state.trackerGoals && state.trackerGoals.repsTotal != null
+        ? state.trackerGoals.repsTotal
+        : 100;
+  }
+
+  // total reps
+  const totalReps = getTotalRepsToday();
+  if (repsTotalDisplay) {
+    repsTotalDisplay.textContent = totalReps;
+  }
+
+  // goal checks
+  const waterGoal = state.trackerGoals?.water ?? 0;
+  const stepGoal = state.trackerGoals?.steps ?? 0;
+  const repsGoal = state.trackerGoals?.repsTotal ?? 0;
+
+  const waterHit = waterGoal > 0 && state.water >= waterGoal;
+  const stepsHit = stepGoal > 0 && state.steps >= stepGoal;
+  const repsHit = repsGoal > 0 && totalReps >= repsGoal;
+  const allHabitsDone =
+    state.habits.length > 0 && state.habits.every((h) => h.done);
+
+  const movementWin = waterHit && stepsHit && repsHit && allHabitsDone;
+  state.celebration.movementWin = movementWin;
+
+  if (movementWinBanner) {
+    movementWinBanner.classList.toggle("show", movementWin);
+  }
 }
 
 function renderWorkouts() {
@@ -669,6 +755,7 @@ function renderWorkouts() {
   state.workouts.forEach((w, idx) => {
     const tr = document.createElement("tr");
 
+    // Move
     const moveTd = document.createElement("td");
     const moveInput = document.createElement("input");
     moveInput.type = "text";
@@ -679,6 +766,7 @@ function renderWorkouts() {
     });
     moveTd.appendChild(moveInput);
 
+    // Weight
     const weightTd = document.createElement("td");
     const weightInput = document.createElement("input");
     weightInput.type = "text";
@@ -689,6 +777,22 @@ function renderWorkouts() {
     });
     weightTd.appendChild(weightInput);
 
+    // Reps
+    const repsTd = document.createElement("td");
+    const repsInput = document.createElement("input");
+    repsInput.type = "number";
+    repsInput.min = "0";
+    repsInput.step = "1";
+    repsInput.value = w.reps != null ? w.reps : 0;
+    repsInput.addEventListener("input", () => {
+      const val = parseInt(repsInput.value || "0", 10);
+      w.reps = isNaN(val) ? 0 : val;
+      saveDayToFirestore();
+      renderWaterAndSteps();
+    });
+    repsTd.appendChild(repsInput);
+
+    // Notes
     const notesTd = document.createElement("td");
     const notesInput = document.createElement("input");
     notesInput.type = "text";
@@ -699,6 +803,7 @@ function renderWorkouts() {
     });
     notesTd.appendChild(notesInput);
 
+    // Remove
     const removeTd = document.createElement("td");
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -708,11 +813,13 @@ function renderWorkouts() {
       state.workouts.splice(idx, 1);
       saveDayToFirestore();
       renderWorkouts();
+      renderWaterAndSteps();
     });
     removeTd.appendChild(removeBtn);
 
     tr.appendChild(moveTd);
     tr.appendChild(weightTd);
+    tr.appendChild(repsTd);
     tr.appendChild(notesTd);
     tr.appendChild(removeTd);
 
@@ -850,13 +957,46 @@ waterMinusBtn.addEventListener("click", async () => {
 stepCountInput.addEventListener("input", () => {
   state.steps = parseInt(stepCountInput.value || "0", 10);
   saveDayToFirestore();
+  renderWaterAndSteps();
 });
+
+// Goal inputs
+if (waterGoalInput) {
+  waterGoalInput.addEventListener("input", () => {
+    const v = parseInt(waterGoalInput.value || "0", 10);
+    if (!state.trackerGoals) state.trackerGoals = {};
+    state.trackerGoals.water = isNaN(v) ? 0 : v;
+    saveDayToFirestore();
+    renderWaterAndSteps();
+  });
+}
+
+if (stepGoalInput) {
+  stepGoalInput.addEventListener("input", () => {
+    const v = parseInt(stepGoalInput.value || "0", 10);
+    if (!state.trackerGoals) state.trackerGoals = {};
+    state.trackerGoals.steps = isNaN(v) ? 0 : v;
+    saveDayToFirestore();
+    renderWaterAndSteps();
+  });
+}
+
+if (repsGoalInput) {
+  repsGoalInput.addEventListener("input", () => {
+    const v = parseInt(repsGoalInput.value || "0", 10);
+    if (!state.trackerGoals) state.trackerGoals = {};
+    state.trackerGoals.repsTotal = isNaN(v) ? 0 : v;
+    saveDayToFirestore();
+    renderWaterAndSteps();
+  });
+}
 
 // Workouts
 addWorkoutRowBtn.addEventListener("click", async () => {
-  state.workouts.push({ id: uuid(), move: "", weight: "", notes: "" });
+  state.workouts.push({ id: uuid(), move: "", weight: "", reps: 0, notes: "" });
   await saveDayToFirestore();
   renderWorkouts();
+  renderWaterAndSteps();
 });
 
 // Last time I...
