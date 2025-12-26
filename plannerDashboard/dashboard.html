@@ -18,7 +18,7 @@
     <!-- Top bar with day summary -->
     <header class="top-bar">
       <div class="top-bar-left">
-        <h1 class="app-title">Planner Dashboard</h1>
+        <h1 class="app-title">aa Planner Dashboard</h1>
         <div class="subtitle">Gentle focus for Mrs. A 💛</div>
       </div>
       <div class="top-bar-right">
@@ -30,59 +30,66 @@
     </header>
 
     <!-- Context setup card -->
-    <section class="context-card">
-      <h2>Today’s Context</h2>
-      <form id="contextForm" class="context-form">
-        <div class="context-row">
-          <label>
-            <span>What day of the week is it?</span>
-            <select id="dayOfWeek" required>
-              <option value="">Select…</option>
-              <option>Monday</option>
-              <option>Tuesday</option>
-              <option>Wednesday</option>
-              <option>Thursday</option>
-              <option>Friday</option>
-              <option>Saturday</option>
-              <option>Sunday</option>
-            </select>
-          </label>
-          <label>
-            <span>What school letter day is it? (A–E)</span>
-            <select id="letterDay" required>
-              <option value="">Select…</option>
-              <option value="NONE">No school today</option>
-              <option value="A">A Day</option>
-              <option value="B">B Day</option>
-              <option value="C">C Day</option>
-              <option value="D">D Day</option>
-              <option value="E">E Day</option>
-            </select>
-          </label>
+    <section class="card context-card">
+      <header class="card-header">
+        <h2>Today’s Context</h2>
+        <div class="card-header-right">
+          <span class="card-toggle-icon">▾</span>
         </div>
-
-        <div class="context-row">
-          <label class="toggle-label">
-            <span>Is it a daycare day?</span>
-            <button type="button" class="toggle-btn" id="daycareToggle" data-value="no">No</button>
-          </label>
-          <label class="toggle-label">
-            <span>Is there therapy tonight?</span>
-            <button type="button" class="toggle-btn" id="therapyToggle" data-value="no">No</button>
-          </label>
-        </div>
-
-        <div class="context-row">
-          <label>
-            <span>Date for this plan</span>
-            <input type="date" id="planDate" required />
-          </label>
-          <div class="context-actions">
-            <button type="submit" class="primary-btn">Update day</button>
-            <button type="button" id="reloadDayBtn" class="ghost-btn">Load saved</button>
+      </header>
+      <div class="card-body">
+        <form id="contextForm" class="context-form">
+          <div class="context-row">
+            <label>
+              <span>What day of the week is it?</span>
+              <select id="dayOfWeek" required>
+                <option value="">Select…</option>
+                <option>Monday</option>
+                <option>Tuesday</option>
+                <option>Wednesday</option>
+                <option>Thursday</option>
+                <option>Friday</option>
+                <option>Saturday</option>
+                <option>Sunday</option>
+              </select>
+            </label>
+            <label>
+              <span>What school letter day is it? (A–E)</span>
+              <select id="letterDay" required>
+                <option value="">Select…</option>
+                <option value="NONE">No school today</option>
+                <option value="A">A Day</option>
+                <option value="B">B Day</option>
+                <option value="C">C Day</option>
+                <option value="D">D Day</option>
+                <option value="E">E Day</option>
+              </select>
+            </label>
           </div>
-        </div>
-      </form>
+
+          <div class="context-row">
+            <label class="toggle-label">
+              <span>Is it a daycare day?</span>
+              <button type="button" class="toggle-btn" id="daycareToggle" data-value="no">No</button>
+            </label>
+            <label class="toggle-label">
+              <span>Is there therapy tonight?</span>
+              <button type="button" class="toggle-btn" id="therapyToggle" data-value="no">No</button>
+            </label>
+          </div>
+
+          <div class="context-row">
+            <label>
+              <span>Date for this plan</span>
+              <input type="date" id="planDate" required />
+            </label>
+            <div class="context-actions">
+              <button type="submit" class="primary-btn">Update day</button>
+              <button type="button" id="reloadDayBtn" class="ghost-btn">Load saved</button>
+            </div>
+          </div>
+        </form>
+      </div>
     </section>
 
     <!-- Main layout: left & right columns -->
@@ -94,30 +101,32 @@
           <header class="card-header">
             <h2>Merged Tasks & Appointments</h2>
             <div class="card-header-right">
-              <label class="inline-checkbox">
+              <label class="inline-checkbox no-collapse">
                 <input type="checkbox" id="hideCompletedTasks" />
                 <span>Hide completed</span>
               </label>
+              <span class="card-toggle-icon">▾</span>
             </div>
           </header>
+          <div class="card-body">
+            <div id="timelineContainer" class="timeline">
+              <!-- Filled by JS -->
+            </div>
 
-          <div id="timelineContainer" class="timeline">
-            <!-- Filled by JS -->
-          </div>
-
-          <div class="card-footer-row">
-            <div class="foot-label">Quick add task to time block:</div>
-            <div class="time-block-add-row">
-              <select id="newTaskBlock">
-                <option value="morning">Morning</option>
-                <option value="workOpen">Work open</option>
-                <option value="midday">Midday</option>
-                <option value="workClose">Work close</option>
-                <option value="evening">Arrive home</option>
-                <option value="bedtime">Bedtime</option>
-              </select>
-              <input type="text" id="newTaskText" placeholder="New task" />
-              <button type="button" id="addTaskBtn" class="tiny-btn">Add</button>
+            <div class="card-footer-row">
+              <div class="foot-label">Quick add task to time block:</div>
+              <div class="time-block-add-row">
+                <select id="newTaskBlock">
+                  <option value="morning">Morning</option>
+                  <option value="workOpen">Work open</option>
+                  <option value="midday">Midday</option>
+                  <option value="workClose">Work close</option>
+                  <option value="evening">Arrive home</option>
+                  <option value="bedtime">Bedtime</option>
+                </select>
+                <input type="text" id="newTaskText" placeholder="New task" />
+                <button type="button" id="addTaskBtn" class="tiny-btn">Add</button>
+              </div>
             </div>
           </div>
         </article>
@@ -126,13 +135,18 @@
         <article class="card">
           <header class="card-header">
             <h2>Parking Lot</h2>
+            <div class="card-header-right">
+              <span class="card-toggle-icon">▾</span>
+            </div>
           </header>
-          <div id="parkingList" class="pill-list">
-            <!-- Items via JS -->
-          </div>
-          <div class="card-footer-row">
-            <input type="text" id="parkingInput" placeholder="Park a thought or idea…" />
-            <button type="button" id="addParkingBtn" class="tiny-btn">Add</button>
+          <div class="card-body">
+            <div id="parkingList" class="pill-list">
+              <!-- Items via JS -->
+            </div>
+            <div class="card-footer-row">
+              <input type="text" id="parkingInput" placeholder="Park a thought or idea…" />
+              <button type="button" id="addParkingBtn" class="tiny-btn">Add</button>
+            </div>
           </div>
         </article>
       </section>
@@ -143,156 +157,149 @@
         <article class="card">
           <header class="card-header">
             <h2>Daily Trackers</h2>
+            <div class="card-header-right">
+              <span class="card-toggle-icon">▾</span>
+            </div>
           </header>
+          <div class="card-body">
+            <div class="trackers-grid">
+              <!-- Daily wins summary -->
+              <div class="daily-wins-row">
+                <div class="win-pill" id="winWater">
+                  <span class="win-label">💧 Water</span>
+                  <span class="win-value">
+                    <span id="winWaterValue">0</span> /
+                    <span id="winWaterGoal">8</span>
+                  </span>
+                </div>
+                <div class="win-pill" id="winSteps">
+                  <span class="win-label">👣 Steps</span>
+                  <span class="win-value">
+                    <span id="winStepsValue">0</span> /
+                    <span id="winStepsGoal">6000</span>
+                  </span>
+                </div>
+                <div class="win-pill" id="winStretch">
+                  <span class="win-label">🤸 Stretch</span>
+                  <span class="win-value">
+                    <span id="winStretchValue">0</span> /
+                    <span id="winStretchGoal">10</span>
+                  </span>
+                </div>
+                <div class="win-pill" id="winReps">
+                  <span class="win-label">💪 Reps</span>
+                  <span class="win-value">
+                    <span id="winRepsValue">0</span> /
+                    <span id="winRepsGoal">100</span>
+                  </span>
+                </div>
+                <div class="win-pill" id="winMeditate">
+                  <span class="win-label">🧘 Meditate</span>
+                  <span class="win-value">
+                    <span id="winMedValue">0</span> /
+                    <span id="winMedGoal">10</span>
+                  </span>
+                </div>
+              </div>
 
-          <div class="trackers-grid">
-            <!-- Daily wins summary -->
-            <div class="daily-wins-row">
-              <div class="win-pill" id="winWater">
-                <span class="win-label">💧 Water</span>
-                <span class="win-value">
-                  <span id="winWaterValue">0</span> /
-                  <span id="winWaterGoal">8</span>
-                </span>
+              <!-- Each tracker like the water cup -->
+              <div class="metric-row">
+                <div class="metric-label">
+                  <span>💧 Water</span>
+                  <small>cups</small>
+                </div>
+                <div class="metric-controls">
+                  <button type="button" id="waterMinus" class="circle-btn">−</button>
+                  <span id="waterCount" class="big-number">0</span>
+                  <button type="button" id="waterPlus" class="circle-btn">+</button>
+                </div>
+                <div class="metric-goal">
+                  <span>Goal</span>
+                  <input id="waterGoal" type="number" min="0" step="1" />
+                </div>
               </div>
-              <div class="win-pill" id="winSteps">
-                <span class="win-label">👣 Steps</span>
-                <span class="win-value">
-                  <span id="winStepsValue">0</span> /
-                  <span id="winStepsGoal">6000</span>
-                </span>
-              </div>
-              <div class="win-pill" id="winStretch">
-                <span class="win-label">🤸 Stretch</span>
-                <span class="win-value">
-                  <span id="winStretchValue">0</span> /
-                  <span id="winStretchGoal">10</span>
-                </span>
-              </div>
-              <div class="win-pill" id="winReps">
-                <span class="win-label">💪 Reps</span>
-                <span class="win-value">
-                  <span id="winRepsValue">0</span> /
-                  <span id="winRepsGoal">100</span>
-                </span>
-              </div>
-              <div class="win-pill" id="winMeditate">
-                <span class="win-label">🧘 Meditate</span>
-                <span class="win-value">
-                  <span id="winMedValue">0</span> /
-                  <span id="winMedGoal">10</span>
-                </span>
-              </div>
-            </div>
 
-            <!-- Each tracker like the water cup -->
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>💧 Water</span>
-                <small>cups</small>
+              <div class="metric-row">
+                <div class="metric-label">
+                  <span>👣 Steps</span>
+                  <small>steps</small>
+                </div>
+                <div class="metric-controls">
+                  <button type="button" id="stepMinus" class="circle-btn">−</button>
+                  <span id="stepCount" class="big-number">0</span>
+                  <button type="button" id="stepPlus" class="circle-btn">+</button>
+                </div>
+                <div class="metric-goal">
+                  <span>Goal</span>
+                  <input id="stepGoal" type="number" min="0" step="500" />
+                </div>
               </div>
-              <div class="metric-controls">
-                <button type="button" id="waterMinus" class="circle-btn">−</button>
-                <span id="waterCount" class="big-number">0</span>
-                <button type="button" id="waterPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="waterGoal" type="number" min="0" step="1" />
-              </div>
-            </div>
 
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>👣 Steps</span>
-                <small>steps</small>
+              <div class="metric-row">
+                <div class="metric-label">
+                  <span>🤸 Stretching</span>
+                  <small>minutes</small>
+                </div>
+                <div class="metric-controls">
+                  <button type="button" id="stretchMinus" class="circle-btn">−</button>
+                  <span id="stretchCount" class="big-number">0</span>
+                  <button type="button" id="stretchPlus" class="circle-btn">+</button>
+                </div>
+                <div class="metric-goal">
+                  <span>Goal</span>
+                  <input id="stretchGoal" type="number" min="0" step="5" />
+                </div>
               </div>
-              <div class="metric-controls">
-                <button type="button" id="stepMinus" class="circle-btn">−</button>
-                <span id="stepCount" class="big-number">0</span>
-                <button type="button" id="stepPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="stepGoal" type="number" min="0" step="500" />
-              </div>
-            </div>
 
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>🤸 Stretching</span>
-                <small>minutes</small>
+              <div class="metric-row">
+                <div class="metric-label">
+                  <span>🧘 Meditate</span>
+                  <small>minutes</small>
+                </div>
+                <div class="metric-controls">
+                  <button type="button" id="medMinus" class="circle-btn">−</button>
+                  <span id="medCount" class="big-number">0</span>
+                  <button type="button" id="medPlus" class="circle-btn">+</button>
+                </div>
+                <div class="metric-goal">
+                  <span>Goal</span>
+                  <input id="medGoal" type="number" min="0" step="5" />
+                </div>
               </div>
-              <div class="metric-controls">
-                <button type="button" id="stretchMinus" class="circle-btn">−</button>
-                <span id="stretchCount" class="big-number">0</span>
-                <button type="button" id="stretchPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="stretchGoal" type="number" min="0" step="5" />
-              </div>
-            </div>
 
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>🧘 Meditate</span>
-                <small>minutes</small>
+              <div class="metric-row">
+                <div class="metric-label">
+                  <span>💪 Reps</span>
+                  <small>total</small>
+                </div>
+                <div class="metric-controls">
+                  <!-- This total is computed from the exercises below -->
+                  <span id="repsCount" class="big-number">0</span>
+                </div>
+                <div class="metric-goal">
+                  <span>Goal</span>
+                  <input id="repsGoal" type="number" min="0" step="5" />
+                </div>
               </div>
-              <div class="metric-controls">
-                <button type="button" id="medMinus" class="circle-btn">−</button>
-                <span id="medCount" class="big-number">0</span>
-                <button type="button" id="medPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="medGoal" type="number" min="0" step="5" />
-              </div>
-            </div>
 
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>💪 Reps</span>
-                <small>total</small>
+              <div id="movementWinBanner" class="movement-banner">
+                🎉 You hit all today’s movement goals!
               </div>
-              <div class="metric-controls">
-                <!-- This total is computed from the exercises below -->
-                <span id="repsCount" class="big-number">0</span>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="repsGoal" type="number" min="0" step="5" />
-              </div>
-            </div>
 
-            <div id="movementWinBanner" class="movement-banner">
-              🎉 You hit all today’s movement goals!
-            </div>
-
-            <!-- Strength exercises (each with 30 reps goal) -->
-            <div class="tracker-subsection">
-              <h3>Strength Exercises</h3>
-              <table class="workout-table">
-                <thead>
-                  <tr>
-                    <th>Move</th>
-                    <th>Weight</th>
-                    <th>Reps</th>
-                    <th>Goal</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="workoutBody">
-                  <!-- Rows rendered via JS -->
-                </tbody>
-              </table>
-              <div class="add-row">
-                <input
-                  type="text"
-                  id="newWorkoutMove"
-                  placeholder="Add exercise (e.g., Squats)"
-                />
-                <button type="button" id="addWorkoutRowBtn" class="tiny-btn">Add</button>
+              <!-- Strength exercises as metric-rows -->
+              <div class="tracker-subsection">
+                <h3>Strength Exercises</h3>
+                <div id="exerciseMetrics">
+                  <!-- Exercise metric-rows via JS -->
+                </div>
+                <div class="add-row">
+                  <input
+                    type="text"
+                    id="newWorkoutMove"
+                    placeholder="Add exercise (e.g., Squats)"
+                  />
+                  <button type="button" id="addWorkoutRowBtn" class="tiny-btn">Add</button>
+                </div>
               </div>
             </div>
           </div>
@@ -302,33 +309,43 @@
         <article class="card">
           <header class="card-header">
             <h2>When was the last time I…</h2>
+            <div class="card-header-right">
+              <span class="card-toggle-icon">▾</span>
+            </div>
           </header>
-          <div id="lastTimeList" class="last-time-list">
-            <!-- Items via JS -->
+          <div class="card-body">
+            <div id="lastTimeList" class="last-time-list">
+              <!-- Items via JS -->
+            </div>
+            <div class="card-footer-row">
+              <input
+                type="text"
+                id="newLastTimeText"
+                placeholder="Add routine (ex: Changed sheets)"
+              />
+              <button type="button" id="addLastTimeBtn" class="tiny-btn">Add</button>
+            </div>
+            <p class="hint-text">
+              Green = all good · Yellow = coming due · Red = overdue
+            </p>
           </div>
-          <div class="card-footer-row">
-            <input
-              type="text"
-              id="newLastTimeText"
-              placeholder="Add routine (ex: Changed sheets)"
-            />
-            <button type="button" id="addLastTimeBtn" class="tiny-btn">Add</button>
-          </div>
-          <p class="hint-text">
-            Green = all good · Yellow = coming due · Red = overdue
-          </p>
         </article>
 
         <!-- Card 3: Tiny notes / feelings -->
         <article class="card">
           <header class="card-header">
             <h2>Note to Future Me</h2>
+            <div class="card-header-right">
+              <span class="card-toggle-icon">▾</span>
+            </div>
           </header>
-          <textarea
-            id="noteBox"
-            class="note-box"
-            placeholder="One gentle thing to remember today…"
-          ></textarea>
+          <div class="card-body">
+            <textarea
+              id="noteBox"
+              class="note-box"
+              placeholder="One gentle thing to remember today…"
+            ></textarea>
+          </div>
         </article>
       </section>
     </main>

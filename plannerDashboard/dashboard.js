@@ -120,7 +120,7 @@ let state = {
     meditate: 10,
     reps: 100       // global daily reps goal (per-move goal is 30 below)
   },
-  workouts: [],       // { id, move, weight, reps, goal: 30 }
+  workouts: [],       // { id, move, weight, reps, goal }
   lastTimeItems: [],  // { id, label, lastDone }
   note: "",
   celebration: {
@@ -177,10 +177,8 @@ const repsGoalInput = document.getElementById("repsGoal");
 // Daily wins banner
 const movementWinBanner = document.getElementById("movementWinBanner");
 
-// Workouts
-const workoutBody = document.getElementById("workoutBody");
-const newWorkoutMoveInput = document.getElementById("newWorkoutMove");
-const addWorkoutRowBtn = document.getElementById("addWorkoutRowBtn");
+// Strength exercise metric container
+const exerciseMetricsEl = document.getElementById("exerciseMetrics");
 
 const lastTimeListEl = document.getElementById("lastTimeList");
 const newLastTimeTextInput = document.getElementById("newLastTimeText");
@@ -258,7 +256,7 @@ function blockForTime(time24) {
   const h = parseInt(hStr, 10);
   const mins = h * 60 + parseInt(mStr, 10);
 
-  if (mins < 9 * 60) return "morning";              // before 9:00
+  if (mins < 8 * 60) return "morning";              // before 8:00
   if (mins < 11 * 60) return "workOpen";           // 9:00–10:59
   if (mins < 13 * 60) return "midday";             // 11:00–12:59
   if (mins < 16 * 60) return "workClose";          // 13:00–15:59
@@ -582,7 +580,7 @@ function generateTasksFromContext() {
 
   // Letter-day class schedule → appointments (skip "NONE")
   const letter = state.context.letterDay;
-  if (letter && SCHEDULE_BY_LETTER_DAY[letter]) {
+  if (letter && letter !== "NONE" && SCHEDULE_BY_LETTER_DAY[letter]) {
     SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
       state.tasks.push({
         id: uuid(),
@@ -784,36 +782,35 @@ function renderTrackers() {
 }
 
 function renderWorkouts() {
-  workoutBody.innerHTML = "";
+  if (!exerciseMetricsEl) return;
+  exerciseMetricsEl.innerHTML = "";
+
   state.workouts.forEach((w, idx) => {
-    const tr = document.createElement("tr");
+    const row = document.createElement("div");
+    row.className = "metric-row";
 
-    // Move
-    const moveTd = document.createElement("td");
-    const moveInput = document.createElement("input");
-    moveInput.type = "text";
-    moveInput.value = w.move || "";
-    moveInput.addEventListener("input", () => {
-      w.move = moveInput.value;
-      saveDayToFirestore();
-    });
-    moveTd.appendChild(moveInput);
+    // LEFT COLUMN: label + optional weight
+    const labelDiv = document.createElement("div");
+    labelDiv.className = "metric-label";
 
-    // Weight
-    const weightTd = document.createElement("td");
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = w.move || "Exercise";
+
     const weightInput = document.createElement("input");
     weightInput.type = "text";
+    weightInput.placeholder = "weight / band";
     weightInput.value = w.weight || "";
     weightInput.addEventListener("input", () => {
       w.weight = weightInput.value;
       saveDayToFirestore();
     });
-    weightTd.appendChild(weightInput);
 
-    // Reps controls (like water cup)
-    const repsTd = document.createElement("td");
-    const repsControls = document.createElement("div");
-    repsControls.className = "workout-reps-controls";
+    labelDiv.appendChild(nameSpan);
+    labelDiv.appendChild(weightInput);
+
+    // MIDDLE COLUMN: reps controls (like water)
+    const controlsDiv = document.createElement("div");
+    controlsDiv.className = "metric-controls";
 
     const minusBtn = document.createElement("button");
     minusBtn.type = "button";
@@ -822,7 +819,7 @@ function renderWorkouts() {
 
     const repsSpan = document.createElement("span");
     repsSpan.className = "big-number";
-    repsSpan.style.fontSize = "0.85rem";
+    repsSpan.style.fontSize = "1rem";
     repsSpan.textContent = w.reps ?? 0;
 
     const plusBtn = document.createElement("button");
@@ -848,25 +845,34 @@ function renderWorkouts() {
       renderTrackers();
     });
 
-    repsControls.appendChild(minusBtn);
-    repsControls.appendChild(repsSpan);
-    repsControls.appendChild(plusBtn);
-    repsTd.appendChild(repsControls);
+    controlsDiv.appendChild(minusBtn);
+    controlsDiv.appendChild(repsSpan);
+    controlsDiv.appendChild(plusBtn);
 
-    // Goal (fixed 30 reps)
-    const goalTd = document.createElement("td");
-    const goalPill = document.createElement("div");
-    goalPill.className = "workout-goal-pill";
-    const goalVal = w.goal != null ? w.goal : 30;
-    goalPill.textContent = `${goalVal} reps`;
-    goalTd.appendChild(goalPill);
+    // RIGHT COLUMN: goal + remove
+    const goalDiv = document.createElement("div");
+    goalDiv.className = "metric-goal";
 
-    // Remove
-    const removeTd = document.createElement("td");
+    const goalLabel = document.createElement("span");
+    goalLabel.textContent = "Goal";
+
+    const goalInput = document.createElement("input");
+    goalInput.type = "number";
+    goalInput.min = "0";
+    goalInput.step = "5";
+    goalInput.value = w.goal != null ? w.goal : 30;
+
+    goalInput.addEventListener("input", () => {
+      const v = parseInt(goalInput.value || "0", 10);
+      w.goal = isNaN(v) ? 0 : v;
+      saveDayToFirestore();
+    });
+
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
-    removeBtn.textContent = "×";
     removeBtn.className = "tiny-btn";
+    removeBtn.textContent = "×";
+    removeBtn.style.marginLeft = "4px";
     removeBtn.addEventListener("click", async () => {
       state.workouts.splice(idx, 1);
       updateRepsFromWorkouts();
@@ -874,15 +880,17 @@ function renderWorkouts() {
       renderWorkouts();
       renderTrackers();
     });
-    removeTd.appendChild(removeBtn);
 
-    tr.appendChild(moveTd);
-    tr.appendChild(weightTd);
-    tr.appendChild(repsTd);
-    tr.appendChild(goalTd);
-    tr.appendChild(removeTd);
+    goalDiv.appendChild(goalLabel);
+    goalDiv.appendChild(goalInput);
+    goalDiv.appendChild(removeBtn);
 
-    workoutBody.appendChild(tr);
+    // Assemble row
+    row.appendChild(labelDiv);
+    row.appendChild(controlsDiv);
+    row.appendChild(goalDiv);
+
+    exerciseMetricsEl.appendChild(row);
   });
 }
 
@@ -953,6 +961,32 @@ function renderAll() {
   renderWorkouts();
   renderLastTimeList();
   renderNote();
+}
+
+// === COLLAPSIBLE CARDS ===
+function setupCardCollapsing() {
+  const cards = document.querySelectorAll(".card");
+  cards.forEach((card) => {
+    const header = card.querySelector(".card-header");
+    const body = card.querySelector(".card-body");
+    if (!header || !body) return;
+
+    header.addEventListener("click", (e) => {
+      const target = e.target;
+      if (!target) return;
+
+      // Don’t collapse when interacting with controls
+      const tag = target.tagName.toLowerCase();
+      if (["button", "input", "select", "textarea", "label"].includes(tag)) {
+        if (!target.classList.contains("card-toggle-icon")) {
+          return;
+        }
+      }
+      if (target.closest(".no-collapse")) return;
+
+      card.classList.toggle("collapsed");
+    });
+  });
 }
 
 // === EVENT WIRES ===
@@ -1075,6 +1109,9 @@ repsGoalInput.addEventListener("input", () => {
 });
 
 // Workouts
+const newWorkoutMoveInput = document.getElementById("newWorkoutMove");
+const addWorkoutRowBtn = document.getElementById("addWorkoutRowBtn");
+
 addWorkoutRowBtn.addEventListener("click", async () => {
   const text = newWorkoutMoveInput.value.trim();
   const label = text || "New move";
@@ -1111,6 +1148,9 @@ noteBox.addEventListener("input", () => {
   state.note = noteBox.value;
   saveDayToFirestore();
 });
+
+// Setup collapsible cards now that DOM is ready
+setupCardCollapsing();
 
 // Initialize default date value for visual niceness if empty
 if (!planDateInput.value) {
