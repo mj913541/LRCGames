@@ -1,7 +1,62 @@
 // LRCGames/plannerDashboard/dashboard.js
-// Simple, localStorage-based planner dashboard logic
+// Firebase-backed planner dashboard that matches dashboard.html
 
-const STORAGE_KEY = "plannerDashboard_v1";
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import {
+  getAuth,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc
+} from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+/* ---------- Firebase init ---------- */
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
+  authDomain: "lrcquest-3039e.firebaseapp.com",
+  projectId: "lrcquest-3039e",
+  storageBucket: "lrcquest-3039e.firebasestorage.app",
+  messagingSenderId: "72063656342",
+  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
+  measurementId: "G-5VXRYJ733C"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Only allow these emails
+const ALLOWED_EMAILS = [
+  "malbrecht@sd308.org",
+  "malbrecht3317@gmail.com"
+];
+
+/* ---------- Helpers ---------- */
+
+function todayDateKey() {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function uuid() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+function $(id) {
+  return document.getElementById(id);
+}
+
+/* ---------- Core state shape ---------- */
 
 const TIME_BLOCKS = [
   { id: "morning", label: "🌅 Morning" },
@@ -12,28 +67,28 @@ const TIME_BLOCKS = [
   { id: "bedtime", label: "🌙 Bedtime" },
 ];
 
-// Base shape of state
 const DEFAULT_STATE = {
   context: {
     dayOfWeek: "",
     letterDay: "",
-    daycare: "no",
-    therapy: "no",
-    planDate: "",
+    daycare: "no",      // "yes" | "no"
+    therapy: "no",      // "yes" | "no"
+    planDate: "",       // YYYY-MM-DD
   },
+  // tasks stored by block id -> array of {id, text, done}
   tasks: TIME_BLOCKS.reduce((acc, b) => {
     acc[b.id] = [];
     return acc;
   }, {}),
-  parking: [],
-  lastTime: [],
+  parking: [],          // [{id, text}]
+  lastTime: [],         // [{id, text, lastDone: "YYYY-MM-DD" | null}]
   trackers: {
     // daily ones
     water: { count: 0, goal: 8 },
     steps: { count: 0, goal: 6000 },
     med: { count: 0, goal: 10 },
     stretch: { count: 0, goal: 10 },
-    // reps exercises (all default 0 / 30)
+    // reps exercises (default goal 30)
     frontLifts: { count: 0, goal: 30 },
     sideLifts: { count: 0, goal: 30 },
     reverseFlys: { count: 0, goal: 30 },
@@ -63,112 +118,60 @@ const DEFAULT_STATE = {
   },
 };
 
-let state = loadState();
+let currentUser = null;
+let currentDateKey = todayDateKey();
+let state = structuredClone(DEFAULT_STATE);
 
-// ---------- Storage helpers ----------
+/* ---------- Firestore helpers ---------- */
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return structuredClone(DEFAULT_STATE);
-    const parsed = JSON.parse(raw);
-    // cheap merge to make sure new fields exist
-    return {
-      ...structuredClone(DEFAULT_STATE),
-      ...parsed,
-      context: { ...DEFAULT_STATE.context, ...(parsed.context || {}) },
-      tasks: { ...DEFAULT_STATE.tasks, ...(parsed.tasks || {}) },
-      parking: parsed.parking || [],
-      lastTime: parsed.lastTime || [],
-      trackers: { ...DEFAULT_STATE.trackers, ...(parsed.trackers || {}) },
-    };
-  } catch (e) {
-    console.error("Error loading planner state:", e);
-    return structuredClone(DEFAULT_STATE);
+function mergeWithDefaults(raw) {
+  if (!raw) return structuredClone(DEFAULT_STATE);
+
+  return {
+    ...structuredClone(DEFAULT_STATE),
+    ...raw,
+    context: {
+      ...DEFAULT_STATE.context,
+      ...(raw.context || {}),
+    },
+    tasks: {
+      ...DEFAULT_STATE.tasks,
+      ...(raw.tasks || {}),
+    },
+    parking: raw.parking || [],
+    lastTime: raw.lastTime || [],
+    trackers: {
+      ...DEFAULT_STATE.trackers,
+      ...(raw.trackers || {}),
+    },
+  };
+}
+
+function getDayDocRef() {
+  if (!currentUser || !currentDateKey) return null;
+  return doc(db, "plannerDays", `${currentUser.uid}_${currentDateKey}`);
+}
+
+async function loadDayFromFirestore() {
+  const ref = getDayDocRef();
+  if (!ref) return;
+
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    state = mergeWithDefaults(snap.data());
+  } else {
+    state = structuredClone(DEFAULT_STATE);
+    state.context.planDate = currentDateKey;
   }
 }
 
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) {
-    console.error("Error saving planner state:", e);
-  }
+async function saveDayToFirestore() {
+  const ref = getDayDocRef();
+  if (!ref) return;
+  await setDoc(ref, state, { merge: false });
 }
 
-// ---------- DOM helpers ----------
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-// ---------- Context + summary ----------
-
-function initContextForm() {
-  const form = $("contextForm");
-  const dayOfWeek = $("dayOfWeek");
-  const letterDay = $("letterDay");
-  const planDate = $("planDate");
-  const daycareToggle = $("daycareToggle");
-  const therapyToggle = $("therapyToggle");
-  const reloadBtn = $("reloadDayBtn");
-
-  if (!form) return;
-
-  // hydrate form from state
-  dayOfWeek.value = state.context.dayOfWeek || "";
-  letterDay.value = state.context.letterDay || "";
-  planDate.value = state.context.planDate || "";
-
-  updateToggleButton(daycareToggle, state.context.daycare);
-  updateToggleButton(therapyToggle, state.context.therapy);
-  renderDaySummary();
-
-  daycareToggle.addEventListener("click", () => {
-    toggleBtnValue(daycareToggle);
-    state.context.daycare = daycareToggle.dataset.value;
-    saveState();
-    renderDaySummary();
-  });
-
-  therapyToggle.addEventListener("click", () => {
-    toggleBtnValue(therapyToggle);
-    state.context.therapy = therapyToggle.dataset.value;
-    saveState();
-    renderDaySummary();
-  });
-
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    state.context.dayOfWeek = dayOfWeek.value;
-    state.context.letterDay = letterDay.value;
-    state.context.planDate = planDate.value;
-    saveState();
-    renderDaySummary();
-  });
-
-  reloadBtn.addEventListener("click", () => {
-    const fresh = loadState();
-    state = fresh;
-    // rehydrate
-    dayOfWeek.value = state.context.dayOfWeek || "";
-    letterDay.value = state.context.letterDay || "";
-    planDate.value = state.context.planDate || "";
-    updateToggleButton(daycareToggle, state.context.daycare);
-    updateToggleButton(therapyToggle, state.context.therapy);
-    renderDaySummary();
-    renderTimeline();
-    renderParking();
-    renderLastTime();
-    hydrateTrackersDom();
-    updateMovementSummaryAndBanner();
-  });
-}
-
-function toggleBtnValue(btn) {
-  const current = btn.dataset.value === "yes" ? "no" : "yes";
-  updateToggleButton(btn, current);
-}
+/* ---------- Context + summary ---------- */
 
 function updateToggleButton(btn, value) {
   btn.dataset.value = value;
@@ -179,6 +182,11 @@ function updateToggleButton(btn, value) {
     btn.classList.remove("toggle-on");
     btn.textContent = "No";
   }
+}
+
+function toggleBtnValue(btn) {
+  const current = btn.dataset.value === "yes" ? "no" : "yes";
+  updateToggleButton(btn, current);
 }
 
 function renderDaySummary() {
@@ -196,41 +204,106 @@ function renderDaySummary() {
   el.textContent = bits.join(" · ");
 }
 
-// ---------- Logout (stub) ----------
+async function handleContextSubmit(e) {
+  e.preventDefault();
+  const dayOfWeek = $("dayOfWeek");
+  const letterDay = $("letterDay");
+  const planDate = $("planDate");
+  const daycareToggle = $("daycareToggle");
+  const therapyToggle = $("therapyToggle");
+
+  state.context.dayOfWeek = dayOfWeek.value;
+  state.context.letterDay = letterDay.value;
+  state.context.planDate = planDate.value || todayDateKey();
+  state.context.daycare = daycareToggle.dataset.value || "no";
+  state.context.therapy = therapyToggle.dataset.value || "no";
+
+  currentDateKey = state.context.planDate;
+
+  await saveDayToFirestore();
+  renderDaySummary();
+}
+
+async function handleReloadDay() {
+  const planDate = $("planDate");
+  currentDateKey = planDate.value || todayDateKey();
+  await loadDayFromFirestore();
+  rehydrateAllFromState();
+}
+
+function initContextForm() {
+  const form = $("contextForm");
+  const daycareToggle = $("daycareToggle");
+  const therapyToggle = $("therapyToggle");
+  const reloadBtn = $("reloadDayBtn");
+
+  if (!form || !daycareToggle || !therapyToggle || !reloadBtn) return;
+
+  // initial sync from state (will be updated again after Firestore load)
+  const dayOfWeek = $("dayOfWeek");
+  const letterDay = $("letterDay");
+  const planDate = $("planDate");
+
+  dayOfWeek.value = state.context.dayOfWeek || "";
+  letterDay.value = state.context.letterDay || "";
+  planDate.value = state.context.planDate || todayDateKey();
+
+  updateToggleButton(daycareToggle, state.context.daycare || "no");
+  updateToggleButton(therapyToggle, state.context.therapy || "no");
+  renderDaySummary();
+
+  daycareToggle.addEventListener("click", async () => {
+    toggleBtnValue(daycareToggle);
+    state.context.daycare = daycareToggle.dataset.value;
+    await saveDayToFirestore();
+    renderDaySummary();
+  });
+
+  therapyToggle.addEventListener("click", async () => {
+    toggleBtnValue(therapyToggle);
+    state.context.therapy = therapyToggle.dataset.value;
+    await saveDayToFirestore();
+    renderDaySummary();
+  });
+
+  form.addEventListener("submit", handleContextSubmit);
+  reloadBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    handleReloadDay();
+  });
+}
+
+/* ---------- Logout ---------- */
 
 function initLogout() {
   const btn = $("logoutBtn");
   if (!btn) return;
-  btn.addEventListener("click", () => {
-    // If you wire Firebase, replace this with signOut(...)
-    // For now, just clear state & reload
-    if (confirm("Sign out and clear saved planner data?")) {
-      localStorage.removeItem(STORAGE_KEY);
-      location.reload();
-    }
+  btn.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "../login.html";
   });
 }
 
-// ---------- Timeline: merged tasks & appointments ----------
+/* ---------- Timeline: merged tasks & appointments ---------- */
 
 function initTimeline() {
   const addBtn = $("addTaskBtn");
   const hideCompleted = $("hideCompletedTasks");
   if (addBtn) {
-    addBtn.addEventListener("click", () => {
+    addBtn.addEventListener("click", async () => {
       const blockSel = $("newTaskBlock");
       const textInput = $("newTaskText");
       const blockId = blockSel.value;
       const text = textInput.value.trim();
       if (!text) return;
       const item = {
-        id: Date.now().toString() + Math.random().toString(16).slice(2),
+        id: uuid(),
         text,
         done: false,
       };
       state.tasks[blockId].push(item);
       textInput.value = "";
-      saveState();
+      await saveDayToFirestore();
       renderTimeline();
     });
   }
@@ -274,9 +347,9 @@ function renderTimeline() {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.checked = item.done;
-        checkbox.addEventListener("change", () => {
+        checkbox.addEventListener("change", async () => {
           item.done = checkbox.checked;
-          saveState();
+          await saveDayToFirestore();
           renderTimeline();
         });
 
@@ -290,9 +363,11 @@ function renderTimeline() {
         delBtn.type = "button";
         delBtn.className = "tiny-icon-btn";
         delBtn.textContent = "✕";
-        delBtn.addEventListener("click", () => {
-          state.tasks[block.id] = state.tasks[block.id].filter((t) => t.id !== item.id);
-          saveState();
+        delBtn.addEventListener("click", async () => {
+          state.tasks[block.id] = state.tasks[block.id].filter(
+            (t) => t.id !== item.id
+          );
+          await saveDayToFirestore();
           renderTimeline();
         });
 
@@ -306,22 +381,22 @@ function renderTimeline() {
   });
 }
 
-// ---------- Parking lot ----------
+/* ---------- Parking lot ---------- */
 
 function initParkingLot() {
   const addBtn = $("addParkingBtn");
   const input = $("parkingInput");
   if (!addBtn || !input) return;
 
-  addBtn.addEventListener("click", () => {
+  addBtn.addEventListener("click", async () => {
     const text = input.value.trim();
     if (!text) return;
     state.parking.push({
-      id: Date.now().toString() + Math.random().toString(16).slice(2),
+      id: uuid(),
       text,
     });
     input.value = "";
-    saveState();
+    await saveDayToFirestore();
     renderParking();
   });
 
@@ -344,9 +419,9 @@ function renderParking() {
     delBtn.type = "button";
     delBtn.className = "tiny-icon-btn";
     delBtn.textContent = "✕";
-    delBtn.addEventListener("click", () => {
+    delBtn.addEventListener("click", async () => {
       state.parking = state.parking.filter((p) => p.id !== item.id);
-      saveState();
+      await saveDayToFirestore();
       renderParking();
     });
 
@@ -357,23 +432,23 @@ function renderParking() {
   });
 }
 
-// ---------- “When was the last time I…” ----------
+/* ---------- “When was the last time I…” ---------- */
 
 function initLastTime() {
   const addBtn = $("addLastTimeBtn");
   const input = $("newLastTimeText");
   if (!addBtn || !input) return;
 
-  addBtn.addEventListener("click", () => {
+  addBtn.addEventListener("click", async () => {
     const text = input.value.trim();
     if (!text) return;
     state.lastTime.push({
-      id: Date.now().toString() + Math.random().toString(16).slice(2),
+      id: uuid(),
       text,
-      lastDone: null, // not yet done
+      lastDone: null,
     });
     input.value = "";
-    saveState();
+    await saveDayToFirestore();
     renderLastTime();
   });
 
@@ -417,11 +492,11 @@ function renderLastTime() {
     } else {
       detail.textContent = days === 0 ? "Today" : `${days} day(s) ago`;
       if (days <= 7) {
-        row.classList.add("status-ok"); // green
+        row.classList.add("status-ok");
       } else if (days <= 14) {
-        row.classList.add("status-warning"); // yellow
+        row.classList.add("status-warning");
       } else {
-        row.classList.add("status-overdue"); // red
+        row.classList.add("status-overdue");
       }
     }
 
@@ -435,9 +510,9 @@ function renderLastTime() {
     didBtn.type = "button";
     didBtn.className = "tiny-btn";
     didBtn.textContent = "Just did it";
-    didBtn.addEventListener("click", () => {
+    didBtn.addEventListener("click", async () => {
       item.lastDone = new Date().toISOString().slice(0, 10);
-      saveState();
+      await saveDayToFirestore();
       renderLastTime();
     });
 
@@ -445,9 +520,9 @@ function renderLastTime() {
     delBtn.type = "button";
     delBtn.className = "tiny-icon-btn";
     delBtn.textContent = "✕";
-    delBtn.addEventListener("click", () => {
+    delBtn.addEventListener("click", async () => {
       state.lastTime = state.lastTime.filter((x) => x.id !== item.id);
-      saveState();
+      await saveDayToFirestore();
       renderLastTime();
     });
 
@@ -460,9 +535,9 @@ function renderLastTime() {
   });
 }
 
-// ---------- Trackers ----------
+/* ---------- Trackers ---------- */
 
-// config for the “simple” four
+// Simple four: water, steps, med, stretch
 const SIMPLE_TRACKERS = {
   water: {
     minusId: "waterMinus",
@@ -506,7 +581,7 @@ const SIMPLE_TRACKERS = {
   },
 };
 
-// config for all the rep-based exercise rows
+// All the rep rows
 const REP_TRACKERS = {
   frontLifts: {
     minusId: "frontLiftsRepsMinus",
@@ -667,7 +742,7 @@ const REP_TRACKERS = {
 };
 
 function initTrackers() {
-  // simple trackers (water/steps/med/stretch)
+  // water / steps / med / stretch
   Object.entries(SIMPLE_TRACKERS).forEach(([key, cfg]) => {
     const minusBtn = $(cfg.minusId);
     const plusBtn = $(cfg.plusId);
@@ -680,45 +755,43 @@ function initTrackers() {
       state.trackers[key] = { count: 0, goal: cfg.defaultGoal };
     }
 
-    // hydrate DOM from state
     const t = state.trackers[key];
+
     if (countSpan) countSpan.textContent = t.count ?? 0;
-    if (goalInput) {
-      if (!goalInput.value) {
-        goalInput.value = t.goal ?? cfg.defaultGoal;
-      }
+    if (goalInput && !goalInput.value) {
+      goalInput.value = t.goal ?? cfg.defaultGoal;
     }
     if (winValueSpan) winValueSpan.textContent = t.count ?? 0;
     if (winGoalSpan) winGoalSpan.textContent = t.goal ?? cfg.defaultGoal;
 
-    minusBtn?.addEventListener("click", () => {
+    minusBtn?.addEventListener("click", async () => {
       t.count = Math.max(0, (t.count ?? 0) - cfg.step);
       if (countSpan) countSpan.textContent = t.count;
       if (winValueSpan) winValueSpan.textContent = t.count;
-      saveState();
+      await saveDayToFirestore();
       updateMovementSummaryAndBanner();
     });
 
-    plusBtn?.addEventListener("click", () => {
+    plusBtn?.addEventListener("click", async () => {
       t.count = (t.count ?? 0) + cfg.step;
       if (countSpan) countSpan.textContent = t.count;
       if (winValueSpan) winValueSpan.textContent = t.count;
-      saveState();
+      await saveDayToFirestore();
       updateMovementSummaryAndBanner();
     });
 
-    goalInput?.addEventListener("change", () => {
+    goalInput?.addEventListener("change", async () => {
       const val = parseInt(goalInput.value, 10);
       const goal = Number.isFinite(val) ? val : cfg.defaultGoal;
       t.goal = goal;
       goalInput.value = goal;
       if (winGoalSpan) winGoalSpan.textContent = goal;
-      saveState();
+      await saveDayToFirestore();
       updateMovementSummaryAndBanner();
     });
   });
 
-  // rep-based trackers
+  // all the rep rows
   Object.entries(REP_TRACKERS).forEach(([key, cfg]) => {
     const minusBtn = $(cfg.minusId);
     const plusBtn = $(cfg.plusId);
@@ -730,29 +803,32 @@ function initTrackers() {
     }
 
     const t = state.trackers[key];
-    if (countSpan) countSpan.textContent = t.count ?? 0;
-    if (goalInput && !goalInput.value) goalInput.value = t.goal ?? 30;
 
-    minusBtn?.addEventListener("click", () => {
+    if (countSpan) countSpan.textContent = t.count ?? 0;
+    if (goalInput && !goalInput.value) {
+      goalInput.value = t.goal ?? 30;
+    }
+
+    minusBtn?.addEventListener("click", async () => {
       t.count = Math.max(0, (t.count ?? 0) - 1);
       if (countSpan) countSpan.textContent = t.count;
-      saveState();
+      await saveDayToFirestore();
       updateMovementSummaryAndBanner();
     });
 
-    plusBtn?.addEventListener("click", () => {
+    plusBtn?.addEventListener("click", async () => {
       t.count = (t.count ?? 0) + 1;
       if (countSpan) countSpan.textContent = t.count;
-      saveState();
+      await saveDayToFirestore();
       updateMovementSummaryAndBanner();
     });
 
-    goalInput?.addEventListener("change", () => {
+    goalInput?.addEventListener("change", async () => {
       const val = parseInt(goalInput.value, 10);
       const goal = Number.isFinite(val) ? val : 30;
       t.goal = goal;
       goalInput.value = goal;
-      saveState();
+      await saveDayToFirestore();
       updateMovementSummaryAndBanner();
     });
   });
@@ -761,7 +837,7 @@ function initTrackers() {
 }
 
 function hydrateTrackersDom() {
-  // re-hydrate counts/goals from state (used on reload)
+  // simple four
   Object.entries(SIMPLE_TRACKERS).forEach(([key, cfg]) => {
     const countSpan = $(cfg.countId);
     const goalInput = $(cfg.goalInputId);
@@ -775,6 +851,7 @@ function hydrateTrackersDom() {
     if (winGoalSpan) winGoalSpan.textContent = t.goal ?? cfg.defaultGoal;
   });
 
+  // reps
   Object.entries(REP_TRACKERS).forEach(([key, cfg]) => {
     const countSpan = $(cfg.countId);
     const goalInput = $(cfg.goalInputId);
@@ -782,6 +859,7 @@ function hydrateTrackersDom() {
     if (countSpan) countSpan.textContent = t.count ?? 0;
     if (goalInput) goalInput.value = t.goal ?? 30;
   });
+
   updateMovementSummaryAndBanner();
 }
 
@@ -790,7 +868,6 @@ function updateMovementSummaryAndBanner() {
   const winRepsValue = $("winRepsValue");
   const winRepsGoal = $("winRepsGoal");
 
-  // simple trackers
   const w = state.trackers.water || { count: 0, goal: 0 };
   const s = state.trackers.steps || { count: 0, goal: 0 };
   const m = state.trackers.med || { count: 0, goal: 0 };
@@ -801,7 +878,7 @@ function updateMovementSummaryAndBanner() {
   const mGoal = m.goal ?? 0;
   const stGoal = st.goal ?? 0;
 
-  // reps totals
+  // sum all reps + goals
   let totalReps = 0;
   let totalRepsGoal = 0;
   Object.keys(REP_TRACKERS).forEach((key) => {
@@ -830,7 +907,59 @@ function updateMovementSummaryAndBanner() {
   }
 }
 
-// ---------- Init ----------
+/* ---------- Rehydrate everything from state ---------- */
+
+function rehydrateAllFromState() {
+  // Context controls
+  const dayOfWeek = $("dayOfWeek");
+  const letterDay = $("letterDay");
+  const planDate = $("planDate");
+  const daycareToggle = $("daycareToggle");
+  const therapyToggle = $("therapyToggle");
+
+  if (dayOfWeek) dayOfWeek.value = state.context.dayOfWeek || "";
+  if (letterDay) letterDay.value = state.context.letterDay || "";
+  if (planDate) planDate.value = state.context.planDate || todayDateKey();
+  if (daycareToggle) updateToggleButton(daycareToggle, state.context.daycare || "no");
+  if (therapyToggle) updateToggleButton(therapyToggle, state.context.therapy || "no");
+
+  renderDaySummary();
+  renderTimeline();
+  renderParking();
+  renderLastTime();
+  hydrateTrackersDom();
+}
+
+/* ---------- Auth init ---------- */
+
+function initAuth() {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+      window.location.href = "../login.html";
+      return;
+    }
+
+    if (!ALLOWED_EMAILS.includes(user.email)) {
+      alert("This planner is only available to Mrs. A.");
+      await signOut(auth);
+      window.location.href = "../login.html";
+      return;
+    }
+
+    currentUser = user;
+
+    const planDate = $("planDate");
+    if (planDate && !planDate.value) {
+      planDate.value = todayDateKey();
+    }
+    currentDateKey = planDate?.value || todayDateKey();
+
+    await loadDayFromFirestore();
+    rehydrateAllFromState();
+  });
+}
+
+/* ---------- Init on DOM ready ---------- */
 
 document.addEventListener("DOMContentLoaded", () => {
   initContextForm();
@@ -839,4 +968,5 @@ document.addEventListener("DOMContentLoaded", () => {
   initParkingLot();
   initLastTime();
   initTrackers();
+  initAuth();
 });
