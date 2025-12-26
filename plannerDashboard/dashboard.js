@@ -14,16 +14,16 @@ import {
   setDoc
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-/**
- * 1. FIREBASE INIT
- * Paste your own Firebase config here (same project as the rest of LRCQuest/LRCGames).
- */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  // ...rest of your config here
+  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
+  authDomain: "lrcquest-3039e.firebaseapp.com",
+  projectId: "lrcquest-3039e",
+  storageBucket: "lrcquest-3039e.firebasestorage.app",
+  messagingSenderId: "72063656342",
+  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
+  measurementId: "G-5VXRYJ733C"
 };
+
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
