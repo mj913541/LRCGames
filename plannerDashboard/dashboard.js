@@ -1,1168 +1,751 @@
 // LRCGames/plannerDashboard/dashboard.js
-// Firebase-backed planner dashboard matching dashboard.html
+// Calm planner dashboard for Mrs. A
+// Connects to the same Firebase project as LRCQuest.
+// TODO: copy your existing firebaseConfig from lrcQuestCore.js / login.html
 
 import {
-  initializeApp
+  initializeApp,
+  getApps,
+  getApp,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
 import {
   getAuth,
   onAuthStateChanged,
-  signOut
+  signOut,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   getFirestore,
   doc,
   getDoc,
-  setDoc
+  setDoc,
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-/* ---------- Firebase init ---------- */
+// ---------- CONFIG ----------
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
-  authDomain: "lrcquest-3039e.firebaseapp.com",
-  projectId: "lrcquest-3039e",
-  storageBucket: "lrcquest-3039e.firebasestorage.app",
-  messagingSenderId: "72063656342",
-  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
-  measurementId: "G-5VXRYJ733C"
+  // 🔁 REPLACE THIS with your real config:
+  // apiKey: "YOUR_KEY",
+  // authDomain: "YOUR_DOMAIN",
+  // projectId: "YOUR_PROJECT_ID",
+  // etc.
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Only allow these emails
 const ALLOWED_EMAILS = [
   "malbrecht@sd308.org",
-  "malbrecht3317@gmail.com"
+  "malbrecht3317@gmail.com",
 ];
 
-/* ---------- Helpers ---------- */
+// Path helpers
+const DAILY_PREFIX = "plannerDaily";
+const PARKING_DOC = "plannerParking";
+const WEEKLY_PREFIX = "plannerWeekly";
 
-function todayDateKey() {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
-}
-
-function uuid() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-/* ---------- Time blocks & letter-day schedule ---------- */
-
-const TIME_BLOCKS = [
-  { id: "morning", label: "🌅 Morning" },
-  { id: "workOpen", label: "🏫 Work open" },
-  { id: "midday", label: "🌤 Midday" },
-  { id: "workClose", label: "🏁 Work close" },
-  { id: "evening", label: "🏠 Arrive home" },
-  { id: "bedtime", label: "🌙 Bedtime" },
-];
-
-// SCHOOL LETTER DAY SCHEDULE (24-hr times for correct ordering)
-const SCHEDULE_BY_LETTER_DAY = {
-  A: [
-    { time24: "09:05", title: "4th Rosenthal" },
-    { time24: "10:05", title: "2nd Peterson" },
-    { time24: "11:05", title: "3rd Hossain" },
-    { time24: "13:45", title: "5th Altruismo" },
-    { time24: "14:45", title: "1st Rogers" }
+// Default weekly tasks (you can tweak the names)
+const DEFAULT_WEEKLY_TASKS = {
+  work: [
+    "Plan next week’s LRC lessons",
+    "Update LRCQuest links / quests",
+    "Refresh book displays",
+    "Library communication (newsletters, Seesaw, etc.)",
   ],
-  B: [
-    { time24: "09:05", title: "4th Cavello" },
-    { time24: "10:05", title: "2nd Schmidt" },
-    { time24: "13:45", title: "5th Isibindi" }
+  home: [
+    "Meal plan & grocery list",
+    "Laundry cycle(s)",
+    "Tidy main rooms",
+    "Budget / bills check-in",
   ],
-  C: [
-    { time24: "08:45", title: "AM Duty" },
-    { time24: "10:05", title: "2nd Adams" },
-    { time24: "11:05", title: "3rd Pulsa" },
-    { time24: "13:45", title: "5th Amistad" }
-  ],
-  D: [
-    { time24: "09:20", title: "HC 5th Green" },
-    { time24: "10:05", title: "HC 1st Green" },
-    { time24: "14:45", title: "1st Wilson" }
-  ],
-  E: [
-    { time24: "09:05", title: "4th Tomter" },
-    { time24: "11:05", title: "3rd Carroll" },
-    { time24: "13:45", title: "5th Reveur" },
-    { time24: "14:45", title: "1st Day" }
-  ]
 };
 
-function blockForTime(time24) {
-  if (!time24) return "midday";
-  const [hStr, mStr] = time24.split(":");
-  const h = parseInt(hStr, 10);
-  const mins = h * 60 + parseInt(mStr, 10);
+// Schedules for each letter day (24h times for ordering)
+const LETTER_DAY_SCHEDULES = {
+  A: [
+    { time24: "09:05", label: "4th Rosenthal" },
+    { time24: "10:05", label: "2nd Peterson" },
+    { time24: "11:05", label: "3rd Hossain" },
+    { time24: "13:45", label: "5th Altruismo" },
+    { time24: "14:45", label: "1st Rogers" },
+  ],
+  B: [
+    { time24: "09:05", label: "4th Cavello" },
+    { time24: "10:05", label: "2nd Schmidt" },
+    { time24: "11:05", label: "Admin / Projects" },
+    { time24: "13:45", label: "5th Isibindi" },
+  ],
+  C: [
+    { time24: "08:45", label: "AM Duty & Opening" },
+    { time24: "09:05", label: "Admin / Projects" },
+    { time24: "10:05", label: "2nd Adams" },
+    { time24: "11:05", label: "3rd Pulsa" },
+    { time24: "13:45", label: "5th Amistad" },
+    { time24: "14:30", label: "Prep / Closing" },
+  ],
+  D: [
+    { time24: "12:20", label: "Lunch" },
+    { time24: "12:45", label: "Prep" },
+    { time24: "13:45", label: "Prep" },
+    { time24: "14:30", label: "Prep" },
+    { time24: "14:45", label: "1st Wilson" },
+  ],
+  E: [
+    { time24: "09:05", label: "4th Tomter" },
+    { time24: "10:05", label: "Prep" },
+    { time24: "11:05", label: "3rd Carroll" },
+    { time24: "13:45", label: "5th Reveur" },
+    { time24: "14:45", label: "1st Day" },
+  ],
+};
 
-  if (mins < 8 * 60) return "morning";        // before 8:00
-  if (mins < 11 * 60) return "workOpen";      // 8:00–10:59
-  if (mins < 13 * 60) return "midday";        // 11:00–12:59
-  if (mins < 16 * 60) return "workClose";     // 13:00–15:59
-  if (mins < 21 * 60) return "evening";       // 16:00–20:59
-  return "bedtime";                           // 21:00+
-}
+// Generic work-day tasks (only shown when letter day is A–E)
+const WORK_DAY_TASK_TEMPLATES = [
+  { label: "Check email & respond to urgent messages", segment: "AM" },
+  { label: "Quick building walk / reset library space", segment: "AM" },
+  { label: "Lesson prep for tomorrow", segment: "MID" },
+  { label: "Update LRCQuest / digital boards", segment: "MID" },
+  { label: "Tidy library, turn off lights & tech", segment: "PM" },
+];
 
-function isWeekdayName(name) {
-  return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(name);
-}
+// Daycare tasks (only when daycare = yes)
+const DAYCARE_TASK_TEMPLATES = [
+  { label: "Pack daycare bag (diapers/wipes/outfit)", segment: "AM" },
+  { label: "Label bottles / snacks", segment: "AM" },
+  { label: "Daycare pickup", segment: "PM" },
+  { label: "Unpack daycare bag (papers, bottles, clothes)", segment: "PM" },
+];
 
-/* ---------- Core state shape ---------- */
+// Home anchors that always show
+const HOME_ANCHORS = [
+  { label: "Morning self-care (meds, clothes, teeth)", segment: "AM" },
+  { label: "Quick reset: counters & hotspots", segment: "MID" },
+  { label: "Evening reset: dishes, sink, launchpad for tomorrow", segment: "PM" },
+];
 
-const DEFAULT_STATE = {
+// ---------- STATE ----------
+
+let app;
+let auth;
+let db;
+let currentUser = null;
+
+let plannerState = {
+  dateKey: null,
   context: {
     dayOfWeek: "",
     letterDay: "",
-    daycare: "no",      // "yes" | "no"
-    therapy: "no",      // "yes" | "no"
-    planDate: "",       // YYYY-MM-DD
+    daycare: "no",
   },
-  // tasks stored by block id -> array of {id, text, done, auto?}
-  tasks: TIME_BLOCKS.reduce((acc, b) => {
-    acc[b.id] = [];
-    return acc;
-  }, {}),
-  parking: [],          // [{id, text}]
-  lastTime: [],         // [{id, text, lastDone: "YYYY-MM-DD" | null}]
-  trackers: {
-    // daily ones
-    water: { count: 0, goal: 8 },
-    steps: { count: 0, goal: 6000 },
-    med: { count: 0, goal: 10 },
-    stretch: { count: 0, goal: 10 },
-    // reps exercises (default goal 30)
-    frontLifts: { count: 0, goal: 30 },
-    sideLifts: { count: 0, goal: 30 },
-    reverseFlys: { count: 0, goal: 30 },
-    pressChest: { count: 0, goal: 30 },
-    flyChest: { count: 0, goal: 30 },
-    pushUps: { count: 0, goal: 30 },
-    heelTapsAbs: { count: 0, goal: 30 },
-    hipBridgeAbs: { count: 0, goal: 30 },
-    birdDogAbs: { count: 0, goal: 30 },
-    deadBugAbs: { count: 0, goal: 30 },
-    catCowAbs: { count: 0, goal: 30 },
-    squats: { count: 0, goal: 30 },
-    alternatingReverseLunges: { count: 0, goal: 30 },
-    sumoSquats: { count: 0, goal: 30 },
-    altSideSquats: { count: 0, goal: 30 },
-    rdlRight: { count: 0, goal: 30 },
-    rdlLeft: { count: 0, goal: 30 },
-    calfRaises: { count: 0, goal: 30 },
-    wideRowBack: { count: 0, goal: 30 },
-    pullDownBack: { count: 0, goal: 30 },
-    facePullsBack: { count: 0, goal: 30 },
-    bicepCurls: { count: 0, goal: 30 },
-    hammerCurls: { count: 0, goal: 30 },
-    tricepKickbacksRight: { count: 0, goal: 30 },
-    tricepKickbacksLeft: { count: 0, goal: 30 },
-    skullCrushers: { count: 0, goal: 30 },
+  mergedTasks: [],
+  weeklyTasks: {
+    work: [],
+    home: [],
   },
 };
 
-let currentUser = null;
-let currentDateKey = todayDateKey();
-let state = deepClone(DEFAULT_STATE);
+let hideCompleted = false;
 
-/* ---------- Firestore helpers ---------- */
+// ---------- INIT ----------
 
-function mergeWithDefaults(raw) {
-  if (!raw) return deepClone(DEFAULT_STATE);
-
-  return {
-    ...deepClone(DEFAULT_STATE),
-    ...raw,
-    context: {
-      ...DEFAULT_STATE.context,
-      ...(raw.context || {}),
-    },
-    tasks: {
-      ...DEFAULT_STATE.tasks,
-      ...(raw.tasks || {}),
-    },
-    parking: raw.parking || [],
-    lastTime: raw.lastTime || [],
-    trackers: {
-      ...DEFAULT_STATE.trackers,
-      ...(raw.trackers || {}),
-    },
-  };
+function initFirebase() {
+  if (!getApps().length) {
+    app = initializeApp(firebaseConfig);
+  } else {
+    app = getApp();
+  }
+  auth = getAuth(app);
+  db = getFirestore(app);
 }
 
-function getDayDocRef() {
-  if (!currentUser || !currentDateKey) return null;
-  return doc(db, "plannerDays", `${currentUser.uid}_${currentDateKey}`);
+function formatTodayLabel(date) {
+  return date.toLocaleDateString(undefined, {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
 }
 
-async function loadDayFromFirestore() {
-  const ref = getDayDocRef();
-  if (!ref) return;
+function getDateKey(date) {
+  return date.toISOString().slice(0, 10);
+}
 
+function getWeekKey(date) {
+  const year = date.getFullYear();
+  const start = new Date(year, 0, 1);
+  const diffDays = Math.floor((date - start) / (1000 * 60 * 60 * 24));
+  const week = Math.floor(diffDays / 7) + 1;
+  return `${year}-W${week}`;
+}
+
+// Assign AM / MID / PM from 24h time (string "HH:MM")
+function segmentFromTime(time24) {
+  const [h] = time24.split(":").map((v) => parseInt(v, 10));
+  if (h < 12) return "AM";
+  if (h < 16) return "MID";
+  return "PM";
+}
+
+function slugify(str) {
+  return String(str)
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function buildTaskId(source, label, extra = "") {
+  return `${source}-${slugify(label)}${extra ? "-" + extra : ""}`;
+}
+
+// ---------- LOAD & SAVE ----------
+
+async function loadDailyState(user, dateKey) {
+  const ref = doc(db, DAILY_PREFIX, `${user.uid}_${dateKey}`);
   const snap = await getDoc(ref);
-  if (snap.exists()) {
-    state = mergeWithDefaults(snap.data());
-  } else {
-    state = deepClone(DEFAULT_STATE);
-    state.context.planDate = currentDateKey;
-  }
+  if (!snap.exists()) return null;
+  return snap.data();
 }
 
-async function saveDayToFirestore() {
-  const ref = getDayDocRef();
-  if (!ref) return;
-  await setDoc(ref, state, { merge: false });
+async function saveDailyState() {
+  if (!currentUser || !plannerState.dateKey) return;
+  const ref = doc(db, DAILY_PREFIX, `${currentUser.uid}_${plannerState.dateKey}`);
+  const payload = {
+    context: plannerState.context,
+    mergedTasks: plannerState.mergedTasks,
+    dateKey: plannerState.dateKey,
+  };
+  await setDoc(ref, payload, { merge: true });
 }
 
-/* ---------- Default “Last time I…” + auto-tasks ---------- */
-
-function seedDefaultLastTimeIfNeeded() {
-  if (!Array.isArray(state.lastTime) || state.lastTime.length === 0) {
-    state.lastTime = [
-      { id: uuid(), text: "Changed sheets",       lastDone: todayDateKey() },
-      { id: uuid(), text: "Bathed Baby",          lastDone: "" },
-      { id: uuid(), text: "Shaved my armpits",    lastDone: "" },
-      { id: uuid(), text: "Cleaned eyebrows",     lastDone: "" },
-      { id: uuid(), text: "Shaved lips",          lastDone: "" },
-      { id: uuid(), text: "Shaved 🐱",            lastDone: "" },
-      { id: uuid(), text: "Washed hair",          lastDone: "" },
-      { id: uuid(), text: "Shaved legs",          lastDone: "" },
-      { id: uuid(), text: "Toenails",             lastDone: "" },
-      { id: uuid(), text: "Nails",                lastDone: "" },
-    ];
-  }
+async function loadParkingLot(user) {
+  const ref = doc(db, PARKING_DOC, user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) return "";
+  return snap.data().text || "";
 }
 
-// Remove existing auto tasks & rebuild from context
-function regenerateAutoTasks() {
-  // remove all existing auto tasks but keep manual
-  TIME_BLOCKS.forEach((b) => {
-    state.tasks[b.id] = (state.tasks[b.id] || []).filter((t) => !t.auto);
-  });
-
-  const blockTasks = [];
-  const isWeekday = isWeekdayName(state.context.dayOfWeek);
-  const isSchoolDay = isWeekday &&
-    state.context.letterDay &&
-    state.context.letterDay !== "NONE";
-
-  // ----- AM Must-Do (always) -----
-  blockTasks.push({ label: "Levothyroxine", block: "morning" });
-  blockTasks.push({ label: "Switch dishwasher", block: "morning" });
-  blockTasks.push({ label: "Clean glasses", block: "morning" });
-  blockTasks.push({ label: "Deodorant", block: "morning" });
-  blockTasks.push({ label: "Eat breakfast", block: "morning" });
-  blockTasks.push({ label: "Brush teeth (AM)", block: "morning" });
-  blockTasks.push({ label: "Floss (AM)", block: "morning" });
-  blockTasks.push({ label: "Get dressed", block: "morning" });
-  blockTasks.push({ label: "Wash face (AM)", block: "morning" });
-  blockTasks.push({ label: "Style hair", block: "morning" });
-  blockTasks.push({ label: "Feed cat & refresh water", block: "morning" });
-
-  // Only on school days
-  if (isSchoolDay) {
-    blockTasks.push({ label: "Fill water bottle", block: "morning" });
-    blockTasks.push({ label: "Pack lunch", block: "morning" });
-    blockTasks.push({ label: "Pack school bag", block: "morning" });
-  }
-
-  if (state.context.daycare === "yes") {
-    blockTasks.push({ label: "Lincoln diaper changed", block: "morning" });
-    blockTasks.push({ label: "Lincoln bottle prepped", block: "morning" });
-    blockTasks.push({ label: "Daycare bag packed", block: "morning" });
-    blockTasks.push({ label: "Daycare notebook filled out", block: "morning" });
-  }
-
-  // ----- WORK OPEN (only on school days) -----
-  if (isSchoolDay) {
-    blockTasks.push({ label: "Projector on", block: "workOpen" });
-    blockTasks.push({ label: "Lunch in fridge", block: "workOpen" });
-    blockTasks.push({ label: "Sign into laptops & pull up Destiny", block: "workOpen" });
-    blockTasks.push({ label: "Name tags out", block: "workOpen" });
-
-    // ----- MIDDAY -----
-    blockTasks.push({
-      label: "Midday reset (5-min tidy / water / stretch)",
-      block: "midday"
-    });
-
-    // ----- WORK CLOSE -----
-    blockTasks.push({ label: "Sign out / projector off", block: "workClose" });
-    blockTasks.push({ label: "Collect name tags", block: "workClose" });
-    blockTasks.push({ label: "5 minutes classroom straighten", block: "workClose" });
-    blockTasks.push({ label: "Clear desk", block: "workClose" });
-  }
-
-  // ----- EVENING -----
-  if (state.context.therapy === "yes") {
-    blockTasks.push({
-      label: "Prep notes & questions for therapy",
-      block: "evening"
-    });
-  }
-  blockTasks.push({ label: "Lay out clothes for tomorrow", block: "evening" });
-
-  // ----- BEDTIME / PM MUST-DO -----
-  blockTasks.push({ label: "Brush teeth", block: "bedtime" });
-  blockTasks.push({ label: "Floss", block: "bedtime" });
-  blockTasks.push({ label: "Wash face", block: "bedtime" });
-  blockTasks.push({
-    label: "Water bottle & lunch dishes in dishwasher",
-    block: "bedtime"
-  });
-
-  // ----- Letter day schedule -> class tasks in appropriate block -----
-  const letter = state.context.letterDay;
-  if (isSchoolDay && letter && SCHEDULE_BY_LETTER_DAY[letter]) {
-    SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
-      const blockId = blockForTime(appt.time24);
-      blockTasks.push({
-        label: appt.title,
-        block: blockId,
-      });
-    });
-  }
-
-  // Push into state.tasks as auto
-  blockTasks.forEach((t) => {
-    if (!state.tasks[t.block]) state.tasks[t.block] = [];
-    state.tasks[t.block].push({
-      id: uuid(),
-      text: t.label,
-      done: false,
-      auto: true,
-    });
-  });
+async function saveParkingLot(text) {
+  if (!currentUser) return;
+  const ref = doc(db, PARKING_DOC, currentUser.uid);
+  await setDoc(ref, { text }, { merge: true });
 }
 
-// Only used on first load if a day has *no* tasks at all
-function seedAutoTasksIfEmpty() {
-  const totalTasksCount = TIME_BLOCKS.reduce(
-    (sum, b) => sum + (state.tasks[b.id]?.length || 0),
-    0
+async function loadWeeklyTasks(user, weekKey) {
+  const ref = doc(db, WEEKLY_PREFIX, `${user.uid}_${weekKey}`);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    // seed with defaults, status "planned"
+    return {
+      weekKey,
+      work: DEFAULT_WEEKLY_TASKS.work.map((title) => ({
+        id: buildTaskId("weekly-work", title),
+        title,
+        status: "planned",
+      })),
+      home: DEFAULT_WEEKLY_TASKS.home.map((title) => ({
+        id: buildTaskId("weekly-home", title),
+        title,
+        status: "planned",
+      })),
+    };
+  }
+  return snap.data();
+}
+
+async function saveWeeklyTasks(weeklyState) {
+  if (!currentUser || !weeklyState || !weeklyState.weekKey) return;
+  const ref = doc(
+    db,
+    WEEKLY_PREFIX,
+    `${currentUser.uid}_${weeklyState.weekKey}`
   );
-  if (totalTasksCount > 0) return;
-  regenerateAutoTasks();
+  await setDoc(ref, weeklyState, { merge: true });
 }
 
-/* ---------- Context + summary ---------- */
+// ---------- MERGED TASKS BUILD ----------
 
-function updateToggleButton(btn, value) {
-  btn.dataset.value = value;
-  if (value === "yes") {
-    btn.classList.add("toggle-on");
-    btn.textContent = "Yes";
-  } else {
-    btn.classList.remove("toggle-on");
-    btn.textContent = "No";
-  }
-}
-
-function toggleBtnValue(btn) {
-  const current = btn.dataset.value === "yes" ? "no" : "yes";
-  updateToggleButton(btn, current);
-}
-
-function renderDaySummary() {
-  const el = $("daySummary");
-  if (!el) return;
-  const { dayOfWeek, letterDay, daycare, therapy, planDate } = state.context;
-
-  const bits = [];
-  if (dayOfWeek) bits.push(dayOfWeek);
-  if (letterDay) bits.push(letterDay === "NONE" ? "No school" : `${letterDay} Day`);
-  if (planDate) bits.push(planDate);
-  bits.push(`Daycare: ${daycare === "yes" ? "✅" : "❌"}`);
-  bits.push(`Therapy: ${therapy === "yes" ? "✅" : "❌"}`);
-
-  el.textContent = bits.join(" · ");
-}
-
-async function handleContextSubmit(e) {
-  e.preventDefault();
-  const dayOfWeekSel = $("dayOfWeek");
-  const letterDaySel = $("letterDay");
-  const planDateInput = $("planDate");
-  const daycareToggle = $("daycareToggle");
-  const therapyToggle = $("therapyToggle");
-
-  const newContext = {
-    dayOfWeek: dayOfWeekSel.value,
-    letterDay: letterDaySel.value,
-    planDate: planDateInput.value || todayDateKey(),
-    daycare: daycareToggle.dataset.value || "no",
-    therapy: therapyToggle.dataset.value || "no",
-  };
-
-  currentDateKey = newContext.planDate;
-
-  // load that day's data, then override context, then regenerate auto tasks
-  await loadDayFromFirestore();
-  state.context = {
-    ...state.context,
-    ...newContext,
-  };
-
-  seedDefaultLastTimeIfNeeded();
-  regenerateAutoTasks();
-  await saveDayToFirestore();
-  rehydrateAllFromState();
-}
-
-async function handleReloadDay() {
-  const planDateInput = $("planDate");
-  currentDateKey = planDateInput.value || todayDateKey();
-
-  await loadDayFromFirestore();
-  seedDefaultLastTimeIfNeeded();
-  // don't regenerate autos here; we want exactly what's saved
-  await saveDayToFirestore();
-  rehydrateAllFromState();
-}
-
-function initContextForm() {
-  const form = $("contextForm");
-  const daycareToggle = $("daycareToggle");
-  const therapyToggle = $("therapyToggle");
-  const reloadBtn = $("reloadDayBtn");
-
-  if (!form || !daycareToggle || !therapyToggle || !reloadBtn) return;
-
-  const dayOfWeek = $("dayOfWeek");
-  const letterDay = $("letterDay");
-  const planDate = $("planDate");
-
-  dayOfWeek.value = state.context.dayOfWeek || "";
-  letterDay.value = state.context.letterDay || "";
-  planDate.value = state.context.planDate || todayDateKey();
-
-  updateToggleButton(daycareToggle, state.context.daycare || "no");
-  updateToggleButton(therapyToggle, state.context.therapy || "no");
-  renderDaySummary();
-
-  daycareToggle.addEventListener("click", async () => {
-    toggleBtnValue(daycareToggle);
-    state.context.daycare = daycareToggle.dataset.value;
-    regenerateAutoTasks();
-    await saveDayToFirestore();
-    rehydrateAllFromState();
+function buildMergedTasksFromContext(context, previousTasks = []) {
+  const { letterDay, daycare } = context;
+  /** @type {Record<string, any>} */
+  const prevById = {};
+  previousTasks.forEach((t) => {
+    prevById[t.id] = t;
   });
 
-  therapyToggle.addEventListener("click", async () => {
-    toggleBtnValue(therapyToggle);
-    state.context.therapy = therapyToggle.dataset.value;
-    regenerateAutoTasks();
-    await saveDayToFirestore();
-    rehydrateAllFromState();
-  });
+  /** @type {Array<any>} */
+  const tasks = [];
 
-  form.addEventListener("submit", handleContextSubmit);
-  reloadBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    handleReloadDay();
-  });
-}
+  // Letter day schedule (classes)
+  if (letterDay && letterDay !== "NONE" && LETTER_DAY_SCHEDULES[letterDay]) {
+    LETTER_DAY_SCHEDULES[letterDay].forEach((slot) => {
+      const segment = segmentFromTime(slot.time24);
+      const id = buildTaskId("class", slot.label, slot.time24);
+      const prev = prevById[id];
+      tasks.push({
+        id,
+        label: slot.label,
+        detail: `${letterDay} Day • ${slot.time24}`,
+        segment,
+        source: "class",
+        completed: prev ? !!prev.completed : false,
+      });
+    });
 
-/* ---------- Logout ---------- */
-
-function initLogout() {
-  const btn = $("logoutBtn");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    await signOut(auth);
-    window.location.href = "../login.html";
-  });
-}
-
-/* ---------- Timeline: merged tasks & appointments ---------- */
-
-function initTimeline() {
-  const addBtn = $("addTaskBtn");
-  const hideCompleted = $("hideCompletedTasks");
-  if (addBtn) {
-    addBtn.addEventListener("click", async () => {
-      const blockSel = $("newTaskBlock");
-      const textInput = $("newTaskText");
-      const blockId = blockSel.value;
-      const text = textInput.value.trim();
-      if (!text) return;
-      const item = {
-        id: uuid(),
-        text,
-        done: false,
-        auto: false,
-      };
-      state.tasks[blockId].push(item);
-      textInput.value = "";
-      await saveDayToFirestore();
-      renderTimeline();
+    // Work tasks (only on letter days)
+    WORK_DAY_TASK_TEMPLATES.forEach((t) => {
+      const id = buildTaskId("work", t.label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
+        label: t.label,
+        detail: "Work day",
+        segment: t.segment,
+        source: "work",
+        completed: prev ? !!prev.completed : false,
+      });
     });
   }
-  if (hideCompleted) {
-    hideCompleted.addEventListener("change", () => {
-      renderTimeline();
+
+  // Daycare tasks
+  if (daycare === "yes") {
+    DAYCARE_TASK_TEMPLATES.forEach((t) => {
+      const id = buildTaskId("daycare", t.label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
+        label: t.label,
+        detail: "Daycare",
+        segment: t.segment,
+        source: "daycare",
+        completed: prev ? !!prev.completed : false,
+      });
     });
   }
-  renderTimeline();
+
+  // Home anchors (always)
+  HOME_ANCHORS.forEach((t) => {
+    const id = buildTaskId("home-anchor", t.label);
+    const prev = prevById[id];
+    tasks.push({
+      id,
+      label: t.label,
+      detail: "Home anchor",
+      segment: t.segment,
+      source: "home",
+      completed: prev ? !!prev.completed : false,
+    });
+  });
+
+  // Sort by segment, then label
+  const order = { AM: 0, MID: 1, PM: 2 };
+  tasks.sort((a, b) => {
+    const segDiff = (order[a.segment] ?? 0) - (order[b.segment] ?? 0);
+    if (segDiff !== 0) return segDiff;
+    return a.label.localeCompare(b.label);
+  });
+
+  return tasks;
 }
 
-function renderTimeline() {
-  const container = $("timelineContainer");
-  const hideCompleted = $("hideCompletedTasks")?.checked;
-  if (!container) return;
+// ---------- RENDERING ----------
 
-  container.innerHTML = "";
+function renderToday(date) {
+  const el = document.getElementById("today-label");
+  if (el) {
+    el.textContent = formatTodayLabel(date);
+  }
+}
 
-  TIME_BLOCKS.forEach((block) => {
-    const items = state.tasks[block.id] || [];
-    const visibleItems = items.filter((item) => !(hideCompleted && item.done));
-    if (!visibleItems.length) return;
+function hydrateContextForm(context) {
+  const daySelect = document.getElementById("day-of-week");
+  const letterSelect = document.getElementById("letter-day");
+  const daycareToggle = document.getElementById("daycare-toggle");
+  const status = document.getElementById("context-status");
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "time-block";
+  if (daySelect) daySelect.value = context.dayOfWeek || "";
+  if (letterSelect) letterSelect.value = context.letterDay || "";
+  if (daycareToggle) {
+    Array.from(daycareToggle.querySelectorAll(".pill-option")).forEach(
+      (btn) => {
+        const v = btn.dataset.value;
+        if (v === context.daycare) {
+          btn.classList.add("pill-option--active");
+        } else {
+          btn.classList.remove("pill-option--active");
+        }
+      }
+    );
+  }
+  if (status) {
+    if (context.letterDay || context.dayOfWeek) {
+      status.textContent = "Context applied. You can update anytime.";
+    } else {
+      status.textContent = "Context not applied yet.";
+    }
+  }
+}
 
-    const header = document.createElement("div");
-    header.className = "time-block-header";
-    header.textContent = block.label;
-    wrapper.appendChild(header);
+function renderMergedTasks() {
+  const amList = document.getElementById("am-task-list");
+  const midList = document.getElementById("mid-task-list");
+  const pmList = document.getElementById("pm-task-list");
+  if (!amList || !midList || !pmList) return;
 
-    const list = document.createElement("div");
-    list.className = "time-block-list";
+  amList.innerHTML = "";
+  midList.innerHTML = "";
+  pmList.innerHTML = "";
 
-    visibleItems.forEach((item) => {
-      const row = document.createElement("div");
-      row.className = "timeline-item";
+  const segments = {
+    AM: amList,
+    MID: midList,
+    PM: pmList,
+  };
 
-      const left = document.createElement("label");
-      left.className = "timeline-item-left";
+  plannerState.mergedTasks.forEach((task) => {
+    if (hideCompleted && task.completed) return;
 
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = item.done;
-      checkbox.addEventListener("change", async () => {
-        item.done = checkbox.checked;
-        await saveDayToFirestore();
-        renderTimeline();
+    const li = document.createElement("li");
+    li.className = "task-item" + (task.completed ? " completed" : "");
+    li.dataset.taskId = task.id;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !!task.completed;
+    checkbox.addEventListener("change", () => {
+      toggleTaskCompleted(task.id, checkbox.checked);
+    });
+
+    const label = document.createElement("div");
+    label.className = "task-item-label";
+    label.textContent = task.label;
+
+    const meta = document.createElement("div");
+    meta.className = "task-item-meta";
+    meta.textContent = task.detail || "";
+
+    li.appendChild(checkbox);
+    const contentWrap = document.createElement("div");
+    contentWrap.style.flex = "1";
+    contentWrap.appendChild(label);
+    contentWrap.appendChild(meta);
+    li.appendChild(contentWrap);
+
+    const segKey = task.segment || "AM";
+    const listEl = segments[segKey] || segments.AM;
+    listEl.appendChild(li);
+  });
+
+  // If any band is empty, show a soft placeholder
+  ["AM", "MID", "PM"].forEach((seg) => {
+    const listEl = segments[seg];
+    if (listEl && !listEl.children.length) {
+      const empty = document.createElement("li");
+      empty.className = "task-item";
+      empty.innerHTML =
+        '<span class="task-item-label" style="opacity:.6;">No tasks in this band yet.</span>';
+      listEl.appendChild(empty);
+    }
+  });
+}
+
+function toggleTaskCompleted(taskId, completed) {
+  const t = plannerState.mergedTasks.find((x) => x.id === taskId);
+  if (!t) return;
+  t.completed = completed;
+
+  // Update DOM class quickly
+  const node = document.querySelector(
+    `.task-item[data-task-id="${CSS.escape(taskId)}"]`
+  );
+  if (node) {
+    if (completed) node.classList.add("completed");
+    else node.classList.remove("completed");
+  }
+
+  saveDailyState().catch(console.error);
+}
+
+// Parking lot
+
+function hydrateParkingLot(text) {
+  const ta = document.getElementById("parking-lot");
+  if (!ta) return;
+  ta.value = text || "";
+}
+
+// Weekly tasks
+
+function renderWeeklyTasks(weeklyState) {
+  const workWrap = document.getElementById("weekly-work-list");
+  const homeWrap = document.getElementById("weekly-home-list");
+  if (!workWrap || !homeWrap) return;
+
+  workWrap.innerHTML = "";
+  homeWrap.innerHTML = "";
+
+  function renderGroup(list, container, groupKey) {
+    list.forEach((item) => {
+      const root = document.createElement("div");
+      root.className = "weekly-task";
+      root.dataset.taskId = item.id;
+      root.dataset.group = groupKey;
+
+      const header = document.createElement("div");
+      header.className = "weekly-task-header";
+
+      const title = document.createElement("div");
+      title.className = "weekly-task-title";
+      title.textContent = item.title;
+
+      const pill = document.createElement("button");
+      pill.type = "button";
+      pill.className =
+        "weekly-status-pill " + getWeeklyStatusClass(item.status);
+      pill.textContent = statusLabel(item.status);
+      pill.addEventListener("click", () => {
+        cycleWeeklyStatus(weeklyState, groupKey, item.id);
       });
 
-      const span = document.createElement("span");
-      span.textContent = item.text;
+      header.appendChild(title);
+      header.appendChild(pill);
 
-      left.appendChild(checkbox);
-      left.appendChild(span);
+      const track = document.createElement("div");
+      track.className = "weekly-progress-track";
 
-      row.appendChild(left);
-      list.appendChild(row);
+      const fill = document.createElement("div");
+      fill.className = "weekly-progress-fill";
+      fill.style.width = statusPercentage(item.status) + "%";
+      track.appendChild(fill);
+
+      root.appendChild(header);
+      root.appendChild(track);
+
+      container.appendChild(root);
     });
+  }
 
-    wrapper.appendChild(list);
-    container.appendChild(wrapper);
-  });
+  renderGroup(weeklyState.work, workWrap, "work");
+  renderGroup(weeklyState.home, homeWrap, "home");
 }
 
-/* ---------- Parking lot ---------- */
-
-function initParkingLot() {
-  const addBtn = $("addParkingBtn");
-  const input = $("parkingInput");
-  if (!addBtn || !input) return;
-
-  addBtn.addEventListener("click", async () => {
-    const text = input.value.trim();
-    if (!text) return;
-    state.parking.push({
-      id: uuid(),
-      text,
-    });
-    input.value = "";
-    await saveDayToFirestore();
-    renderParking();
-  });
-
-  renderParking();
+function getWeeklyStatusClass(status) {
+  if (status === "prepped") return "weekly-status--prepped";
+  if (status === "completed") return "weekly-status--completed";
+  return "weekly-status--planned";
 }
 
-function renderParking() {
-  const container = $("parkingList");
-  if (!container) return;
-  container.innerHTML = "";
-
-  state.parking.forEach((item) => {
-    const pill = document.createElement("div");
-    pill.className = "pill-item";
-
-    const span = document.createElement("span");
-    span.textContent = item.text;
-
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "tiny-icon-btn";
-    delBtn.textContent = "✕";
-    delBtn.addEventListener("click", async () => {
-      state.parking = state.parking.filter((p) => p.id !== item.id);
-      await saveDayToFirestore();
-      renderParking();
-    });
-
-    pill.appendChild(span);
-    pill.appendChild(delBtn);
-
-    container.appendChild(pill);
-  });
+function statusLabel(status) {
+  if (status === "prepped") return "Prepped";
+  if (status === "completed") return "Completed";
+  return "Planned";
 }
 
-/* ---------- “When was the last time I…” ---------- */
-
-function initLastTime() {
-  const addBtn = $("addLastTimeBtn");
-  const input = $("newLastTimeText");
-  if (!addBtn || !input) return;
-
-  addBtn.addEventListener("click", async () => {
-    const text = input.value.trim();
-    if (!text) return;
-    state.lastTime.push({
-      id: uuid(),
-      text,
-      lastDone: null,
-    });
-    input.value = "";
-    await saveDayToFirestore();
-    renderLastTime();
-  });
-
-  renderLastTime();
+function statusPercentage(status) {
+  if (status === "prepped") return 66;
+  if (status === "completed") return 100;
+  return 33;
 }
 
-function renderLastTime() {
-  const container = $("lastTimeList");
-  if (!container) return;
+async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
+  const list = weeklyState[groupKey];
+  const item = list.find((x) => x.id === taskId);
+  if (!item) return;
 
-  container.innerHTML = "";
+  const order = ["planned", "prepped", "completed"];
+  const idx = order.indexOf(item.status || "planned");
+  const next = order[(idx + 1) % order.length];
+  item.status = next;
+
+  // Re-render just weekly tasks (simple for now)
+  renderWeeklyTasks(weeklyState);
+  await saveWeeklyTasks(weeklyState);
+}
+
+// ---------- COLLAPSIBLES & UI EVENTS ----------
+
+function setupCollapsibles() {
+  document
+    .querySelectorAll(".collapsible")
+    .forEach((section) => {
+      const header = section.querySelector(".collapsible-header");
+      const toggleBtn = section.querySelector(".collapse-toggle");
+      const body = section.querySelector(".collapsible-body");
+      if (!header || !toggleBtn || !body) return;
+
+      // initial state
+      section.classList.remove("collapsed");
+
+      header.addEventListener("click", (e) => {
+        // avoid double-toggle when clicking inner buttons:
+        if (e.target.closest("button") && e.target !== toggleBtn) return;
+        toggleSection(section, toggleBtn);
+      });
+
+      toggleBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        toggleSection(section, toggleBtn);
+      });
+    });
+}
+
+function toggleSection(section, toggleBtn) {
+  const isCollapsed = section.classList.toggle("collapsed");
+  if (toggleBtn) {
+    toggleBtn.setAttribute("aria-expanded", String(!isCollapsed));
+    const label = toggleBtn.querySelector(".collapse-label");
+    if (label) label.textContent = isCollapsed ? "Show" : "Hide";
+  }
+}
+
+// ---------- MAIN FLOW ----------
+
+async function initDashboardForUser(user) {
+  currentUser = user;
+
+  const userChip = document.getElementById("user-email");
+  if (userChip) userChip.textContent = user.email || "Signed in";
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  plannerState.dateKey = getDateKey(today);
+  renderToday(today);
 
-  state.lastTime.forEach((item) => {
-    const row = document.createElement("div");
-    row.className = "last-time-item";
-
-    const info = document.createElement("div");
-    info.className = "last-time-info";
-
-    const title = document.createElement("div");
-    title.className = "last-time-title";
-    title.textContent = item.text;
-
-    const detail = document.createElement("div");
-    detail.className = "last-time-detail";
-
-    let days = null;
-    if (item.lastDone) {
-      const lastDate = new Date(item.lastDone);
-      lastDate.setHours(0, 0, 0, 0);
-      const diffMs = today - lastDate;
-      days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    }
-
-    if (days === null) {
-      detail.textContent = "Not done yet";
-      row.classList.add("status-overdue");
-    } else {
-      detail.textContent = days === 0 ? "Today" : `${days} day(s) ago`;
-      if (days <= 7) {
-        row.classList.add("status-ok");
-      } else if (days <= 14) {
-        row.classList.add("status-warning");
-      } else {
-        row.classList.add("status-overdue");
-      }
-    }
-
-    info.appendChild(title);
-    info.appendChild(detail);
-
-    const actions = document.createElement("div");
-    actions.className = "last-time-actions";
-
-    const didBtn = document.createElement("button");
-    didBtn.type = "button";
-    didBtn.className = "tiny-btn";
-    didBtn.textContent = "Just did it";
-    didBtn.addEventListener("click", async () => {
-      item.lastDone = new Date().toISOString().slice(0, 10);
-      await saveDayToFirestore();
-      renderLastTime();
-    });
-
-    const delBtn = document.createElement("button");
-    delBtn.type = "button";
-    delBtn.className = "tiny-icon-btn";
-    delBtn.textContent = "✕";
-    delBtn.addEventListener("click", async () => {
-      state.lastTime = state.lastTime.filter((x) => x.id !== item.id);
-      await saveDayToFirestore();
-      renderLastTime();
-    });
-
-    actions.appendChild(didBtn);
-    actions.appendChild(delBtn);
-
-    row.appendChild(info);
-    row.appendChild(actions);
-    container.appendChild(row);
-  });
-}
-
-/* ---------- Trackers ---------- */
-
-// Simple four: water, steps, med, stretch
-const SIMPLE_TRACKERS = {
-  water: {
-    minusId: "waterMinus",
-    plusId: "waterPlus",
-    countId: "waterCount",
-    goalInputId: "waterGoal",
-    winValueId: "winWaterValue",
-    winGoalId: "winWaterGoal",
-    defaultGoal: 8,
-    step: 1,
-  },
-  steps: {
-    minusId: "stepMinus",
-    plusId: "stepPlus",
-    countId: "stepCount",
-    goalInputId: "stepGoal",
-    winValueId: "winStepsValue",
-    winGoalId: "winStepsGoal",
-    defaultGoal: 6000,
-    step: 500,
-  },
-  med: {
-    minusId: "medMinus",
-    plusId: "medPlus",
-    countId: "medCount",
-    goalInputId: "medGoal",
-    winValueId: "winMedValue",
-    winGoalId: "winMedGoal",
-    defaultGoal: 10,
-    step: 5,
-  },
-  stretch: {
-    minusId: "stretchMinus",
-    plusId: "stretchPlus",
-    countId: "stretchCount",
-    goalInputId: "stretchGoal",
-    winValueId: "winStretchValue",
-    winGoalId: "winStretchGoal",
-    defaultGoal: 10,
-    step: 5,
-  },
-};
-
-// All the rep rows
-const REP_TRACKERS = {
-  frontLifts: {
-    minusId: "frontLiftsRepsMinus",
-    plusId: "frontLiftsRepsPlus",
-    countId: "frontLiftsRepsCount",
-    goalInputId: "frontLiftsGoal",
-  },
-  sideLifts: {
-    minusId: "sideLiftsRepsMinus",
-    plusId: "sideLiftsRepsPlus",
-    countId: "sideLiftsRepsCount",
-    goalInputId: "sideLiftsGoal",
-  },
-  reverseFlys: {
-    minusId: "reverseFlysRepsMinus",
-    plusId: "reverseFlysRepsPlus",
-    countId: "reverseFlysRepsCount",
-    goalInputId: "reverseFlysGoal",
-  },
-  pressChest: {
-    minusId: "pressChestRepsMinus",
-    plusId: "pressChestRepsPlus",
-    countId: "pressChestRepsCount",
-    goalInputId: "pressChestGoal",
-  },
-  flyChest: {
-    minusId: "flyChestRepsMinus",
-    plusId: "flyChestRepsPlus",
-    countId: "flyChestRepsCount",
-    goalInputId: "flyChestGoal",
-  },
-  pushUps: {
-    minusId: "pushUpsRepsMinus",
-    plusId: "pushUpsRepsPlus",
-    countId: "pushUpsRepsCount",
-    goalInputId: "pushUpsGoal",
-  },
-  heelTapsAbs: {
-    minusId: "heelTapsAbsRepsMinus",
-    plusId: "heelTapsAbsRepsPlus",
-    countId: "heelTapsAbsRepsCount",
-    goalInputId: "heelTapsAbsGoal",
-  },
-  hipBridgeAbs: {
-    minusId: "hipBridgeAbsRepsMinus",
-    plusId: "hipBridgeAbsRepsPlus",
-    countId: "hipBridgeAbsRepsCount",
-    goalInputId: "hipBridgeAbsGoal",
-  },
-  birdDogAbs: {
-    minusId: "birdDogAbsRepsMinus",
-    plusId: "birdDogAbsRepsPlus",
-    countId: "birdDogAbsRepsCount",
-    goalInputId: "birdDogAbsGoal",
-  },
-  deadBugAbs: {
-    minusId: "deadBugAbsRepsMinus",
-    plusId: "deadBugAbsRepsPlus",
-    countId: "deadBugAbsRepsCount",
-    goalInputId: "deadBugAbsGoal",
-  },
-  catCowAbs: {
-    minusId: "catCowAbsRepsMinus",
-    plusId: "catCowAbsRepsPlus",
-    countId: "catCowAbsRepsCount",
-    goalInputId: "catCowAbsGoal",
-  },
-  squats: {
-    minusId: "squatsRepsMinus",
-    plusId: "squatsRepsPlus",
-    countId: "squatsRepsCount",
-    goalInputId: "squatsGoal",
-  },
-  alternatingReverseLunges: {
-    minusId: "alternatingReverseLungesRepsMinus",
-    plusId: "alternatingReverseLungesRepsPlus",
-    countId: "alternatingReverseLungesRepsCount",
-    goalInputId: "alternatingReverseLungesGoal",
-  },
-  sumoSquats: {
-    minusId: "sumoSquatsRepsMinus",
-    plusId: "sumoSquatsRepsPlus",
-    countId: "sumoSquatsRepsCount",
-    goalInputId: "sumoSquatsGoal",
-  },
-  altSideSquats: {
-    minusId: "altSideSquatsRepsMinus",
-    plusId: "altSideSquatsRepsPlus",
-    countId: "altSideSquatsRepsCount",
-    goalInputId: "altSideSquatsGoal",
-  },
-  rdlRight: {
-    minusId: "rdlRightRepsMinus",
-    plusId: "rdlRightRepsPlus",
-    countId: "rdlRightRepsCount",
-    goalInputId: "rdlRightGoal",
-  },
-  rdlLeft: {
-    minusId: "rdlLeftRepsMinus",
-    plusId: "rdlLeftRepsPlus",
-    countId: "rdlLeftRepsCount",
-    goalInputId: "rdlLeftGoal",
-  },
-  calfRaises: {
-    minusId: "calfRaisesRepsMinus",
-    plusId: "calfRaisesRepsPlus",
-    countId: "calfRaisesRepsCount",
-    goalInputId: "calfRaisesGoal",
-  },
-  wideRowBack: {
-    minusId: "wideRowBackRepsMinus",
-    plusId: "wideRowBackRepsPlus",
-    countId: "wideRowBackRepsCount",
-    goalInputId: "wideRowBackGoal",
-  },
-  pullDownBack: {
-    minusId: "pullDownBackRepsMinus",
-    plusId: "pullDownBackRepsPlus",
-    countId: "pullDownBackRepsCount",
-    goalInputId: "pullDownBackGoal",
-  },
-  facePullsBack: {
-    minusId: "facePullsBackRepsMinus",
-    plusId: "facePullsBackRepsPlus",
-    countId: "facePullsBackRepsCount",
-    goalInputId: "facePullsBackGoal",
-  },
-  bicepCurls: {
-    minusId: "bicepCurlsRepsMinus",
-    plusId: "bicepCurlsRepsPlus",
-    countId: "bicepCurlsRepsCount",
-    goalInputId: "bicepCurlsGoal",
-  },
-  hammerCurls: {
-    minusId: "hammerCurlsRepsMinus",
-    plusId: "hammerCurlsRepsPlus",
-    countId: "hammerCurlsRepsCount",
-    goalInputId: "hammerCurlsGoal",
-  },
-  tricepKickbacksRight: {
-    minusId: "tricepKickbacksRightRepsMinus",
-    plusId: "tricepKickbacksRightRepsPlus",
-    countId: "tricepKickbacksRightRepsCount",
-    goalInputId: "tricepKickbacksRightGoal",
-  },
-  tricepKickbacksLeft: {
-    minusId: "tricepKickbacksLeftRepsMinus",
-    plusId: "tricepKickbacksLeftRepsPlus",
-    countId: "tricepKickbacksLeftRepsCount",
-    goalInputId: "tricepKickbacksLeftGoal",
-  },
-  skullCrushers: {
-    minusId: "skullCrushersRepsMinus",
-    plusId: "skullCrushersRepsPlus",
-    countId: "skullCrushersRepsCount",
-    goalInputId: "skullCrushersGoal",
-  },
-};
-
-function initTrackers() {
-  // water / steps / med / stretch
-  Object.entries(SIMPLE_TRACKERS).forEach(([key, cfg]) => {
-    const minusBtn = $(cfg.minusId);
-    const plusBtn = $(cfg.plusId);
-    const countSpan = $(cfg.countId);
-    const goalInput = $(cfg.goalInputId);
-    const winValueSpan = $(cfg.winValueId);
-    const winGoalSpan = $(cfg.winGoalId);
-
-    if (!state.trackers[key]) {
-      state.trackers[key] = { count: 0, goal: cfg.defaultGoal };
-    }
-
-    const t = state.trackers[key];
-
-    if (countSpan) countSpan.textContent = t.count ?? 0;
-    if (goalInput && !goalInput.value) {
-      goalInput.value = t.goal ?? cfg.defaultGoal;
-    }
-    if (winValueSpan) winValueSpan.textContent = t.count ?? 0;
-    if (winGoalSpan) winGoalSpan.textContent = t.goal ?? cfg.defaultGoal;
-
-    minusBtn?.addEventListener("click", async () => {
-      t.count = Math.max(0, (t.count ?? 0) - cfg.step);
-      if (countSpan) countSpan.textContent = t.count;
-      if (winValueSpan) winValueSpan.textContent = t.count;
-      await saveDayToFirestore();
-      updateMovementSummaryAndBanner();
-    });
-
-    plusBtn?.addEventListener("click", async () => {
-      t.count = (t.count ?? 0) + cfg.step;
-      if (countSpan) countSpan.textContent = t.count;
-      if (winValueSpan) winValueSpan.textContent = t.count;
-      await saveDayToFirestore();
-      updateMovementSummaryAndBanner();
-    });
-
-    goalInput?.addEventListener("change", async () => {
-      const val = parseInt(goalInput.value, 10);
-      const goal = Number.isFinite(val) ? val : cfg.defaultGoal;
-      t.goal = goal;
-      goalInput.value = goal;
-      if (winGoalSpan) winGoalSpan.textContent = goal;
-      await saveDayToFirestore();
-      updateMovementSummaryAndBanner();
-    });
-  });
-
-  // all the rep rows
-  Object.entries(REP_TRACKERS).forEach(([key, cfg]) => {
-    const minusBtn = $(cfg.minusId);
-    const plusBtn = $(cfg.plusId);
-    const countSpan = $(cfg.countId);
-    const goalInput = $(cfg.goalInputId);
-
-    if (!state.trackers[key]) {
-      state.trackers[key] = { count: 0, goal: 30 };
-    }
-
-    const t = state.trackers[key];
-
-    if (countSpan) countSpan.textContent = t.count ?? 0;
-    if (goalInput && !goalInput.value) {
-      goalInput.value = t.goal ?? 30;
-    }
-
-    minusBtn?.addEventListener("click", async () => {
-      t.count = Math.max(0, (t.count ?? 0) - 1);
-      if (countSpan) countSpan.textContent = t.count;
-      await saveDayToFirestore();
-      updateMovementSummaryAndBanner();
-    });
-
-    plusBtn?.addEventListener("click", async () => {
-      t.count = (t.count ?? 0) + 1;
-      if (countSpan) countSpan.textContent = t.count;
-      await saveDayToFirestore();
-      updateMovementSummaryAndBanner();
-    });
-
-    goalInput?.addEventListener("change", async () => {
-      const val = parseInt(goalInput.value, 10);
-      const goal = Number.isFinite(val) ? val : 30;
-      t.goal = goal;
-      goalInput.value = goal;
-      await saveDayToFirestore();
-      updateMovementSummaryAndBanner();
-    });
-  });
-
-  updateMovementSummaryAndBanner();
-}
-
-function hydrateTrackersDom() {
-  // simple four
-  Object.entries(SIMPLE_TRACKERS).forEach(([key, cfg]) => {
-    const countSpan = $(cfg.countId);
-    const goalInput = $(cfg.goalInputId);
-    const winValueSpan = $(cfg.winValueId);
-    const winGoalSpan = $(cfg.winGoalId);
-    const t = state.trackers[key] || { count: 0, goal: cfg.defaultGoal };
-
-    if (countSpan) countSpan.textContent = t.count ?? 0;
-    if (goalInput) goalInput.value = t.goal ?? cfg.defaultGoal;
-    if (winValueSpan) winValueSpan.textContent = t.count ?? 0;
-    if (winGoalSpan) winGoalSpan.textContent = t.goal ?? cfg.defaultGoal;
-  });
-
-  // reps
-  Object.entries(REP_TRACKERS).forEach(([key, cfg]) => {
-    const countSpan = $(cfg.countId);
-    const goalInput = $(cfg.goalInputId);
-    const t = state.trackers[key] || { count: 0, goal: 30 };
-    if (countSpan) countSpan.textContent = t.count ?? 0;
-    if (goalInput) goalInput.value = t.goal ?? 30;
-  });
-
-  updateMovementSummaryAndBanner();
-}
-
-function updateMovementSummaryAndBanner() {
-  const movementWin = $("movementWinBanner");
-  const winRepsValue = $("winRepsValue");
-  const winRepsGoal = $("winRepsGoal");
-
-  const w = state.trackers.water || { count: 0, goal: 0 };
-  const s = state.trackers.steps || { count: 0, goal: 0 };
-  const m = state.trackers.med || { count: 0, goal: 0 };
-  const st = state.trackers.stretch || { count: 0, goal: 0 };
-
-  const wGoal = w.goal ?? 0;
-  const sGoal = s.goal ?? 0;
-  const mGoal = m.goal ?? 0;
-  const stGoal = st.goal ?? 0;
-
-  // sum all reps + goals
-  let totalReps = 0;
-  let totalRepsGoal = 0;
-  Object.keys(REP_TRACKERS).forEach((key) => {
-    const t = state.trackers[key] || { count: 0, goal: 0 };
-    totalReps += t.count ?? 0;
-    totalRepsGoal += t.goal ?? 0;
-  });
-
-  if (winRepsValue) winRepsValue.textContent = totalReps;
-  if (winRepsGoal) winRepsGoal.textContent = totalRepsGoal || 0;
-
-  const hitWater = wGoal > 0 && w.count >= wGoal;
-  const hitSteps = sGoal > 0 && s.count >= sGoal;
-  const hitMed = mGoal > 0 && m.count >= mGoal;
-  const hitStretch = stGoal > 0 && st.count >= stGoal;
-  const hitReps = totalRepsGoal > 0 && totalReps >= totalRepsGoal;
-
-  const allHit = hitWater && hitSteps && hitMed && hitStretch && hitReps;
-
-  if (movementWin) {
-    if (allHit) {
-      movementWin.classList.add("movement-banner-visible");
-    } else {
-      movementWin.classList.remove("movement-banner-visible");
-    }
+  // Load daily state if present
+  const existing = await loadDailyState(user, plannerState.dateKey);
+  if (existing && existing.context) {
+    plannerState.context = {
+      dayOfWeek: existing.context.dayOfWeek || "",
+      letterDay: existing.context.letterDay || "",
+      daycare: existing.context.daycare || "no",
+    };
+    plannerState.mergedTasks = existing.mergedTasks || [];
   }
+
+  // Hydrate context UI and rebuild tasks if needed
+  hydrateContextForm(plannerState.context);
+  if (!plannerState.mergedTasks.length) {
+    plannerState.mergedTasks = buildMergedTasksFromContext(
+      plannerState.context,
+      []
+    );
+  }
+
+  renderMergedTasks();
+
+  // Parking lot
+  const parkingText = await loadParkingLot(user);
+  hydrateParkingLot(parkingText);
+
+  const parking = document.getElementById("parking-lot");
+  const parkingStatus = document.getElementById("parking-status");
+  let parkingTimer = null;
+  if (parking) {
+    parking.addEventListener("input", () => {
+      if (parkingStatus) parkingStatus.textContent = "Saving…";
+      clearTimeout(parkingTimer);
+      parkingTimer = setTimeout(async () => {
+        await saveParkingLot(parking.value);
+        if (parkingStatus) parkingStatus.textContent = "Saved automatically.";
+      }, 400);
+    });
+  }
+
+  // Weekly tasks
+  const weekKey = getWeekKey(today);
+  const weeklyState = await loadWeeklyTasks(user, weekKey);
+  renderWeeklyTasks(weeklyState);
+
+  // Weekly tasks clicks already wired (cycleWeeklyStatus saves)
+
+  // Hide completed toggle
+  const hideBox = document.getElementById("hide-completed");
+  if (hideBox) {
+    hideBox.checked = hideCompleted;
+    hideBox.addEventListener("change", () => {
+      hideCompleted = hideBox.checked;
+      renderMergedTasks();
+    });
+  }
+
+  // Context apply button
+  const applyBtn = document.getElementById("apply-context");
+  if (applyBtn) {
+    applyBtn.addEventListener("click", async () => {
+      const daySelect = document.getElementById("day-of-week");
+      const letterSelect = document.getElementById("letter-day");
+      const daycareToggle = document.getElementById("daycare-toggle");
+      const status = document.getElementById("context-status");
+
+      const dayOfWeek = daySelect ? daySelect.value : "";
+      const letterDay = letterSelect ? letterSelect.value : "";
+      let daycare = plannerState.context.daycare || "no";
+      if (daycareToggle) {
+        const active = daycareToggle.querySelector(".pill-option--active");
+        if (active) daycare = active.dataset.value || "no";
+      }
+
+      plannerState.context = { dayOfWeek, letterDay, daycare };
+
+      // Rebuild merged tasks but preserve completion info where possible
+      plannerState.mergedTasks = buildMergedTasksFromContext(
+        plannerState.context,
+        plannerState.mergedTasks
+      );
+      renderMergedTasks();
+      await saveDailyState();
+
+      hydrateContextForm(plannerState.context);
+      if (status) {
+        status.textContent = "Context updated for today.";
+      }
+    });
+  }
+
+  // Daycare toggle
+  const daycareToggle = document.getElementById("daycare-toggle");
+  if (daycareToggle) {
+    daycareToggle.querySelectorAll(".pill-option").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        daycareToggle.querySelectorAll(".pill-option").forEach((b) =>
+          b.classList.remove("pill-option--active")
+        );
+        btn.classList.add("pill-option--active");
+      });
+    });
+  }
+
+  setupCollapsibles();
 }
 
-/* ---------- Rehydrate everything from state ---------- */
+// ---------- AUTH GUARD ----------
 
-function rehydrateAllFromState() {
-  // Context controls
-  const dayOfWeek = $("dayOfWeek");
-  const letterDay = $("letterDay");
-  const planDate = $("planDate");
-  const daycareToggle = $("daycareToggle");
-  const therapyToggle = $("therapyToggle");
+async function start() {
+  initFirebase();
 
-  if (dayOfWeek) dayOfWeek.value = state.context.dayOfWeek || "";
-  if (letterDay) letterDay.value = state.context.letterDay || "";
-  if (planDate) planDate.value = state.context.planDate || todayDateKey();
-  if (daycareToggle) updateToggleButton(daycareToggle, state.context.daycare || "no");
-  if (therapyToggle) updateToggleButton(therapyToggle, state.context.therapy || "no");
+  const unauthorizedBanner = document.getElementById("unauthorized-banner");
 
-  renderDaySummary();
-  renderTimeline();
-  renderParking();
-  renderLastTime();
-  hydrateTrackersDom();
-}
-
-/* ---------- Auth init ---------- */
-
-function initAuth() {
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      // Not logged in → go to login screen
       window.location.href = "../login.html";
       return;
     }
 
-    if (!ALLOWED_EMAILS.includes(user.email)) {
-      alert("This planner is only available to Mrs. A.");
-      await signOut(auth);
-      window.location.href = "../login.html";
+    if (!ALLOWED_EMAILS.includes(user.email || "")) {
+      if (unauthorizedBanner) unauthorizedBanner.classList.remove("hidden");
+      const userChip = document.getElementById("user-email");
+      if (userChip) userChip.textContent = user.email || "Unauthorized";
+      // Optionally sign out and send to login
+      setTimeout(async () => {
+        try {
+          await signOut(auth);
+        } catch (e) {
+          console.error(e);
+        }
+        window.location.href = "../login.html";
+      }, 3500);
       return;
     }
 
-    currentUser = user;
-
-    const planDate = $("planDate");
-    if (planDate && !planDate.value) {
-      planDate.value = todayDateKey();
-    }
-    currentDateKey = planDate?.value || todayDateKey();
-
-    await loadDayFromFirestore();
-    seedDefaultLastTimeIfNeeded();
-    seedAutoTasksIfEmpty();
-    await saveDayToFirestore();
-    rehydrateAllFromState();
+    if (unauthorizedBanner) unauthorizedBanner.classList.add("hidden");
+    await initDashboardForUser(user);
   });
 }
 
-/* ---------- Init on DOM ready ---------- */
-
-document.addEventListener("DOMContentLoaded", () => {
-  initContextForm();
-  initLogout();
-  initTimeline();
-  initParkingLot();
-  initLastTime();
-  initTrackers();
-  initAuth();
-});
+start().catch(console.error);

@@ -1,733 +1,200 @@
-<!-- LRCGames/plannerDashboard/dashboard.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <title>Planner Dashboard | LRC Quest</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Planner Dashboard | Mrs. A</title>
-
-  <!-- Calming Google Font -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet">
-
   <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
-  <div id="app" class="app-shell">
-    <!-- Top bar with day summary -->
+  <div class="page-shell">
     <header class="top-bar">
       <div class="top-bar-left">
-        <h1 class="app-title">e Planner Dashboard</h1>
-        <div class="subtitle">Gentle focus for Mrs. A 💛</div>
+        <h1 class="app-title">Calm Planner</h1>
+        <p class="app-subtitle">gentle daily focus for Mrs. A</p>
       </div>
       <div class="top-bar-right">
-        <div id="daySummary" class="day-summary-pill">
-          <!-- Filled in by JS -->
+        <div class="today-chip">
+          <span id="today-label">Today</span>
         </div>
-        <button id="logoutBtn" class="ghost-btn">Sign out</button>
+        <div class="user-chip" id="user-chip">
+          <span id="user-email">Loading…</span>
+        </div>
       </div>
     </header>
 
-    <!-- Context setup card -->
-    <section class="context-card">
-      <h2>Today’s Context</h2>
-      <form id="contextForm" class="context-form">
-        <div class="context-row">
-          <label>
-            <span>What day of the week is it?</span>
-            <select id="dayOfWeek" required>
-              <option value="">Select…</option>
-              <option>Monday</option>
-              <option>Tuesday</option>
-              <option>Wednesday</option>
-              <option>Thursday</option>
-              <option>Friday</option>
-              <option>Saturday</option>
-              <option>Sunday</option>
-            </select>
-          </label>
-          <label>
-            <span>What school letter day is it? (A–E)</span>
-            <select id="letterDay" required>
-              <option value="">Select…</option>
-              <option value="NONE">No school today</option>
-              <option value="A">A Day</option>
-              <option value="B">B Day</option>
-              <option value="C">C Day</option>
-              <option value="D">D Day</option>
-              <option value="E">E Day</option>
-            </select>
-          </label>
-        </div>
+    <!-- If someone unauthorized logs in -->
+    <div class="unauthorized-banner hidden" id="unauthorized-banner">
+      <p>
+        This planner dashboard is only available for Mrs. A.
+        Please log in as <strong>malbrecht@sd308.org</strong> or
+        <strong>malbrecht3317@gmail.com</strong>.
+      </p>
+    </div>
 
-        <div class="context-row">
-          <label class="toggle-label">
-            <span>Is it a daycare day?</span>
-            <button type="button" class="toggle-btn" id="daycareToggle" data-value="no">No</button>
-          </label>
-          <label class="toggle-label">
-            <span>Is there therapy tonight?</span>
-            <button type="button" class="toggle-btn" id="therapyToggle" data-value="no">No</button>
-          </label>
-        </div>
-
-        <div class="context-row">
-          <label>
-            <span>Date for this plan</span>
-            <input type="date" id="planDate" required />
-          </label>
-          <div class="context-actions">
-            <button type="submit" class="primary-btn">Update day</button>
-            <button type="button" id="reloadDayBtn" class="ghost-btn">Load saved</button>
-          </div>
-        </div>
-      </form>
-    </section>
-
-    <!-- Main layout: left & right columns -->
-    <main class="main-grid">
-      <!-- LEFT COLUMN -->
-      <section class="column">
-        <!-- Card 1: Merged Tasks & Appointments -->
-        <article class="card">
+    <main class="layout">
+      <!-- LEFT PANEL: context + main cards -->
+      <section class="main-panel" aria-label="Planner main panel">
+        <!-- Day context + setup -->
+        <section class="card" id="context-card">
           <header class="card-header">
-            <h2>Merged Tasks & Appointments</h2>
-            <div class="card-header-right">
-              <label class="inline-checkbox">
-                <input type="checkbox" id="hideCompletedTasks" />
-                <span>Hide completed</span>
+            <h2>Daily Context</h2>
+            <p class="card-subtitle">Set the “shape” of today. You can update anytime.</p>
+          </header>
+          <div class="card-body context-grid">
+            <div class="field-group">
+              <label for="day-of-week">What day of the week is it?</label>
+              <select id="day-of-week">
+                <option value="">Select…</option>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday</option>
+              </select>
+            </div>
+
+            <div class="field-group">
+              <label for="letter-day">
+                What school letter day is it?
+                <span class="helper-text">(A, B, C, D, E, No School)</span>
+              </label>
+              <select id="letter-day">
+                <option value="">Select…</option>
+                <option value="A">A Day</option>
+                <option value="B">B Day</option>
+                <option value="C">C Day</option>
+                <option value="D">D Day</option>
+                <option value="E">E Day</option>
+                <option value="NONE">No School</option>
+              </select>
+            </div>
+
+            <div class="field-group daycare-group">
+              <span>Is it a daycare day?</span>
+              <div class="pill-toggle" id="daycare-toggle" role="radiogroup" aria-label="Daycare day">
+                <button type="button" class="pill-option" data-value="yes">Yes</button>
+                <button type="button" class="pill-option pill-option--active" data-value="no">No</button>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <button id="apply-context" class="primary-btn">
+                Apply / Update Day
+              </button>
+              <p class="tiny-hint" id="context-status">Context not applied yet.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Merged Tasks & Appointments -->
+        <section class="card collapsible" data-section="merged">
+          <header class="card-header collapsible-header">
+            <div>
+              <h2>Merged Tasks & Appointments</h2>
+              <p class="card-subtitle">
+                Classes, work tasks, daycare, and home anchors in one gentle list.
+              </p>
+            </div>
+            <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
+          </header>
+          <div class="card-body collapsible-body">
+            <div class="merged-toolbar">
+              <label class="hide-completed-label">
+                <input type="checkbox" id="hide-completed" />
+                Hide completed items
               </label>
             </div>
-          </header>
 
-          <div id="timelineContainer" class="timeline">
-            <!-- Filled by JS -->
-          </div>
-
-          <div class="card-footer-row">
-            <div class="foot-label">Quick add task to time block:</div>
-            <div class="time-block-add-row">
-              <select id="newTaskBlock">
-                <option value="morning">Morning</option>
-                <option value="workOpen">Work open</option>
-                <option value="midday">Midday</option>
-                <option value="workClose">Work close</option>
-                <option value="evening">Arrive home</option>
-                <option value="bedtime">Bedtime</option>
-              </select>
-              <input type="text" id="newTaskText" placeholder="New task" />
-              <button type="button" id="addTaskBtn" class="tiny-btn">Add</button>
+            <div class="time-bands">
+              <div class="time-band" data-segment="AM">
+                <h3>Morning</h3>
+                <ul class="task-list" id="am-task-list"></ul>
+              </div>
+              <div class="time-band" data-segment="MID">
+                <h3>Midday</h3>
+                <ul class="task-list" id="mid-task-list"></ul>
+              </div>
+              <div class="time-band" data-segment="PM">
+                <h3>Evening</h3>
+                <ul class="task-list" id="pm-task-list"></ul>
+              </div>
             </div>
           </div>
-        </article>
+        </section>
 
-        <!-- Card 2: Parking Lot -->
-        <article class="card">
-          <header class="card-header">
-            <h2>Parking Lot</h2>
+        <!-- Parking Lot -->
+        <section class="card collapsible" data-section="parking">
+          <header class="card-header collapsible-header">
+            <div>
+              <h2>Parking Lot</h2>
+              <p class="card-subtitle">
+                A rolling sticky note for stray thoughts. It gently carries over each day.
+              </p>
+            </div>
+            <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
           </header>
-          <div id="parkingList" class="pill-list">
-            <!-- Items via JS -->
+          <div class="card-body collapsible-body">
+            <textarea
+              id="parking-lot"
+              class="parking-textarea"
+              rows="6"
+              placeholder="Jot ideas, to-dos, things to remember. Nothing disappears unless you clear it."
+            ></textarea>
+            <p class="tiny-hint" id="parking-status">Saved automatically.</p>
           </div>
-          <div class="card-footer-row">
-            <input type="text" id="parkingInput" placeholder="Park a thought or idea…" />
-            <button type="button" id="addParkingBtn" class="tiny-btn">Add</button>
+        </section>
+
+        <!-- Weekly Tasks Progress -->
+        <section class="card collapsible" data-section="weekly">
+          <header class="card-header collapsible-header">
+            <div>
+              <h2>Weekly Tasks Progress</h2>
+              <p class="card-subtitle">
+                Track the “big rocks” for this week at work and at home.
+              </p>
+            </div>
+            <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
+          </header>
+          <div class="card-body collapsible-body weekly-grid">
+            <article class="sub-card">
+              <h3>Work</h3>
+              <div id="weekly-work-list" class="weekly-task-list"></div>
+            </article>
+            <article class="sub-card">
+              <h3>Home</h3>
+              <div id="weekly-home-list" class="weekly-task-list"></div>
+            </article>
           </div>
-        </article>
+        </section>
       </section>
 
-      <!-- RIGHT COLUMN -->
-      <section class="column">
-        <!-- Card 1: Trackers -->
-        <article class="card">
-          <header class="card-header">
-            <h2>Daily Trackers</h2>
-          </header>
-
-          <div class="trackers-grid">
-            <!-- Daily wins summary -->
-            <div class="daily-wins-row">
-              <div class="win-pill" id="winWater">
-                <span class="win-label">💧 Water</span>
-                <span class="win-value">
-                  <span id="winWaterValue">0</span> /
-                  <span id="winWaterGoal">8</span>
-                </span>
-              </div>
-              <div class="win-pill" id="winSteps">
-                <span class="win-label">👣 Steps</span>
-                <span class="win-value">
-                  <span id="winStepsValue">0</span> /
-                  <span id="winStepsGoal">6000</span>
-                </span>
-              </div>
-              <div class="win-pill" id="winStretch">
-                <span class="win-label">🤸 Stretch</span>
-                <span class="win-value">
-                  <span id="winStretchValue">0</span> /
-                  <span id="winStretchGoal">10</span>
-                </span>
-              </div>
-              <div class="win-pill" id="winMeditate">
-                <span class="win-label">🧘 Meditate</span>
-                <span class="win-value">
-                  <span id="winMedValue">0</span> /
-                  <span id="winMedGoal">10</span>
-                </span>
-              </div>
-
-              <div class="win-pill" id="winReps">
-                <span class="win-label">💪 Reps</span>
-                <span class="win-value">
-                  <span id="winRepsValue">0</span> /
-                  <span id="winRepsGoal">30</span>
-                </span>
-              </div>
-
-            </div>
-
-            <!-- Each tracker like the water cup -->
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>💧 Water</span>
-                <small>cups</small>
-              </div>
-              <div class="metric-controls">
-                <button type="button" id="waterMinus" class="circle-btn">−</button>
-                <span id="waterCount" class="big-number">0</span>
-                <button type="button" id="waterPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="waterGoal" type="number" min="0" step="1" />
-              </div>
-            </div>
-
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>👣 Steps</span>
-                <small>steps</small>
-              </div>
-              <div class="metric-controls">
-                <button type="button" id="stepMinus" class="circle-btn">−</button>
-                <span id="stepCount" class="big-number">0</span>
-                <button type="button" id="stepPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="stepGoal" type="number" min="0" step="500" />
-              </div>
-            </div>
-
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>🧘 Meditate</span>
-                <small>minutes</small>
-              </div>
-              <div class="metric-controls">
-                <button type="button" id="medMinus" class="circle-btn">−</button>
-                <span id="medCount" class="big-number">0</span>
-                <button type="button" id="medPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="medGoal" type="number" min="0" step="5" />
-              </div>
-            </div>
-
-            <div class="metric-row">
-              <div class="metric-label">
-                <span>🤸 Stretching</span>
-                <small>minutes</small>
-              </div>
-              <div class="metric-controls">
-                <button type="button" id="stretchMinus" class="circle-btn">−</button>
-                <span id="stretchCount" class="big-number">0</span>
-                <button type="button" id="stretchPlus" class="circle-btn">+</button>
-              </div>
-              <div class="metric-goal">
-                <span>Goal</span>
-                <input id="stretchGoal" type="number" min="0" step="5" />
-              </div>
-            </div>
-
-<!-- Front Lifts (Shoulders) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Front Lifts (Shoulders)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="frontLiftsRepsMinus" class="circle-btn">−</button>
-    <span id="frontLiftsRepsCount" class="big-number">0</span>
-    <button type="button" id="frontLiftsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="frontLiftsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Side Lifts (Shoulders) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Side Lifts (Shoulders)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="sideLiftsRepsMinus" class="circle-btn">−</button>
-    <span id="sideLiftsRepsCount" class="big-number">0</span>
-    <button type="button" id="sideLiftsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="sideLiftsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Reverse Flys (Shoulders) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Reverse Flys (Shoulders)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="reverseFlysRepsMinus" class="circle-btn">−</button>
-    <span id="reverseFlysRepsCount" class="big-number">0</span>
-    <button type="button" id="reverseFlysRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="reverseFlysGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Press (Chest) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Press (Chest)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="pressChestRepsMinus" class="circle-btn">−</button>
-    <span id="pressChestRepsCount" class="big-number">0</span>
-    <button type="button" id="pressChestRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="pressChestGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Fly (Chest) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Fly (Chest)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="flyChestRepsMinus" class="circle-btn">−</button>
-    <span id="flyChestRepsCount" class="big-number">0</span>
-    <button type="button" id="flyChestRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="flyChestGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Push Ups -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Push Ups</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="pushUpsRepsMinus" class="circle-btn">−</button>
-    <span id="pushUpsRepsCount" class="big-number">0</span>
-    <button type="button" id="pushUpsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="pushUpsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Heel Taps (Abs) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Heel Taps (Abs)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="heelTapsAbsRepsMinus" class="circle-btn">−</button>
-    <span id="heelTapsAbsRepsCount" class="big-number">0</span>
-    <button type="button" id="heelTapsAbsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="heelTapsAbsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Hip Bridge (Abs) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Hip Bridge (Abs)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="hipBridgeAbsRepsMinus" class="circle-btn">−</button>
-    <span id="hipBridgeAbsRepsCount" class="big-number">0</span>
-    <button type="button" id="hipBridgeAbsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="hipBridgeAbsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Bird Dog (Abs) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Bird Dog (Abs)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="birdDogAbsRepsMinus" class="circle-btn">−</button>
-    <span id="birdDogAbsRepsCount" class="big-number">0</span>
-    <button type="button" id="birdDogAbsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="birdDogAbsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Dead Bug (Abs) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Dead Bug (Abs)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="deadBugAbsRepsMinus" class="circle-btn">−</button>
-    <span id="deadBugAbsRepsCount" class="big-number">0</span>
-    <button type="button" id="deadBugAbsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="deadBugAbsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Cat Cow (Abs) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Cat Cow (Abs)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="catCowAbsRepsMinus" class="circle-btn">−</button>
-    <span id="catCowAbsRepsCount" class="big-number">0</span>
-    <button type="button" id="catCowAbsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="catCowAbsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Squats -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Squats</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="squatsRepsMinus" class="circle-btn">−</button>
-    <span id="squatsRepsCount" class="big-number">0</span>
-    <button type="button" id="squatsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="squatsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Alternating Reverse Lunges -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Alternating Reverse Lunges</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="alternatingReverseLungesRepsMinus" class="circle-btn">−</button>
-    <span id="alternatingReverseLungesRepsCount" class="big-number">0</span>
-    <button type="button" id="alternatingReverseLungesRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="alternatingReverseLungesGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Sumo Squats -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Sumo Squats</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="sumoSquatsRepsMinus" class="circle-btn">−</button>
-    <span id="sumoSquatsRepsCount" class="big-number">0</span>
-    <button type="button" id="sumoSquatsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="sumoSquatsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Alternating Side Squats -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Alternating Side Squats</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="altSideSquatsRepsMinus" class="circle-btn">−</button>
-    <span id="altSideSquatsRepsCount" class="big-number">0</span>
-    <button type="button" id="altSideSquatsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="altSideSquatsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- RDL Right -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>RDL – Right</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="rdlRightRepsMinus" class="circle-btn">−</button>
-    <span id="rdlRightRepsCount" class="big-number">0</span>
-    <button type="button" id="rdlRightRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="rdlRightGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- RDL Left -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>RDL – Left</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="rdlLeftRepsMinus" class="circle-btn">−</button>
-    <span id="rdlLeftRepsCount" class="big-number">0</span>
-    <button type="button" id="rdlLeftRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="rdlLeftGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Calf Raises -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Calf Raises</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="calfRaisesRepsMinus" class="circle-btn">−</button>
-    <span id="calfRaisesRepsCount" class="big-number">0</span>
-    <button type="button" id="calfRaisesRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="calfRaisesGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Wide Row (Back) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Wide Row (Back)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="wideRowBackRepsMinus" class="circle-btn">−</button>
-    <span id="wideRowBackRepsCount" class="big-number">0</span>
-    <button type="button" id="wideRowBackRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="wideRowBackGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Pull Down (Back) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Pull Down (Back)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="pullDownBackRepsMinus" class="circle-btn">−</button>
-    <span id="pullDownBackRepsCount" class="big-number">0</span>
-    <button type="button" id="pullDownBackRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="pullDownBackGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Face Pulls (Back) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Face Pulls (Back)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="facePullsBackRepsMinus" class="circle-btn">−</button>
-    <span id="facePullsBackRepsCount" class="big-number">0</span>
-    <button type="button" id="facePullsBackRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="facePullsBackGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Bicep Curls -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Bicep Curls</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="bicepCurlsRepsMinus" class="circle-btn">−</button>
-    <span id="bicepCurlsRepsCount" class="big-number">0</span>
-    <button type="button" id="bicepCurlsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="bicepCurlsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Hammer Curls -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Hammer Curls</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="hammerCurlsRepsMinus" class="circle-btn">−</button>
-    <span id="hammerCurlsRepsCount" class="big-number">0</span>
-    <button type="button" id="hammerCurlsRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="hammerCurlsGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Tricep Kickbacks (Right) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Tricep Kickbacks (Right)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="tricepKickbacksRightRepsMinus" class="circle-btn">−</button>
-    <span id="tricepKickbacksRightRepsCount" class="big-number">0</span>
-    <button type="button" id="tricepKickbacksRightRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="tricepKickbacksRightGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Tricep Kickbacks (Left) -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Tricep Kickbacks (Left)</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="tricepKickbacksLeftRepsMinus" class="circle-btn">−</button>
-    <span id="tricepKickbacksLeftRepsCount" class="big-number">0</span>
-    <button type="button" id="tricepKickbacksLeftRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="tricepKickbacksLeftGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-<!-- Skull Crushers -->
-<div class="metric-row">
-  <div class="metric-label">
-    <span>Skull Crushers</span>
-    <small>reps</small>
-  </div>
-  <div class="metric-controls">
-    <button type="button" id="skullCrushersRepsMinus" class="circle-btn">−</button>
-    <span id="skullCrushersRepsCount" class="big-number">0</span>
-    <button type="button" id="skullCrushersRepsPlus" class="circle-btn">+</button>
-  </div>
-  <div class="metric-goal">
-    <span>Goal</span>
-    <input id="skullCrushersGoal" type="number" min="0" step="5" value="30" />
-  </div>
-</div>
-
-
-
-            <div id="movementWinBanner" class="movement-banner">
-              🎉 You hit all today’s movement goals!
-            </div>
-
-          </div>
-        </article>
-
-        <!-- Card 2: When was the last time I… -->
-        <article class="card">
-          <header class="card-header">
-            <h2>When was the last time I…</h2>
-          </header>
-          <div id="lastTimeList" class="last-time-list">
-            <!-- Items via JS -->
-          </div>
-          <div class="card-footer-row">
-            <input
-              type="text"
-              id="newLastTimeText"
-              placeholder="Add routine (ex: Changed sheets)"
-            />
-            <button type="button" id="addLastTimeBtn" class="tiny-btn">Add</button>
-          </div>
-          <p class="hint-text">
-            Green = all good · Yellow = coming due · Red = overdue
+      <!-- RIGHT PANEL: soft space (future expansion) -->
+      <aside class="side-panel" aria-label="Side panel">
+        <div class="side-card">
+          <p class="side-quote">
+            “One thing at a time. Tiny progress still counts.”
           </p>
-        </article>
-      </section>
+          <p class="side-note">
+            This space is intentionally light for now, to keep the dashboard calm.
+            We can later add mood tracking, focus timers, or read-a-thon stats here.
+          </p>
+        </div>
+      </aside>
     </main>
   </div>
 
-  <!-- Firebase + app script -->
   <script type="module" src="dashboard.js"></script>
 </body>
 </html>
