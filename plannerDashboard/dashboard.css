@@ -369,8 +369,8 @@ select:focus {
 }
 
 .time-bands {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -445,8 +445,8 @@ select:focus {
 /* Weekly tasks */
 
 .weekly-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
@@ -460,6 +460,26 @@ select:focus {
 .sub-card h3 {
   margin: 0 0 8px;
   font-size: 0.9rem;
+}
+.sub-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mini-hide-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(241, 245, 249, 0.9);
+  padding: 3px 9px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  color: var(--text-soft);
+}
+
+.mini-hide-btn:active {
+  transform: translateY(1px);
 }
 
 .weekly-task-list {

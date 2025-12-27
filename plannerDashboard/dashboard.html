@@ -111,21 +111,28 @@
               </label>
             </div>
 
-            <div class="time-bands">
-              <div class="time-band" data-segment="AM">
-                <h3>Morning</h3>
-                <ul class="task-list" id="am-task-list"></ul>
-              </div>
-              <div class="time-band" data-segment="MID">
-                <h3>Midday</h3>
-                <ul class="task-list" id="mid-task-list"></ul>
-              </div>
-              <div class="time-band" data-segment="PM">
-                <h3>Evening</h3>
-                <ul class="task-list" id="pm-task-list"></ul>
-              </div>
-            </div>
-          </div>
+<div class="time-bands">
+  <div class="time-band" data-band="AM">
+    <h3>Morning</h3>
+    <ul class="task-list" id="am-task-list"></ul>
+  </div>
+
+  <div class="time-band" data-band="ARRIVE">
+    <h3>Work Arrive</h3>
+    <ul class="task-list" id="arrive-task-list"></ul>
+  </div>
+
+  <div class="time-band" data-band="MID">
+    <h3>Midday</h3>
+    <ul class="task-list" id="mid-task-list"></ul>
+  </div>
+
+  <div class="time-band" data-band="PM">
+    <h3>Evening</h3>
+    <ul class="task-list" id="pm-task-list"></ul>
+  </div>
+</div>
+
         </section>
 
         <!-- Parking Lot -->
@@ -168,14 +175,21 @@
             </button>
           </header>
           <div class="card-body collapsible-body weekly-grid">
-            <article class="sub-card">
-              <h3>Work</h3>
-              <div id="weekly-work-list" class="weekly-task-list"></div>
-            </article>
-            <article class="sub-card">
-              <h3>Home</h3>
-              <div id="weekly-home-list" class="weekly-task-list"></div>
-            </article>
+<article class="sub-card" data-group="work">
+  <div class="sub-card-header">
+    <h3>Work</h3>
+    <button type="button" class="mini-hide-btn" data-target="work">Hide</button>
+  </div>
+  <div id="weekly-work-list" class="weekly-task-list"></div>
+</article>
+<article class="sub-card" data-group="home">
+  <div class="sub-card-header">
+    <h3>Home</h3>
+    <button type="button" class="mini-hide-btn" data-target="home">Hide</button>
+  </div>
+  <div id="weekly-home-list" class="weekly-task-list"></div>
+</article>
+
           </div>
         </section>
       </section>
