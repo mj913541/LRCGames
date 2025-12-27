@@ -1,7 +1,6 @@
 // LRCGames/plannerDashboard/dashboard.js
 // Calm planner dashboard for Mrs. A
 // Connects to the same Firebase project as LRCQuest.
-// TODO: copy your existing firebaseConfig from lrcQuestCore.js / login.html
 
 import {
   initializeApp,
@@ -23,11 +22,13 @@ import {
 // ---------- CONFIG ----------
 
 const firebaseConfig = {
-  // 🔁 REPLACE THIS with your real config:
-  // apiKey: "YOUR_KEY",
-  // authDomain: "YOUR_DOMAIN",
-  // projectId: "YOUR_PROJECT_ID",
-  // etc.
+  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
+  authDomain: "lrcquest-3039e.firebaseapp.com",
+  projectId: "lrcquest-3039e",
+  storageBucket: "lrcquest-3039e.firebasestorage.app",
+  messagingSenderId: "72063656342",
+  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
+  measurementId: "G-5VXRYJ733C",
 };
 
 const ALLOWED_EMAILS = [
@@ -35,12 +36,102 @@ const ALLOWED_EMAILS = [
   "malbrecht3317@gmail.com",
 ];
 
-// Path helpers
+// Firestore collection prefixes
 const DAILY_PREFIX = "plannerDaily";
 const PARKING_DOC = "plannerParking";
 const WEEKLY_PREFIX = "plannerWeekly";
 
-// Default weekly tasks (you can tweak the names)
+// ---------- SCHEDULE & TEMPLATE TASKS ----------
+
+// SCHOOL LETTER DAY SCHEDULE (24-hr times for correct ordering)
+const SCHEDULE_BY_LETTER_DAY = {
+  A: [
+    { time24: "09:05", title: "4th Rosenthal" },
+    { time24: "10:05", title: "2nd Peterson" },
+    { time24: "11:05", title: "3rd Hossain" },
+    { time24: "13:45", title: "5th Altruismo" },
+    { time24: "14:45", title: "1st Rogers" },
+  ],
+  B: [
+    { time24: "09:05", title: "4th Cavello" },
+    { time24: "10:05", title: "2nd Schmidt" },
+    { time24: "13:45", title: "5th Isibindi" },
+  ],
+  C: [
+    { time24: "08:45", title: "AM Duty" },
+    { time24: "10:05", title: "2nd Adams" },
+    { time24: "11:05", title: "3rd Pulsa" },
+    { time24: "13:45", title: "5th Amistad" },
+  ],
+  D: [
+    { time24: "09:20", title: "HC 5th Green" },
+    { time24: "10:05", title: "HC 1st Green" },
+    { time24: "14:45", title: "1st Wilson" },
+  ],
+  E: [
+    { time24: "09:05", title: "4th Tomter" },
+    { time24: "11:05", title: "3rd Carroll" },
+    { time24: "13:45", title: "5th Reveur" },
+    { time24: "14:45", title: "1st Day" },
+  ],
+};
+
+// Everyday AM tasks (show every single day @ 06:00)
+const EVERYDAY_AM_TASKS = [
+  "Switch Dishwasher",
+  "Clean Glasses",
+  "Deodorant",
+  "Eat Breakfast",
+  "Levothyroxine",
+  "Brush teeth",
+  "Floss",
+  "Get Dressed",
+  "Wash Face",
+  "Style Hair",
+  "Feed Cat & Refresh Water",
+].map((label) => ({ label, time24: "06:00" }));
+
+// Everyday PM tasks (show every single day @ 20:00)
+const EVERYDAY_PM_TASKS = [
+  "Brush teeth",
+  "Floss",
+  "Wash Face",
+  "Water Bottle & Lunch dishes in dishwasher",
+  "Clothes for tomorrow",
+].map((label) => ({ label, time24: "20:00" }));
+
+// AM Tasks (School Days Only: MTWThF WITH a letter day A–E) @ 06:00
+const SCHOOL_AM_TASKS = [
+  "Water Bottle (school day)",
+  "Pack Lunch (school day)",
+  "Pack School bag (school day)",
+].map((label) => ({ label, time24: "06:00" }));
+
+// AM Tasks (Daycare days only) @ 06:00
+const DAYCARE_AM_TASKS = [
+  "Lincoln Diaper Changed (daycare)",
+  "Lincoln Bottle (daycare)",
+  "Daycare bag packed",
+  "Daycare Notebook Filled Out",
+].map((label) => ({ label, time24: "06:00" }));
+
+// Work open (A–E letter days) @ 09:00
+const WORK_OPEN_TASKS = [
+  "Projector on",
+  "Lunch in fridge",
+  "Sign into laptops & pull up Destiny",
+  "Name tags out",
+].map((label) => ({ label, time24: "09:00" }));
+
+// Work close (A–E letter days) after last scheduled class
+const WORK_CLOSE_TASKS = [
+  "Sign out / projector off",
+  "Collect name tags",
+  "5 minutes classroom straighten",
+  "Clear desk",
+];
+
+// Default weekly tasks (unchanged – just your “big rocks”)
 const DEFAULT_WEEKLY_TASKS = {
   work: [
     "Plan next week’s LRC lessons",
@@ -55,69 +146,6 @@ const DEFAULT_WEEKLY_TASKS = {
     "Budget / bills check-in",
   ],
 };
-
-// Schedules for each letter day (24h times for ordering)
-const LETTER_DAY_SCHEDULES = {
-  A: [
-    { time24: "09:05", label: "4th Rosenthal" },
-    { time24: "10:05", label: "2nd Peterson" },
-    { time24: "11:05", label: "3rd Hossain" },
-    { time24: "13:45", label: "5th Altruismo" },
-    { time24: "14:45", label: "1st Rogers" },
-  ],
-  B: [
-    { time24: "09:05", label: "4th Cavello" },
-    { time24: "10:05", label: "2nd Schmidt" },
-    { time24: "11:05", label: "Admin / Projects" },
-    { time24: "13:45", label: "5th Isibindi" },
-  ],
-  C: [
-    { time24: "08:45", label: "AM Duty & Opening" },
-    { time24: "09:05", label: "Admin / Projects" },
-    { time24: "10:05", label: "2nd Adams" },
-    { time24: "11:05", label: "3rd Pulsa" },
-    { time24: "13:45", label: "5th Amistad" },
-    { time24: "14:30", label: "Prep / Closing" },
-  ],
-  D: [
-    { time24: "12:20", label: "Lunch" },
-    { time24: "12:45", label: "Prep" },
-    { time24: "13:45", label: "Prep" },
-    { time24: "14:30", label: "Prep" },
-    { time24: "14:45", label: "1st Wilson" },
-  ],
-  E: [
-    { time24: "09:05", label: "4th Tomter" },
-    { time24: "10:05", label: "Prep" },
-    { time24: "11:05", label: "3rd Carroll" },
-    { time24: "13:45", label: "5th Reveur" },
-    { time24: "14:45", label: "1st Day" },
-  ],
-};
-
-// Generic work-day tasks (only shown when letter day is A–E)
-const WORK_DAY_TASK_TEMPLATES = [
-  { label: "Check email & respond to urgent messages", segment: "AM" },
-  { label: "Quick building walk / reset library space", segment: "AM" },
-  { label: "Lesson prep for tomorrow", segment: "MID" },
-  { label: "Update LRCQuest / digital boards", segment: "MID" },
-  { label: "Tidy library, turn off lights & tech", segment: "PM" },
-];
-
-// Daycare tasks (only when daycare = yes)
-const DAYCARE_TASK_TEMPLATES = [
-  { label: "Pack daycare bag (diapers/wipes/outfit)", segment: "AM" },
-  { label: "Label bottles / snacks", segment: "AM" },
-  { label: "Daycare pickup", segment: "PM" },
-  { label: "Unpack daycare bag (papers, bottles, clothes)", segment: "PM" },
-];
-
-// Home anchors that always show
-const HOME_ANCHORS = [
-  { label: "Morning self-care (meds, clothes, teeth)", segment: "AM" },
-  { label: "Quick reset: counters & hotspots", segment: "MID" },
-  { label: "Evening reset: dishes, sink, launchpad for tomorrow", segment: "PM" },
-];
 
 // ---------- STATE ----------
 
@@ -142,7 +170,7 @@ let plannerState = {
 
 let hideCompleted = false;
 
-// ---------- INIT ----------
+// ---------- HELPERS ----------
 
 function initFirebase() {
   if (!getApps().length) {
@@ -174,12 +202,17 @@ function getWeekKey(date) {
   return `${year}-W${week}`;
 }
 
-// Assign AM / MID / PM from 24h time (string "HH:MM")
 function segmentFromTime(time24) {
   const [h] = time24.split(":").map((v) => parseInt(v, 10));
   if (h < 12) return "AM";
   if (h < 16) return "MID";
   return "PM";
+}
+
+function isWeekday(dayOfWeek) {
+  return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(
+    dayOfWeek
+  );
 }
 
 function slugify(str) {
@@ -231,7 +264,6 @@ async function loadWeeklyTasks(user, weekKey) {
   const ref = doc(db, WEEKLY_PREFIX, `${user.uid}_${weekKey}`);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
-    // seed with defaults, status "planned"
     return {
       weekKey,
       work: DEFAULT_WEEKLY_TASKS.work.map((title) => ({
@@ -262,82 +294,152 @@ async function saveWeeklyTasks(weeklyState) {
 // ---------- MERGED TASKS BUILD ----------
 
 function buildMergedTasksFromContext(context, previousTasks = []) {
-  const { letterDay, daycare } = context;
-  /** @type {Record<string, any>} */
+  const { dayOfWeek, letterDay, daycare } = context;
+  const isLetterDay =
+    letterDay && letterDay !== "NONE" && SCHEDULE_BY_LETTER_DAY[letterDay];
+  const isSchoolDay = isWeekday(dayOfWeek) && !!isLetterDay;
+
+  // Previous tasks map for preserving completion
   const prevById = {};
   previousTasks.forEach((t) => {
     prevById[t.id] = t;
   });
 
-  /** @type {Array<any>} */
   const tasks = [];
 
-  // Letter day schedule (classes)
-  if (letterDay && letterDay !== "NONE" && LETTER_DAY_SCHEDULES[letterDay]) {
-    LETTER_DAY_SCHEDULES[letterDay].forEach((slot) => {
-      const segment = segmentFromTime(slot.time24);
-      const id = buildTaskId("class", slot.label, slot.time24);
+  // 1) Everyday AM tasks (06:00)
+  EVERYDAY_AM_TASKS.forEach((item) => {
+    const id = buildTaskId("everyday-am", item.label);
+    const prev = prevById[id];
+    tasks.push({
+      id,
+      label: item.label,
+      detail: "Daily @ 06:00",
+      time24: item.time24,
+      segment: "AM",
+      source: "everyday-am",
+      completed: prev ? !!prev.completed : false,
+    });
+  });
+
+  // 2) Everyday PM tasks (20:00)
+  EVERYDAY_PM_TASKS.forEach((item) => {
+    const id = buildTaskId("everyday-pm", item.label);
+    const prev = prevById[id];
+    tasks.push({
+      id,
+      label: item.label,
+      detail: "Daily @ 20:00",
+      time24: item.time24,
+      segment: "PM",
+      source: "everyday-pm",
+      completed: prev ? !!prev.completed : false,
+    });
+  });
+
+  // 3) School-day AM tasks (Mon–Fri + letter day A–E)
+  if (isSchoolDay) {
+    SCHOOL_AM_TASKS.forEach((item) => {
+      const id = buildTaskId("school-am", item.label);
       const prev = prevById[id];
       tasks.push({
         id,
-        label: slot.label,
+        label: item.label,
+        detail: "School day @ 06:00",
+        time24: item.time24,
+        segment: "AM",
+        source: "school-am",
+        completed: prev ? !!prev.completed : false,
+      });
+    });
+  }
+
+  // 4) Daycare AM tasks (only when daycare = yes)
+  if (daycare === "yes") {
+    DAYCARE_AM_TASKS.forEach((item) => {
+      const id = buildTaskId("daycare-am", item.label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
+        label: item.label,
+        detail: "Daycare @ 06:00",
+        time24: item.time24,
+        segment: "AM",
+        source: "daycare-am",
+        completed: prev ? !!prev.completed : false,
+      });
+    });
+  }
+
+  // 5) Letter day schedule (classes)
+  if (isLetterDay) {
+    const slots = SCHEDULE_BY_LETTER_DAY[letterDay];
+    slots.forEach((slot) => {
+      const segment = segmentFromTime(slot.time24);
+      const id = buildTaskId("class", slot.title, slot.time24);
+      const prev = prevById[id];
+      tasks.push({
+        id,
+        label: slot.title,
         detail: `${letterDay} Day • ${slot.time24}`,
+        time24: slot.time24,
         segment,
         source: "class",
         completed: prev ? !!prev.completed : false,
       });
     });
 
-    // Work tasks (only on letter days)
-    WORK_DAY_TASK_TEMPLATES.forEach((t) => {
-      const id = buildTaskId("work", t.label);
+    // 6) Work open (09:00)
+    WORK_OPEN_TASKS.forEach((item) => {
+      const segment = segmentFromTime(item.time24);
+      const id = buildTaskId("work-open", item.label);
       const prev = prevById[id];
       tasks.push({
         id,
-        label: t.label,
-        detail: "Work day",
-        segment: t.segment,
-        source: "work",
+        label: item.label,
+        detail: "Work open @ 09:00",
+        time24: item.time24,
+        segment,
+        source: "work-open",
+        completed: prev ? !!prev.completed : false,
+      });
+    });
+
+    // 7) Work close (after last scheduled class)
+    // Find last class time in schedule
+    const sortedSlots = [...slots].sort((a, b) =>
+      a.time24.localeCompare(b.time24)
+    );
+    const lastSlot = sortedSlots[sortedSlots.length - 1];
+    const lastTime = lastSlot ? lastSlot.time24 : "15:30";
+    const closeSegment = segmentFromTime(lastTime);
+
+    WORK_CLOSE_TASKS.forEach((label) => {
+      const id = buildTaskId("work-close", label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
+        label,
+        detail: `Work close (after last class ~${lastTime})`,
+        time24: lastTime,
+        segment: closeSegment,
+        source: "work-close",
         completed: prev ? !!prev.completed : false,
       });
     });
   }
 
-  // Daycare tasks
-  if (daycare === "yes") {
-    DAYCARE_TASK_TEMPLATES.forEach((t) => {
-      const id = buildTaskId("daycare", t.label);
-      const prev = prevById[id];
-      tasks.push({
-        id,
-        label: t.label,
-        detail: "Daycare",
-        segment: t.segment,
-        source: "daycare",
-        completed: prev ? !!prev.completed : false,
-      });
-    });
-  }
-
-  // Home anchors (always)
-  HOME_ANCHORS.forEach((t) => {
-    const id = buildTaskId("home-anchor", t.label);
-    const prev = prevById[id];
-    tasks.push({
-      id,
-      label: t.label,
-      detail: "Home anchor",
-      segment: t.segment,
-      source: "home",
-      completed: prev ? !!prev.completed : false,
-    });
-  });
-
-  // Sort by segment, then label
-  const order = { AM: 0, MID: 1, PM: 2 };
+  // Sort by segment then by time24/label
+  const segmentOrder = { AM: 0, MID: 1, PM: 2 };
   tasks.sort((a, b) => {
-    const segDiff = (order[a.segment] ?? 0) - (order[b.segment] ?? 0);
+    const segDiff =
+      (segmentOrder[a.segment] ?? 0) - (segmentOrder[b.segment] ?? 0);
     if (segDiff !== 0) return segDiff;
+
+    if (a.time24 && b.time24 && a.time24 !== b.time24) {
+      return a.time24.localeCompare(b.time24);
+    }
+
     return a.label.localeCompare(b.label);
   });
 
@@ -432,7 +534,7 @@ function renderMergedTasks() {
     listEl.appendChild(li);
   });
 
-  // If any band is empty, show a soft placeholder
+  // Soft placeholder if empty
   ["AM", "MID", "PM"].forEach((seg) => {
     const listEl = segments[seg];
     if (listEl && !listEl.children.length) {
@@ -450,7 +552,6 @@ function toggleTaskCompleted(taskId, completed) {
   if (!t) return;
   t.completed = completed;
 
-  // Update DOM class quickly
   const node = document.querySelector(
     `.task-item[data-task-id="${CSS.escape(taskId)}"]`
   );
@@ -553,7 +654,6 @@ async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
   const next = order[(idx + 1) % order.length];
   item.status = next;
 
-  // Re-render just weekly tasks (simple for now)
   renderWeeklyTasks(weeklyState);
   await saveWeeklyTasks(weeklyState);
 }
@@ -561,28 +661,24 @@ async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
 // ---------- COLLAPSIBLES & UI EVENTS ----------
 
 function setupCollapsibles() {
-  document
-    .querySelectorAll(".collapsible")
-    .forEach((section) => {
-      const header = section.querySelector(".collapsible-header");
-      const toggleBtn = section.querySelector(".collapse-toggle");
-      const body = section.querySelector(".collapsible-body");
-      if (!header || !toggleBtn || !body) return;
+  document.querySelectorAll(".collapsible").forEach((section) => {
+    const header = section.querySelector(".collapsible-header");
+    const toggleBtn = section.querySelector(".collapse-toggle");
+    const body = section.querySelector(".collapsible-body");
+    if (!header || !toggleBtn || !body) return;
 
-      // initial state
-      section.classList.remove("collapsed");
+    section.classList.remove("collapsed");
 
-      header.addEventListener("click", (e) => {
-        // avoid double-toggle when clicking inner buttons:
-        if (e.target.closest("button") && e.target !== toggleBtn) return;
-        toggleSection(section, toggleBtn);
-      });
-
-      toggleBtn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        toggleSection(section, toggleBtn);
-      });
+    header.addEventListener("click", (e) => {
+      if (e.target.closest("button") && e.target !== toggleBtn) return;
+      toggleSection(section, toggleBtn);
     });
+
+    toggleBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      toggleSection(section, toggleBtn);
+    });
+  });
 }
 
 function toggleSection(section, toggleBtn) {
@@ -606,7 +702,6 @@ async function initDashboardForUser(user) {
   plannerState.dateKey = getDateKey(today);
   renderToday(today);
 
-  // Load daily state if present
   const existing = await loadDailyState(user, plannerState.dateKey);
   if (existing && existing.context) {
     plannerState.context = {
@@ -617,7 +712,6 @@ async function initDashboardForUser(user) {
     plannerState.mergedTasks = existing.mergedTasks || [];
   }
 
-  // Hydrate context UI and rebuild tasks if needed
   hydrateContextForm(plannerState.context);
   if (!plannerState.mergedTasks.length) {
     plannerState.mergedTasks = buildMergedTasksFromContext(
@@ -651,9 +745,6 @@ async function initDashboardForUser(user) {
   const weeklyState = await loadWeeklyTasks(user, weekKey);
   renderWeeklyTasks(weeklyState);
 
-  // Weekly tasks clicks already wired (cycleWeeklyStatus saves)
-
-  // Hide completed toggle
   const hideBox = document.getElementById("hide-completed");
   if (hideBox) {
     hideBox.checked = hideCompleted;
@@ -663,7 +754,7 @@ async function initDashboardForUser(user) {
     });
   }
 
-  // Context apply button
+  // Context apply
   const applyBtn = document.getElementById("apply-context");
   if (applyBtn) {
     applyBtn.addEventListener("click", async () => {
@@ -682,7 +773,6 @@ async function initDashboardForUser(user) {
 
       plannerState.context = { dayOfWeek, letterDay, daycare };
 
-      // Rebuild merged tasks but preserve completion info where possible
       plannerState.mergedTasks = buildMergedTasksFromContext(
         plannerState.context,
         plannerState.mergedTasks
@@ -697,7 +787,7 @@ async function initDashboardForUser(user) {
     });
   }
 
-  // Daycare toggle
+  // Daycare toggle visual state
   const daycareToggle = document.getElementById("daycare-toggle");
   if (daycareToggle) {
     daycareToggle.querySelectorAll(".pill-option").forEach((btn) => {
@@ -722,7 +812,6 @@ async function start() {
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
-      // Not logged in → go to login screen
       window.location.href = "../login.html";
       return;
     }
@@ -731,7 +820,6 @@ async function start() {
       if (unauthorizedBanner) unauthorizedBanner.classList.remove("hidden");
       const userChip = document.getElementById("user-email");
       if (userChip) userChip.textContent = user.email || "Unauthorized";
-      // Optionally sign out and send to login
       setTimeout(async () => {
         try {
           await signOut(auth);
