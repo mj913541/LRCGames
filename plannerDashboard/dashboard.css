@@ -482,6 +482,7 @@ select:focus {
   transform: translateY(1px);
 }
 
+
 .weekly-task-list {
   display: flex;
   flex-direction: column;

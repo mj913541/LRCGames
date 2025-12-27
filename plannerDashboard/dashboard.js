@@ -100,7 +100,7 @@ const EVERYDAY_PM_TASKS = [
   "Clothes for tomorrow",
 ].map((label) => ({ label, time24: "20:00" }));
 
-// AM Tasks (School Days Only: Mon–Fri WITH a letter day A–E) @ 06:00
+// AM Tasks (School Days Only: MTWThF WITH a letter day A–E) @ 06:00
 const SCHOOL_AM_TASKS = [
   "Water Bottle (school day)",
   "Pack Lunch (school day)",
@@ -131,7 +131,7 @@ const WORK_CLOSE_TASKS = [
   "Clear desk",
 ];
 
-// Default weekly “big rock” tasks
+// Default weekly tasks (unchanged – just your “big rocks”)
 const DEFAULT_WEEKLY_TASKS = {
   work: [
     "Plan next week’s LRC lessons",
@@ -227,19 +227,6 @@ function buildTaskId(source, label, extra = "") {
   return `${source}-${slugify(label)}${extra ? "-" + extra : ""}`;
 }
 
-// 24h → 12h helper
-function formatTime12(time24) {
-  if (!time24) return "";
-  const parts = time24.split(":");
-  if (parts.length < 2) return time24;
-  let h = parseInt(parts[0], 10);
-  const m = parts[1];
-  const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12;
-  if (h === 0) h = 12;
-  return `${h}:${m} ${ampm}`;
-}
-
 // ---------- LOAD & SAVE ----------
 
 async function loadDailyState(user, dateKey) {
@@ -304,114 +291,122 @@ async function saveWeeklyTasks(weeklyState) {
   await setDoc(ref, weeklyState, { merge: true });
 }
 
-// ---------- MERGED TASKS BUILD (REVISED) ----------
+// ---------- MERGED TASKS BUILD ----------
 
 function buildMergedTasksFromContext(context, previousTasks = []) {
   const { dayOfWeek, letterDay, daycare } = context;
-
-  // Debug: see what the planner thinks the context is
-  console.log("Rebuilding merged tasks with context:", context);
-
-  const hasLetterDay = !!letterDay && letterDay !== "NONE";
-  const isSchoolDay = isWeekday(dayOfWeek) && hasLetterDay;
+  const isLetterDay =
+    letterDay && letterDay !== "NONE" && SCHEDULE_BY_LETTER_DAY[letterDay];
+  const isSchoolDay = isWeekday(dayOfWeek) && !!isLetterDay;
 
   // Previous tasks map for preserving completion
   const prevById = {};
-  (previousTasks || []).forEach((t) => {
-    if (t && t.id) prevById[t.id] = t;
+  previousTasks.forEach((t) => {
+    prevById[t.id] = t;
   });
 
   const tasks = [];
 
-  // Helper for creating tasks while preserving completion state
-  function addTask({ source, label, detail, time24, segment }) {
-    const id = buildTaskId(source, label, time24 || "");
+  // 1) Everyday AM tasks (06:00)
+  EVERYDAY_AM_TASKS.forEach((item) => {
+    const id = buildTaskId("everyday-am", item.label);
     const prev = prevById[id];
     tasks.push({
       id,
-      label,
-      detail,
-      time24: time24 || "",
-      segment: segment || segmentFromTime(time24 || "09:00"),
-      source,
-      completed: prev ? !!prev.completed : false,
-    });
-  }
-
-  // 1) Everyday AM tasks (06:00, always)
-  EVERYDAY_AM_TASKS.forEach((item) => {
-    addTask({
-      source: "everyday-am",
       label: item.label,
       detail: "Daily @ 06:00",
       time24: item.time24,
       segment: "AM",
+      source: "everyday-am",
+      completed: prev ? !!prev.completed : false,
     });
   });
 
-  // 2) Everyday PM tasks (20:00, always)
+  // 2) Everyday PM tasks (20:00)
   EVERYDAY_PM_TASKS.forEach((item) => {
-    addTask({
-      source: "everyday-pm",
+    const id = buildTaskId("everyday-pm", item.label);
+    const prev = prevById[id];
+    tasks.push({
+      id,
       label: item.label,
       detail: "Daily @ 20:00",
       time24: item.time24,
       segment: "PM",
+      source: "everyday-pm",
+      completed: prev ? !!prev.completed : false,
     });
   });
 
-  // 3) School-day AM tasks (Mon–Fri AND letter day A–E)
+  // 3) School-day AM tasks (Mon–Fri + letter day A–E)
   if (isSchoolDay) {
     SCHOOL_AM_TASKS.forEach((item) => {
-      addTask({
-        source: "school-am",
+      const id = buildTaskId("school-am", item.label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
         label: item.label,
         detail: "School day @ 06:00",
         time24: item.time24,
         segment: "AM",
+        source: "school-am",
+        completed: prev ? !!prev.completed : false,
       });
     });
   }
 
-  // 4) Daycare AM tasks (only when daycare = "yes")
+  // 4) Daycare AM tasks (only when daycare = yes)
   if (daycare === "yes") {
     DAYCARE_AM_TASKS.forEach((item) => {
-      addTask({
-        source: "daycare-am",
+      const id = buildTaskId("daycare-am", item.label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
         label: item.label,
         detail: "Daycare @ 06:00",
         time24: item.time24,
         segment: "AM",
+        source: "daycare-am",
+        completed: prev ? !!prev.completed : false,
       });
     });
   }
 
-  // 5) Letter day schedule (classes: only when letter day A–E and schedule exists)
-  if (hasLetterDay && SCHEDULE_BY_LETTER_DAY[letterDay]) {
+  // 5) Letter day schedule (classes)
+  if (isLetterDay) {
     const slots = SCHEDULE_BY_LETTER_DAY[letterDay];
-
     slots.forEach((slot) => {
-      addTask({
-        source: "class",
+      const segment = segmentFromTime(slot.time24);
+      const id = buildTaskId("class", slot.title, slot.time24);
+      const prev = prevById[id];
+      tasks.push({
+        id,
         label: slot.title,
         detail: `${letterDay} Day • ${slot.time24}`,
         time24: slot.time24,
-        segment: segmentFromTime(slot.time24),
+        segment,
+        source: "class",
+        completed: prev ? !!prev.completed : false,
       });
     });
 
-    // 6) Work open (09:00, A–E days)
+    // 6) Work open (09:00)
     WORK_OPEN_TASKS.forEach((item) => {
-      addTask({
-        source: "work-open",
+      const segment = segmentFromTime(item.time24);
+      const id = buildTaskId("work-open", item.label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
         label: item.label,
         detail: "Work open @ 09:00",
         time24: item.time24,
-        segment: segmentFromTime(item.time24),
+        segment,
+        source: "work-open",
+        completed: prev ? !!prev.completed : false,
       });
     });
 
     // 7) Work close (after last scheduled class)
+    // Find last class time in schedule
     const sortedSlots = [...slots].sort((a, b) =>
       a.time24.localeCompare(b.time24)
     );
@@ -420,17 +415,21 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     const closeSegment = segmentFromTime(lastTime);
 
     WORK_CLOSE_TASKS.forEach((label) => {
-      addTask({
-        source: "work-close",
+      const id = buildTaskId("work-close", label);
+      const prev = prevById[id];
+      tasks.push({
+        id,
         label,
         detail: `Work close (after last class ~${lastTime})`,
         time24: lastTime,
         segment: closeSegment,
+        source: "work-close",
+        completed: prev ? !!prev.completed : false,
       });
     });
   }
 
-  // 8) Sort by segment then time24 then label
+  // Sort by segment then by time24/label
   const segmentOrder = { AM: 0, MID: 1, PM: 2 };
   tasks.sort((a, b) => {
     const segDiff =
@@ -444,7 +443,6 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     return a.label.localeCompare(b.label);
   });
 
-  console.log("Merged tasks count:", tasks.length);
   return tasks;
 }
 
@@ -488,15 +486,19 @@ function hydrateContextForm(context) {
 
 function renderMergedTasks() {
   const amList = document.getElementById("am-task-list");
-  const arriveList = document.getElementById("arrive-task-list");
   const midList = document.getElementById("mid-task-list");
   const pmList = document.getElementById("pm-task-list");
-  if (!amList || !arriveList || !midList || !pmList) return;
+  if (!amList || !midList || !pmList) return;
 
   amList.innerHTML = "";
-  arriveList.innerHTML = "";
   midList.innerHTML = "";
   pmList.innerHTML = "";
+
+  const segments = {
+    AM: amList,
+    MID: midList,
+    PM: pmList,
+  };
 
   plannerState.mergedTasks.forEach((task) => {
     if (hideCompleted && task.completed) return;
@@ -518,24 +520,7 @@ function renderMergedTasks() {
 
     const meta = document.createElement("div");
     meta.className = "task-item-meta";
-
-    // Build meta text with 12-hour time if we have time24
-    let metaText = "";
-    if (task.time24) {
-      const pretty = formatTime12(task.time24);
-      if (task.detail) {
-        if (task.detail.includes(task.time24)) {
-          metaText = task.detail.replace(task.time24, pretty);
-        } else {
-          metaText = `${task.detail} • ${pretty}`;
-        }
-      } else {
-        metaText = pretty;
-      }
-    } else {
-      metaText = task.detail || "";
-    }
-    meta.textContent = metaText;
+    meta.textContent = task.detail || "";
 
     li.appendChild(checkbox);
     const contentWrap = document.createElement("div");
@@ -544,61 +529,22 @@ function renderMergedTasks() {
     contentWrap.appendChild(meta);
     li.appendChild(contentWrap);
 
-    const seg = task.segment || "AM";
-    const source = task.source || "";
-
-    let targetList = null;
-
-    // Morning personal + school/daycare AM routines
-    if (
-      seg === "AM" &&
-      (source === "everyday-am" ||
-        source === "school-am" ||
-        source === "daycare-am")
-    ) {
-      targetList = amList;
-    }
-    // Work Arrive: work-open tasks + AM classes
-    else if (
-      source === "work-open" ||
-      (source === "class" && seg === "AM")
-    ) {
-      targetList = arriveList;
-    }
-    // Midday tasks
-    else if (seg === "MID") {
-      targetList = midList;
-    }
-    // PM tasks
-    else if (seg === "PM") {
-      targetList = pmList;
-    }
-    // Fallback: route by segment
-    else if (seg === "AM") {
-      targetList = amList;
-    } else {
-      targetList = pmList;
-    }
-
-    targetList.appendChild(li);
+    const segKey = task.segment || "AM";
+    const listEl = segments[segKey] || segments.AM;
+    listEl.appendChild(li);
   });
 
-  // Soft placeholders if any band is empty
-  function ensurePlaceholder(listEl) {
-    if (!listEl) return;
-    if (listEl.children.length === 0) {
+  // Soft placeholder if empty
+  ["AM", "MID", "PM"].forEach((seg) => {
+    const listEl = segments[seg];
+    if (listEl && !listEl.children.length) {
       const empty = document.createElement("li");
       empty.className = "task-item";
       empty.innerHTML =
         '<span class="task-item-label" style="opacity:.6;">No tasks in this band yet.</span>';
       listEl.appendChild(empty);
     }
-  }
-
-  ensurePlaceholder(amList);
-  ensurePlaceholder(arriveList);
-  ensurePlaceholder(midList);
-  ensurePlaceholder(pmList);
+  });
 }
 
 function toggleTaskCompleted(taskId, completed) {
@@ -712,7 +658,7 @@ async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
   await saveWeeklyTasks(weeklyState);
 }
 
-// ---------- COLLAPSIBLES & WEEKLY MINI HIDES ----------
+// ---------- COLLAPSIBLES & UI EVENTS ----------
 
 function setupCollapsibles() {
   document.querySelectorAll(".collapsible").forEach((section) => {
@@ -742,22 +688,6 @@ function toggleSection(section, toggleBtn) {
     const label = toggleBtn.querySelector(".collapse-label");
     if (label) label.textContent = isCollapsed ? "Show" : "Hide";
   }
-}
-
-function setupWeeklyMiniHides() {
-  document.querySelectorAll(".mini-hide-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const target = btn.dataset.target;
-      const listEl =
-        target === "work"
-          ? document.getElementById("weekly-work-list")
-          : document.getElementById("weekly-home-list");
-      if (!listEl) return;
-
-      const isHidden = listEl.classList.toggle("hidden");
-      btn.textContent = isHidden ? "Show" : "Hide";
-    });
-  });
 }
 
 // ---------- MAIN FLOW ----------
@@ -814,9 +744,7 @@ async function initDashboardForUser(user) {
   const weekKey = getWeekKey(today);
   const weeklyState = await loadWeeklyTasks(user, weekKey);
   renderWeeklyTasks(weeklyState);
-  setupWeeklyMiniHides();
 
-  // Hide completed toggle
   const hideBox = document.getElementById("hide-completed");
   if (hideBox) {
     hideBox.checked = hideCompleted;
