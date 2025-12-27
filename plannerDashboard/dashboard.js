@@ -132,7 +132,7 @@ const DEFAULT_STATE = {
     therapy: "no",      // "yes" | "no"
     planDate: "",       // YYYY-MM-DD
   },
-  // tasks stored by block id -> array of {id, text, done}
+  // tasks stored by block id -> array of {id, text, done, auto?}
   tasks: TIME_BLOCKS.reduce((acc, b) => {
     acc[b.id] = [];
     return acc;
@@ -247,18 +247,20 @@ function seedDefaultLastTimeIfNeeded() {
   }
 }
 
-// Seed AM / work / evening / bedtime must-do tasks + letter-day classes
-// ONLY if there are currently no tasks at all for the day
-function seedAutoTasksIfEmpty() {
-  const totalTasksCount = TIME_BLOCKS.reduce(
-    (sum, b) => sum + (state.tasks[b.id]?.length || 0),
-    0
-  );
-  if (totalTasksCount > 0) return;
+// Remove existing auto tasks & rebuild from context
+function regenerateAutoTasks() {
+  // remove all existing auto tasks but keep manual
+  TIME_BLOCKS.forEach((b) => {
+    state.tasks[b.id] = (state.tasks[b.id] || []).filter((t) => !t.auto);
+  });
 
   const blockTasks = [];
+  const isWeekday = isWeekdayName(state.context.dayOfWeek);
+  const isSchoolDay = isWeekday &&
+    state.context.letterDay &&
+    state.context.letterDay !== "NONE";
 
-  // ----- AM Must-Do -----
+  // ----- AM Must-Do (always) -----
   blockTasks.push({ label: "Levothyroxine", block: "morning" });
   blockTasks.push({ label: "Switch dishwasher", block: "morning" });
   blockTasks.push({ label: "Clean glasses", block: "morning" });
@@ -271,7 +273,8 @@ function seedAutoTasksIfEmpty() {
   blockTasks.push({ label: "Style hair", block: "morning" });
   blockTasks.push({ label: "Feed cat & refresh water", block: "morning" });
 
-  if (isWeekdayName(state.context.dayOfWeek)) {
+  // Only on school days
+  if (isSchoolDay) {
     blockTasks.push({ label: "Fill water bottle", block: "morning" });
     blockTasks.push({ label: "Pack lunch", block: "morning" });
     blockTasks.push({ label: "Pack school bag", block: "morning" });
@@ -284,23 +287,25 @@ function seedAutoTasksIfEmpty() {
     blockTasks.push({ label: "Daycare notebook filled out", block: "morning" });
   }
 
-  // ----- WORK OPEN -----
-  blockTasks.push({ label: "Projector on", block: "workOpen" });
-  blockTasks.push({ label: "Lunch in fridge", block: "workOpen" });
-  blockTasks.push({ label: "Sign into laptops & pull up Destiny", block: "workOpen" });
-  blockTasks.push({ label: "Name tags out", block: "workOpen" });
+  // ----- WORK OPEN (only on school days) -----
+  if (isSchoolDay) {
+    blockTasks.push({ label: "Projector on", block: "workOpen" });
+    blockTasks.push({ label: "Lunch in fridge", block: "workOpen" });
+    blockTasks.push({ label: "Sign into laptops & pull up Destiny", block: "workOpen" });
+    blockTasks.push({ label: "Name tags out", block: "workOpen" });
 
-  // ----- MIDDAY -----
-  blockTasks.push({
-    label: "Midday reset (5-min tidy / water / stretch)",
-    block: "midday"
-  });
+    // ----- MIDDAY -----
+    blockTasks.push({
+      label: "Midday reset (5-min tidy / water / stretch)",
+      block: "midday"
+    });
 
-  // ----- WORK CLOSE -----
-  blockTasks.push({ label: "Sign out / projector off", block: "workClose" });
-  blockTasks.push({ label: "Collect name tags", block: "workClose" });
-  blockTasks.push({ label: "5 minutes classroom straighten", block: "workClose" });
-  blockTasks.push({ label: "Clear desk", block: "workClose" });
+    // ----- WORK CLOSE -----
+    blockTasks.push({ label: "Sign out / projector off", block: "workClose" });
+    blockTasks.push({ label: "Collect name tags", block: "workClose" });
+    blockTasks.push({ label: "5 minutes classroom straighten", block: "workClose" });
+    blockTasks.push({ label: "Clear desk", block: "workClose" });
+  }
 
   // ----- EVENING -----
   if (state.context.therapy === "yes") {
@@ -322,7 +327,7 @@ function seedAutoTasksIfEmpty() {
 
   // ----- Letter day schedule -> class tasks in appropriate block -----
   const letter = state.context.letterDay;
-  if (letter && SCHEDULE_BY_LETTER_DAY[letter]) {
+  if (isSchoolDay && letter && SCHEDULE_BY_LETTER_DAY[letter]) {
     SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
       const blockId = blockForTime(appt.time24);
       blockTasks.push({
@@ -332,15 +337,26 @@ function seedAutoTasksIfEmpty() {
     });
   }
 
-  // Push into state.tasks
+  // Push into state.tasks as auto
   blockTasks.forEach((t) => {
     if (!state.tasks[t.block]) state.tasks[t.block] = [];
     state.tasks[t.block].push({
       id: uuid(),
       text: t.label,
       done: false,
+      auto: true,
     });
   });
+}
+
+// Only used on first load if a day has *no* tasks at all
+function seedAutoTasksIfEmpty() {
+  const totalTasksCount = TIME_BLOCKS.reduce(
+    (sum, b) => sum + (state.tasks[b.id]?.length || 0),
+    0
+  );
+  if (totalTasksCount > 0) return;
+  regenerateAutoTasks();
 }
 
 /* ---------- Context + summary ---------- */
@@ -378,33 +394,42 @@ function renderDaySummary() {
 
 async function handleContextSubmit(e) {
   e.preventDefault();
-  const dayOfWeek = $("dayOfWeek");
-  const letterDay = $("letterDay");
-  const planDate = $("planDate");
+  const dayOfWeekSel = $("dayOfWeek");
+  const letterDaySel = $("letterDay");
+  const planDateInput = $("planDate");
   const daycareToggle = $("daycareToggle");
   const therapyToggle = $("therapyToggle");
 
-  state.context.dayOfWeek = dayOfWeek.value;
-  state.context.letterDay = letterDay.value;
-  state.context.planDate = planDate.value || todayDateKey();
-  state.context.daycare = daycareToggle.dataset.value || "no";
-  state.context.therapy = therapyToggle.dataset.value || "no";
+  const newContext = {
+    dayOfWeek: dayOfWeekSel.value,
+    letterDay: letterDaySel.value,
+    planDate: planDateInput.value || todayDateKey(),
+    daycare: daycareToggle.dataset.value || "no",
+    therapy: therapyToggle.dataset.value || "no",
+  };
 
-  currentDateKey = state.context.planDate;
+  currentDateKey = newContext.planDate;
 
-  await loadDayFromFirestore();          // pull that date's data if it exists
+  // load that day's data, then override context, then regenerate auto tasks
+  await loadDayFromFirestore();
+  state.context = {
+    ...state.context,
+    ...newContext,
+  };
+
   seedDefaultLastTimeIfNeeded();
-  seedAutoTasksIfEmpty();
+  regenerateAutoTasks();
   await saveDayToFirestore();
   rehydrateAllFromState();
 }
 
 async function handleReloadDay() {
-  const planDate = $("planDate");
-  currentDateKey = planDate.value || todayDateKey();
+  const planDateInput = $("planDate");
+  currentDateKey = planDateInput.value || todayDateKey();
+
   await loadDayFromFirestore();
   seedDefaultLastTimeIfNeeded();
-  seedAutoTasksIfEmpty();
+  // don't regenerate autos here; we want exactly what's saved
   await saveDayToFirestore();
   rehydrateAllFromState();
 }
@@ -432,15 +457,17 @@ function initContextForm() {
   daycareToggle.addEventListener("click", async () => {
     toggleBtnValue(daycareToggle);
     state.context.daycare = daycareToggle.dataset.value;
+    regenerateAutoTasks();
     await saveDayToFirestore();
-    renderDaySummary();
+    rehydrateAllFromState();
   });
 
   therapyToggle.addEventListener("click", async () => {
     toggleBtnValue(therapyToggle);
     state.context.therapy = therapyToggle.dataset.value;
+    regenerateAutoTasks();
     await saveDayToFirestore();
-    renderDaySummary();
+    rehydrateAllFromState();
   });
 
   form.addEventListener("submit", handleContextSubmit);
@@ -477,6 +504,7 @@ function initTimeline() {
         id: uuid(),
         text,
         done: false,
+        auto: false,
       };
       state.tasks[blockId].push(item);
       textInput.value = "";
@@ -537,20 +565,7 @@ function renderTimeline() {
       left.appendChild(checkbox);
       left.appendChild(span);
 
-      const delBtn = document.createElement("button");
-      delBtn.type = "button";
-      delBtn.className = "tiny-icon-btn";
-      delBtn.textContent = "✕";
-      delBtn.addEventListener("click", async () => {
-        state.tasks[block.id] = state.tasks[block.id].filter(
-          (t) => t.id !== item.id
-        );
-        await saveDayToFirestore();
-        renderTimeline();
-      });
-
       row.appendChild(left);
-      row.appendChild(delBtn);
       list.appendChild(row);
     });
 
