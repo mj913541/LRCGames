@@ -4,13 +4,13 @@
   <meta charset="UTF-8" />
   <title>Planner Dashboard | LRC Quest</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="./dashboard.css" />
+  <link rel="stylesheet" href="dashboard.css" />
 </head>
 <body>
   <div class="page-shell">
     <header class="top-bar">
       <div class="top-bar-left">
-        <h1 class="app-title">Calm Planner</h1>
+        <h1 class="app-title">A Calm Planner</h1>
         <p class="app-subtitle">gentle daily focus for Mrs. A</p>
       </div>
       <div class="top-bar-right">
@@ -23,7 +23,7 @@
       </div>
     </header>
 
-    <!-- If someone unauthorized logs in -->
+    <!-- Unauthorized banner -->
     <div class="unauthorized-banner hidden" id="unauthorized-banner">
       <p>
         This planner dashboard is only available for Mrs. A.
@@ -33,9 +33,9 @@
     </div>
 
     <main class="layout">
-      <!-- LEFT PANEL: context + main cards -->
+      <!-- LEFT PANEL -->
       <section class="main-panel" aria-label="Planner main panel">
-        <!-- Day context + setup -->
+        <!-- Daily Context -->
         <section class="card" id="context-card">
           <header class="card-header">
             <h2>Daily Context</h2>
@@ -91,7 +91,7 @@
 
         <!-- Merged Tasks & Appointments -->
         <section class="card collapsible" data-section="merged">
-            <div class="card-body collapsible-body scrollable">
+          <header class="card-header collapsible-header">
             <div>
               <h2>Merged Tasks & Appointments</h2>
               <p class="card-subtitle">
@@ -103,7 +103,8 @@
               <span class="chevron">&#9662;</span>
             </button>
           </header>
-          <div class="card-body collapsible-body">
+
+          <div class="card-body collapsible-body scrollable">
             <div class="merged-toolbar">
               <label class="hide-completed-label">
                 <input type="checkbox" id="hide-completed" />
@@ -112,15 +113,22 @@
             </div>
 
             <div class="time-bands">
-              <div class="time-band" data-segment="AM">
+              <div class="time-band" data-band="AM">
                 <h3>Morning</h3>
                 <ul class="task-list" id="am-task-list"></ul>
               </div>
-              <div class="time-band" data-segment="MID">
+
+              <div class="time-band" data-band="ARRIVE">
+                <h3>Work Arrive</h3>
+                <ul class="task-list" id="arrive-task-list"></ul>
+              </div>
+
+              <div class="time-band" data-band="MID">
                 <h3>Midday</h3>
                 <ul class="task-list" id="mid-task-list"></ul>
               </div>
-              <div class="time-band" data-segment="PM">
+
+              <div class="time-band" data-band="PM">
                 <h3>Evening</h3>
                 <ul class="task-list" id="pm-task-list"></ul>
               </div>
@@ -142,7 +150,7 @@
               <span class="chevron">&#9662;</span>
             </button>
           </header>
-          <div class="card-body collapsible-body">
+          <div class="card-body collapsible-body scrollable">
             <textarea
               id="parking-lot"
               class="parking-textarea"
@@ -155,37 +163,44 @@
 
         <!-- Weekly Tasks Progress -->
         <section class="card collapsible" data-section="weekly">
-          <header class="card-header scrollable collapsible-header">
+          <header class="card-header collapsible-header">
             <div>
               <h2>Weekly Tasks Progress</h2>
+              <p class="card-subtitle">
+                Track the “big rocks” for this week at work and at home.
+              </p>
             </div>
             <button class="collapse-toggle" type="button" aria-expanded="true">
               <span class="collapse-label">Hide</span>
               <span class="chevron">&#9662;</span>
             </button>
           </header>
-          <div class="card-body collapsible-body weekly-grid">
-            <article class="sub-card">
-              <h3>Work</h3>
-                          <button class="collapse-toggle" type="button" aria-expanded="true">
-              <span class="collapse-label">Hide</span>
-              <span class="chevron">&#9662;</span>
-            </button>
+
+          <div class="card-body collapsible-body scrollable weekly-grid">
+            <article class="sub-card" data-group="work">
+              <div class="sub-card-header">
+                <h3>Work</h3>
+                <button type="button" class="mini-hide-btn" data-target="work">
+                  Hide
+                </button>
+              </div>
               <div id="weekly-work-list" class="weekly-task-list"></div>
             </article>
-            <article class="sub-card">
-              <h3>Home</h3>
-                          <button class="collapse-toggle" type="button" aria-expanded="true">
-              <span class="collapse-label">Hide</span>
-              <span class="chevron">&#9662;</span>
-            </button>
+
+            <article class="sub-card" data-group="home">
+              <div class="sub-card-header">
+                <h3>Home</h3>
+                <button type="button" class="mini-hide-btn" data-target="home">
+                  Hide
+                </button>
+              </div>
               <div id="weekly-home-list" class="weekly-task-list"></div>
             </article>
           </div>
         </section>
       </section>
 
-      <!-- RIGHT PANEL: soft space (future expansion) -->
+      <!-- RIGHT PANEL -->
       <aside class="side-panel" aria-label="Side panel">
         <div class="side-card">
           <p class="side-quote">

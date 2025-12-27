@@ -1,6 +1,5 @@
 // LRCGames/plannerDashboard/dashboard.js
 // Calm planner dashboard for Mrs. A
-// Connects to the same Firebase project as LRCQuest.
 
 import {
   initializeApp,
@@ -43,7 +42,7 @@ const WEEKLY_PREFIX = "plannerWeekly";
 
 // ---------- SCHEDULE & TEMPLATE TASKS ----------
 
-// SCHOOL LETTER DAY SCHEDULE (24-hr times for correct ordering)
+// SCHOOL LETTER DAY SCHEDULE (24-hr times)
 const SCHEDULE_BY_LETTER_DAY = {
   A: [
     { time24: "09:05", title: "4th Rosenthal" },
@@ -76,7 +75,7 @@ const SCHEDULE_BY_LETTER_DAY = {
   ],
 };
 
-// Everyday AM tasks (show every single day @ 06:00)
+// Everyday AM tasks (06:00)
 const EVERYDAY_AM_TASKS = [
   "Switch Dishwasher",
   "Clean Glasses",
@@ -91,7 +90,7 @@ const EVERYDAY_AM_TASKS = [
   "Feed Cat & Refresh Water",
 ].map((label) => ({ label, time24: "06:00" }));
 
-// Everyday PM tasks (show every single day @ 20:00)
+// Everyday PM tasks (20:00)
 const EVERYDAY_PM_TASKS = [
   "Brush teeth",
   "Floss",
@@ -100,14 +99,14 @@ const EVERYDAY_PM_TASKS = [
   "Clothes for tomorrow",
 ].map((label) => ({ label, time24: "20:00" }));
 
-// AM Tasks (School Days Only: Mon–Fri WITH a letter day A–E) @ 06:00
+// School day AM (Mon–Fri & letter day A–E) (06:00)
 const SCHOOL_AM_TASKS = [
   "Water Bottle (school day)",
   "Pack Lunch (school day)",
   "Pack School bag (school day)",
 ].map((label) => ({ label, time24: "06:00" }));
 
-// AM Tasks (Daycare days only) @ 06:00
+// Daycare AM tasks (06:00)
 const DAYCARE_AM_TASKS = [
   "Lincoln Diaper Changed (daycare)",
   "Lincoln Bottle (daycare)",
@@ -115,7 +114,7 @@ const DAYCARE_AM_TASKS = [
   "Daycare Notebook Filled Out",
 ].map((label) => ({ label, time24: "06:00" }));
 
-// Work open (A–E letter days) @ 09:00
+// Work open (09:00) on letter days A–E
 const WORK_OPEN_TASKS = [
   "Projector on",
   "Lunch in fridge",
@@ -123,7 +122,7 @@ const WORK_OPEN_TASKS = [
   "Name tags out",
 ].map((label) => ({ label, time24: "09:00" }));
 
-// Work close (A–E letter days) after last scheduled class
+// Work close (after last scheduled class)
 const WORK_CLOSE_TASKS = [
   "Sign out / projector off",
   "Collect name tags",
@@ -131,7 +130,7 @@ const WORK_CLOSE_TASKS = [
   "Clear desk",
 ];
 
-// Default weekly “big rock” tasks
+// Weekly big rocks
 const DEFAULT_WEEKLY_TASKS = {
   work: [
     "Plan next week’s LRC lessons",
@@ -227,7 +226,6 @@ function buildTaskId(source, label, extra = "") {
   return `${source}-${slugify(label)}${extra ? "-" + extra : ""}`;
 }
 
-// 24h → 12h helper
 function formatTime12(time24) {
   if (!time24) return "";
   const parts = time24.split(":");
@@ -304,18 +302,15 @@ async function saveWeeklyTasks(weeklyState) {
   await setDoc(ref, weeklyState, { merge: true });
 }
 
-// ---------- MERGED TASKS BUILD (REVISED) ----------
+// ---------- MERGED TASKS BUILD ----------
 
 function buildMergedTasksFromContext(context, previousTasks = []) {
   const { dayOfWeek, letterDay, daycare } = context;
-
-  // Debug: see what the planner thinks the context is
   console.log("Rebuilding merged tasks with context:", context);
 
   const hasLetterDay = !!letterDay && letterDay !== "NONE";
   const isSchoolDay = isWeekday(dayOfWeek) && hasLetterDay;
 
-  // Previous tasks map for preserving completion
   const prevById = {};
   (previousTasks || []).forEach((t) => {
     if (t && t.id) prevById[t.id] = t;
@@ -323,7 +318,6 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
 
   const tasks = [];
 
-  // Helper for creating tasks while preserving completion state
   function addTask({ source, label, detail, time24, segment }) {
     const id = buildTaskId(source, label, time24 || "");
     const prev = prevById[id];
@@ -338,7 +332,7 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     });
   }
 
-  // 1) Everyday AM tasks (06:00, always)
+  // 1) Everyday AM tasks
   EVERYDAY_AM_TASKS.forEach((item) => {
     addTask({
       source: "everyday-am",
@@ -349,7 +343,7 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     });
   });
 
-  // 2) Everyday PM tasks (20:00, always)
+  // 2) Everyday PM tasks
   EVERYDAY_PM_TASKS.forEach((item) => {
     addTask({
       source: "everyday-pm",
@@ -360,7 +354,7 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     });
   });
 
-  // 3) School-day AM tasks (Mon–Fri AND letter day A–E)
+  // 3) School-day AM tasks
   if (isSchoolDay) {
     SCHOOL_AM_TASKS.forEach((item) => {
       addTask({
@@ -373,7 +367,7 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     });
   }
 
-  // 4) Daycare AM tasks (only when daycare = "yes")
+  // 4) Daycare AM tasks
   if (daycare === "yes") {
     DAYCARE_AM_TASKS.forEach((item) => {
       addTask({
@@ -386,7 +380,7 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     });
   }
 
-  // 5) Letter day schedule (classes: only when letter day A–E and schedule exists)
+  // 5) Letter day schedule (classes)
   if (hasLetterDay && SCHEDULE_BY_LETTER_DAY[letterDay]) {
     const slots = SCHEDULE_BY_LETTER_DAY[letterDay];
 
@@ -400,7 +394,7 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
       });
     });
 
-    // 6) Work open (09:00, A–E days)
+    // 6) Work open
     WORK_OPEN_TASKS.forEach((item) => {
       addTask({
         source: "work-open",
@@ -430,7 +424,6 @@ function buildMergedTasksFromContext(context, previousTasks = []) {
     });
   }
 
-  // 8) Sort by segment then time24 then label
   const segmentOrder = { AM: 0, MID: 1, PM: 2 };
   tasks.sort((a, b) => {
     const segDiff =
@@ -519,7 +512,6 @@ function renderMergedTasks() {
     const meta = document.createElement("div");
     meta.className = "task-item-meta";
 
-    // Build meta text with 12-hour time if we have time24
     let metaText = "";
     if (task.time24) {
       const pretty = formatTime12(task.time24);
@@ -549,7 +541,6 @@ function renderMergedTasks() {
 
     let targetList = null;
 
-    // Morning personal + school/daycare AM routines
     if (
       seg === "AM" &&
       (source === "everyday-am" ||
@@ -557,24 +548,16 @@ function renderMergedTasks() {
         source === "daycare-am")
     ) {
       targetList = amList;
-    }
-    // Work Arrive: work-open tasks + AM classes
-    else if (
+    } else if (
       source === "work-open" ||
       (source === "class" && seg === "AM")
     ) {
       targetList = arriveList;
-    }
-    // Midday tasks
-    else if (seg === "MID") {
+    } else if (seg === "MID") {
       targetList = midList;
-    }
-    // PM tasks
-    else if (seg === "PM") {
+    } else if (seg === "PM") {
       targetList = pmList;
-    }
-    // Fallback: route by segment
-    else if (seg === "AM") {
+    } else if (seg === "AM") {
       targetList = amList;
     } else {
       targetList = pmList;
@@ -583,7 +566,6 @@ function renderMergedTasks() {
     targetList.appendChild(li);
   });
 
-  // Soft placeholders if any band is empty
   function ensurePlaceholder(listEl) {
     if (!listEl) return;
     if (listEl.children.length === 0) {
@@ -712,7 +694,7 @@ async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
   await saveWeeklyTasks(weeklyState);
 }
 
-// ---------- COLLAPSIBLES & WEEKLY MINI HIDES ----------
+// ---------- COLLAPSIBLES & MINI HIDES ----------
 
 function setupCollapsibles() {
   document.querySelectorAll(".collapsible").forEach((section) => {
