@@ -199,6 +199,27 @@ body {
 .card-body {
   margin-top: 10px;
 }
+/* Scrollable inner areas for tall cards */
+.card-body.scrollable {
+  max-height: 45vh;            /* adjust to taste */
+  overflow-y: auto;
+  padding-right: 4px;          /* space away from scrollbar */
+  -webkit-overflow-scrolling: touch; /* smooth iOS scrolling */
+}
+
+/* Optional: subtle scrollbar styling for WebKit (iPad/iPhone/Chrome) */
+.card-body.scrollable::-webkit-scrollbar {
+  width: 6px;
+}
+
+.card-body.scrollable::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.7);
+}
+
+.card-body.scrollable::-webkit-scrollbar-track {
+  background: transparent;
+}
 
 /* Context grid */
 

@@ -91,7 +91,7 @@
 
         <!-- Merged Tasks & Appointments -->
         <section class="card collapsible" data-section="merged">
-          <header class="card-header collapsible-header">
+            <div class="card-body collapsible-body scrollable">
             <div>
               <h2>Merged Tasks & Appointments</h2>
               <p class="card-subtitle">
@@ -155,12 +155,9 @@
 
         <!-- Weekly Tasks Progress -->
         <section class="card collapsible" data-section="weekly">
-          <header class="card-header collapsible-header">
+          <header class="card-header scrollable collapsible-header">
             <div>
               <h2>Weekly Tasks Progress</h2>
-              <p class="card-subtitle">
-                Track the “big rocks” for this week at work and at home.
-              </p>
             </div>
             <button class="collapse-toggle" type="button" aria-expanded="true">
               <span class="collapse-label">Hide</span>
@@ -170,10 +167,18 @@
           <div class="card-body collapsible-body weekly-grid">
             <article class="sub-card">
               <h3>Work</h3>
+                          <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
               <div id="weekly-work-list" class="weekly-task-list"></div>
             </article>
             <article class="sub-card">
               <h3>Home</h3>
+                          <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
               <div id="weekly-home-list" class="weekly-task-list"></div>
             </article>
           </div>
