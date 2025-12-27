@@ -1,5 +1,5 @@
 // LRCGames/plannerDashboard/dashboard.js
-// Firebase-backed planner dashboard that matches dashboard.html
+// Firebase-backed planner dashboard matching dashboard.html
 
 import {
   initializeApp
@@ -48,6 +48,10 @@ function todayDateKey() {
   return `${year}-${month}-${day}`;
 }
 
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
 function uuid() {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
@@ -56,7 +60,7 @@ function $(id) {
   return document.getElementById(id);
 }
 
-/* ---------- Time blocks ---------- */
+/* ---------- Time blocks & letter-day schedule ---------- */
 
 const TIME_BLOCKS = [
   { id: "morning", label: "🌅 Morning" },
@@ -67,7 +71,6 @@ const TIME_BLOCKS = [
   { id: "bedtime", label: "🌙 Bedtime" },
 ];
 
-/* ---------- Letter day schedule (classes) ---------- */
 // SCHOOL LETTER DAY SCHEDULE (24-hr times for correct ordering)
 const SCHEDULE_BY_LETTER_DAY = {
   A: [
@@ -101,7 +104,6 @@ const SCHEDULE_BY_LETTER_DAY = {
   ]
 };
 
-// map a 24-hr time like "09:05" to one of the TIME_BLOCK ids
 function blockForTime(time24) {
   if (!time24) return "midday";
   const [hStr, mStr] = time24.split(":");
@@ -175,15 +177,15 @@ const DEFAULT_STATE = {
 
 let currentUser = null;
 let currentDateKey = todayDateKey();
-let state = structuredClone(DEFAULT_STATE);
+let state = deepClone(DEFAULT_STATE);
 
 /* ---------- Firestore helpers ---------- */
 
 function mergeWithDefaults(raw) {
-  if (!raw) return structuredClone(DEFAULT_STATE);
+  if (!raw) return deepClone(DEFAULT_STATE);
 
   return {
-    ...structuredClone(DEFAULT_STATE),
+    ...deepClone(DEFAULT_STATE),
     ...raw,
     context: {
       ...DEFAULT_STATE.context,
@@ -215,7 +217,7 @@ async function loadDayFromFirestore() {
   if (snap.exists()) {
     state = mergeWithDefaults(snap.data());
   } else {
-    state = structuredClone(DEFAULT_STATE);
+    state = deepClone(DEFAULT_STATE);
     state.context.planDate = currentDateKey;
   }
 }
@@ -226,9 +228,8 @@ async function saveDayToFirestore() {
   await setDoc(ref, state, { merge: false });
 }
 
-/* ---------- Default “Last time I…” + auto-tasks seeding ---------- */
+/* ---------- Default “Last time I…” + auto-tasks ---------- */
 
-// Seed your default “When was the last time I…” list IF empty
 function seedDefaultLastTimeIfNeeded() {
   if (!Array.isArray(state.lastTime) || state.lastTime.length === 0) {
     state.lastTime = [
@@ -391,8 +392,7 @@ async function handleContextSubmit(e) {
 
   currentDateKey = state.context.planDate;
 
-  // When you change the date, we load that day instead of overwriting it
-  await loadDayFromFirestore();
+  await loadDayFromFirestore();          // pull that date's data if it exists
   seedDefaultLastTimeIfNeeded();
   seedAutoTasksIfEmpty();
   await saveDayToFirestore();
@@ -500,6 +500,10 @@ function renderTimeline() {
   container.innerHTML = "";
 
   TIME_BLOCKS.forEach((block) => {
+    const items = state.tasks[block.id] || [];
+    const visibleItems = items.filter((item) => !(hideCompleted && item.done));
+    if (!visibleItems.length) return;
+
     const wrapper = document.createElement("div");
     wrapper.className = "time-block";
 
@@ -511,47 +515,44 @@ function renderTimeline() {
     const list = document.createElement("div");
     list.className = "time-block-list";
 
-    const items = state.tasks[block.id] || [];
-    items
-      .filter((item) => !(hideCompleted && item.done))
-      .forEach((item) => {
-        const row = document.createElement("div");
-        row.className = "timeline-item";
+    visibleItems.forEach((item) => {
+      const row = document.createElement("div");
+      row.className = "timeline-item";
 
-        const left = document.createElement("label");
-        left.className = "timeline-item-left";
+      const left = document.createElement("label");
+      left.className = "timeline-item-left";
 
-        const checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        checkbox.checked = item.done;
-        checkbox.addEventListener("change", async () => {
-          item.done = checkbox.checked;
-          await saveDayToFirestore();
-          renderTimeline();
-        });
-
-        const span = document.createElement("span");
-        span.textContent = item.text;
-
-        left.appendChild(checkbox);
-        left.appendChild(span);
-
-        const delBtn = document.createElement("button");
-        delBtn.type = "button";
-        delBtn.className = "tiny-icon-btn";
-        delBtn.textContent = "✕";
-        delBtn.addEventListener("click", async () => {
-          state.tasks[block.id] = state.tasks[block.id].filter(
-            (t) => t.id !== item.id
-          );
-          await saveDayToFirestore();
-          renderTimeline();
-        });
-
-        row.appendChild(left);
-        row.appendChild(delBtn);
-        list.appendChild(row);
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = item.done;
+      checkbox.addEventListener("change", async () => {
+        item.done = checkbox.checked;
+        await saveDayToFirestore();
+        renderTimeline();
       });
+
+      const span = document.createElement("span");
+      span.textContent = item.text;
+
+      left.appendChild(checkbox);
+      left.appendChild(span);
+
+      const delBtn = document.createElement("button");
+      delBtn.type = "button";
+      delBtn.className = "tiny-icon-btn";
+      delBtn.textContent = "✕";
+      delBtn.addEventListener("click", async () => {
+        state.tasks[block.id] = state.tasks[block.id].filter(
+          (t) => t.id !== item.id
+        );
+        await saveDayToFirestore();
+        renderTimeline();
+      });
+
+      row.appendChild(left);
+      row.appendChild(delBtn);
+      list.appendChild(row);
+    });
 
     wrapper.appendChild(list);
     container.appendChild(wrapper);
