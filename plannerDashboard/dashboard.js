@@ -56,7 +56,7 @@ function $(id) {
   return document.getElementById(id);
 }
 
-/* ---------- Core state shape ---------- */
+/* ---------- Time blocks ---------- */
 
 const TIME_BLOCKS = [
   { id: "morning", label: "🌅 Morning" },
@@ -66,6 +66,61 @@ const TIME_BLOCKS = [
   { id: "evening", label: "🏠 Arrive home" },
   { id: "bedtime", label: "🌙 Bedtime" },
 ];
+
+/* ---------- Letter day schedule (classes) ---------- */
+// SCHOOL LETTER DAY SCHEDULE (24-hr times for correct ordering)
+const SCHEDULE_BY_LETTER_DAY = {
+  A: [
+    { time24: "09:05", title: "4th Rosenthal" },
+    { time24: "10:05", title: "2nd Peterson" },
+    { time24: "11:05", title: "3rd Hossain" },
+    { time24: "13:45", title: "5th Altruismo" },
+    { time24: "14:45", title: "1st Rogers" }
+  ],
+  B: [
+    { time24: "09:05", title: "4th Cavello" },
+    { time24: "10:05", title: "2nd Schmidt" },
+    { time24: "13:45", title: "5th Isibindi" }
+  ],
+  C: [
+    { time24: "08:45", title: "AM Duty" },
+    { time24: "10:05", title: "2nd Adams" },
+    { time24: "11:05", title: "3rd Pulsa" },
+    { time24: "13:45", title: "5th Amistad" }
+  ],
+  D: [
+    { time24: "09:20", title: "HC 5th Green" },
+    { time24: "10:05", title: "HC 1st Green" },
+    { time24: "14:45", title: "1st Wilson" }
+  ],
+  E: [
+    { time24: "09:05", title: "4th Tomter" },
+    { time24: "11:05", title: "3rd Carroll" },
+    { time24: "13:45", title: "5th Reveur" },
+    { time24: "14:45", title: "1st Day" }
+  ]
+};
+
+// map a 24-hr time like "09:05" to one of the TIME_BLOCK ids
+function blockForTime(time24) {
+  if (!time24) return "midday";
+  const [hStr, mStr] = time24.split(":");
+  const h = parseInt(hStr, 10);
+  const mins = h * 60 + parseInt(mStr, 10);
+
+  if (mins < 8 * 60) return "morning";        // before 8:00
+  if (mins < 11 * 60) return "workOpen";      // 8:00–10:59
+  if (mins < 13 * 60) return "midday";        // 11:00–12:59
+  if (mins < 16 * 60) return "workClose";     // 13:00–15:59
+  if (mins < 21 * 60) return "evening";       // 16:00–20:59
+  return "bedtime";                           // 21:00+
+}
+
+function isWeekdayName(name) {
+  return ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"].includes(name);
+}
+
+/* ---------- Core state shape ---------- */
 
 const DEFAULT_STATE = {
   context: {
@@ -171,6 +226,122 @@ async function saveDayToFirestore() {
   await setDoc(ref, state, { merge: false });
 }
 
+/* ---------- Default “Last time I…” + auto-tasks seeding ---------- */
+
+// Seed your default “When was the last time I…” list IF empty
+function seedDefaultLastTimeIfNeeded() {
+  if (!Array.isArray(state.lastTime) || state.lastTime.length === 0) {
+    state.lastTime = [
+      { id: uuid(), text: "Changed sheets",       lastDone: todayDateKey() },
+      { id: uuid(), text: "Bathed Baby",          lastDone: "" },
+      { id: uuid(), text: "Shaved my armpits",    lastDone: "" },
+      { id: uuid(), text: "Cleaned eyebrows",     lastDone: "" },
+      { id: uuid(), text: "Shaved lips",          lastDone: "" },
+      { id: uuid(), text: "Shaved 🐱",            lastDone: "" },
+      { id: uuid(), text: "Washed hair",          lastDone: "" },
+      { id: uuid(), text: "Shaved legs",          lastDone: "" },
+      { id: uuid(), text: "Toenails",             lastDone: "" },
+      { id: uuid(), text: "Nails",                lastDone: "" },
+    ];
+  }
+}
+
+// Seed AM / work / evening / bedtime must-do tasks + letter-day classes
+// ONLY if there are currently no tasks at all for the day
+function seedAutoTasksIfEmpty() {
+  const totalTasksCount = TIME_BLOCKS.reduce(
+    (sum, b) => sum + (state.tasks[b.id]?.length || 0),
+    0
+  );
+  if (totalTasksCount > 0) return;
+
+  const blockTasks = [];
+
+  // ----- AM Must-Do -----
+  blockTasks.push({ label: "Levothyroxine", block: "morning" });
+  blockTasks.push({ label: "Switch dishwasher", block: "morning" });
+  blockTasks.push({ label: "Clean glasses", block: "morning" });
+  blockTasks.push({ label: "Deodorant", block: "morning" });
+  blockTasks.push({ label: "Eat breakfast", block: "morning" });
+  blockTasks.push({ label: "Brush teeth (AM)", block: "morning" });
+  blockTasks.push({ label: "Floss (AM)", block: "morning" });
+  blockTasks.push({ label: "Get dressed", block: "morning" });
+  blockTasks.push({ label: "Wash face (AM)", block: "morning" });
+  blockTasks.push({ label: "Style hair", block: "morning" });
+  blockTasks.push({ label: "Feed cat & refresh water", block: "morning" });
+
+  if (isWeekdayName(state.context.dayOfWeek)) {
+    blockTasks.push({ label: "Fill water bottle", block: "morning" });
+    blockTasks.push({ label: "Pack lunch", block: "morning" });
+    blockTasks.push({ label: "Pack school bag", block: "morning" });
+  }
+
+  if (state.context.daycare === "yes") {
+    blockTasks.push({ label: "Lincoln diaper changed", block: "morning" });
+    blockTasks.push({ label: "Lincoln bottle prepped", block: "morning" });
+    blockTasks.push({ label: "Daycare bag packed", block: "morning" });
+    blockTasks.push({ label: "Daycare notebook filled out", block: "morning" });
+  }
+
+  // ----- WORK OPEN -----
+  blockTasks.push({ label: "Projector on", block: "workOpen" });
+  blockTasks.push({ label: "Lunch in fridge", block: "workOpen" });
+  blockTasks.push({ label: "Sign into laptops & pull up Destiny", block: "workOpen" });
+  blockTasks.push({ label: "Name tags out", block: "workOpen" });
+
+  // ----- MIDDAY -----
+  blockTasks.push({
+    label: "Midday reset (5-min tidy / water / stretch)",
+    block: "midday"
+  });
+
+  // ----- WORK CLOSE -----
+  blockTasks.push({ label: "Sign out / projector off", block: "workClose" });
+  blockTasks.push({ label: "Collect name tags", block: "workClose" });
+  blockTasks.push({ label: "5 minutes classroom straighten", block: "workClose" });
+  blockTasks.push({ label: "Clear desk", block: "workClose" });
+
+  // ----- EVENING -----
+  if (state.context.therapy === "yes") {
+    blockTasks.push({
+      label: "Prep notes & questions for therapy",
+      block: "evening"
+    });
+  }
+  blockTasks.push({ label: "Lay out clothes for tomorrow", block: "evening" });
+
+  // ----- BEDTIME / PM MUST-DO -----
+  blockTasks.push({ label: "Brush teeth", block: "bedtime" });
+  blockTasks.push({ label: "Floss", block: "bedtime" });
+  blockTasks.push({ label: "Wash face", block: "bedtime" });
+  blockTasks.push({
+    label: "Water bottle & lunch dishes in dishwasher",
+    block: "bedtime"
+  });
+
+  // ----- Letter day schedule -> class tasks in appropriate block -----
+  const letter = state.context.letterDay;
+  if (letter && SCHEDULE_BY_LETTER_DAY[letter]) {
+    SCHEDULE_BY_LETTER_DAY[letter].forEach((appt) => {
+      const blockId = blockForTime(appt.time24);
+      blockTasks.push({
+        label: appt.title,
+        block: blockId,
+      });
+    });
+  }
+
+  // Push into state.tasks
+  blockTasks.forEach((t) => {
+    if (!state.tasks[t.block]) state.tasks[t.block] = [];
+    state.tasks[t.block].push({
+      id: uuid(),
+      text: t.label,
+      done: false,
+    });
+  });
+}
+
 /* ---------- Context + summary ---------- */
 
 function updateToggleButton(btn, value) {
@@ -220,14 +391,21 @@ async function handleContextSubmit(e) {
 
   currentDateKey = state.context.planDate;
 
+  // When you change the date, we load that day instead of overwriting it
+  await loadDayFromFirestore();
+  seedDefaultLastTimeIfNeeded();
+  seedAutoTasksIfEmpty();
   await saveDayToFirestore();
-  renderDaySummary();
+  rehydrateAllFromState();
 }
 
 async function handleReloadDay() {
   const planDate = $("planDate");
   currentDateKey = planDate.value || todayDateKey();
   await loadDayFromFirestore();
+  seedDefaultLastTimeIfNeeded();
+  seedAutoTasksIfEmpty();
+  await saveDayToFirestore();
   rehydrateAllFromState();
 }
 
@@ -239,7 +417,6 @@ function initContextForm() {
 
   if (!form || !daycareToggle || !therapyToggle || !reloadBtn) return;
 
-  // initial sync from state (will be updated again after Firestore load)
   const dayOfWeek = $("dayOfWeek");
   const letterDay = $("letterDay");
   const planDate = $("planDate");
@@ -955,6 +1132,9 @@ function initAuth() {
     currentDateKey = planDate?.value || todayDateKey();
 
     await loadDayFromFirestore();
+    seedDefaultLastTimeIfNeeded();
+    seedAutoTasksIfEmpty();
+    await saveDayToFirestore();
     rehydrateAllFromState();
   });
 }
