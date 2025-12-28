@@ -200,18 +200,58 @@
         </section>
       </section>
 
-      <!-- RIGHT PANEL -->
+      <!-- RIGHT PANEL: quote + trackers -->
       <aside class="side-panel" aria-label="Side panel">
+        <!-- Quote card -->
         <div class="side-card">
           <p class="side-quote">
             “One thing at a time. Tiny progress still counts.”
           </p>
-          <p class="side-note">
-            This space is intentionally light for now, to keep the dashboard calm.
-            We can later add mood tracking, focus timers, or read-a-thon stats here.
-          </p>
         </div>
+
+        <!-- Goal Trackers -->
+        <section class="card collapsible side-goal-card" data-section="goals">
+          <header class="card-header collapsible-header">
+            <div>
+              <h2>Goal Trackers</h2>
+              <p class="card-subtitle">“How many did I do today?”</p>
+            </div>
+            <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
+          </header>
+          <div class="card-body collapsible-body scrollable">
+            <div class="goals-toolbar">
+              <label class="hide-completed-label">
+                <input type="checkbox" id="hide-completed-goals" />
+                Hide completed goals
+              </label>
+            </div>
+            <ul id="goal-tracker-list" class="goal-list"></ul>
+          </div>
+        </section>
+
+        <!-- When was the last time I...? -->
+        <section class="card collapsible side-lasttime-card" data-section="last-time">
+          <header class="card-header collapsible-header">
+            <div>
+              <h2>When was the last time I…</h2>
+              <p class="card-subtitle">
+                Gentle nudges for occasional tasks.
+              </p>
+            </div>
+            <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
+          </header>
+          <div class="card-body collapsible-body scrollable">
+            <ul id="last-time-list" class="last-time-list"></ul>
+          </div>
+        </section>
       </aside>
+
     </main>
   </div>
 

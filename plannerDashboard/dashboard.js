@@ -39,6 +39,8 @@ const ALLOWED_EMAILS = [
 const DAILY_PREFIX = "plannerDaily";
 const PARKING_DOC = "plannerParking";
 const WEEKLY_PREFIX = "plannerWeekly";
+const GOALS_PREFIX = "plannerGoalsDaily";
+const LASTTIME_PREFIX = "plannerLastTime";
 
 // ---------- SCHEDULE & TEMPLATE TASKS ----------
 
@@ -77,11 +79,11 @@ const SCHEDULE_BY_LETTER_DAY = {
 
 // Everyday AM tasks (06:00)
 const EVERYDAY_AM_TASKS = [
-  "Levothyroxine",
   "Switch Dishwasher",
   "Clean Glasses",
   "Deodorant",
   "Eat Breakfast",
+  "Levothyroxine",
   "Brush teeth",
   "Floss",
   "Get Dressed",
@@ -133,18 +135,10 @@ const WORK_CLOSE_TASKS = [
 // Weekly big rocks
 const DEFAULT_WEEKLY_TASKS = {
   work: [
-    "Next week 1st grade lessons",
-    "Next week 2nd grade lessons",
-    "Next week 3rd grade lessons",
-    "Next week 4th grade lessons",
-    "Next week 5th grade lessons",
-    "Process 5 new books",
-    "5 Book hospital books",
-    "Evaluation Evidence",
-    "Sub plans",
-    "Read-A-Thon Fundraiser",
-    "Ordering supplies",
-    "Decorate 2 shelves to match the genre color sections",
+    "Plan next week’s LRC lessons",
+    "Update LRCQuest links / quests",
+    "Refresh book displays",
+    "Library communication (newsletters, Seesaw, etc.)",
   ],
   home: [
     "Meal plan & grocery list",
@@ -153,6 +147,46 @@ const DEFAULT_WEEKLY_TASKS = {
     "Budget / bills check-in",
   ],
 };
+
+// Simple daily goal trackers (per-day counts)
+const GOAL_TRACKERS = [
+  { id: "water", label: "Cups of water", dailyTarget: 8 },
+  { id: "movement", label: "Movement breaks", dailyTarget: 3 },
+  { id: "outside", label: "Step outside", dailyTarget: 1 },
+];
+
+// "When was the last time I…" items.
+// Each item gets its own green/yellow/red thresholds in DAYS.
+const LAST_TIME_ITEMS = [
+  {
+    id: "wash-hair",
+    label: "Wash hair",
+    greenDays: 0,
+    yellowDays: 2,
+    redDays: 4,
+  },
+  {
+    id: "change-sheets",
+    label: "Change bed sheets",
+    greenDays: 0,
+    yellowDays: 7,
+    redDays: 14,
+  },
+  {
+    id: "water-plants",
+    label: "Water plants",
+    greenDays: 0,
+    yellowDays: 3,
+    redDays: 7,
+  },
+  {
+    id: "deep-tidy",
+    label: "Deep tidy one area",
+    greenDays: 0,
+    yellowDays: 5,
+    redDays: 10,
+  },
+];
 
 // ---------- STATE ----------
 
@@ -176,6 +210,11 @@ let plannerState = {
 };
 
 let hideCompleted = false;
+
+// goal/last-time local state
+let goalCountsState = {};   // { goalId: countToday }
+let hideCompletedGoals = false;
+let lastTimeState = {};     // { itemId: "YYYY-MM-DD" }
 
 // ---------- HELPERS ----------
 
@@ -246,7 +285,21 @@ function formatTime12(time24) {
   return `${h}:${m} ${ampm}`;
 }
 
-// ---------- LOAD & SAVE ----------
+function formatDateShort(date) {
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function daysBetween(a, b) {
+  const msPerDay = 1000 * 60 * 60 * 24;
+  const start = new Date(a.getFullYear(), a.getMonth(), a.getDate());
+  const end = new Date(b.getFullYear(), b.getMonth(), b.getDate());
+  return Math.floor((start - end) / msPerDay);
+}
+
+// ---------- LOAD & SAVE (FIRESTORE) ----------
 
 async function loadDailyState(user, dateKey) {
   const ref = doc(db, DAILY_PREFIX, `${user.uid}_${dateKey}`);
@@ -308,6 +361,55 @@ async function saveWeeklyTasks(weeklyState) {
     `${currentUser.uid}_${weeklyState.weekKey}`
   );
   await setDoc(ref, weeklyState, { merge: true });
+}
+
+// --- Firestore for goal trackers ---
+
+async function loadGoalCountsFromFirestore(user, dateKey) {
+  const ref = doc(db, GOALS_PREFIX, `${user.uid}_${dateKey}`);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    goalCountsState = {};
+    return;
+  }
+  const data = snap.data();
+  goalCountsState = data.counts || {};
+}
+
+async function saveGoalCountsToFirestore() {
+  if (!currentUser || !plannerState.dateKey) return;
+  const ref = doc(
+    db,
+    GOALS_PREFIX,
+    `${currentUser.uid}_${plannerState.dateKey}`
+  );
+  await setDoc(
+    ref,
+    {
+      counts: goalCountsState,
+      dateKey: plannerState.dateKey,
+    },
+    { merge: true }
+  );
+}
+
+// --- Firestore for "last time I..." ---
+
+async function loadLastTimeStateFromFirestore(user) {
+  const ref = doc(db, LASTTIME_PREFIX, user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    lastTimeState = {};
+    return;
+  }
+  const data = snap.data();
+  lastTimeState = data.lastDone || {};
+}
+
+async function saveLastTimeStateToFirestore() {
+  if (!currentUser) return;
+  const ref = doc(db, LASTTIME_PREFIX, currentUser.uid);
+  await setDoc(ref, { lastDone: lastTimeState }, { merge: true });
 }
 
 // ---------- MERGED TASKS BUILD ----------
@@ -549,6 +651,7 @@ function renderMergedTasks() {
 
     let targetList = null;
 
+    // Morning personal + school/daycare AM routines
     if (
       seg === "AM" &&
       (source === "everyday-am" ||
@@ -556,16 +659,24 @@ function renderMergedTasks() {
         source === "daycare-am")
     ) {
       targetList = amList;
-    } else if (
+    }
+    // Work Arrive: work-open tasks + AM classes
+    else if (
       source === "work-open" ||
       (source === "class" && seg === "AM")
     ) {
       targetList = arriveList;
-    } else if (seg === "MID") {
+    }
+    // Midday tasks
+    else if (seg === "MID") {
       targetList = midList;
-    } else if (seg === "PM") {
+    }
+    // PM tasks
+    else if (seg === "PM") {
       targetList = pmList;
-    } else if (seg === "AM") {
+    }
+    // Fallback: route by segment
+    else if (seg === "AM") {
       targetList = amList;
     } else {
       targetList = pmList;
@@ -702,6 +813,205 @@ async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
   await saveWeeklyTasks(weeklyState);
 }
 
+// ---------- GOAL TRACKERS ----------
+
+function renderGoalTrackers() {
+  const listEl = document.getElementById("goal-tracker-list");
+  if (!listEl) return;
+
+  listEl.innerHTML = "";
+
+  const items = GOAL_TRACKERS.map((def) => {
+    const count = goalCountsState[def.id] || 0;
+    const completed = count >= def.dailyTarget;
+    return { ...def, count, completed };
+  });
+
+  // Incomplete first, completed last
+  items.sort((a, b) => Number(a.completed) - Number(b.completed));
+
+  items.forEach((item) => {
+    if (hideCompletedGoals && item.completed) return;
+
+    const li = document.createElement("li");
+    li.className = "goal-row";
+    li.dataset.goalId = item.id;
+
+    const main = document.createElement("div");
+    main.className = "goal-main";
+
+    const label = document.createElement("div");
+    label.className = "goal-label";
+    label.textContent = item.label;
+
+    const sub = document.createElement("div");
+    sub.className = "goal-sub";
+    sub.textContent = `${item.count} / ${item.dailyTarget} today`;
+
+    main.appendChild(label);
+    main.appendChild(sub);
+
+    const controls = document.createElement("div");
+    controls.className = "goal-controls";
+
+    const minus = document.createElement("button");
+    minus.type = "button";
+    minus.className = "goal-btn";
+    minus.textContent = "−";
+    minus.addEventListener("click", () => {
+      changeGoalCount(item.id, -1);
+    });
+
+    const bubble = document.createElement("span");
+    bubble.className = "goal-count-bubble";
+    bubble.textContent = String(item.count);
+
+    const plus = document.createElement("button");
+    plus.type = "button";
+    plus.className = "goal-btn";
+    plus.textContent = "+";
+    plus.addEventListener("click", () => {
+      changeGoalCount(item.id, +1);
+    });
+
+    controls.appendChild(minus);
+    controls.appendChild(bubble);
+    controls.appendChild(plus);
+
+    li.appendChild(main);
+    li.appendChild(controls);
+
+    listEl.appendChild(li);
+  });
+
+  if (!listEl.children.length) {
+    const li = document.createElement("li");
+    li.className = "goal-row";
+    const span = document.createElement("span");
+    span.className = "goal-sub";
+    span.textContent = "No visible goals – unhide completed to see all.";
+    li.appendChild(span);
+    listEl.appendChild(li);
+  }
+}
+
+async function changeGoalCount(goalId, delta) {
+  const current = goalCountsState[goalId] || 0;
+  const next = Math.max(0, current + delta);
+  goalCountsState[goalId] = next;
+  await saveGoalCountsToFirestore();
+  renderGoalTrackers();
+}
+
+// ---------- LAST-TIME TRACKER ----------
+
+function computeLastTimeStatus(def, today) {
+  const iso = lastTimeState[def.id];
+  if (!iso) {
+    // Never done: treat like yellow so it shows up gently
+    return { status: "yellow", daysSince: null };
+  }
+  const last = new Date(iso);
+  const diff = daysBetween(today, last); // today - last
+  let status;
+  if (diff <= def.greenDays) {
+    status = "green";
+  } else if (diff <= def.yellowDays) {
+    status = "yellow";
+  } else {
+    status = "red";
+  }
+  return { status, daysSince: diff };
+}
+
+function renderLastTimeList() {
+  const listEl = document.getElementById("last-time-list");
+  if (!listEl) return;
+
+  listEl.innerHTML = "";
+  const today = new Date();
+
+  const statusRank = { red: 0, yellow: 1, green: 2 };
+
+  const items = LAST_TIME_ITEMS.map((def) => {
+    const info = computeLastTimeStatus(def, today);
+    return { ...def, ...info };
+  });
+
+  // Overdue (red) at top, then yellow, then green.
+  // Within same color, longer ago floats first.
+  items.sort((a, b) => {
+    const r = statusRank[a.status] - statusRank[b.status];
+    if (r !== 0) return r;
+    const da = a.daysSince == null ? -1 : a.daysSince;
+    const db = b.daysSince == null ? -1 : b.daysSince;
+    return db - da;
+  });
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "last-time-row";
+    li.dataset.itemId = item.id;
+
+    const main = document.createElement("div");
+    main.className = "last-time-main";
+
+    const label = document.createElement("div");
+    label.className = "last-time-label";
+    label.textContent = item.label;
+
+    const sub = document.createElement("div");
+    sub.className = "last-time-sub";
+
+    if (item.daysSince == null) {
+      sub.textContent = "Not tracked yet.";
+    } else if (item.daysSince === 0) {
+      sub.textContent = "Today";
+    } else if (item.daysSince === 1) {
+      sub.textContent = "1 day ago";
+    } else {
+      const last = new Date(lastTimeState[item.id]);
+      sub.textContent = `${item.daysSince} days ago (${formatDateShort(
+        last
+      )})`;
+    }
+
+    main.appendChild(label);
+    main.appendChild(sub);
+
+    const controls = document.createElement("div");
+    controls.className = "last-time-controls";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "last-time-btn";
+    btn.textContent = "Just did it";
+    btn.addEventListener("click", async () => {
+      lastTimeState[item.id] = getDateKey(today);
+      await saveLastTimeStateToFirestore();
+      renderLastTimeList();
+    });
+
+    const pill = document.createElement("span");
+    pill.className =
+      "last-time-status-pill " + `last-time-status--${item.status}`;
+    pill.textContent =
+      item.status === "green"
+        ? "Good"
+        : item.status === "yellow"
+        ? "Soon"
+        : "Overdue";
+
+    controls.appendChild(btn);
+    controls.appendChild(pill);
+
+    li.appendChild(main);
+    li.appendChild(controls);
+
+    listEl.appendChild(li);
+  });
+}
+
 // ---------- COLLAPSIBLES & MINI HIDES ----------
 
 function setupCollapsibles() {
@@ -762,6 +1072,7 @@ async function initDashboardForUser(user) {
   plannerState.dateKey = getDateKey(today);
   renderToday(today);
 
+  // Daily merged tasks
   const existing = await loadDailyState(user, plannerState.dateKey);
   if (existing && existing.context) {
     plannerState.context = {
@@ -806,7 +1117,24 @@ async function initDashboardForUser(user) {
   renderWeeklyTasks(weeklyState);
   setupWeeklyMiniHides();
 
-  // Hide completed toggle
+  // Goal trackers (daily, Firestore)
+  await loadGoalCountsFromFirestore(user, plannerState.dateKey);
+  renderGoalTrackers();
+
+  const hideGoalsBox = document.getElementById("hide-completed-goals");
+  if (hideGoalsBox) {
+    hideGoalsBox.checked = hideCompletedGoals;
+    hideGoalsBox.addEventListener("change", () => {
+      hideCompletedGoals = hideGoalsBox.checked;
+      renderGoalTrackers();
+    });
+  }
+
+  // Last-time tracker (per user, Firestore)
+  await loadLastTimeStateFromFirestore(user);
+  renderLastTimeList();
+
+  // Hide completed merged tasks toggle
   const hideBox = document.getElementById("hide-completed");
   if (hideBox) {
     hideBox.checked = hideCompleted;

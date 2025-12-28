@@ -613,3 +613,166 @@ select:focus {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --- Side panel trackers --- */
+
+.side-goal-card,
+.side-lasttime-card {
+  margin-top: 12px;
+}
+
+/* Goal trackers */
+
+.goals-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.goal-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.goal-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.goal-label {
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.goal-sub {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.goal-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.goal-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #f9fafb;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.goal-btn:active {
+  transform: translateY(1px);
+}
+
+.goal-count-bubble {
+  min-width: 26px;
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+}
+
+/* When was the last time I… */
+
+.last-time-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.last-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-md);
+  background: var(--bg-card-soft);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.last-time-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.last-time-label {
+  font-size: 0.85rem;
+  color: var(--text-main);
+}
+
+.last-time-sub {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.last-time-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.last-time-btn {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: #f9fafb;
+  padding: 4px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.last-time-btn:active {
+  transform: translateY(1px);
+}
+
+.last-time-status-pill {
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+/* status colors: green = good, yellow = needs attention, red = overdue */
+
+.last-time-status--green {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.last-time-status--yellow {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.last-time-status--red {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
