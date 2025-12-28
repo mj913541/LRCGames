@@ -1,0 +1,1051 @@
+<!-- worlds/readathonWorld/readathonWorld.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏟 Read-a-Thon Arena | LRC Quest</title>
+
+  <!-- Tailwind CDN -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+  />
+
+  <style>
+    :root {
+      --jungle-green: #16a34a;
+      --jungle-dark: #020617;
+      --jungle-mid: #0f172a;
+      --jungle-glow: rgba(52, 211, 153, 0.6);
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(34,197,94,0.25) 0, transparent 45%),
+        radial-gradient(circle at bottom, rgba(56,189,248,0.15) 0, transparent 45%),
+        linear-gradient(160deg, #020617 0%, #020617 40%, #0b1120 100%);
+      color: #f9fafb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Soft firefly glow dots */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(190,242,100,0.18) 0, transparent 55%),
+        radial-gradient(circle, rgba(96,165,250,0.14) 0, transparent 55%);
+      background-size: 260px 260px, 320px 320px;
+      background-position: 8% 20%, 90% 80%;
+      mix-blend-mode: screen;
+      opacity: 0.7;
+      z-index: -1;
+    }
+
+    .arena-shell {
+      background: radial-gradient(circle at top left, rgba(15,118,110,0.35) 0, transparent 50%),
+                  rgba(15,23,42,0.94);
+      border-radius: 2rem;
+      border: 1px solid rgba(148,163,184,0.35);
+      box-shadow:
+        0 24px 80px rgba(0,0,0,0.7),
+        0 0 0 1px rgba(15,23,42,0.8);
+      backdrop-filter: blur(16px);
+    }
+
+    /* Vines along the top */
+    .vine-border {
+      position: relative;
+      padding-top: 0.75rem;
+    }
+
+    .vine-border::before {
+      content: "";
+      position: absolute;
+      top: 0.2rem;
+      left: 0.5rem;
+      right: 0.5rem;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e, #facc15, #22c55e);
+      opacity: 0.7;
+    }
+
+    .vine-border::after {
+      content: "⋱⋰⋱⋰";
+      position: absolute;
+      top: -0.25rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: rgba(190,242,100,0.8);
+    }
+
+    /* Blobby jungle “spots” instead of rectangles */
+    .jungle-spot {
+      position: relative;
+      border-radius: 2.6rem 2.2rem 2.8rem 2rem;
+      border: 1px solid rgba(148,163,184,0.4);
+      background: radial-gradient(circle at top left, rgba(74,222,128,0.25) 0, transparent 50%),
+                  rgba(15,23,42,0.96);
+      padding: 1.1rem 1.15rem 1.35rem 1.15rem;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.65);
+      overflow: hidden;
+    }
+
+    .jungle-spot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at bottom right, rgba(59,130,246,0.16) 0, transparent 55%);
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .jungle-spot-inner {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Slight tilt alternation for “game board” feel */
+    .jungle-spot-tilt-left {
+      transform: rotate(-1.5deg);
+    }
+
+    .jungle-spot-tilt-right {
+      transform: rotate(1.5deg);
+    }
+
+    /* Tab buttons -> vine chips */
+    .tab-button-active {
+      background: radial-gradient(circle at top, rgba(132,204,22,0.7) 0, rgba(34,197,94,0.75) 40%, rgba(21,128,61,0.9) 100%);
+      color: #022c22;
+      box-shadow: 0 8px 18px rgba(22,163,74,0.7);
+      transform: translateY(-1px);
+    }
+
+    .tab-button-inactive {
+      background: rgba(15,23,42,0.6);
+      color: #e5e7eb;
+      border: 1px solid rgba(55,65,81,0.75);
+    }
+
+    .tab-button {
+      border-radius: 999px;
+      padding: 0.35rem 0.95rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      transition: all 0.15s ease-out;
+    }
+
+    .tab-button:not(.tab-button-active):hover {
+      background: rgba(31,41,55,0.9);
+      transform: translateY(-1px);
+    }
+
+    .badge-pill {
+      border-radius: 9999px;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .tag-chip {
+      border-radius: 999px;
+      font-size: 0.65rem;
+      padding: 0.15rem 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .big-level-pill {
+      border-radius: 999px;
+      padding: 0.25rem 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: radial-gradient(circle at top, #facc15 0, #f97316 40%, #b45309 100%);
+      color: #1f2937;
+      box-shadow: 0 10px 24px rgba(245,158,11,0.7);
+    }
+
+    .progress-track {
+      position: relative;
+      height: 0.75rem;
+      border-radius: 999px;
+      overflow: hidden;
+      background: linear-gradient(90deg, #020617, #020617);
+      border: 1px solid rgba(51,65,85,0.95);
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #22c55e, #a3e635, #facc15);
+      box-shadow: 0 0 12px rgba(190,242,100,0.9);
+    }
+
+    /* Little “stepping dot” markers for the map vibe */
+    .step-dots {
+      display: flex;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .step-dot {
+      width: 0.35rem;
+      height: 0.35rem;
+      border-radius: 999px;
+      background: rgba(148,163,184,0.6);
+    }
+
+    .step-dot-active {
+      background: #facc15;
+      box-shadow: 0 0 8px rgba(250,204,21,0.85);
+    }
+
+    /* READ-A-THON ARENA BOARD */
+    .readathon-board-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .readathon-board {
+      position: relative;
+      width: 100%;
+      /* 1152 x 768 ≈ 3:2 ratio */
+      aspect-ratio: 3 / 2;
+      background-image: url("./assets/backgrounds/readathon-arena-board.png");
+      background-size: cover;
+      background-position: center;
+      border-radius: 1.5rem;
+      overflow: hidden;
+      box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
+    }
+
+    .board-hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+
+      /* DEBUG BORDER AROUND CLICKABLE SPACE */
+      border: 2px dashed rgba(250, 204, 21, 0.95);
+      background: rgba(15, 23, 42, 0.55);
+
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #fefce8;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    }
+
+    .board-hotspot:hover {
+      border-style: solid;
+      background: rgba(22, 163, 74, 0.75);
+    }
+  </style>
+</head>
+
+<body class="flex items-center justify-center px-3 sm:px-5 py-4 sm:py-8">
+  <div class="w-full max-w-6xl arena-shell p-4 sm:p-6 lg:p-8 vine-border space-y-5 sm:space-y-6">
+    <!-- Top header: title + user info -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-900/70 border border-emerald-500/50 px-3 py-1">
+          <span class="text-xs font-semibold text-emerald-300 tracking-wide uppercase">
+            Library Quest Event
+          </span>
+          <span class="text-xs text-amber-300">• 1 Month</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold flex items-center gap-3">
+          <span class="text-yellow-300 text-3xl sm:text-4xl drop-shadow-lg">🦁</span>
+          <span class="leading-tight">
+            Read-a-Thon Arena
+          </span>
+        </h1>
+        <p class="mt-0.5 text-sm sm:text-base text-gray-200 max-w-xl">
+          Choose your path, level up your Guardian, and help our library fight
+          <span class="font-semibold text-emerald-300">Book Decay</span> by reading.
+        </p>
+      </div>
+
+      <!-- User summary pill -->
+      <div class="self-start md:self-auto">
+        <div class="bg-slate-900/80 border border-slate-600/80 rounded-2xl px-3.5 py-2.5 shadow-lg flex flex-col items-end gap-1">
+          <div id="userSummary" class="text-xs sm:text-sm text-gray-100">
+            <span class="font-semibold" id="userNameLabel">Guardian</span>
+            <span id="userGradeLabel" class="ml-1 text-gray-300"></span>
+          </div>
+          <div class="flex flex-wrap gap-1.5 justify-end">
+            <span id="userHouseBadge" class="badge-pill bg-emerald-800/80 text-emerald-50 hidden">
+              🏠 <span id="userHouseText">House</span>
+            </span>
+            <span id="userRoleBadge" class="badge-pill bg-sky-800/90 text-sky-50 hidden">
+              🎓 <span id="userRoleText">Teacher</span>
+            </span>
+            <span id="userAdminBadge" class="badge-pill bg-fuchsia-700/90 text-fuchsia-50 hidden">
+              🦁 Admin
+            </span>
+          </div>
+          <button
+            id="signOutButton"
+            class="mt-0.5 text-[0.65rem] text-gray-400 hover:text-gray-200 underline"
+            type="button"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="border-b border-gray-700 pb-2 flex flex-wrap gap-1.5">
+      <button
+        class="tab-button tab-button-active"
+        data-target="tab-student"
+      >
+        🧒 Arena Map
+      </button>
+      <button
+        class="tab-button tab-button-inactive"
+        data-target="tab-teacher"
+      >
+        👩‍🏫 Teacher Guide
+      </button>
+      <button
+        class="tab-button tab-button-inactive"
+        data-target="tab-family"
+      >
+        👨‍👩‍👧 Family Info
+      </button>
+      <button
+        class="tab-button tab-button-inactive"
+        data-target="tab-admin"
+        id="adminTabButton"
+      >
+        🦁 Admin Tools
+      </button>
+    </nav>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="mt-1 space-y-4">
+      <!-- STUDENT ARENA TAB -->
+      <section id="tab-student" class="tab-panel space-y-4">
+        <!-- Board image with clickable hotspots -->
+        <div class="readathon-board-wrapper">
+          <div class="readathon-board" aria-label="Read-a-Thon Arena interactive map">
+
+            <!-- 1. START / GUARDIAN GATE (lion platform) -->
+            <a
+              href="#guardian-status"
+              class="board-hotspot"
+              style="top: 24%; left: 20%;"
+              aria-label="Guardian Gate: Your Level"
+            >
+              Start / Level
+            </a>
+
+            <!-- 2. MY MINUTES POOL (stopwatch pond) -->
+            <a
+              href="#my-minutes"
+              class="board-hotspot"
+              style="top: 24%; left: 74%;"
+              aria-label="My Minutes"
+            >
+              My Minutes
+            </a>
+
+            <!-- 3. MY TEAM JUNGLE (tents area) -->
+            <a
+              href="#my-team"
+              class="board-hotspot"
+              style="top: 47%; left: 23%;"
+              aria-label="My Team"
+            >
+              My Team
+            </a>
+
+            <!-- 4. FAMILY CAMP (small hut in middle) -->
+            <a
+              href="#family-camp"
+              class="board-hotspot"
+              style="top: 53%; left: 43%;"
+              aria-label="Family Camp"
+            >
+              Family Camp
+            </a>
+
+            <!-- 5. POWER-UP CAVE (glowing cave with icons) -->
+            <a
+              href="#power-ups"
+              class="board-hotspot"
+              style="top: 51%; left: 77%;"
+              aria-label="Power-Ups"
+            >
+              Power-Ups
+            </a>
+
+            <!-- 6. STORY FIRE (bottom-left campfire circle) -->
+            <a
+              href="#story-fire"
+              class="board-hotspot"
+              style="top: 74%; left: 23%;"
+              aria-label="Story Fire"
+            >
+              Story Fire
+            </a>
+
+            <!-- 7. FAMILY READING GLOW (bottom middle, silhouettes reading) -->
+            <a
+              href="#reading-spot"
+              class="board-hotspot"
+              style="top: 68%; left: 50%;"
+              aria-label="Reading Spot"
+            >
+              Reading Spot
+            </a>
+
+            <!-- 8. REWARD TREE (bottom-right glowing tree with prizes) -->
+            <a
+              href="#rewards"
+              class="board-hotspot"
+              style="top: 73%; left: 78%;"
+              aria-label="Rewards"
+            >
+              Rewards
+            </a>
+
+            <!-- 9. TEACHER HUT (small hut near top center) -->
+            <a
+              href="#tab-teacher"
+              class="board-hotspot"
+              style="top: 29%; left: 55%;"
+              aria-label="Teacher Guide"
+            >
+              Teacher
+            </a>
+
+            <!-- 10. ADMIN TREEHOUSE (little house in upper-right tree) -->
+            <a
+              href="#tab-admin"
+              class="board-hotspot"
+              style="top: 23%; left: 88%;"
+              aria-label="Admin Tools"
+            >
+              Admin
+            </a>
+          </div>
+        </div>
+
+        <!-- Hero: Level + progress -->
+        <div id="guardian-status" class="jungle-spot jungle-spot-tilt-left">
+          <div class="jungle-spot-inner flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div class="space-y-2 max-w-xl">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="big-level-pill">
+                  ⭐ Level
+                  <span id="studentLevelLabelText">1</span>
+                  <span class="hidden sm:inline"> – New Guardian</span>
+                </span>
+                <span class="tag-chip bg-emerald-900/80 text-emerald-200 border border-emerald-500/60">
+                  Your Reading Power
+                </span>
+              </div>
+
+              <p class="text-sm sm:text-base text-gray-100">
+                Every minute you read fills your power bar and lights up the library.
+                Can you reach the next level this week?
+              </p>
+
+              <div class="space-y-1.5 mt-1">
+                <div class="flex justify-between text-[0.7rem] sm:text-xs text-gray-300">
+                  <span>Level progress</span>
+                  <span id="studentLevelProgressText">0 / 100 minutes</span>
+                </div>
+                <div class="progress-track">
+                  <div id="studentLevelProgressBar" class="progress-fill" style="width: 0%"></div>
+                </div>
+                <div class="flex justify-between text-[0.7rem] text-gray-400">
+                  <span>
+                    Total minutes this month:
+                    <span id="studentMinutesLabel" class="font-semibold text-amber-300">
+                      0
+                    </span>
+                  </span>
+                  <span class="hidden sm:inline step-dots">
+                    <span class="step-dot step-dot-active"></span>
+                    <span class="step-dot"></span>
+                    <span class="step-dot"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Simple “avatar circle” for kids -->
+            <div class="flex-1 flex lg:justify-end">
+              <div class="relative inline-flex items-center justify-center">
+                <div class="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-gradient-to-br from-emerald-500 via-lime-400 to-amber-300 shadow-2xl flex items-center justify-center">
+                  <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-slate-950/90 border-4 border-emerald-300 flex flex-col items-center justify-center gap-1">
+                    <span class="text-3xl sm:text-4xl">📚</span>
+                    <span class="text-[0.7rem] sm:text-xs font-semibold text-emerald-100 text-center leading-tight">
+                      Library
+                      <br />
+                      Guardian
+                    </span>
+                  </div>
+                </div>
+                <div class="absolute -bottom-1 -right-1 bg-emerald-900/90 border border-emerald-400 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-100">
+                  LVL <span id="studentLevelLabelSmall">1</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game board row: 3 “places” kids can tap with their eyes -->
+        <div class="grid lg:grid-cols-3 gap-4">
+          <!-- Spot 1: My Minutes -->
+          <div id="my-minutes" class="jungle-spot jungle-spot-tilt-right">
+            <div class="jungle-spot-inner space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-9 h-9 rounded-2xl bg-emerald-700/90 flex items-center justify-center text-2xl">
+                    ⏱
+                  </div>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-bold leading-tight">
+                      My Minutes
+                    </h2>
+                    <p class="text-[0.7rem] sm:text-xs text-emerald-200">
+                      Every minute counts!
+                    </p>
+                  </div>
+                </div>
+                <span class="badge-pill bg-slate-900/80 border border-slate-500 text-[0.7rem]">
+                  Monthly
+                </span>
+              </div>
+
+              <div class="mt-2 text-sm text-gray-100">
+                <div class="flex justify-between items-center text-sm">
+                  <span class="text-gray-200">This month:</span>
+                  <span class="font-extrabold text-amber-300 text-lg">
+                    <span id="studentMinutesLabelBoard">0</span> min
+                  </span>
+                </div>
+                <p class="mt-1 text-[0.78rem] text-gray-300">
+                  Your teacher helps track your reading minutes at school and at home.
+                  Just keep reading and cheering on your class!
+                </p>
+              </div>
+
+              <div class="mt-2 text-[0.7rem] text-gray-400">
+                <span class="font-semibold text-emerald-300">Tip:</span> Picture how
+                many books you can finish by the end of the month!
+              </div>
+            </div>
+          </div>
+
+          <!-- Spot 2: My Team Jungle -->
+          <div id="my-team" class="jungle-spot jungle-spot-tilt-left">
+            <div class="jungle-spot-inner space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-9 h-9 rounded-2xl bg-sky-700/90 flex items-center justify-center text-2xl">
+                    🏕
+                  </div>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-bold leading-tight">
+                      My Team Jungle
+                    </h2>
+                    <p class="text-[0.7rem] sm:text-xs text-sky-200">
+                      Class • Grade • School
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="space-y-1.5 text-[0.8rem] sm:text-sm text-gray-100 mt-1">
+                <div class="flex justify-between">
+                  <span>Class minutes:</span>
+                  <span id="classMinutesLabel" class="font-semibold text-sky-300">0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>Grade minutes:</span>
+                  <span id="gradeMinutesLabel" class="font-semibold text-indigo-300">0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span>School minutes:</span>
+                  <span id="schoolMinutesLabel" class="font-semibold text-rose-300">0</span>
+                </div>
+              </div>
+
+              <div class="mt-2">
+                <h3 class="text-[0.7rem] font-semibold text-gray-200 uppercase tracking-wide mb-0.5">
+                  Standings Snapshot
+                </h3>
+                <ul id="standingsList" class="text-[0.7rem] sm:text-xs text-gray-300 space-y-0.5">
+                  <li>1️⃣ Example Class A – 0 minutes</li>
+                  <li>2️⃣ Example Class B – 0 minutes</li>
+                  <li>3️⃣ Example Class C – 0 minutes</li>
+                </ul>
+              </div>
+
+              <!-- House strip for 5th -->
+              <div id="houseStandingsStrip" class="mt-2 hidden">
+                <h3 class="text-[0.7rem] font-semibold text-gray-200 uppercase tracking-wide mb-0.5">
+                  5th Grade Houses
+                </h3>
+                <div class="flex flex-wrap gap-1 text-[0.7rem]">
+                  <span class="badge-pill bg-emerald-800/80">🏠 House Example – 0 min</span>
+                  <span class="badge-pill bg-blue-800/80">🏠 House Example – 0 min</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Spot 3: Power-Up Cave -->
+          <div id="power-ups" class="jungle-spot jungle-spot-tilt-right">
+            <div class="jungle-spot-inner space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                  <div class="w-9 h-9 rounded-2xl bg-purple-700/90 flex items-center justify-center text-2xl">
+                    💥
+                  </div>
+                  <div>
+                    <h2 class="text-sm sm:text-base font-bold leading-tight">
+                      Power-Up Cave
+                    </h2>
+                    <p class="text-[0.7rem] sm:text-xs text-purple-200">
+                      Class boosts & silly sabotage
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <p class="text-[0.78rem] sm:text-xs text-gray-200 mt-1">
+                Classes earn Power-Up cards by reading together. Your teacher and Mrs. A
+                choose when to use them. Sabotage is always silly and short, never mean.
+              </p>
+
+              <div class="grid grid-cols-2 gap-1.5 text-[0.7rem] mt-2">
+                <div class="border border-emerald-500/60 rounded-xl px-2 py-1.5 bg-emerald-900/50">
+                  <div class="font-semibold flex items-center gap-1">
+                    🛡 Shield
+                  </div>
+                  <p class="mt-0.5 text-[0.67rem] text-emerald-100">
+                    Block one sabotage this week.
+                  </p>
+                  <p class="mt-0.5 text-[0.65rem] text-emerald-200 font-semibold">
+                    Status: <span id="shieldStatusLabel">Locked</span>
+                  </p>
+                </div>
+
+                <div class="border border-slate-500/70 rounded-xl px-2 py-1.5 bg-slate-900/80">
+                  <div class="font-semibold flex items-center gap-1">
+                    🌫 Fog
+                  </div>
+                  <p class="mt-0.5 text-[0.67rem] text-gray-100">
+                    A tiny, silly slow-down for another class.
+                  </p>
+                  <p class="mt-0.5 text-[0.65rem] text-gray-200 font-semibold">
+                    Status: <span id="fogStatusLabel">Locked</span>
+                  </p>
+                </div>
+
+                <div class="border border-amber-500/80 rounded-xl px-2 py-1.5 bg-amber-900/40">
+                  <div class="font-semibold flex items-center gap-1">
+                    🧰 Repair
+                  </div>
+                  <p class="mt-0.5 text-[0.67rem] text-amber-100">
+                    Fix some minutes lost to sabotage.
+                  </p>
+                  <p class="mt-0.5 text-[0.65rem] text-amber-200 font-semibold">
+                    Status: <span id="repairStatusLabel">Locked</span>
+                  </p>
+                </div>
+
+                <div class="border border-indigo-500/80 rounded-xl px-2 py-1.5 bg-indigo-900/60">
+                  <div class="font-semibold flex items-center gap-1">
+                    🎭 Fun
+                  </div>
+                  <p class="mt-0.5 text-[0.67rem] text-indigo-100">
+                    Trigger a school-spirit challenge.
+                  </p>
+                  <p class="mt-0.5 text-[0.65rem] text-indigo-200 font-semibold">
+                    Status: <span id="challengeStatusLabel">Locked</span>
+                  </p>
+                </div>
+              </div>
+
+              <p class="mt-1 text-[0.7rem] text-gray-400">
+                Watch announcements to see which class uses a Power-Up each week!
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Story / Announcements -->
+        <div id="story-fire" class="jungle-spot jungle-spot-tilt-left">
+          <div class="jungle-spot-inner">
+            <h2 class="text-base sm:text-lg font-bold flex items-center gap-2">
+              <span>📖 This Week in the Arena</span>
+            </h2>
+            <p id="weeklyStoryText" class="mt-1.5 text-sm text-gray-100">
+              The Book Decay is creeping through the shelves, making pages crinkle and
+              covers fade. Every minute you read this week sends bright energy back into
+              our favorite series and graphic novels. Can our Guardians reach the next
+              milestone before Friday?
+            </p>
+
+            <!-- Invisible anchor for the "Reading Spot" hotspot to scroll near here -->
+            <span id="reading-spot"></span>
+          </div>
+        </div>
+
+        <!-- Simple anchor for Family Camp hotspot (can be styled later or removed) -->
+        <div id="family-camp" class="jungle-spot jungle-spot-tilt-right">
+          <div class="jungle-spot-inner text-sm text-gray-100">
+            <h2 class="text-base font-bold mb-1 flex items-center gap-2">
+              🏕 Family Camp
+            </h2>
+            <p>
+              This is a placeholder section connected to the Family Camp hut on the map.
+              You can use it to highlight family reading challenges, or link families to
+              the Family Info tab above.
+            </p>
+            <p class="mt-1 text-xs text-gray-300">
+              (Later you can hide this or replace it with something fancier!)
+            </p>
+          </div>
+        </div>
+
+        <!-- Rewards anchor -->
+        <div id="rewards" class="jungle-spot jungle-spot-tilt-left">
+          <div class="jungle-spot-inner text-sm text-gray-100">
+            <h2 class="text-base font-bold mb-1 flex items-center gap-2">
+              🌳 Rewards Tree
+            </h2>
+            <p>
+              This section is linked to the glowing Rewards Tree on the map. Use it to
+              list school-wide milestones (PJ day, flashlight reading, silly principal
+              challenge, etc.) and show which ones are unlocked.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEACHER GUIDE TAB -->
+      <section id="tab-teacher" class="tab-panel hidden space-y-4 text-sm text-gray-200">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          👩‍🏫 Teacher Guide
+        </h2>
+
+        <div class="jungle-spot jungle-spot-tilt-left">
+          <div class="jungle-spot-inner space-y-3">
+            <h3 class="font-semibold">How the Read-a-Thon works</h3>
+            <ul class="list-disc list-inside text-sm text-gray-100 space-y-1">
+              <li>Students read at school and at home during the month-long event.</li>
+              <li>
+                Minutes are logged (paper or digital) and verified by you for reasonableness.
+              </li>
+              <li>
+                Classes earn levels, power-ups, and silly sabotage options based on total
+                minutes, not dollars raised.
+              </li>
+              <li>
+                Fundraising supports new copies of loved series and fresh graphic novels
+                for our LRC.
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-3">
+          <div class="jungle-spot jungle-spot-tilt-right">
+            <div class="jungle-spot-inner space-y-2">
+              <h3 class="font-semibold">Your weekly rhythm</h3>
+              <ol class="list-decimal list-inside text-sm text-gray-100 space-y-1">
+                <li>Collect or review students’ reading logs.</li>
+                <li>Submit/confirm minutes (system TBD) once per week.</li>
+                <li>Share class progress and celebrate small milestones.</li>
+                <li>When your class earns a power-up, decide together when to use it.</li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="jungle-spot jungle-spot-tilt-left">
+            <div class="jungle-spot-inner space-y-2">
+              <h3 class="font-semibold">About sabotage</h3>
+              <p class="text-sm text-gray-100">
+                Sabotage in the Arena is playful, temporary, and never used to shame
+                students. Think “fun obstacle” instead of punishment.
+              </p>
+              <ul class="list-disc list-inside text-sm text-gray-100 space-y-1">
+                <li>Impacts are short-lived (one day or one update cycle).</li>
+                <li>Often result in a fun challenge for the other class.</li>
+                <li>Minutes are never permanently erased in large amounts.</li>
+                <li>
+                  You and Mrs. A always have veto power if something doesn’t feel right for
+                  your group.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAMILY INFO TAB -->
+      <section id="tab-family" class="tab-panel hidden space-y-4 text-sm text-gray-200">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          👨‍👩‍👧 Family Information
+        </h2>
+
+        <div class="jungle-spot jungle-spot-tilt-left">
+          <div class="jungle-spot-inner space-y-2">
+            <h3 class="font-semibold">What is the Read-a-Thon Arena?</h3>
+            <p>
+              Our school-wide Read-a-Thon is a month-long celebration of reading.
+              Students track their minutes, work together as classes and teams, and
+              unlock fun in-school rewards. At the same time, families are invited to
+              make donations that help us refresh beloved series and add new graphic
+              novels to our library.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-3">
+          <div class="jungle-spot jungle-spot-tilt-right">
+            <div class="jungle-spot-inner space-y-2">
+              <h3 class="font-semibold">How families can help</h3>
+              <ul class="list-disc list-inside space-y-1">
+                <li>Encourage your child to read a little bit every day.</li>
+                <li>Sign their reading log or confirm minutes as requested.</li>
+                <li>Share our Read-a-Thon information with relatives who may wish to donate.</li>
+                <li>Talk about favorite books together – conversations count in building readers!</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="jungle-spot jungle-spot-tilt-left">
+            <div class="jungle-spot-inner space-y-2">
+              <h3 class="font-semibold">FAQ</h3>
+              <ul class="list-disc list-inside space-y-1">
+                <li>
+                  <span class="font-semibold">Do we have to donate?</span><br />
+                  No. Every student can fully participate and earn reading rewards, even
+                  without donations.
+                </li>
+                <li>
+                  <span class="font-semibold">What does the money support?</span><br />
+                  We will replace worn-out copies of popular series and purchase new
+                  graphic novels that students are excited to read.
+                </li>
+                <li>
+                  <span class="font-semibold">What counts as reading?</span><br />
+                  Independent reading, being read to, audiobooks (when students are
+                  actively listening), and buddy reading all count.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN TOOLS TAB -->
+      <section id="tab-admin" class="tab-panel hidden space-y-4 text-sm text-gray-200">
+        <h2 class="text-xl font-bold flex items-center gap-2">
+          🦁 Admin Tools (Mrs. A)
+        </h2>
+
+        <div class="jungle-spot jungle-spot-tilt-left">
+          <div class="jungle-spot-inner space-y-2">
+            <p class="text-sm text-gray-100">
+              This area is for managing school-wide Read-a-Thon data, power-ups, and
+              sabotage. It will only be fully visible to approved admin accounts.
+            </p>
+            <ul class="list-disc list-inside space-y-1">
+              <li>View whole-school and grade-level minutes.</li>
+              <li>See class standings and house totals.</li>
+              <li>Grant or revoke class power-ups.</li>
+              <li>Trigger silly sabotage events between classes.</li>
+              <li>Export data after the Read-a-Thon ends.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="jungle-spot jungle-spot-tilt-right">
+          <div class="jungle-spot-inner space-y-2">
+            <h3 class="font-semibold">Next steps (implementation notes)</h3>
+            <ul class="list-disc list-inside space-y-1 text-xs text-gray-300">
+              <li>Hook this world into <code>lrcQuestCore.js</code> for login and roles.</li>
+              <li>
+                Define Firestore collections for students, classes, minutes, power-ups,
+                and sabotage history.
+              </li>
+              <li>
+                Add an “Update Week” flow to lock in weekly totals and apply power-ups.
+              </li>
+              <li>
+                Build a simple teacher-facing control for confirming class minutes.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Basic tab + login wiring -->
+  <script type="module">
+    import {
+      requireLogin,
+      getCurrentUserProfile,
+      signOutUser,
+    } from "../../scripts/lrcQuestCore.js";
+
+    const ADMIN_EMAILS = ["malbrecht@sd308.org", "malbrecht3317@gmail.com"];
+
+    const tabButtons = document.querySelectorAll(".tab-button");
+    const tabPanels = document.querySelectorAll(".tab-panel");
+    const adminTabButton = document.getElementById("adminTabButton");
+
+    function showTab(targetId) {
+      tabPanels.forEach((panel) => {
+        panel.classList.toggle("hidden", panel.id !== targetId);
+      });
+
+      tabButtons.forEach((btn) => {
+        const isActive = btn.dataset.target === targetId;
+        btn.classList.toggle("tab-button-active", isActive);
+        btn.classList.toggle("tab-button-inactive", !isActive);
+      });
+    }
+
+    tabButtons.forEach((btn) => {
+      btn.addEventListener("click", () => showTab(btn.dataset.target));
+    });
+
+    // Default tab
+    showTab("tab-student");
+
+    // User UI elements
+    const userNameLabel = document.getElementById("userNameLabel");
+    const userGradeLabel = document.getElementById("userGradeLabel");
+    const userHouseBadge = document.getElementById("userHouseBadge");
+    const userHouseText = document.getElementById("userHouseText");
+    const userRoleBadge = document.getElementById("userRoleBadge");
+    const userRoleText = document.getElementById("userRoleText");
+    const userAdminBadge = document.getElementById("userAdminBadge");
+    const signOutButton = document.getElementById("signOutButton");
+
+    // Level labels
+    const studentMinutesLabel = document.getElementById("studentMinutesLabel");
+    const studentMinutesLabelBoard = document.getElementById("studentMinutesLabelBoard");
+    const studentLevelLabelText = document.getElementById("studentLevelLabelText");
+    const studentLevelLabelSmall = document.getElementById("studentLevelLabelSmall");
+    const studentLevelProgressText = document.getElementById("studentLevelProgressText");
+    const studentLevelProgressBar = document.getElementById("studentLevelProgressBar");
+
+    function mockFillStudentStats() {
+      const totalMinutes = 0;
+      const nextLevelMinutes = 100;
+      const percent = Math.min(100, (totalMinutes / nextLevelMinutes) * 100);
+
+      studentMinutesLabel.textContent = totalMinutes;
+      studentMinutesLabelBoard.textContent = totalMinutes;
+      studentLevelLabelText.textContent = "1";
+      studentLevelLabelSmall.textContent = "1";
+      studentLevelProgressText.textContent = `${totalMinutes} / ${nextLevelMinutes} minutes`;
+      studentLevelProgressBar.style.width = `${percent}%`;
+    }
+
+    mockFillStudentStats();
+
+    let currentUser = null;
+    let currentProfile = null;
+
+    async function initReadathonWorld() {
+      try {
+        const authUser = await requireLogin();
+        currentUser = authUser;
+
+        try {
+          currentProfile = await getCurrentUserProfile();
+        } catch (e) {
+          currentProfile = null;
+        }
+
+        const displayName =
+          (currentProfile && currentProfile.displayName) ||
+          authUser.displayName ||
+          "Guardian";
+
+        userNameLabel.textContent = displayName;
+
+        const grade =
+          (currentProfile && currentProfile.gradeLabel) ||
+          (currentProfile && currentProfile.grade) ||
+          "";
+        if (grade) {
+          userGradeLabel.textContent = `• Grade ${grade}`;
+        }
+
+        const role = currentProfile && currentProfile.role;
+        if (role && role !== "student") {
+          userRoleBadge.classList.remove("hidden");
+          userRoleText.textContent = role === "teacher" ? "Teacher" : role;
+        }
+
+        const house = currentProfile && currentProfile.house;
+        if (house) {
+          userHouseBadge.classList.remove("hidden");
+          userHouseText.textContent = house;
+        }
+
+        const isAdmin = ADMIN_EMAILS.includes(authUser.email || "");
+        if (!isAdmin) {
+          adminTabButton.classList.add("hidden");
+          const adminPanel = document.getElementById("tab-admin");
+          if (adminPanel) adminPanel.classList.add("hidden");
+        } else {
+          userAdminBadge.classList.remove("hidden");
+        }
+      } catch (error) {
+        console.error("Error initializing Read-a-Thon Arena:", error);
+      }
+    }
+
+    initReadathonWorld();
+
+    signOutButton.addEventListener("click", async () => {
+      try {
+        await signOutUser();
+      } catch (e) {
+        console.error("Sign-out failed:", e);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,999 @@
+<!-- worlds/avatarLab/avatarLab.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🎨 Avatar Lab | LRC Quest</title>
+
+  <!-- Tailwind CDN -->
+  <link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+  />
+
+  <style>
+    :root {
+      --jungle-dark: #020617;
+      --jungle-deep: #020617;
+      --jungle-mid: #0f172a;
+      --accent-emerald: #22c55e;
+      --accent-gold: #facc15;
+    }
+
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(34,197,94,0.2) 0, transparent 45%),
+        radial-gradient(circle at bottom, rgba(56,189,248,0.18) 0, transparent 50%),
+        linear-gradient(160deg, #020617 0%, #020617 40%, #020617 100%);
+      color: #f9fafb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle, rgba(190,242,100,0.22) 0, transparent 55%),
+        radial-gradient(circle, rgba(96,165,250,0.18) 0, transparent 55%);
+      background-size: 260px 260px, 320px 320px;
+      background-position: 5% 18%, 95% 85%;
+      mix-blend-mode: screen;
+      opacity: 0.6;
+      z-index: -1;
+    }
+
+    .shell {
+      background:
+        radial-gradient(circle at top left, rgba(16,185,129,0.35) 0, transparent 55%),
+        rgba(15,23,42,0.96);
+      border-radius: 2rem;
+      border: 1px solid rgba(148,163,184,0.4);
+      box-shadow:
+        0 24px 80px rgba(0,0,0,0.9),
+        0 0 0 1px rgba(15,23,42,0.9);
+      backdrop-filter: blur(18px);
+    }
+
+    .vine-border {
+      position: relative;
+      padding-top: 0.75rem;
+    }
+
+    .vine-border::before {
+      content: "";
+      position: absolute;
+      top: 0.2rem;
+      left: 0.75rem;
+      right: 0.75rem;
+      height: 4px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22c55e, #facc15, #22c55e);
+      opacity: 0.85;
+    }
+
+    .vine-border::after {
+      content: "⋱⋰⋱⋰";
+      position: absolute;
+      top: -0.3rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.7rem;
+      letter-spacing: 0.25em;
+      color: rgba(190,242,100,0.85);
+    }
+
+    .badge-pill {
+      border-radius: 9999px;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .avatar-circle {
+      background: radial-gradient(circle at top, #facc15 0, #f97316 40%, #ea580c 70%, #b45309 100%);
+      box-shadow:
+        0 18px 45px rgba(0,0,0,0.85),
+        0 0 40px rgba(250,204,21,0.7);
+    }
+
+    .avatar-inner {
+      background: rgba(15,23,42,0.96);
+      box-shadow:
+        0 0 0 3px rgba(190,242,100,0.75),
+        0 0 35px rgba(34,197,94,0.7);
+    }
+
+    .category-chip {
+      border-radius: 999px;
+      padding: 0.25rem 0.7rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      border: 1px solid rgba(148,163,184,0.7);
+      background: rgba(15,23,42,0.8);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .category-chip-active {
+      border-color: rgba(250,204,21,0.9);
+      background: radial-gradient(circle at top, rgba(250,204,21,0.9) 0, rgba(234,179,8,0.9) 40%, rgba(161,98,7,0.95) 100%);
+      color: #022c22;
+      box-shadow: 0 10px 20px rgba(250,204,21,0.75);
+      transform: translateY(-1px);
+    }
+
+    .tab-chip {
+      border-radius: 999px;
+      padding: 0.2rem 0.7rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid rgba(75,85,99,0.9);
+      background: rgba(15,23,42,0.9);
+    }
+
+    .tab-chip-active {
+      border-color: rgba(59,130,246,0.9);
+      background: radial-gradient(circle at top, rgba(59,130,246,0.85) 0, rgba(37,99,235,0.9) 40%, rgba(30,64,175,0.95) 100%);
+      color: #eff6ff;
+      box-shadow: 0 8px 18px rgba(37,99,235,0.7);
+    }
+
+    .item-card {
+      border-radius: 1rem;
+      border: 1px solid rgba(51,65,85,0.9);
+      background: radial-gradient(circle at top left, rgba(148,163,184,0.15) 0, transparent 50%),
+                  rgba(15,23,42,0.95);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.75);
+      padding: 0.6rem 0.7rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.8rem;
+    }
+
+    .item-card-owned {
+      border-color: rgba(34,197,94,0.85);
+      box-shadow: 0 0 20px rgba(34,197,94,0.45);
+    }
+
+    .item-card-equipped {
+      border-width: 2px;
+      border-color: rgba(250,204,21,0.95);
+      box-shadow:
+        0 0 25px rgba(250,204,21,0.75),
+        0 0 0 1px rgba(15,23,42,1);
+    }
+
+    .item-emoji {
+      font-size: 1.5rem;
+      line-height: 1;
+    }
+
+    .coin-pill {
+      border-radius: 999px;
+      background: radial-gradient(circle at top, #facc15 0, #f97316 45%, #ea580c 80%);
+      color: #1f2937;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.75rem;
+      box-shadow: 0 10px 25px rgba(245,158,11,0.85);
+    }
+
+    .coin-pill span {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.15rem;
+    }
+
+    .scroll-panel {
+      max-height: 320px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(148,163,184,0.9) rgba(15,23,42,0.9);
+    }
+
+    .scroll-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scroll-panel::-webkit-scrollbar-track {
+      background: rgba(15,23,42,0.9);
+    }
+    .scroll-panel::-webkit-scrollbar-thumb {
+      background: rgba(148,163,184,0.9);
+      border-radius: 999px;
+    }
+
+    .small-label {
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body class="flex items-center justify-center px-3 sm:px-4 py-4 sm:py-8">
+  <div class="w-full max-w-6xl shell p-4 sm:p-6 lg:p-8 vine-border space-y-4 sm:space-y-6">
+    <!-- HEADER -->
+    <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div class="space-y-1">
+        <div class="inline-flex items-center gap-1.5 rounded-full bg-emerald-900/70 border border-emerald-500/60 px-3 py-1">
+          <span class="text-xs font-semibold text-emerald-300 tracking-wide uppercase">
+            Avatar Lab
+          </span>
+          <span class="text-xs text-amber-300">• Dress your Library Guardian</span>
+        </div>
+
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold flex items-center gap-3">
+          <span class="text-3xl sm:text-4xl drop-shadow-lg">🎨</span>
+          <span class="leading-tight">
+            Customize My Guardian
+          </span>
+        </h1>
+        <p class="mt-0.5 text-sm sm:text-base text-gray-200 max-w-xl">
+          Spend your reading coins on cozy outfits, silly hats, and glowing pets. Your avatar
+          shows up across LRC Quest worlds.
+        </p>
+      </div>
+
+      <!-- User / coins -->
+      <div class="flex flex-col gap-2 items-end">
+        <div class="bg-slate-900/90 border border-slate-600/90 rounded-2xl px-3.5 py-2.5 shadow-lg flex flex-col items-end gap-1">
+          <div id="userSummary" class="text-xs sm:text-sm text-gray-100">
+            <span class="font-semibold" id="userNameLabel">Guardian</span>
+            <span id="userGradeLabel" class="ml-1 text-gray-300"></span>
+          </div>
+          <div class="flex flex-wrap gap-1.5 justify-end text-xs">
+            <span id="userHouseBadge" class="badge-pill bg-emerald-800/80 text-emerald-50 hidden">
+              🏠 <span id="userHouseText">House</span>
+            </span>
+            <span id="userRoleBadge" class="badge-pill bg-sky-800/90 text-sky-50 hidden">
+              🎓 <span id="userRoleText">Teacher</span>
+            </span>
+            <span id="userAdminBadge" class="badge-pill bg-fuchsia-700/90 text-fuchsia-50 hidden">
+              🦁 Admin
+            </span>
+          </div>
+          <button
+            id="signOutButton"
+            class="mt-0.5 text-[0.65rem] text-gray-400 hover:text-gray-200 underline"
+            type="button"
+          >
+            Sign out
+          </button>
+        </div>
+
+        <div class="coin-pill" title="Reading coins">
+          <span>🪙</span>
+          <span>
+            <span id="coinAmountLabel">0</span>
+            <span class="text-[0.7rem] font-semibold uppercase tracking-wide">coins</span>
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="space-y-4 sm:space-y-5">
+      <!-- AVATAR PREVIEW & CATEGORY TABS -->
+      <section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-6">
+        <!-- Avatar preview -->
+        <div class="flex items-center gap-4 sm:gap-6">
+          <div class="relative flex items-center justify-center">
+            <div class="avatar-circle w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center">
+              <div class="avatar-inner w-24 h-24 sm:w-32 sm:h-32 rounded-full flex flex-col items-center justify-center relative text-center">
+                <!-- Base avatar icon -->
+                <div class="text-4xl sm:text-5xl" id="avatarBaseIcon">🦁</div>
+
+                <!-- Equipped items text preview (simple for now) -->
+                <div class="absolute inset-x-1 bottom-1 flex flex-col items-center gap-0.5">
+                  <div id="avatarHeadChip" class="text-[0.6rem] bg-slate-900/80 px-2 py-0.5 rounded-full text-emerald-200 max-w-[7rem] truncate"></div>
+                  <div id="avatarBodyChip" class="text-[0.6rem] bg-slate-900/80 px-2 py-0.5 rounded-full text-sky-200 max-w-[7rem] truncate"></div>
+                  <div id="avatarBackChip" class="text-[0.6rem] bg-slate-900/80 px-2 py-0.5 rounded-full text-amber-200 max-w-[7rem] truncate"></div>
+                  <div id="avatarPetChip" class="text-[0.6rem] bg-slate-900/80 px-2 py-0.5 rounded-full text-fuchsia-200 max-w-[7rem] truncate"></div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute -bottom-1.5 left-1/2 -translate-x-1/2 bg-emerald-900/90 border border-emerald-400 rounded-full px-2 py-0.5 text-[0.65rem] font-semibold text-emerald-100 flex items-center gap-1">
+              LVL <span id="avatarLevelLabel">1</span>
+            </div>
+          </div>
+
+          <div class="space-y-1.5 text-xs sm:text-sm text-gray-200 max-w-xs">
+            <div class="small-label text-emerald-300">YOUR GUARDIAN</div>
+            <p>
+              Choose a category, buy items with coins, then equip them from your closet.
+              You can change your look anytime.
+            </p>
+            <p class="text-[0.7rem] text-gray-400">
+              Teachers and Mrs. A may also gift special items for kindness or extra effort.
+            </p>
+          </div>
+        </div>
+
+        <!-- Category chips -->
+        <div class="flex flex-wrap gap-1.5 justify-start lg:justify-end">
+          <button
+            class="category-chip category-chip-active"
+            data-category="head"
+            type="button"
+          >
+            🧢 <span>Headgear</span>
+          </button>
+          <button
+            class="category-chip"
+            data-category="body"
+            type="button"
+          >
+            🧥 <span>Outfits</span>
+          </button>
+          <button
+            class="category-chip"
+            data-category="back"
+            type="button"
+          >
+            🎒 <span>Back</span>
+          </button>
+          <button
+            class="category-chip"
+            data-category="pet"
+            type="button"
+          >
+            🐾 <span>Pets</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- TABS: SHOP / CLOSET -->
+      <section class="flex flex-wrap items-center justify-between gap-2">
+        <div class="flex gap-1.5">
+          <button
+            class="tab-chip tab-chip-active"
+            data-tab="shop"
+            type="button"
+          >
+            🏪 Shop
+          </button>
+          <button
+            class="tab-chip"
+            data-tab="closet"
+            type="button"
+          >
+            🧺 My Closet
+          </button>
+        </div>
+
+        <p class="text-[0.7rem] sm:text-xs text-gray-300 max-w-md">
+          <span class="font-semibold text-amber-300">Tip:</span>
+          Earn coins from reading minutes and Read-a-Thon milestones. Some rare items are only unlocked as rewards.
+        </p>
+      </section>
+
+      <!-- SHOP + CLOSET PANELS -->
+      <section class="grid lg:grid-cols-2 gap-4 lg:gap-6 items-start">
+        <!-- SHOP -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm sm:text-base font-semibold flex items-center gap-2">
+              <span>🏪 Shop</span>
+              <span class="text-[0.7rem] uppercase tracking-wide text-amber-300">Spend Coins</span>
+            </h2>
+            <span class="text-[0.7rem] text-gray-400">
+              Showing: <span id="shopCategoryLabel">Headgear</span>
+            </span>
+          </div>
+
+          <div id="shopEmptyMessage" class="hidden text-xs text-gray-400 italic">
+            No more items to buy in this category. Try another tab or keep reading to unlock special rewards!
+          </div>
+
+          <div id="shopList" class="scroll-panel grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Shop items injected by JS -->
+          </div>
+        </div>
+
+        <!-- CLOSET -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm sm:text-base font-semibold flex items-center gap-2">
+              <span>🧺 My Closet</span>
+              <span class="text-[0.7rem] uppercase tracking-wide text-emerald-300">What I Own</span>
+            </h2>
+            <span class="text-[0.7rem] text-gray-400">
+              Category: <span id="closetCategoryLabel">Headgear</span>
+            </span>
+          </div>
+
+          <div id="closetEmptyMessage" class="text-xs text-gray-400 italic">
+            You don’t own any items in this category yet. Buy something in the Shop, or keep reading to unlock rewards!
+          </div>
+
+          <div id="closetList" class="scroll-panel grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Closet items injected by JS -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import {
+      requireLogin,
+      getCurrentUserProfile,
+      signOutUser,
+      // TODO: later we can import helpers like saveUserAvatar / loadUserAvatar if we add them.
+    } from "../../scripts/lrcQuestCore.js";
+
+    const ADMIN_EMAILS = ["malbrecht@sd308.org", "malbrecht3317@gmail.com"];
+
+    // --- DOM references ---
+    const userNameLabel = document.getElementById("userNameLabel");
+    const userGradeLabel = document.getElementById("userGradeLabel");
+    const userHouseBadge = document.getElementById("userHouseBadge");
+    const userHouseText = document.getElementById("userHouseText");
+    const userRoleBadge = document.getElementById("userRoleBadge");
+    const userRoleText = document.getElementById("userRoleText");
+    const userAdminBadge = document.getElementById("userAdminBadge");
+    const signOutButton = document.getElementById("signOutButton");
+
+    const avatarLevelLabel = document.getElementById("avatarLevelLabel");
+    const avatarHeadChip = document.getElementById("avatarHeadChip");
+    const avatarBodyChip = document.getElementById("avatarBodyChip");
+    const avatarBackChip = document.getElementById("avatarBackChip");
+    const avatarPetChip = document.getElementById("avatarPetChip");
+
+    const coinAmountLabel = document.getElementById("coinAmountLabel");
+
+    const categoryChips = document.querySelectorAll(".category-chip");
+    const tabChips = document.querySelectorAll(".tab-chip");
+
+    const shopCategoryLabel = document.getElementById("shopCategoryLabel");
+    const closetCategoryLabel = document.getElementById("closetCategoryLabel");
+    const shopList = document.getElementById("shopList");
+    const shopEmptyMessage = document.getElementById("shopEmptyMessage");
+    const closetList = document.getElementById("closetList");
+    const closetEmptyMessage = document.getElementById("closetEmptyMessage");
+
+    // --- Item definitions (from our brainstorm, simplified) ---
+    // id should be stable keys; category = "head" | "body" | "back" | "pet"
+    const ITEM_DEFS = [
+      // Headgear
+      {
+        id: "head_leaf_crown",
+        name: "Leaf Crown",
+        emoji: "🍃",
+        category: "head",
+        price: 2,
+        description: "Simple crown of jungle leaves. First-time readers’ favorite."
+      },
+      {
+        id: "head_star_cap",
+        name: "Star Reading Cap",
+        emoji: "🧢",
+        category: "head",
+        price: 3,
+        description: "A cap with a tiny shining star. For readers on a roll."
+      },
+      {
+        id: "head_cozy_hat",
+        name: "Cozy Night Hat",
+        emoji: "🛌",
+        category: "head",
+        price: 3,
+        description: "Perfect for bedtime stories and pajama reading."
+      },
+      {
+        id: "head_explorer_goggles",
+        name: "Explorer Goggles",
+        emoji: "🥽",
+        category: "head",
+        price: 4,
+        description: "For brave explorers of new worlds and series."
+      },
+      {
+        id: "head_lion_ears",
+        name: "Lion Ears Headband",
+        emoji: "🦁",
+        category: "head",
+        price: 4,
+        description: "Join the pride with matching lion ears."
+      },
+
+      // Body / Outfits
+      {
+        id: "body_library_hoodie",
+        name: "Library Hoodie",
+        emoji: "🧥",
+        category: "body",
+        price: 3,
+        description: "Cozy hoodie with a tiny book stack on the sleeve."
+      },
+      {
+        id: "body_star_cape",
+        name: "Star Reader Cape",
+        emoji: "🦸",
+        category: "body",
+        price: 5,
+        description: "Short cape sprinkled with stars. A big milestone reward."
+      },
+      {
+        id: "body_comic_jersey",
+        name: "Graphic Novel Jersey",
+        emoji: "📣",
+        category: "body",
+        price: 4,
+        description: "Comic-style jersey that celebrates graphic novels."
+      },
+      {
+        id: "body_book_armor",
+        name: "Book Armor Vest",
+        emoji: "🛡️",
+        category: "body",
+        price: 6,
+        description: "Armor made of overlapping book covers. For book warriors."
+      },
+
+      // Back
+      {
+        id: "back_book_wings",
+        name: "Book Wings",
+        emoji: "📚",
+        category: "back",
+        price: 5,
+        description: "Small wings made of open pages. Fly through your TBR pile."
+      },
+      {
+        id: "back_reading_backpack",
+        name: "Reading Backpack",
+        emoji: "🎒",
+        category: "back",
+        price: 3,
+        description: "Stuffed with favorite books for any adventure."
+      },
+      {
+        id: "back_cozy_blanket",
+        name: "Cozy Reading Blanket",
+        emoji: "🛏️",
+        category: "back",
+        price: 4,
+        description: "Wrapped around your shoulders like a reading cape."
+      },
+      {
+        id: "back_lightning_aura",
+        name: "Lightning Aura",
+        emoji: "⚡",
+        category: "back",
+        price: 7,
+        description: "A sparkly trail that appears when you hit big goals."
+      },
+
+      // Pets / Friends
+      {
+        id: "pet_glow_bug",
+        name: "Glow Bug Friend",
+        emoji: "✨",
+        category: "pet",
+        price: 3,
+        description: "A tiny firefly that buzzes around your guardian."
+      },
+      {
+        id: "pet_book_stack_buddy",
+        name: "Book Stack Buddy",
+        emoji: "📚",
+        category: "pet",
+        price: 4,
+        description: "A happy stack of books that follows you everywhere."
+      },
+      {
+        id: "pet_bookmark_dragon",
+        name: "Bookmark Dragon",
+        emoji: "🐉",
+        category: "pet",
+        price: 6,
+        description: "A small dragon that guards your place in every story."
+      },
+      {
+        id: "pet_reading_cloud",
+        name: "Reading Cloud",
+        emoji: "☁️",
+        category: "pet",
+        price: 7,
+        description: "A fluffy cloud seat for truly sky-high readers."
+      }
+    ];
+
+    const CATEGORY_LABELS = {
+      head: "Headgear",
+      body: "Outfits",
+      back: "Back",
+      pet: "Pets"
+    };
+
+    // --- State (mock for now – later we load/save per user) ---
+    const state = {
+      activeCategory: "head",
+      activeTab: "shop", // "shop" | "closet"
+      coins: 10,         // TODO: later derive from minutes / Firestore
+      level: 1,          // TODO: later load from user profile / progress
+      owned: new Set([
+        // Mock starter owned items:
+        "head_leaf_crown",
+        "body_library_hoodie",
+        "pet_glow_bug"
+      ]),
+      equipped: {
+        head: "head_leaf_crown",
+        body: "body_library_hoodie",
+        back: null,
+        pet: "pet_glow_bug"
+      }
+    };
+
+    // ----- UI update helpers -----
+    function updateCoinsDisplay() {
+      coinAmountLabel.textContent = state.coins.toString();
+    }
+
+    function updateAvatarPreview() {
+      avatarLevelLabel.textContent = String(state.level);
+
+      const headItem = getItem(state.equipped.head);
+      const bodyItem = getItem(state.equipped.body);
+      const backItem = getItem(state.equipped.back);
+      const petItem = getItem(state.equipped.pet);
+
+      avatarHeadChip.textContent = headItem ? `${headItem.emoji} ${headItem.name}` : "";
+      avatarBodyChip.textContent = bodyItem ? `${bodyItem.emoji} ${bodyItem.name}` : "";
+      avatarBackChip.textContent = backItem ? `${backItem.emoji} ${backItem.name}` : "";
+      avatarPetChip.textContent = petItem ? `${petItem.emoji} ${petItem.name}` : "";
+    }
+
+    function setActiveCategory(category) {
+      state.activeCategory = category;
+
+      categoryChips.forEach((chip) => {
+        const chipCategory = chip.dataset.category;
+        chip.classList.toggle("category-chip-active", chipCategory === category);
+      });
+
+      const label = CATEGORY_LABELS[category] || "Items";
+      shopCategoryLabel.textContent = label;
+      closetCategoryLabel.textContent = label;
+
+      renderCurrentTab();
+    }
+
+    function setActiveTab(tabName) {
+      state.activeTab = tabName;
+
+      tabChips.forEach((chip) => {
+        const chipTab = chip.dataset.tab;
+        chip.classList.toggle("tab-chip-active", chipTab === tabName);
+      });
+
+      renderCurrentTab();
+    }
+
+    function getItem(id) {
+      if (!id) return null;
+      return ITEM_DEFS.find((item) => item.id === id) || null;
+    }
+
+    function getItemsForCategory(category) {
+      return ITEM_DEFS.filter((item) => item.category === category);
+    }
+
+    function isOwned(id) {
+      return state.owned.has(id);
+    }
+
+    function isEquipped(id) {
+      const item = getItem(id);
+      if (!item) return false;
+      return state.equipped[item.category] === id;
+    }
+
+    // ----- Rendering: shop / closet -----
+    function renderShop() {
+      const items = getItemsForCategory(state.activeCategory).filter(
+        (item) => !isOwned(item.id) // only show not-yet-owned items in the Shop
+      );
+
+      shopList.innerHTML = "";
+      if (!items.length) {
+        shopEmptyMessage.classList.remove("hidden");
+        return;
+      }
+      shopEmptyMessage.classList.add("hidden");
+
+      items.forEach((item) => {
+        const affordable = state.coins >= item.price;
+
+        const card = document.createElement("article");
+        card.className = "item-card";
+
+        const topRow = document.createElement("div");
+        topRow.className = "flex items-center justify-between gap-2";
+
+        const left = document.createElement("div");
+        left.className = "flex items-center gap-2";
+        const emojiSpan = document.createElement("div");
+        emojiSpan.className = "item-emoji";
+        emojiSpan.textContent = item.emoji;
+        const nameBox = document.createElement("div");
+        const nameTitle = document.createElement("div");
+        nameTitle.className = "font-semibold text-sm";
+        nameTitle.textContent = item.name;
+        const catLabel = document.createElement("div");
+        catLabel.className = "text-[0.65rem] text-gray-400 uppercase tracking-wide";
+        catLabel.textContent = CATEGORY_LABELS[item.category] || "Item";
+
+        nameBox.appendChild(nameTitle);
+        nameBox.appendChild(catLabel);
+        left.appendChild(emojiSpan);
+        left.appendChild(nameBox);
+
+        const priceSpan = document.createElement("div");
+        priceSpan.className = "text-xs font-semibold flex flex-col items-end";
+        priceSpan.innerHTML = `
+          <span class="flex items-center gap-1 text-amber-300">
+            🪙 <span>${item.price}</span>
+          </span>
+          <span class="text-[0.65rem] text-gray-400">${affordable ? "You can afford this" : "Need more coins"}</span>
+        `;
+
+        topRow.appendChild(left);
+        topRow.appendChild(priceSpan);
+
+        const desc = document.createElement("p");
+        desc.className = "text-[0.75rem] text-gray-300 mt-1";
+        desc.textContent = item.description;
+
+        const buttonRow = document.createElement("div");
+        buttonRow.className = "flex items-center justify-between mt-1";
+
+        const statusLabel = document.createElement("div");
+        statusLabel.className = "text-[0.7rem] text-gray-400";
+        statusLabel.textContent = affordable
+          ? "This will move into your closet."
+          : "Keep reading to earn more coins.";
+
+        const buyButton = document.createElement("button");
+        buyButton.type = "button";
+        buyButton.className =
+          "text-[0.75rem] font-semibold px-2.5 py-1 rounded-full border " +
+          (affordable
+            ? "border-amber-300 bg-amber-500/90 text-slate-900 hover:bg-amber-400"
+            : "border-slate-600 bg-slate-800/80 text-gray-400 cursor-not-allowed");
+        buyButton.textContent = affordable ? "Buy" : "Not enough coins";
+
+        if (affordable) {
+          buyButton.addEventListener("click", () => {
+            handleBuyItem(item);
+          });
+        }
+
+        buttonRow.appendChild(statusLabel);
+        buttonRow.appendChild(buyButton);
+
+        card.appendChild(topRow);
+        card.appendChild(desc);
+        card.appendChild(buttonRow);
+
+        shopList.appendChild(card);
+      });
+    }
+
+    function renderCloset() {
+      const items = getItemsForCategory(state.activeCategory).filter((item) =>
+        isOwned(item.id)
+      );
+
+      closetList.innerHTML = "";
+      if (!items.length) {
+        closetEmptyMessage.classList.remove("hidden");
+        return;
+      }
+      closetEmptyMessage.classList.add("hidden");
+
+      items.forEach((item) => {
+        const card = document.createElement("article");
+        const equipped = isEquipped(item.id);
+
+        card.className =
+          "item-card item-card-owned" + (equipped ? " item-card-equipped" : "");
+
+        const topRow = document.createElement("div");
+        topRow.className = "flex items-center justify-between gap-2";
+
+        const left = document.createElement("div");
+        left.className = "flex items-center gap-2";
+        const emojiSpan = document.createElement("div");
+        emojiSpan.className = "item-emoji";
+        emojiSpan.textContent = item.emoji;
+        const nameBox = document.createElement("div");
+        const nameTitle = document.createElement("div");
+        nameTitle.className = "font-semibold text-sm";
+        nameTitle.textContent = item.name;
+        const catLabel = document.createElement("div");
+        catLabel.className = "text-[0.65rem] text-gray-400 uppercase tracking-wide";
+        catLabel.textContent = equipped ? "Equipped" : "Owned";
+
+        nameBox.appendChild(nameTitle);
+        nameBox.appendChild(catLabel);
+        left.appendChild(emojiSpan);
+        left.appendChild(nameBox);
+
+        const actionButton = document.createElement("button");
+        actionButton.type = "button";
+        if (equipped) {
+          actionButton.className =
+            "text-[0.7rem] font-semibold px-2.5 py-1 rounded-full border border-slate-500 bg-slate-900/80 text-gray-200 hover:bg-slate-800";
+          actionButton.textContent = "Unequip";
+        } else {
+          actionButton.className =
+            "text-[0.7rem] font-semibold px-2.5 py-1 rounded-full border border-emerald-300 bg-emerald-500/90 text-slate-900 hover:bg-emerald-400";
+          actionButton.textContent = "Equip";
+        }
+
+        actionButton.addEventListener("click", () => {
+          handleEquipToggle(item);
+        });
+
+        topRow.appendChild(left);
+        topRow.appendChild(actionButton);
+
+        const desc = document.createElement("p");
+        desc.className = "text-[0.75rem] text-gray-300 mt-1";
+        desc.textContent = item.description;
+
+        card.appendChild(topRow);
+        card.appendChild(desc);
+
+        closetList.appendChild(card);
+      });
+    }
+
+    function renderCurrentTab() {
+      if (state.activeTab === "shop") {
+        renderShop();
+      } else {
+        renderCloset();
+      }
+      updateAvatarPreview();
+      updateCoinsDisplay();
+    }
+
+    // ----- Actions -----
+    function handleBuyItem(item) {
+      if (state.coins < item.price) return;
+
+      state.coins -= item.price;
+      state.owned.add(item.id);
+
+      // Optional: auto-equip if that slot was empty
+      if (!state.equipped[item.category]) {
+        state.equipped[item.category] = item.id;
+      }
+
+      renderCurrentTab();
+
+      // TODO: later save to Firestore (owned items + coins + equipped).
+    }
+
+    function handleEquipToggle(item) {
+      const currentlyEquipped = state.equipped[item.category];
+      if (currentlyEquipped === item.id) {
+        // Unequip
+        state.equipped[item.category] = null;
+      } else {
+        // Equip
+        state.equipped[item.category] = item.id;
+      }
+
+      renderCurrentTab();
+
+      // TODO: later save to Firestore (equipped state).
+    }
+
+    // ----- Auth + profile init -----
+    async function initAvatarLab() {
+      try {
+        const authUser = await requireLogin();
+        let profile = null;
+
+        try {
+          profile = await getCurrentUserProfile();
+        } catch (e) {
+          profile = null;
+        }
+
+        const displayName =
+          (profile && profile.displayName) ||
+          authUser.displayName ||
+          "Guardian";
+
+        userNameLabel.textContent = displayName;
+
+        const grade =
+          (profile && profile.gradeLabel) ||
+          (profile && profile.grade) ||
+          "";
+        if (grade) {
+          userGradeLabel.textContent = `• Grade ${grade}`;
+        }
+
+        const role = profile && profile.role;
+        if (role && role !== "student") {
+          userRoleBadge.classList.remove("hidden");
+          userRoleText.textContent = role === "teacher" ? "Teacher" : role;
+        }
+
+        const house = profile && profile.house;
+        if (house) {
+          userHouseBadge.classList.remove("hidden");
+          userHouseText.textContent = house;
+        }
+
+        const isAdmin = ADMIN_EMAILS.includes(authUser.email || "");
+        if (isAdmin) {
+          userAdminBadge.classList.remove("hidden");
+        }
+
+        // TODO: In the future: load avatar + coin data from Firestore based on authUser.uid.
+        // For now, we stick with mock state.
+      } catch (err) {
+        console.error("Error initializing Avatar Lab:", err);
+      }
+
+      // Initial render with default state
+      updateCoinsDisplay();
+      updateAvatarPreview();
+      renderCurrentTab();
+    }
+
+    // ----- Event wiring -----
+    categoryChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const category = chip.dataset.category;
+        if (!category) return;
+        setActiveCategory(category);
+      });
+    });
+
+    tabChips.forEach((chip) => {
+      chip.addEventListener("click", () => {
+        const tab = chip.dataset.tab;
+        if (!tab) return;
+        setActiveTab(tab);
+      });
+    });
+
+    signOutButton.addEventListener("click", async () => {
+      try {
+        await signOutUser();
+      } catch (e) {
+        console.error("Sign-out failed:", e);
+      }
+    });
+
+    // Kick things off
+    initAvatarLab();
+  </script>
+</body>
+</html>
