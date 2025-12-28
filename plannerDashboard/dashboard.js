@@ -79,11 +79,11 @@ const SCHEDULE_BY_LETTER_DAY = {
 
 // Everyday AM tasks (06:00)
 const EVERYDAY_AM_TASKS = [
+  "Levothyroxine",
   "Switch Dishwasher",
   "Clean Glasses",
   "Deodorant",
   "Eat Breakfast",
-  "Levothyroxine",
   "Brush teeth",
   "Floss",
   "Get Dressed",
@@ -272,7 +272,6 @@ const LAST_TIME_ITEMS = [
   },
 ];
 
-
 // ---------- STATE ----------
 
 let app;
@@ -417,9 +416,12 @@ async function saveParkingLot(text) {
   await setDoc(ref, { text }, { merge: true });
 }
 
+// 🔄 UPDATED: Weekly tasks now merge Firestore + DEFAULT_WEEKLY_TASKS
 async function loadWeeklyTasks(user, weekKey) {
   const ref = doc(db, WEEKLY_PREFIX, `${user.uid}_${weekKey}`);
   const snap = await getDoc(ref);
+
+  // First time this week → build from defaults
   if (!snap.exists()) {
     return {
       weekKey,
@@ -435,7 +437,55 @@ async function loadWeeklyTasks(user, weekKey) {
       })),
     };
   }
-  return snap.data();
+
+  // Merge existing Firestore data with current defaults
+  const data = snap.data() || {};
+  const storedWork = Array.isArray(data.work) ? data.work : [];
+  const storedHome = Array.isArray(data.home) ? data.home : [];
+
+  const workByTitle = new Map(storedWork.map((t) => [t.title, t]));
+  const homeByTitle = new Map(storedHome.map((t) => [t.title, t]));
+
+  // Ensure all default tasks exist (reuse status if already present)
+  const mergedWork = DEFAULT_WEEKLY_TASKS.work.map((title) => {
+    const existing = workByTitle.get(title);
+    return (
+      existing || {
+        id: buildTaskId("weekly-work", title),
+        title,
+        status: "planned",
+      }
+    );
+  });
+
+  const mergedHome = DEFAULT_WEEKLY_TASKS.home.map((title) => {
+    const existing = homeByTitle.get(title);
+    return (
+      existing || {
+        id: buildTaskId("weekly-home", title),
+        title,
+        status: "planned",
+      }
+    );
+  });
+
+  // Keep any “extra” tasks that were previously saved but not in defaults
+  storedWork.forEach((t) => {
+    if (!mergedWork.some((x) => x.title === t.title)) {
+      mergedWork.push(t);
+    }
+  });
+  storedHome.forEach((t) => {
+    if (!mergedHome.some((x) => x.title === t.title)) {
+      mergedHome.push(t);
+    }
+  });
+
+  return {
+    weekKey,
+    work: mergedWork,
+    home: mergedHome,
+  };
 }
 
 async function saveWeeklyTasks(weeklyState) {
