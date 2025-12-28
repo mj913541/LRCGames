@@ -36,10 +36,13 @@
       <!-- LEFT PANEL -->
       <section class="main-panel" aria-label="Planner main panel">
         <!-- Daily Context -->
-        <section class="card" id="context-card">
-          <header class="card-header">
+        <section class="card collapsible" id="context-card">
+          <header class="card-header collapsible-header">
             <h2>Daily Context</h2>
-            <p class="card-subtitle">Set the “shape” of today. You can update anytime.</p>
+               <button class="collapse-toggle" type="button" aria-expanded="true">
+              <span class="collapse-label">Hide</span>
+              <span class="chevron">&#9662;</span>
+            </button>
           </header>
           <div class="card-body context-grid">
             <div class="field-group">
@@ -94,9 +97,6 @@
           <header class="card-header collapsible-header">
             <div>
               <h2>Merged Tasks & Appointments</h2>
-              <p class="card-subtitle">
-                Classes, work tasks, daycare, and home anchors in one gentle list.
-              </p>
             </div>
             <button class="collapse-toggle" type="button" aria-expanded="true">
               <span class="collapse-label">Hide</span>
