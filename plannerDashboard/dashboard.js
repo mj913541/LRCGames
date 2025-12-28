@@ -135,10 +135,18 @@ const WORK_CLOSE_TASKS = [
 // Weekly big rocks
 const DEFAULT_WEEKLY_TASKS = {
   work: [
-    "Plan next week’s LRC lessons",
-    "Update LRCQuest links / quests",
-    "Refresh book displays",
-    "Library communication (newsletters, Seesaw, etc.)",
+    "Next week 1st grade lessons",
+    "Next week 2nd grade lessons",
+    "Next week 3rd grade lessons",
+    "Next week 4th grade lessons",
+    "Next week 5th grade lessons",
+    "Process 5 new books",
+    "5 Book hospital books",
+    "Evaluation Evidence",
+    "Sub plans",
+    "Read-A-Thon Fundraiser",
+    "Ordering supplies",
+    "Decorate 2 shelves to match the genre color sections",
   ],
   home: [
     "Meal plan & grocery list",
