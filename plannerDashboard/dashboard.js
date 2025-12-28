@@ -157,44 +157,121 @@ const DEFAULT_WEEKLY_TASKS = {
 };
 
 // Simple daily goal trackers (per-day counts)
+// You can tweak dailyTarget numbers any time.
 const GOAL_TRACKERS = [
-  { id: "water", label: "Cups of water", dailyTarget: 8 },
-  { id: "movement", label: "Movement breaks", dailyTarget: 3 },
-  { id: "outside", label: "Step outside", dailyTarget: 1 },
+  // --- General health habits ---
+  { id: "water",      label: "Water (cups)",  dailyTarget: 8 },
+  { id: "steps",      label: "Steps goal",    dailyTarget: 1 },
+  { id: "stretching", label: "Stretching",    dailyTarget: 10 },
+  { id: "cardio",     label: "Cardio",        dailyTarget: 10 },
+  { id: "meditate",   label: "Meditate",      dailyTarget: 10 },
+
+  // --- Weight lifting / strength: shoulders ---
+  { id: "front-lift-shoulders",   label: "Front lift – shoulders",    dailyTarget: 10 },
+  { id: "side-lift-shoulders",    label: "Side lift – shoulders",     dailyTarget: 10 },
+  { id: "reverse-flys-shoulders", label: "Reverse flys – shoulders",  dailyTarget: 10 },
+
+  // --- Chest ---
+  { id: "press-chest", label: "Press – chest", dailyTarget: 10 },
+  { id: "fly-chest",   label: "Fly – chest",   dailyTarget: 10 },
+  { id: "push-ups",    label: "Push ups",      dailyTarget: 10 },
+
+  // --- Abs / core ---
+  { id: "heel-taps",   label: "Heel taps – abs",   dailyTarget: 10 },
+  { id: "hip-bridge",  label: "Hip bridge – abs",  dailyTarget: 10 },
+  { id: "bird-dog",    label: "Bird dog – abs",    dailyTarget: 10 },
+  { id: "dead-bug",    label: "Dead bug – abs",    dailyTarget: 10 },
+  { id: "cat-cow",     label: "Cat cow – abs",     dailyTarget: 10 },
+
+  // --- Legs / glutes ---
+  { id: "squats",                 label: "Squats",                    dailyTarget: 10 },
+  { id: "alt-reverse-lunges",     label: "Alternating reverse lunges",dailyTarget: 10 },
+  { id: "sumo-squats",            label: "Sumo squats",               dailyTarget: 10 },
+  { id: "alt-side-squats",        label: "Alternating side squats",   dailyTarget: 10 },
+  { id: "rdl-right",              label: "RDL – right",               dailyTarget: 10 },
+  { id: "rdl-left",               label: "RDL – left",                dailyTarget: 10 },
+  { id: "calf-raises",            label: "Calf raises",               dailyTarget: 10 },
+
+  // --- Back ---
+  { id: "rows-back",       label: "Wide row / rows – back", dailyTarget: 10 },
+  { id: "pulldown-back",   label: "Pull down – back",        dailyTarget: 10 },
+  { id: "face-pulls-back", label: "Face pulls – back",       dailyTarget: 10 },
+
+  // --- Arms ---
+  { id: "bicep-curls",          label: "Bicep curls",             dailyTarget: 10 },
+  { id: "hammer-curls",         label: "Hammer curls",            dailyTarget: 10 },
+  { id: "tricep-kickbacks-r",   label: "Tricep kickbacks – right",dailyTarget: 10 },
+  { id: "tricep-kickbacks-l",   label: "Tricep kickbacks – left", dailyTarget: 10 },
+  { id: "skull-crushers",       label: "Skull crushers",          dailyTarget: 10 },
 ];
 
-// "When was the last time I…" items.
-// Each item gets its own green/yellow/red thresholds in DAYS.
+// "When was the last time I…" — body care & routines
 const LAST_TIME_ITEMS = [
   {
-    id: "wash-hair",
-    label: "Wash hair",
+    id: "bathed-baby",
+    label: "Bathed baby",
     greenDays: 0,
     yellowDays: 2,
     redDays: 4,
   },
   {
-    id: "change-sheets",
-    label: "Change bed sheets",
+    id: "shaved-armpits",
+    label: "Shaved armpits",
+    greenDays: 0,
+    yellowDays: 4,
+    redDays: 8,
+  },
+  {
+    id: "cleaned-eyebrows",
+    label: "Cleaned eyebrows",
+    greenDays: 0,
+    yellowDays: 10,
+    redDays: 21,
+  },
+  {
+    id: "shaved-upper-lip",
+    label: "Shaved upper lip",
     greenDays: 0,
     yellowDays: 7,
     redDays: 14,
   },
   {
-    id: "water-plants",
-    label: "Water plants",
+    id: "shaved-bikini",
+    label: "Shaved bikini area",
     greenDays: 0,
-    yellowDays: 3,
-    redDays: 7,
+    yellowDays: 10,
+    redDays: 20,
   },
   {
-    id: "deep-tidy",
-    label: "Deep tidy one area",
+    id: "washed-hair",
+    label: "Washed hair",
     greenDays: 0,
-    yellowDays: 5,
-    redDays: 10,
+    yellowDays: 2,
+    redDays: 4,
+  },
+  {
+    id: "shaved-legs",
+    label: "Shaved legs",
+    greenDays: 0,
+    yellowDays: 10,
+    redDays: 20,
+  },
+  {
+    id: "trimmed-toenails",
+    label: "Trimmed toenails",
+    greenDays: 0,
+    yellowDays: 21,
+    redDays: 35,
+  },
+  {
+    id: "trimmed-nails",
+    label: "Trimmed fingernails",
+    greenDays: 0,
+    yellowDays: 10,
+    redDays: 21,
   },
 ];
+
 
 // ---------- STATE ----------
 
