@@ -142,29 +142,54 @@
         </section>
 
         <!-- Parking Lot -->
-        <section class="card collapsible" data-section="parking">
-          <header class="card-header collapsible-header">
-            <div>
-              <h2>Parking Lot</h2>
-              <p class="card-subtitle">
-                A rolling sticky note for stray thoughts. It gently carries over each day.
-              </p>
-            </div>
-            <button class="collapse-toggle" type="button" aria-expanded="true">
-              <span class="collapse-label">Hide</span>
-              <span class="chevron">&#9662;</span>
-            </button>
-          </header>
-          <div class="card-body collapsible-body scrollable">
-            <textarea
-              id="parking-lot"
-              class="parking-textarea"
-              rows="6"
-              placeholder="Jot ideas, to-dos, things to remember. Nothing disappears unless you clear it."
-            ></textarea>
-            <p class="tiny-hint" id="parking-status">Saved automatically.</p>
-          </div>
-        </section>
+<div class="card-body collapsible-body scrollable weekly-grid">
+  <!-- Work Parking Lot -->
+  <article class="sub-card" data-group="parking-work">
+    <div class="sub-card-header">
+      <h3>Work Parking Lot</h3>
+      <button
+        type="button"
+        class="mini-hide-btn"
+        data-target="parking-work-wrap"
+      >
+        Hide
+      </button>
+    </div>
+    <div id="parking-work-wrap">
+      <textarea
+        id="parking-work"
+        class="parking-textarea"
+        rows="4"
+        placeholder="Work projects, ideas, and stray to-dos that don’t fit today."
+      ></textarea>
+      <p class="tiny-hint" id="parking-work-status">Saved automatically.</p>
+    </div>
+  </article>
+
+  <!-- Home Parking Lot -->
+  <article class="sub-card" data-group="parking-home">
+    <div class="sub-card-header">
+      <h3>Home Parking Lot</h3>
+      <button
+        type="button"
+        class="mini-hide-btn"
+        data-target="parking-home-wrap"
+      >
+        Hide
+      </button>
+    </div>
+    <div id="parking-home-wrap">
+      <textarea
+        id="parking-home"
+        class="parking-textarea"
+        rows="4"
+        placeholder="Home / family / personal things to park for later."
+      ></textarea>
+      <p class="tiny-hint" id="parking-home-status">Saved automatically.</p>
+    </div>
+  </article>
+</div>
+
 
         <!-- Weekly Tasks Progress -->
         <section class="card collapsible" data-section="weekly">
@@ -185,9 +210,9 @@
             <article class="sub-card" data-group="work">
               <div class="sub-card-header">
                 <h3>Work</h3>
-                <button type="button" class="mini-hide-btn" data-target="work">
-                  Hide
-                </button>
+<button type="button" class="mini-hide-btn" data-target="weekly-work-list">
+  Hide
+</button>
               </div>
               <div id="weekly-work-list" class="weekly-task-list"></div>
             </article>
@@ -195,9 +220,9 @@
             <article class="sub-card" data-group="home">
               <div class="sub-card-header">
                 <h3>Home</h3>
-                <button type="button" class="mini-hide-btn" data-target="home">
-                  Hide
-                </button>
+<button type="button" class="mini-hide-btn" data-target="weekly-home-list">
+  Hide
+</button>
               </div>
               <div id="weekly-home-list" class="weekly-task-list"></div>
             </article>

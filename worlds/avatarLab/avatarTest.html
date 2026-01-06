@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Avatar Layer Test</title>
+
+  <style>
+    .avatar {
+      position: relative;
+      width: 350px;   /* you can adjust */
+      height: 350px;  /* should be square */
+    }
+
+    .avatar img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .base {
+      z-index: 2;
+    }
+
+    .head-item {
+      z-index: 4;
+    }
+
+    .avatar-container {
+  display: flex;
+  flex-wrap: wrap;          /* allows wrapping */
+  gap: 16px;                /* space between avatars */
+  justify-content: flex-start;
+  background-color: blueviolet;
+}
+  </style>
+</head>
+
+<body>
+  <h2>Avatar Layer Test</h2>
+<div class="avatar-container">
+  <div class="avatar">
+    <img src="./assets/avatar/base/lion-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+  <div class="avatar">
+    <img src="./assets/avatar/base/cat-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+    <div class="avatar">
+    <img src="./assets/avatar/base/dog-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+    <div class="avatar">
+    <img src="./assets/avatar/base/dragon-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+    <div class="avatar">
+    <img src="./assets/avatar/base/fox-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+      <div class="avatar">
+    <img src="./assets/avatar/base/owl-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+      <div class="avatar">
+    <img src="./assets/avatar/base/panda-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+      <div class="avatar">
+    <img src="./assets/avatar/base/turtle-base.png" class="base">
+    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
+  </div>
+  </div>
+</body>
+</html>

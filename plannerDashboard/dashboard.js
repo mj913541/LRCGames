@@ -81,6 +81,7 @@ const SCHEDULE_BY_LETTER_DAY = {
 const EVERYDAY_AM_TASKS = [
   "Levothyroxine",
   "Switch Dishwasher",
+  "Reset Coffee",
   "Clean Glasses",
   "Deodorant",
   "Eat Breakfast",
@@ -135,26 +136,112 @@ const WORK_CLOSE_TASKS = [
 // Weekly big rocks
 const DEFAULT_WEEKLY_TASKS = {
   work: [
-    "Next week 1st grade lessons",
-    "Next week 2nd grade lessons",
-    "Next week 3rd grade lessons",
-    "Next week 4th grade lessons",
-    "Next week 5th grade lessons",
-    "Process 5 new books",
-    "5 Book hospital books",
-    "Evaluation Evidence",
-    "Sub plans",
-    "Read-A-Thon Fundraiser",
-    "Ordering supplies",
-    "Decorate 2 shelves to match the genre color sections",
+    { title: "Next week 1st grade lessons", statusType: "lessons" },
+    { title: "Next week 2nd grade lessons", statusType: "lessons" },
+    { title: "Next week 3rd grade lessons", statusType: "lessons" },
+    { title: "Next week 4th grade lessons", statusType: "lessons" },
+    { title: "Next week 5th grade lessons", statusType: "lessons" },
+    { title: "Process 5 new books", statusType: "generic" },
+    { title: "5 Book hospital books", statusType: "generic" },
+    { title: "Evaluation Evidence", statusType: "generic" },
+    { title: "Sub plans", statusType: "generic" },
+    { title: "Read-A-Thon Fundraiser", statusType: "generic" },
+    { title: "Ordering supplies", statusType: "generic" },
+    {
+      title: "Decorate 2 shelves to match the genre color sections",
+      statusType: "generic",
+    },
   ],
   home: [
-    "Meal plan & grocery list",
-    "Laundry cycle(s)",
-    "Tidy main rooms",
-    "Budget / bills check-in",
+    { title: "Meal plan & grocery list", statusType: "generic" },
+    { title: "Laundry cycle(s)", statusType: "laundry" },
+    { title: "Tidy main rooms", statusType: "generic" },
+    { title: "Budget / bills check-in", statusType: "generic" },
   ],
 };
+
+const WEEKLY_STATUS_TYPES = {
+  // For lesson planning (3-step)
+  lessons: {
+    order: ["planned", "prepped", "completed"],
+    labelMap: {
+      planned: "Planned",
+      prepped: "Prepped",
+      completed: "Completed",
+    },
+    percentageMap: {
+      planned: 33,
+      prepped: 66,
+      completed: 100,
+    },
+    classMap: {
+      planned: "weekly-status--planned",
+      prepped: "weekly-status--prepped",
+      completed: "weekly-status--completed",
+    },
+  },
+
+  // Default generic 3-step
+  generic: {
+    order: ["planned", "prepped", "completed"],
+    labelMap: {
+      planned: "Planned",
+      prepped: "Prepped",
+      completed: "Completed",
+    },
+    percentageMap: {
+      planned: 33,
+      prepped: 66,
+      completed: 100,
+    },
+    classMap: {
+      planned: "weekly-status--planned",
+      prepped: "weekly-status--prepped",
+      completed: "weekly-status--completed",
+    },
+  },
+
+  // Laundry (4-step)
+  laundry: {
+    order: ["wash", "dry", "fold", "put-away"],
+    labelMap: {
+      wash: "Wash",
+      dry: "Dry",
+      fold: "Fold",
+      "put-away": "Put away",
+    },
+    percentageMap: {
+      wash: 25,
+      dry: 50,
+      fold: 75,
+      "put-away": 100,
+    },
+    // Re-uses your existing color classes:
+    classMap: {
+      wash: "weekly-status--planned",
+      dry: "weekly-status--prepped",
+      fold: "weekly-status--prepped",
+      "put-away": "weekly-status--completed",
+    },
+  },
+};
+
+function inferStatusTypeFromTitle(title) {
+  const lower = (title || "").toLowerCase();
+  if (lower.includes("laundry")) return "laundry";
+  if (lower.includes("lesson")) return "lessons";
+  return "generic";
+}
+
+function getStatusConfigForItem(item) {
+  const key = item.statusType || inferStatusTypeFromTitle(item.title);
+  return WEEKLY_STATUS_TYPES[key] || WEEKLY_STATUS_TYPES.generic;
+}
+
+function initialStatusForItem(item) {
+  const cfg = getStatusConfigForItem(item);
+  return cfg.order[0] || "planned";
+}
 
 // Simple daily goal trackers (per-day counts)
 // You can tweak dailyTarget numbers any time.
@@ -165,7 +252,8 @@ const GOAL_TRACKERS = [
   { id: "stretching", label: "Stretching",    dailyTarget: 10 },
   { id: "cardio",     label: "Cardio",        dailyTarget: 10 },
   { id: "meditate",   label: "Meditate",      dailyTarget: 10 },
-
+  { id: "eyedrops",   label: "Eye Drops",      dailyTarget: 10 },
+  
   // --- Weight lifting / strength: shoulders ---
   { id: "front-lift-shoulders",   label: "Front lift – shoulders",    dailyTarget: 10 },
   { id: "side-lift-shoulders",    label: "Side lift – shoulders",     dailyTarget: 10 },
@@ -215,32 +303,39 @@ const LAST_TIME_ITEMS = [
     redDays: 4,
   },
   {
+    id: "litter-box",
+    label: "Litter Box",
+    greenDays: 0,
+    yellowDays: 3,
+    redDays: 5,
+  },
+  {
     id: "shaved-armpits",
     label: "Shaved armpits",
     greenDays: 0,
-    yellowDays: 4,
-    redDays: 8,
+    yellowDays: 2,
+    redDays: 4,
   },
   {
     id: "cleaned-eyebrows",
     label: "Cleaned eyebrows",
     greenDays: 0,
-    yellowDays: 10,
-    redDays: 21,
+    yellowDays: 6,
+    redDays: 10,
   },
   {
     id: "shaved-upper-lip",
     label: "Shaved upper lip",
     greenDays: 0,
-    yellowDays: 7,
-    redDays: 14,
+    yellowDays: 6,
+    redDays: 10,
   },
   {
     id: "shaved-bikini",
     label: "Shaved bikini area",
     greenDays: 0,
-    yellowDays: 10,
-    redDays: 20,
+    yellowDays: 6,
+    redDays: 10,
   },
   {
     id: "washed-hair",
@@ -253,8 +348,8 @@ const LAST_TIME_ITEMS = [
     id: "shaved-legs",
     label: "Shaved legs",
     greenDays: 0,
-    yellowDays: 10,
-    redDays: 20,
+    yellowDays: 6,
+    redDays: 10,
   },
   {
     id: "trimmed-toenails",
@@ -406,14 +501,27 @@ async function saveDailyState() {
 async function loadParkingLot(user) {
   const ref = doc(db, PARKING_DOC, user.uid);
   const snap = await getDoc(ref);
-  if (!snap.exists()) return "";
-  return snap.data().text || "";
+  if (!snap.exists()) {
+    return { work: "", home: "" };
+  }
+
+  const data = snap.data() || {};
+
+  // Backwards compatibility: if there used to be one big text field,
+  // treat it as "work" by default.
+  const legacyText =
+    typeof data.text === "string" ? data.text : "";
+
+  return {
+    work: data.work ?? legacyText ?? "",
+    home: data.home ?? "",
+  };
 }
 
-async function saveParkingLot(text) {
+async function saveParkingLot(partial) {
   if (!currentUser) return;
   const ref = doc(db, PARKING_DOC, currentUser.uid);
-  await setDoc(ref, { text }, { merge: true });
+  await setDoc(ref, partial, { merge: true });
 }
 
 // 🔄 UPDATED: Weekly tasks now merge Firestore + DEFAULT_WEEKLY_TASKS
@@ -421,55 +529,101 @@ async function loadWeeklyTasks(user, weekKey) {
   const ref = doc(db, WEEKLY_PREFIX, `${user.uid}_${weekKey}`);
   const snap = await getDoc(ref);
 
-  // First time this week → build from defaults
-  if (!snap.exists()) {
+  // Normalize a stored task (adds statusType + safe status)
+  const normalizeStored = (task) => {
+    if (!task) return null;
+    const title = task.title || "";
+    const statusType =
+      task.statusType || inferStatusTypeFromTitle(title);
+    const cfg =
+      WEEKLY_STATUS_TYPES[statusType] || WEEKLY_STATUS_TYPES.generic;
+    const fallbackStatus = cfg.order[0] || "planned";
+    const status =
+      task.status && cfg.order.includes(task.status)
+        ? task.status
+        : fallbackStatus;
+
+    return {
+      id: task.id || buildTaskId("weekly", title),
+      title,
+      statusType,
+      status,
+    };
+  };
+
+  const buildFromDefaults = () => {
+    const buildGroup = (defs, groupKey) =>
+      defs.map((def) => {
+        const title = typeof def === "string" ? def : def.title;
+        const statusType =
+          typeof def === "string"
+            ? inferStatusTypeFromTitle(title)
+            : def.statusType || inferStatusTypeFromTitle(title);
+
+        const item = {
+          id: buildTaskId(`weekly-${groupKey}`, title),
+          title,
+          statusType,
+        };
+        item.status = initialStatusForItem(item);
+        return item;
+      });
+
     return {
       weekKey,
-      work: DEFAULT_WEEKLY_TASKS.work.map((title) => ({
-        id: buildTaskId("weekly-work", title),
-        title,
-        status: "planned",
-      })),
-      home: DEFAULT_WEEKLY_TASKS.home.map((title) => ({
-        id: buildTaskId("weekly-home", title),
-        title,
-        status: "planned",
-      })),
+      work: buildGroup(DEFAULT_WEEKLY_TASKS.work, "work"),
+      home: buildGroup(DEFAULT_WEEKLY_TASKS.home, "home"),
     };
+  };
+
+  // First time this week → build from defaults
+  if (!snap.exists()) {
+    return buildFromDefaults();
   }
 
   // Merge existing Firestore data with current defaults
   const data = snap.data() || {};
-  const storedWork = Array.isArray(data.work) ? data.work : [];
-  const storedHome = Array.isArray(data.home) ? data.home : [];
+  const storedWorkRaw = Array.isArray(data.work) ? data.work : [];
+  const storedHomeRaw = Array.isArray(data.home) ? data.home : [];
+
+  const storedWork = storedWorkRaw.map(normalizeStored).filter(Boolean);
+  const storedHome = storedHomeRaw.map(normalizeStored).filter(Boolean);
 
   const workByTitle = new Map(storedWork.map((t) => [t.title, t]));
   const homeByTitle = new Map(storedHome.map((t) => [t.title, t]));
 
-  // Ensure all default tasks exist (reuse status if already present)
-  const mergedWork = DEFAULT_WEEKLY_TASKS.work.map((title) => {
-    const existing = workByTitle.get(title);
-    return (
-      existing || {
-        id: buildTaskId("weekly-work", title),
-        title,
-        status: "planned",
-      }
-    );
-  });
+  const mergeDefaults = (defs, groupKey, byTitle) =>
+    defs.map((def) => {
+      const title = typeof def === "string" ? def : def.title;
+      const existing = byTitle.get(title);
+      if (existing) return existing;
 
-  const mergedHome = DEFAULT_WEEKLY_TASKS.home.map((title) => {
-    const existing = homeByTitle.get(title);
-    return (
-      existing || {
-        id: buildTaskId("weekly-home", title),
-        title,
-        status: "planned",
-      }
-    );
-  });
+      const statusType =
+        typeof def === "string"
+          ? inferStatusTypeFromTitle(title)
+          : def.statusType || inferStatusTypeFromTitle(title);
 
-  // Keep any “extra” tasks that were previously saved but not in defaults
+      const item = {
+        id: buildTaskId(`weekly-${groupKey}`, title),
+        title,
+        statusType,
+      };
+      item.status = initialStatusForItem(item);
+      return item;
+    });
+
+  const mergedWork = mergeDefaults(
+    DEFAULT_WEEKLY_TASKS.work,
+    "work",
+    workByTitle
+  );
+  const mergedHome = mergeDefaults(
+    DEFAULT_WEEKLY_TASKS.home,
+    "home",
+    homeByTitle
+  );
+
+  // Keep any extra user-created tasks
   storedWork.forEach((t) => {
     if (!mergedWork.some((x) => x.title === t.title)) {
       mergedWork.push(t);
@@ -855,10 +1009,12 @@ function toggleTaskCompleted(taskId, completed) {
 
 // Parking lot
 
-function hydrateParkingLot(text) {
-  const ta = document.getElementById("parking-lot");
-  if (!ta) return;
-  ta.value = text || "";
+function hydrateParkingLots(data) {
+  const workTa = document.getElementById("parking-work");
+  const homeTa = document.getElementById("parking-home");
+
+  if (workTa) workTa.value = (data && data.work) || "";
+  if (homeTa) homeTa.value = (data && data.home) || "";
 }
 
 // Weekly tasks
@@ -888,8 +1044,8 @@ function renderWeeklyTasks(weeklyState) {
       const pill = document.createElement("button");
       pill.type = "button";
       pill.className =
-        "weekly-status-pill " + getWeeklyStatusClass(item.status);
-      pill.textContent = statusLabel(item.status);
+        "weekly-status-pill " + getWeeklyStatusClass(item.status, item);
+      pill.textContent = statusLabel(item.status, item);
       pill.addEventListener("click", () => {
         cycleWeeklyStatus(weeklyState, groupKey, item.id);
       });
@@ -902,7 +1058,7 @@ function renderWeeklyTasks(weeklyState) {
 
       const fill = document.createElement("div");
       fill.className = "weekly-progress-fill";
-      fill.style.width = statusPercentage(item.status) + "%";
+      fill.style.width = statusPercentage(item.status, item) + "%";
       track.appendChild(fill);
 
       root.appendChild(header);
@@ -916,22 +1072,28 @@ function renderWeeklyTasks(weeklyState) {
   renderGroup(weeklyState.home, homeWrap, "home");
 }
 
-function getWeeklyStatusClass(status) {
-  if (status === "prepped") return "weekly-status--prepped";
-  if (status === "completed") return "weekly-status--completed";
-  return "weekly-status--planned";
+function getWeeklyStatusClass(status, item) {
+  const cfg = getStatusConfigForItem(item || {});
+  const fallback = cfg.order[0] || "planned";
+  const key =
+    status && cfg.order.includes(status) ? status : fallback;
+  return cfg.classMap[key] || "weekly-status--planned";
 }
 
-function statusLabel(status) {
-  if (status === "prepped") return "Prepped";
-  if (status === "completed") return "Completed";
-  return "Planned";
+function statusLabel(status, item) {
+  const cfg = getStatusConfigForItem(item || {});
+  const fallback = cfg.order[0] || "planned";
+  const key =
+    status && cfg.order.includes(status) ? status : fallback;
+  return cfg.labelMap[key] || "Planned";
 }
 
-function statusPercentage(status) {
-  if (status === "prepped") return 66;
-  if (status === "completed") return 100;
-  return 33;
+function statusPercentage(status, item) {
+  const cfg = getStatusConfigForItem(item || {});
+  const fallback = cfg.order[0] || "planned";
+  const key =
+    status && cfg.order.includes(status) ? status : fallback;
+  return cfg.percentageMap[key] ?? 0;
 }
 
 async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
@@ -939,8 +1101,15 @@ async function cycleWeeklyStatus(weeklyState, groupKey, taskId) {
   const item = list.find((x) => x.id === taskId);
   if (!item) return;
 
-  const order = ["planned", "prepped", "completed"];
-  const idx = order.indexOf(item.status || "planned");
+  const cfg = getStatusConfigForItem(item);
+  const order = cfg.order && cfg.order.length ? cfg.order : ["planned"];
+
+  const current =
+    item.status && order.includes(item.status)
+      ? item.status
+      : order[0];
+
+  const idx = order.indexOf(current);
   const next = order[(idx + 1) % order.length];
   item.status = next;
 
@@ -1182,14 +1351,13 @@ function toggleSection(section, toggleBtn) {
 function setupWeeklyMiniHides() {
   document.querySelectorAll(".mini-hide-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const target = btn.dataset.target;
-      const listEl =
-        target === "work"
-          ? document.getElementById("weekly-work-list")
-          : document.getElementById("weekly-home-list");
-      if (!listEl) return;
+      const targetId = btn.dataset.target;
+      if (!targetId) return;
 
-      const isHidden = listEl.classList.toggle("hidden");
+      const targetEl = document.getElementById(targetId);
+      if (!targetEl) return;
+
+      const isHidden = targetEl.classList.toggle("hidden");
       btn.textContent = isHidden ? "Show" : "Hide";
     });
   });
@@ -1228,25 +1396,46 @@ async function initDashboardForUser(user) {
 
   renderMergedTasks();
 
-  // Parking lot
-  const parkingText = await loadParkingLot(user);
-  hydrateParkingLot(parkingText);
+  // Parking lot (work + home)
+  const parkingData = await loadParkingLot(user);
+  hydrateParkingLots(parkingData);
 
-  const parking = document.getElementById("parking-lot");
-  const parkingStatus = document.getElementById("parking-status");
-  let parkingTimer = null;
-  if (parking) {
-    parking.addEventListener("input", () => {
-      if (parkingStatus) parkingStatus.textContent = "Saving…";
-      clearTimeout(parkingTimer);
-      parkingTimer = setTimeout(async () => {
-        await saveParkingLot(parking.value);
-        if (parkingStatus) parkingStatus.textContent = "Saved automatically.";
+  const parkingWork = document.getElementById("parking-work");
+  const parkingHome = document.getElementById("parking-home");
+  const parkingWorkStatus = document.getElementById("parking-work-status");
+  const parkingHomeStatus = document.getElementById("parking-home-status");
+
+  let parkingWorkTimer = null;
+  let parkingHomeTimer = null;
+
+  if (parkingWork) {
+    parkingWork.addEventListener("input", () => {
+      if (parkingWorkStatus) parkingWorkStatus.textContent = "Saving…";
+      clearTimeout(parkingWorkTimer);
+      parkingWorkTimer = setTimeout(async () => {
+        await saveParkingLot({ work: parkingWork.value });
+        if (parkingWorkStatus) {
+          parkingWorkStatus.textContent = "Saved automatically.";
+        }
+      }, 400);
+    });
+  }
+
+  if (parkingHome) {
+    parkingHome.addEventListener("input", () => {
+      if (parkingHomeStatus) parkingHomeStatus.textContent = "Saving…";
+      clearTimeout(parkingHomeTimer);
+      parkingHomeTimer = setTimeout(async () => {
+        await saveParkingLot({ home: parkingHome.value });
+        if (parkingHomeStatus) {
+          parkingHomeStatus.textContent = "Saved automatically.";
+        }
       }, 400);
     });
   }
 
   // Weekly tasks
+
   const weekKey = getWeekKey(today);
   const weeklyState = await loadWeeklyTasks(user, weekKey);
   renderWeeklyTasks(weeklyState);
@@ -1258,7 +1447,7 @@ async function initDashboardForUser(user) {
 
   const hideGoalsBox = document.getElementById("hide-completed-goals");
   if (hideGoalsBox) {
-    hideGoalsBox.checked = hideCompletedGoals;
+    hideCompletedGoals = hideGoalsBox.checked;
     hideGoalsBox.addEventListener("change", () => {
       hideCompletedGoals = hideGoalsBox.checked;
       renderGoalTrackers();
