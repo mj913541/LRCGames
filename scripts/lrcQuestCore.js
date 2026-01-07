@@ -36,6 +36,18 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // -------------------------------------------------------------
+// Role constants
+// -------------------------------------------------------------
+
+const ADMIN_EMAILS = [
+  "malbrecht3317@gmail.com",
+  "malbrecht@sd308.org"
+];
+
+const STAFF_DOMAIN = "@sd308.org";
+const STUDENT_DOMAIN = "@students.sd308.org";
+
+// -------------------------------------------------------------
 // Expose Auth Instance
 // -------------------------------------------------------------
 
@@ -79,8 +91,80 @@ export function setLocalTier(tier) {
   localStorage.setItem("lrcQuestTier", tier);
 }
 
+export function getLocalRole() {
+  return localStorage.getItem("lrcQuestRole") || null;
+}
+
+function setLocalRole(role) {
+  if (!role) {
+    localStorage.removeItem("lrcQuestRole");
+  } else {
+    localStorage.setItem("lrcQuestRole", role);
+  }
+}
+
 // -------------------------------------------------------------
-// Require Login on Any Page
+// Ensure user has a role (admin / staff / student / blocked)
+// -------------------------------------------------------------
+
+async function ensureUserRole(user) {
+  if (!user || !user.email) return null;
+
+  const email = user.email.toLowerCase();
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+
+  // If they already have a role saved, reuse it
+  if (snap.exists() && snap.data()?.role) {
+    const existingRole = snap.data().role;
+    setLocalRole(existingRole);
+    return existingRole;
+  }
+
+  let role = "student"; // default fallback
+
+  // --- Admin (explicit list ONLY) ---
+  if (ADMIN_EMAILS.includes(email)) {
+    role = "admin";
+  }
+  // --- Staff (district staff) ---
+  else if (email.endsWith(STAFF_DOMAIN)) {
+    role = "staff";
+  }
+  // --- Students ---
+  else if (email.endsWith(STUDENT_DOMAIN)) {
+    role = "student";
+  }
+  // --- Everyone else is blocked ---
+  else {
+    role = "blocked";
+  }
+
+  await setDoc(
+    userRef,
+    {
+      email,
+      role,
+      createdAt: Date.now()
+    },
+    { merge: true }
+  );
+
+  setLocalRole(role);
+  return role;
+}
+
+// Optional helper if you ever need to look up role directly
+export async function getCurrentUserRole() {
+  const user = auth.currentUser;
+  if (!user) return null;
+  const userRef = doc(db, "users", user.uid);
+  const snap = await getDoc(userRef);
+  return snap.exists() ? snap.data().role || null : null;
+}
+
+// -------------------------------------------------------------
+// Require Login on Any Page (now also ensures allowed domain)
 // -------------------------------------------------------------
 
 export function requireLogin(callback) {
@@ -90,7 +174,29 @@ export function requireLogin(callback) {
       window.location.href = "login.html";
       return;
     }
-    callback(user);
+
+    // Check / assign role asynchronously
+    (async () => {
+      try {
+        const role = await ensureUserRole(user);
+
+        if (role === "blocked") {
+          alert(
+            "Sorry, this account is not allowed to use LRC Quest.\n\n" +
+            "Please log in with your SD308 school Google account."
+          );
+          await logOut();
+          return;
+        }
+
+        // callback(user) still works; role is a second (optional) argument
+        callback(user, role);
+      } catch (err) {
+        console.error("Error ensuring user role:", err);
+        // If something goes wrong, at least let them in as basic user
+        callback(user, null);
+      }
+    })();
   });
 }
 
@@ -162,5 +268,6 @@ export async function logOut() {
   localStorage.removeItem("lrcQuestStudent");
   localStorage.removeItem("lrcQuestProgress");
   localStorage.removeItem("lrcQuestTier");
+  localStorage.removeItem("lrcQuestRole");
   window.location.href = "login.html";
 }
