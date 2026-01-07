@@ -53,79 +53,107 @@
   </div>
 
   <!-- Firebase + Core Logic -->
-  <script type="module">
-    import {
-      getAuthInstance,
-      loadOrCreatePlayer,
-      setLocalStudent,
-      setLocalProgress,
-      setLocalTier
-    } from "./scripts/lrcQuestCore.js";
+<script type="module">
+  import {
+    getAuthInstance,
+    loadOrCreatePlayer,
+    setLocalStudent,
+    setLocalProgress,
+    setLocalTier
+  } from "./scripts/lrcQuestCore.js";
 
-    import {
-      GoogleAuthProvider,
-      signInWithPopup
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import {
+    GoogleAuthProvider,
+    signInWithPopup,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    const auth = getAuthInstance();
-    const provider = new GoogleAuthProvider();
+  const auth = getAuthInstance();
+  const provider = new GoogleAuthProvider();
 
-    // Change this if your hub page has a different name
-    const urlParams = new URLSearchParams(window.location.search);
-// If redirected here from another protected page (like /planner/dashboard.html),
-// we’ll send you back there after login.
-const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
+  // Allow redirect back to a protected page after login
+  const urlParams = new URLSearchParams(window.location.search);
+  const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
 
-    const btn = document.getElementById("googleLoginBtn");
-    const statusEl = document.getElementById("status");
+  const btn = document.getElementById("googleLoginBtn");
+  const statusEl = document.getElementById("status");
 
-    btn.addEventListener("click", async () => {
-      statusEl.textContent = "Opening Google sign-in.....";
+  // --- Role & domain helpers (client-side only, for gating login) ---
 
-      try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
+  const ADMIN_EMAILS = [
+    "malbrecht3317@gmail.com",
+    "malbrecht@sd308.org"
+  ];
 
-        const student = {
-          uid: user.uid,
-          fullName: user.displayName || "",
-          email: user.email || ""
-        };
+  function classifyRole(email) {
+    if (!email) return "blocked";
+    const e = email.toLowerCase();
 
-        // Save identity locally (shared for all pages)
-        setLocalStudent(student);
+    if (ADMIN_EMAILS.includes(e)) return "admin";
+    if (e.endsWith("@sd308.org")) return "staff";
+    if (e.endsWith("@students.sd308.org")) return "student";
+    return "blocked";
+  }
 
-        statusEl.textContent = "Loading your progress.....";
+  btn.addEventListener("click", async () => {
+    statusEl.textContent = "Opening Google sign-in...";
 
-        // Load or create the player document (progress + tier)
-        const playerData = await loadOrCreatePlayer(
-          student.uid,
-          student.email,
-          student.fullName
-        );
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      const email = user.email || "";
+      const role = classifyRole(email);
 
-        setLocalProgress(playerData.progress || {});
-        setLocalTier(playerData.subscriptionTier || "free");
-
-        statusEl.textContent = "Heading into the jungle.....";
-
-        const [firstName, ...rest] = (student.fullName || "").split(" ");
-        const lastName = rest.join(" ");
-
-        const params = new URLSearchParams({
-          fn: firstName || "",
-          ln: lastName || "",
-          email: student.email || "",
-          uid: student.uid || ""
-        });
-
-        window.location.href = `${DESTINATION_PAGE}?${params.toString()}`;
-      } catch (err) {
-        console.error(err);
-        statusEl.textContent = "Login failed or was canceled. Try again.";
+      // Block non-district / non-approved accounts
+      if (role === "blocked") {
+        statusEl.textContent =
+          "This Google account is not allowed to use LRC Quest. " +
+          "Please sign in with your SD308 school Google account.";
+        await signOut(auth);
+        return;
       }
-    });
-  </script>
+
+      const student = {
+        uid: user.uid,
+        fullName: user.displayName || "",
+        email: email
+      };
+
+      // Save identity locally (shared for all pages)
+      setLocalStudent(student);
+
+      statusEl.textContent = "Loading your progress...";
+
+      // Load or create the player document (progress + tier)
+      const playerData = await loadOrCreatePlayer(
+        student.uid,
+        student.email,
+        student.fullName
+      );
+
+      setLocalProgress(playerData.progress || {});
+      setLocalTier(playerData.subscriptionTier || "free");
+
+      statusEl.textContent = "Heading into the jungle...";
+
+      const [firstName, ...rest] = (student.fullName || "").split(" ");
+      const lastName = rest.join(" ");
+
+      const params = new URLSearchParams({
+        fn: firstName || "",
+        ln: lastName || "",
+        email: student.email || "",
+        uid: student.uid || ""
+      });
+
+      window.location.href = `${DESTINATION_PAGE}?${params.toString()}`;
+    } catch (err) {
+      console.error(err);
+      statusEl.textContent = "Login failed or was canceled. Try again.";
+    }
+  });
+</script>
+
 
 </body>
 </html>
