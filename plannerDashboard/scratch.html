@@ -2,385 +2,609 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Monarch Voting Practice ❄️</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>PrePostTest20252026 – Post Test</title>
   <style>
-    /* --- Overall page --- */
-    body {
-      margin: 0;
-      font-family: "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
-      background: linear-gradient(135deg, #e0f7fa, #fff3e0);
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-      padding: 20px;
+    :root{
+      --bg:#f6f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280;
+      --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --border:#e5e7eb;
     }
-
-    .wrapper {
-      background: #ffffffee;
-      border-radius: 24px;
-      padding: 20px;
-      max-width: 900px;
-      width: 100%;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-      border: 4px solid #90caf9;
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--ink);
+      display:flex; justify-content:center; padding:24px;
     }
-
-    h1 {
-      text-align: center;
-      font-size: 2rem;
-      margin: 0 0 8px;
+    .wrap{ width:min(960px, 100%); }
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:18px;
+      box-shadow:0 10px 24px rgba(0,0,0,.06);
+      padding:18px;
     }
-
-    .subtitle {
-      text-align: center;
-      font-size: 1.1rem;
-      margin-bottom: 16px;
+    h1{ margin:0 0 6px; font-size:22px; }
+    p{ margin:8px 0; color:var(--muted); line-height:1.35; }
+    .row{ display:flex; gap:12px; flex-wrap:wrap; }
+    .row > *{ flex:1 1 220px; }
+    label{ display:block; font-weight:700; font-size:13px; margin:10px 0 6px; }
+    select, input, textarea{
+      width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border);
+      font-size:14px; outline:none; box-sizing:border-box;
     }
-
-    /* --- Step Navigation / Progress --- */
-    .steps-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
+    textarea{ min-height:110px; resize:vertical; }
+    select:focus, input:focus, textarea:focus{ border-color: var(--accent); box-shadow:0 0 0 3px rgba(37,99,235,.15); }
+    .btns{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; }
+    button{
+      border:0; border-radius:12px; padding:10px 12px; cursor:pointer;
+      font-weight:800; font-size:14px;
     }
-
-    .step-badge {
-      flex: 1;
-      min-width: 100px;
-      background: #e3f2fd;
-      border-radius: 999px;
-      padding: 6px 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border: 2px solid #90caf9;
-      font-size: 0.85rem;
+    .primary{ background:var(--accent); color:#fff; }
+    .ghost{ background:#eef2ff; color:#1e40af; }
+    .ok{ background:var(--ok); color:#fff; }
+    .muted{ background:#f3f4f6; color:#111827; }
+    button:disabled{ opacity:.55; cursor:not-allowed; }
+    .topbar{
+      display:flex; justify-content:space-between; align-items:center; gap:10px;
+      margin-bottom:12px; flex-wrap:wrap;
     }
-
-    .step-circle {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #90caf9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: #0d47a1;
+    .pill{
+      background:#f3f4f6; border:1px solid var(--border); color:#111827;
+      padding:8px 10px; border-radius:999px; font-size:13px;
+      display:inline-flex; gap:8px; align-items:center; flex-wrap:wrap;
     }
-
-    .step-badge.active {
-      background: #bbdefb;
-      border-color: #42a5f5;
-      transform: translateY(-1px);
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    .qbox{ border:1px solid var(--border); border-radius:14px; padding:14px; margin-top:12px; }
+    .qtext{ font-size:18px; font-weight:900; margin:0 0 10px; }
+    .subtext{ font-size:13px; color:var(--muted); margin-top:6px; }
+    .choices{ display:grid; gap:10px; margin-top:8px; }
+    .choice{
+      border:1px solid var(--border); border-radius:14px; padding:12px;
+      display:flex; align-items:center; gap:10px;
+      cursor:pointer; background:#fff;
     }
-
-    .step-badge.done {
-      background: #c8e6c9;
-      border-color: #66bb6a;
+    .choice input{ width:auto; }
+    .choice:hover{ border-color:#c7d2fe; box-shadow:0 0 0 3px rgba(99,102,241,.10); }
+    .feedback{ margin-top:12px; font-weight:900; }
+    .good{ color: var(--ok); }
+    .bad{ color: var(--bad); }
+    .divider{ height:1px; background:var(--border); margin:14px 0; }
+    table{ width:100%; border-collapse:collapse; }
+    th, td{ border-bottom:1px solid var(--border); padding:10px; text-align:left; vertical-align:top; }
+    th{ font-size:13px; color:var(--muted); }
+    .right{ text-align:right; }
+    .warn{
+      background:#fffbeb; border:1px solid #fde68a; color:#92400e;
+      padding:10px 12px; border-radius:14px; margin-top:10px;
+      font-size:13px;
     }
-
-    .step-badge.done .step-circle {
-      background: #66bb6a;
-      color: white;
-    }
-
-    /* --- Step cards --- */
-    .step-card {
-      display: none;
-      background: #f5fbff;
-      border-radius: 18px;
-      padding: 16px;
-      border: 3px solid #bbdefb;
-      margin-bottom: 10px;
-    }
-
-    .step-card.active {
-      display: block;
-      animation: popIn 0.25s ease-out;
-    }
-
-    @keyframes popIn {
-      from {
-        opacity: 0;
-        transform: scale(0.97);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
-    }
-
-    .step-title {
-      font-size: 1.4rem;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .step-instruction {
-      font-size: 1rem;
-      margin-bottom: 10px;
-    }
-
-    /* --- Video container --- */
-    .video-box {
-      position: relative;
-      padding-bottom: 56.25%;
-      height: 0;
-      overflow: hidden;
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
-      background: #000;
-    }
-
-    .video-box iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      border: 0;
-    }
-
-    .next-btn {
-      margin-top: 12px;
-      padding: 10px 18px;
-      font-size: 1rem;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: #42a5f5;
-      color: #0d1b2a;
-      font-weight: bold;
-      box-shadow: 0 3px 0 #1e88e5;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .next-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 1px 0 #1e88e5;
-    }
-
-    .next-btn[disabled] {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: 0 3px 0 #bbdefb;
-    }
-
-    /* --- Voting form --- */
-    #voteFormWrap {
-      margin-top: 10px;
-    }
-
-    #voteFormWrap iframe {
-      width: 100%;
-      max-width: 100%;
-      border: 0;
-    }
-
-    /* --- Work of choice button --- */
-    .work-btn {
-      padding: 14px 24px;
-      font-size: 1.2rem;
-      border-radius: 999px;
-      border: none;
-      cursor: pointer;
-      background: #ef6c00;
-      color: white;
-      font-weight: bold;
-      box-shadow: 0 4px 0 #e65100;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      margin-top: 8px;
-    }
-
-    .work-btn:active {
-      transform: translateY(2px);
-      box-shadow: 0 2px 0 #e65100;
-    }
-
-    .tiny-note {
-      font-size: 0.9rem;
-      margin-top: 6px;
-    }
-
-    @media (max-width: 600px) {
-      .wrapper {
-        padding: 14px;
-        border-width: 3px;
-      }
-      h1 {
-        font-size: 1.8rem;
-      }
-      .step-title {
-        font-size: 1.2rem;
-      }
-    }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
   </style>
 </head>
+
 <body>
-  <div class="wrapper">
-    <h1>Monarch Voting Practice ❄️</h1>
-    <div class="subtitle">
-      Watch both snow stories, vote on the form, then do your work of choice! ⛄📚
+<div class="wrap">
+
+  <!-- SETUP -->
+  <div class="card" id="screen-setup">
+    <h1>PrePostTest20252026 – Post Test</h1>
+    <p>Enter your information, then answer each question. Multiple-choice questions must be correct to move on. Written responses will be saved for your teacher to review.</p>
+
+    <div class="warn">
+      🔊 <strong>Read Aloud:</strong> If audio doesn’t play automatically, click “Test Read Aloud” once. Some browsers require a click first.
     </div>
 
-    <!-- Step progress badges -->
-    <div class="steps-row">
-      <div class="step-badge active" data-step-indicator="1">
-        <div class="step-circle">1</div>
-        Watch <em>The Snow Thief</em>
+    <div class="row">
+      <div>
+        <label for="firstName">First Name *</label>
+        <input id="firstName" autocomplete="off" />
       </div>
-      <div class="step-badge" data-step-indicator="2">
-        <div class="step-circle">2</div>
-        Watch <em>How to Catch a Snowman</em>
+      <div>
+        <label for="lastName">Last Name *</label>
+        <input id="lastName" autocomplete="off" />
       </div>
-      <div class="step-badge" data-step-indicator="3">
-        <div class="step-circle">3</div>
-        Vote on the Form
-      </div>
-      <div class="step-badge" data-step-indicator="4">
-        <div class="step-circle">4</div>
-        Work of Choice
+      <div>
+        <label for="grade">Grade Level *</label>
+        <select id="grade">
+          <option value="">-- Choose --</option>
+          <option value="1st">1st</option>
+          <option value="2nd">2nd</option>
+          <option value="3rd">3rd</option>
+          <option value="4th">4th</option>
+          <option value="5th">5th</option>
+        </select>
       </div>
     </div>
 
-    <!-- STEP 1 -->
-    <section class="step-card active" data-step="1">
-      <div class="step-title">1️⃣ Watch <em>The Snow Thief</em></div>
-      <div class="step-instruction">
-        Find a comfy spot! 🛋️<br />
-        Press the ▶️ button and watch the first snow story.
+    <div class="row">
+      <div>
+        <label for="voiceRate">Voice Speed</label>
+        <select id="voiceRate">
+          <option value="0.85">Slow</option>
+          <option value="0.95" selected>Normal</option>
+          <option value="1.1">Fast</option>
+        </select>
       </div>
-      <div class="video-box">
-        <!-- The Snow Thief (SafeShare) -->
-        <iframe
-          src="https://safeshare.tv/x/ss695eab9d51dc5"
-          title="The Snow Thief"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
+      <div>
+        <label for="autoRead">Auto Read Each Question</label>
+        <select id="autoRead">
+          <option value="yes" selected>Yes</option>
+          <option value="no">No</option>
+        </select>
       </div>
-      <button class="next-btn" onclick="goToStep(2)">
-        I'm done! Next story 👉
-      </button>
-    </section>
+    </div>
 
-    <!-- STEP 2 -->
-    <section class="step-card" data-step="2">
-      <div class="step-title">2️⃣ Watch <em>How to Catch a Snowman</em></div>
-      <div class="step-instruction">
-        Great job! 🌟 Now watch the second snow story.<br />
-        Think: which one did you like better?
-      </div>
-      <div class="video-box">
-        <!-- How to Catch a Snowman (SafeShare) -->
-        <iframe
-          src="https://safeshare.tv/my/safeviews/ss695eaa9680dc7/play"
-          title="How to Catch a Snowman"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowfullscreen
-        ></iframe>
-      </div>
-      <button class="next-btn" onclick="goToStep(3)">
-        All done! Time to vote 🗳️
-      </button>
-    </section>
+    <div class="btns">
+      <button class="ghost" id="btn-test-voice">🔊 Test Read Aloud</button>
+      <button class="primary" id="btn-start">Start</button>
+      <button class="muted" id="btn-clear">Clear Saved Session</button>
+    </div>
 
-    <!-- STEP 3 -->
-    <section class="step-card" data-step="3">
-      <div class="step-title">3️⃣ Monarch Practice Voting</div>
-
-      <div class="step-instruction">
-        Now it’s time to vote! 🗳️<br />
-        Listen carefully, think, and choose your favorite story on the form.
-      </div>
-
-      <div id="voteFormWrap">
-        <iframe
-          src="https://docs.google.com/forms/d/e/1FAIpQLSfw2JtcFUqQKCzA7q5cRzcXEUpf6Q0lBBlm1SRo2DONexenpw/viewform?embedded=true"
-          width="640"
-          height="657"
-          frameborder="0"
-          marginheight="0"
-          marginwidth="0"
-        >
-          Loading…
-        </iframe>
-      </div>
-
-      <button class="next-btn" onclick="goToStep(4)">
-        I'm finished! 👉
-      </button>
-    </section>
-
-    <!-- STEP 4 -->
-    <section class="step-card" data-step="4">
-      <div class="step-title">4️⃣ Work of Choice Time!</div>
-      <div class="step-instruction">
-        Now it’s your turn to think and create. 💡<br />
-        Click the big orange button to go to your special work.
-      </div>
-
-      <!-- Works of choice page -->
-      <a
-        href="https://www.lrcquest.org/worksOfChoice/jungleGames12/gameHub12Jungle.html"
-        class="work-btn"
-        id="workButton"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        ✏️ Go to my Work of Choice!
-      </a>
-
-      <div class="tiny-note">
-        <strong>Teacher tip:</strong> Students can move on when you give the signal.
-      </div>
-    </section>
+    <p class="subtext">Teacher note: results save to Google Sheets at the end (and also locally in this browser while the test is in progress).</p>
   </div>
 
-  <script>
-    let currentStep = 1;
+  <!-- QUIZ -->
+  <div class="card" id="screen-quiz" style="display:none;">
+    <div class="topbar">
+      <div class="pill" id="pill-student"></div>
+      <div class="pill">
+        <span><strong>Question:</strong> <span id="qNum"></span>/<span id="qTotal"></span></span>
+        <span>•</span>
+        <span><strong>Attempts (this Q):</strong> <span id="qAttempts">1</span></span>
+      </div>
+    </div>
 
-    function updateStepIndicators() {
-      const indicators = document.querySelectorAll("[data-step-indicator]");
-      indicators.forEach((el) => {
-        const stepNumber = Number(el.getAttribute("data-step-indicator"));
-        el.classList.remove("active", "done");
-        if (stepNumber < currentStep) {
-          el.classList.add("done");
-        } else if (stepNumber === currentStep) {
-          el.classList.add("active");
-        }
+    <div class="qbox">
+      <div class="qtext" id="qText"></div>
+
+      <div class="btns" style="margin-top:0;">
+        <button class="ghost" id="btn-read">🔊 Read Again</button>
+        <button class="muted" id="btn-stop">⏹ Stop Voice</button>
+      </div>
+
+      <!-- Multiple choice area -->
+      <div id="mc-area" style="display:none;">
+        <div class="choices" id="choices"></div>
+      </div>
+
+      <!-- Written response area -->
+      <div id="wr-area" style="display:none;">
+        <label for="writtenAnswer" style="margin-top:12px;">Type your answer *</label>
+        <textarea id="writtenAnswer" placeholder="Write your answer here..."></textarea>
+        <div class="subtext">This question will be saved for your teacher to review.</div>
+      </div>
+
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="subtext" id="hint"></div>
+
+      <div class="divider"></div>
+
+      <div class="btns">
+        <button class="primary" id="btn-submit" disabled>Check / Save</button>
+        <button class="ok" id="btn-next" style="display:none;">Next Question →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="card" id="screen-results" style="display:none;">
+    <h1>Finished 🎉</h1>
+    <p id="results-summary"></p>
+
+    <div class="divider"></div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Question</th>
+          <th>Student Answer</th>
+          <th>Correct Answer</th>
+          <th class="right">Attempts</th>
+        </tr>
+      </thead>
+      <tbody id="results-table"></tbody>
+    </table>
+
+    <div class="btns">
+      <button class="muted" id="btn-restart">Restart</button>
+    </div>
+
+    <p class="subtext mono" id="session-id"></p>
+    <p class="subtext" id="save-status"></p>
+  </div>
+
+</div>
+
+<script>
+/* ============================
+   GOOGLE SHEETS WEB APP URL
+   ============================ */
+const SHEETS_WEBAPP_URL = "https://script.google.com/macros/s/AKfycb1234567890abcdef/exec";
+
+/* ============================
+   QUESTIONS (from your form)
+   type: "mc" or "wr"
+   For "mc", answer must match a choice EXACTLY.
+   For "wr", we store the text response (no auto-grading).
+   ============================ */
+const QUESTIONS = [
+  { id:"q1",  type:"mc", text:"Which genre has a Red sticker in our library?", choices:["Mystery 🕵️‍♀️","Fantasy 🧙‍♂️","Sports","Horror 👻"], answer:"Fantasy 🧙‍♂️" },
+  { id:"q2",  type:"mc", text:"Which genre uses the Purple sticker?", choices:["Realistic Fiction 👦","Mystery 🕵️‍♀️","Science Fiction 🚀","Picture Books 📖"], answer:"Mystery 🕵️‍♀️" },
+  { id:"q3",  type:"mc", text:"Which genre has the Blue sticker?", choices:["Realistic Fiction 👦","Science Fiction 🚀","Nonfiction 📘","Animals 🦁"], answer:"Realistic Fiction 👦" },
+  { id:"q4",  type:"mc", text:"Which genre is marked with Neon Green?", choices:["Picture Books 📖","Fantasy 🧙‍♂️","Horror 👻","Sports 🏀"], answer:"Picture Books 📖" },
+  { id:"q5",  type:"mc", text:"Sports books are which color in our library?", choices:["Orange","White","Black","Blue"], answer:"Orange" },
+  { id:"q6",  type:"mc", text:"Which genre is Black in our library?", choices:["Horror 👻","Fantasy 🧙‍♂️","Nonfiction 📘","Realistic Fiction 👦"], answer:"Horror 👻" },
+  { id:"q7",  type:"mc", text:"Animals books are which color?", choices:["Brown","Red","Green","White"], answer:"Brown" },
+  { id:"q8",  type:"mc", text:"Which genre is White in our library?", choices:["Nonfiction 📘","Fantasy 🧙‍♂️","Mystery 🕵️‍♀️","Animals 🦁"], answer:"Nonfiction 📘" },
+  { id:"q9",  type:"mc", text:"Diary of a Wimpy Kid belongs to which genre? (Hint: everyday life)", choices:["Realistic Fiction 👦","Fantasy 🧙‍♂️","Mystery 🕵️‍♀️","Sports 🏀"], answer:"Realistic Fiction 👦" },
+  { id:"q10", type:"mc", text:"A book about planets and the solar system is most likely…", choices:["Nonfiction 📘","Fantasy 🧙‍♂️","Mystery 🕵️‍♀️","Animals 🦁"], answer:"Nonfiction 📘" },
+  { id:"q11", type:"mc", text:"\"Who Would Win? Shark vs Crocodile\" is which genre?", choices:["Nonfiction 📘","Horror 👻","Fantasy 🧙‍♂️","Sports 🏀"], answer:"Nonfiction 📘" },
+  { id:"q12", type:"mc", text:"Goosebumps belongs to which genre?", choices:["Horror 👻","Fantasy 🧙‍♂️","Realistic Fiction 👦","Mystery 🕵️‍♀️"], answer:"Horror 👻" },
+  { id:"q13", type:"mc", text:"Magic Tree House belongs to which genre?", choices:["Fantasy 🧙‍♂️","Nonfiction 📘","Mystery 🕵️‍♀️","Animals 🦁"], answer:"Fantasy 🧙‍♂️" },
+  { id:"q14", type:"mc", text:"If you want to find all the Mystery books in the library, which tool should you use?", choices:["IXL","Destiny Discover","Classlink","Google Classroom"], answer:"Destiny Discover" },
+  { id:"q15", type:"mc", text:"If you type “dinosaurs” in Destiny Discover, what will happen?", choices:["Only dinosaur movies appear","You see a list of books and resources about dinosaurs","You get an error message","It takes you to Google"], answer:"You see a list of books and resources about dinosaurs" },
+  { id:"q16", type:"mc", text:"Where do you look to see if a book is checked in or out in Destiny Discover?", choices:["In the search bar","On the book picture","On the library shelf","By asking another student"], answer:"On the book picture" },
+  { id:"q17", type:"mc", text:"Which of these can Destiny Discover NOT do?", choices:["Tell you if a book is available","Let you write a review","Let you search by title","Let you search by author"], answer:"Let you write a review" },
+  { id:"q18", type:"wr", text:"What is a genre? (Use your own words)" },
+  { id:"q19", type:"wr", text:"Explain one way a Fantasy book is different from a Realistic Fiction book." },
+  { id:"q20", type:"wr", text:"Explain one way a Historical Fiction book is different from a Realistic Fiction book." }
+];
+
+/* ============================
+   Local session storage
+   ============================ */
+const STORAGE_KEY = "prepost_20252026_posttest_session_v2";
+
+/* UI */
+const setupScreen = document.getElementById("screen-setup");
+const quizScreen = document.getElementById("screen-quiz");
+const resultsScreen = document.getElementById("screen-results");
+
+const firstNameEl = document.getElementById("firstName");
+const lastNameEl = document.getElementById("lastName");
+const gradeEl = document.getElementById("grade");
+const voiceRateEl = document.getElementById("voiceRate");
+const autoReadEl = document.getElementById("autoRead");
+
+const btnTestVoice = document.getElementById("btn-test-voice");
+const btnStart = document.getElementById("btn-start");
+const btnClear = document.getElementById("btn-clear");
+
+const pillStudent = document.getElementById("pill-student");
+const qNumEl = document.getElementById("qNum");
+const qTotalEl = document.getElementById("qTotal");
+const qAttemptsEl = document.getElementById("qAttempts");
+const qTextEl = document.getElementById("qText");
+const feedbackEl = document.getElementById("feedback");
+const hintEl = document.getElementById("hint");
+const btnRead = document.getElementById("btn-read");
+const btnStop = document.getElementById("btn-stop");
+const btnSubmit = document.getElementById("btn-submit");
+const btnNext = document.getElementById("btn-next");
+
+const mcArea = document.getElementById("mc-area");
+const choicesEl = document.getElementById("choices");
+const wrArea = document.getElementById("wr-area");
+const writtenAnswerEl = document.getElementById("writtenAnswer");
+
+const resultsSummary = document.getElementById("results-summary");
+const resultsTable = document.getElementById("results-table");
+const btnRestart = document.getElementById("btn-restart");
+const sessionIdEl = document.getElementById("session-id");
+const saveStatusEl = document.getElementById("save-status");
+
+/* Session state */
+let session = null;
+let selectedChoice = null;
+
+/* Speech */
+function stopSpeech(){ try{ speechSynthesis.cancel(); }catch(e){} }
+function speak(text){
+  stopSpeech();
+  const msg = new SpeechSynthesisUtterance(text);
+  msg.rate = Number(voiceRateEl.value || 0.95);
+  msg.pitch = 1; msg.volume = 1;
+  speechSynthesis.speak(msg);
+}
+function speakQuestion(q){
+  const parts = [];
+  parts.push(`Question ${session.index + 1}. ${q.text}`);
+  if(q.type === "mc"){
+    parts.push("Choices are:");
+    q.choices.forEach((c,i)=> parts.push(`${i+1}. ${String(c)}`));
+  } else {
+    parts.push("Type your answer.");
+  }
+  speak(parts.join(" "));
+}
+
+/* Helpers */
+function showScreen(which){
+  setupScreen.style.display = which==="setup" ? "block" : "none";
+  quizScreen.style.display  = which==="quiz"  ? "block" : "none";
+  resultsScreen.style.display = which==="results" ? "block" : "none";
+}
+function saveSession(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(session)); }
+function loadSession(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return null;
+  try { return JSON.parse(raw); } catch(e){ return null; }
+}
+function clearSession(){ localStorage.removeItem(STORAGE_KEY); }
+
+function newSession(firstName,lastName,grade){
+  const sid = "PT-" + Date.now().toString(36).toUpperCase();
+  return {
+    sessionId: sid,
+    startedAt: new Date().toISOString(),
+    finishedAt: null,
+    firstName, lastName, grade,
+    index: 0,
+    attempts: Object.fromEntries(QUESTIONS.map(q => [q.id, 0])),
+    correctAtAttempt: Object.fromEntries(QUESTIONS.map(q => [q.id, null])),
+    studentAnswer: Object.fromEntries(QUESTIONS.map(q => [q.id, ""])), // for mc store chosen; for wr store text
+  };
+}
+
+/* Render */
+function renderQuestion(){
+  const q = QUESTIONS[session.index];
+  selectedChoice = null;
+
+  qTotalEl.textContent = QUESTIONS.length;
+  qNumEl.textContent = session.index + 1;
+
+  const currentAttempts = session.attempts[q.id];
+  qAttemptsEl.textContent = Math.max(1, currentAttempts + 1);
+
+  qTextEl.textContent = q.text;
+  feedbackEl.textContent = "";
+  feedbackEl.className = "feedback";
+  btnNext.style.display = "none";
+  btnSubmit.style.display = "inline-block";
+  btnSubmit.disabled = true;
+
+  pillStudent.innerHTML =
+    `👤 <strong>${escapeHtml(session.firstName)} ${escapeHtml(session.lastName)}</strong> • 🎓 <strong>${escapeHtml(session.grade)}</strong>`;
+
+  if(q.type === "mc"){
+    mcArea.style.display = "block";
+    wrArea.style.display = "none";
+    choicesEl.innerHTML = "";
+    hintEl.textContent = "Pick an answer, then click “Check / Save.”";
+
+    q.choices.forEach((choice, i) => {
+      const row = document.createElement("label");
+      row.className = "choice";
+      row.innerHTML = `
+        <input type="radio" name="choice" />
+        <div><strong>${String.fromCharCode(65+i)}.</strong> ${escapeHtml(choice)}</div>
+      `;
+      row.addEventListener("click", () => {
+        selectedChoice = choice;
+        btnSubmit.disabled = false;
+        const radio = row.querySelector("input");
+        if(radio) radio.checked = true;
       });
+      choicesEl.appendChild(row);
+    });
+
+  } else {
+    mcArea.style.display = "none";
+    wrArea.style.display = "block";
+    writtenAnswerEl.value = session.studentAnswer[q.id] || "";
+    hintEl.textContent = "Type your answer, then click “Check / Save.”";
+    btnSubmit.disabled = (writtenAnswerEl.value.trim().length === 0);
+
+    writtenAnswerEl.oninput = () => {
+      btnSubmit.disabled = (writtenAnswerEl.value.trim().length === 0);
+    };
+  }
+
+  saveSession();
+  if(autoReadEl.value === "yes") speakQuestion(q);
+}
+
+/* Checking / saving answer */
+function checkOrSave(){
+  const q = QUESTIONS[session.index];
+
+  session.attempts[q.id] += 1;
+
+  if(q.type === "mc"){
+    session.studentAnswer[q.id] = selectedChoice || "";
+
+    const isCorrect = (selectedChoice === q.answer);
+    if(isCorrect){
+      if(session.correctAtAttempt[q.id] == null) session.correctAtAttempt[q.id] = session.attempts[q.id];
+      feedbackEl.textContent = "✅ Correct!";
+      feedbackEl.className = "feedback good";
+      hintEl.textContent = "Click Next Question.";
+      btnNext.style.display = "inline-block";
+      btnSubmit.style.display = "none";
+      stopSpeech();
+    } else {
+      feedbackEl.textContent = "❌ Not yet — try again.";
+      feedbackEl.className = "feedback bad";
+      hintEl.textContent = "Listen again, then choose a different answer.";
+      qAttemptsEl.textContent = session.attempts[q.id] + 1;
+      speak("Not yet. Try again. " + q.text);
     }
 
-    function showStep(stepNumber) {
-      const cards = document.querySelectorAll(".step-card");
-      cards.forEach((card) => {
-        const s = Number(card.getAttribute("data-step"));
-        card.classList.toggle("active", s === stepNumber);
-      });
+  } else {
+    // Written response: save text, allow next
+    const text = writtenAnswerEl.value.trim();
+    if(!text){
+      btnSubmit.disabled = true;
+      return;
     }
+    session.studentAnswer[q.id] = text;
+    // written questions are “complete” immediately; no correct/incorrect
+    session.correctAtAttempt[q.id] = session.attempts[q.id];
+    feedbackEl.textContent = "✅ Saved!";
+    feedbackEl.className = "feedback good";
+    hintEl.textContent = "Click Next Question.";
+    btnNext.style.display = "inline-block";
+    btnSubmit.style.display = "none";
+    stopSpeech();
+  }
 
-    function goToStep(stepNumber) {
-      currentStep = stepNumber;
-      showStep(currentStep);
-      updateStepIndicators();
+  saveSession();
+}
+
+function nextQuestion(){
+  session.index += 1;
+  if(session.index >= QUESTIONS.length){
+    finishQuiz();
+  } else {
+    renderQuestion();
+  }
+}
+
+/* Finish + send to Google Sheets */
+async function sendResultsToGoogleSheet(){
+  const total = QUESTIONS.length;
+  const mcQs = QUESTIONS.filter(q => q.type === "mc");
+  const wrQs = QUESTIONS.filter(q => q.type === "wr");
+
+  const attemptNums = QUESTIONS.map(q => session.correctAtAttempt[q.id] ?? session.attempts[q.id] ?? 0);
+  const avg = attemptNums.reduce((a,b)=>a+b,0) / Math.max(1, attemptNums.length);
+
+  const details = {
+    perQuestion: QUESTIONS.map((q, i) => ({
+      n: i+1,
+      id: q.id,
+      type: q.type,
+      text: q.text,
+      choices: q.choices || [],
+      correctAnswer: q.type === "mc" ? q.answer : "",
+      studentAnswer: session.studentAnswer[q.id] || "",
+      attempts: (session.correctAtAttempt[q.id] ?? session.attempts[q.id] ?? 0)
+    }))
+  };
+
+  const payload = new URLSearchParams({
+    sessionId: session.sessionId,
+    firstName: session.firstName,
+    lastName: session.lastName,
+    grade: session.grade,
+    startedAt: session.startedAt,
+    finishedAt: session.finishedAt,
+    avgAttempts: avg.toFixed(2),
+    totalQuestions: String(total),
+    totalMC: String(mcQs.length),
+    totalWritten: String(wrQs.length),
+    detailsJson: JSON.stringify(details)
+  });
+
+  // no-cors avoids preflight/CORS issues commonly seen with Apps Script web apps
+  await fetch(SHEETS_WEBAPP_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+    body: payload.toString()
+  });
+}
+
+function finishQuiz(){
+  session.finishedAt = new Date().toISOString();
+  saveSession();
+  stopSpeech();
+  renderResults();
+  showScreen("results");
+
+  saveStatusEl.textContent = "Saving results to Google Sheets…";
+  sendResultsToGoogleSheet()
+    .then(()=> saveStatusEl.textContent = "✅ Saved to Google Sheets (if your web app is deployed correctly).")
+    .catch(()=> saveStatusEl.textContent = "⚠️ Could not confirm save (check your web app URL + deployment access).");
+}
+
+function renderResults(){
+  const total = QUESTIONS.length;
+  const attemptNums = QUESTIONS.map(q => session.correctAtAttempt[q.id] ?? session.attempts[q.id] ?? 0);
+  const avg = attemptNums.reduce((a,b)=>a+b,0) / Math.max(1, attemptNums.length);
+
+  resultsSummary.textContent =
+    `${session.firstName} ${session.lastName} (${session.grade}) finished ${total} questions. Average attempts per question: ${avg.toFixed(2)}.`;
+
+  resultsTable.innerHTML = "";
+  QUESTIONS.forEach((q, idx) => {
+    const tr = document.createElement("tr");
+    const atts = session.correctAtAttempt[q.id] ?? session.attempts[q.id];
+    const studentAns = session.studentAnswer[q.id] || "";
+    tr.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${escapeHtml(q.text)}</td>
+      <td>${escapeHtml(studentAns)}</td>
+      <td>${q.type==="mc" ? escapeHtml(q.answer) : "<span class='mono' style='color:#6b7280'>(teacher review)</span>"}</td>
+      <td class="right"><strong>${atts}</strong></td>
+    `;
+    resultsTable.appendChild(tr);
+  });
+
+  sessionIdEl.textContent = `Session ID: ${session.sessionId} • Started: ${formatTime(session.startedAt)} • Finished: ${formatTime(session.finishedAt)}`;
+}
+
+/* Events */
+btnTestVoice.addEventListener("click", () => speak("Read aloud is working. You can begin the post test."));
+btnStart.addEventListener("click", () => {
+  const fn = firstNameEl.value.trim();
+  const ln = lastNameEl.value.trim();
+  const gr = gradeEl.value.trim();
+
+  if(!fn || !ln || !gr){
+    alert("Please fill out First Name, Last Name, and Grade Level.");
+    return;
+  }
+  session = newSession(fn, ln, gr);
+  saveSession();
+  showScreen("quiz");
+  renderQuestion();
+});
+btnClear.addEventListener("click", () => { clearSession(); stopSpeech(); alert("Saved session cleared on this device."); });
+
+btnRead.addEventListener("click", () => speakQuestion(QUESTIONS[session.index]));
+btnStop.addEventListener("click", () => stopSpeech());
+btnSubmit.addEventListener("click", () => checkOrSave());
+btnNext.addEventListener("click", () => nextQuestion());
+
+btnRestart.addEventListener("click", () => {
+  clearSession();
+  stopSpeech();
+  session = null;
+  showScreen("setup");
+});
+
+/* Init */
+(function init(){
+  qTotalEl.textContent = QUESTIONS.length;
+
+  const loaded = loadSession();
+  if(loaded && loaded.finishedAt == null){
+    firstNameEl.value = loaded.firstName || "";
+    lastNameEl.value = loaded.lastName || "";
+    gradeEl.value = loaded.grade || "";
+    const resume = confirm(`It looks like ${loaded.firstName} ${loaded.lastName} has an unfinished test on this device. Resume?`);
+    if(resume){
+      session = loaded;
+      showScreen("quiz");
+      renderQuestion();
+    } else {
+      clearSession();
     }
-  </script>
+  }
+})();
+
+/* Utilities */
+function escapeHtml(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+function formatTime(iso){
+  if(!iso) return "";
+  try{ return new Date(iso).toLocaleString(); }catch(e){ return iso; }
+}
+</script>
 </body>
 </html>
