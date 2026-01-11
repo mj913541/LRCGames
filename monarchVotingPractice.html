@@ -231,6 +231,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="wrapper">
     <h1>Monarch Voting Practice ❄️</h1>
@@ -265,15 +266,16 @@
         Find a comfy spot! 🛋️<br />
         Press the ▶️ button and watch the first snow story.
       </div>
+
       <div class="video-box">
-        <!-- The Snow Thief (SafeShare) -->
         <iframe
-          src="https://safeshare.tv/x/ss695eab9d51dc5"
+          src="https://www.youtube.com/embed/gREVMxvgkS8"
           title="The Snow Thief"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowfullscreen
         ></iframe>
       </div>
+
       <button class="next-btn" onclick="goToStep(2)">
         I'm done! Next story 👉
       </button>
@@ -286,15 +288,16 @@
         Great job! 🌟 Now watch the second snow story.<br />
         Think: which one did you like better?
       </div>
+
       <div class="video-box">
-        <!-- How to Catch a Snowman (SafeShare) -->
         <iframe
-          src="https://safeshare.tv/my/safeviews/ss695eaa9680dc7/play"
+          src="https://www.youtube.com/embed/Xtd-mTRcu7U"
           title="How to Catch a Snowman"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowfullscreen
         ></iframe>
       </div>
+
       <button class="next-btn" onclick="goToStep(3)">
         All done! Time to vote 🗳️
       </button>
@@ -335,7 +338,6 @@
         Click the big orange button to go to your special work.
       </div>
 
-      <!-- Works of choice page -->
       <a
         href="https://www.lrcquest.org/worksOfChoice/jungleGames12/gameHub12Jungle.html"
         class="work-btn"
@@ -360,6 +362,7 @@
       indicators.forEach((el) => {
         const stepNumber = Number(el.getAttribute("data-step-indicator"));
         el.classList.remove("active", "done");
+
         if (stepNumber < currentStep) {
           el.classList.add("done");
         } else if (stepNumber === currentStep) {
