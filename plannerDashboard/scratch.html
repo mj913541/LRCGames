@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title> BBB PrePostTest20252026 – Post Test (MC + Read Aloud + Retries)</title>
-  <style>
+  <title> Genre Exercise 2026</title>
+<style>
     :root{
       --bg:#f6f7fb; --card:#fff; --ink:#1f2937; --muted:#6b7280;
       --accent:#2563eb; --ok:#16a34a; --bad:#dc2626; --border:#e5e7eb;
@@ -112,7 +112,7 @@
 
   <!-- SETUP -->
   <div class="card" id="screen-setup">
-    <h1>Post Test</h1>
+    <h1>Genres</h1>
     <p>Type your <strong>first name + last initial</strong>, choose your teacher, then begin. Questions will read aloud. If you get one wrong, you’ll try again until it’s correct.</p>
 
     <div class="warn">
@@ -122,13 +122,12 @@
     <div style="margin-top:12px;">
       <label for="studentName">First Name + Last Initial *</label>
       <input id="studentName" placeholder="Example: Mindy A" autocomplete="off" />
-      <div class="subtext">Please do not type your full last name.</div>
     </div>
 
     <div style="margin-top:10px;">
       <label>Choose Your Teacher *</label>
       <div class="teacherGrid" id="teacherGrid"></div>
-      <div class="subtext" id="teacherHint">Click a teacher picture to select.</div>
+      <div class="subtext" id="teacherHint">Click your teacher picture to select.</div>
     </div>
 
     <div class="btns">
@@ -217,7 +216,7 @@ const QUESTIONS = [
   { id:"q10", text:"A book about planets and the solar system is most likely…", choices:["Nonfiction 📘","Fantasy 🧙‍♂️","Mystery 🕵️‍♀️","Animals 🦁"], answer:"Nonfiction 📘" },
   { id:"q11", text:"\"Who Would Win? Shark vs Crocodile\" is which genre?", choices:["Nonfiction 📘","Horror 👻","Fantasy 🧙‍♂️","Sports 🏀"], answer:"Nonfiction 📘" },
   { id:"q12", text:"Goosebumps belongs to which genre?", choices:["Horror 👻","Fantasy 🧙‍♂️","Realistic Fiction 👦","Mystery 🕵️‍♀️"], answer:"Horror 👻" },
-  { id:"q13", text:"Magic Tree House belongs to which genre?", choices:["Fantasy 🧙‍♂️","Nonfiction 📘","Mystery 🕵️‍♀️","Animals 🦁"], answer:"Fantasy 🧙‍♂️" },
+  { id:"q13", text:"Magic Tree House belongs to which genre?", choices:["Fantasy 🧙‍♂️","Nonfiction 📘","Mystery 🕵️‍♀️","Animals 🦁"], answer:"Mystery 🕵️‍♀️" },
   { id:"q14", text:"If you want to find all the Mystery books in the library, which tool should you use?", choices:["IXL","Destiny Discover","Classlink","Google Classroom"], answer:"Destiny Discover" },
   { id:"q15", text:"If you type “dinosaurs” in Destiny Discover, what will happen?", choices:["Only dinosaur movies appear","You see a list of books and resources about dinosaurs","You get an error message","It takes you to Google"], answer:"You see a list of books and resources about dinosaurs" },
   { id:"q16", text:"Where do you look to see if a book is checked in or out in Destiny Discover?", choices:["In the search bar","On the book picture","On the library shelf","By asking another student"], answer:"On the book picture" },
