@@ -115,6 +115,21 @@
       border:0;
       display:block;
     }
+    .embed-thumb{
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.embed-thumb iframe{
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
 
     /* Falling snow animation (emoji-based) */
     .snow{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
@@ -142,7 +157,7 @@
     <header>
       <div>
         <h1>❄️ January Choice Board</h1>
-        <div class="subtitle">Pick 1 adventure this month! Check it off when finished.</div>
+
       </div>
       <div class="bar">
         <div class="progress">
@@ -170,8 +185,8 @@
 
       <!-- 2) Create a train scene -->
       <article class="card" data-id="train">
-        <a class="hit" href="./januaryTrainScene.html">
-          <img class="thumb" src="./januaryPictures/januaryTrainScene.png" alt="Train scene creation">
+        <a class="hit" href="https://classroom.google.com/c/Nzc0MjExNzg1NzY2/a/ODM5MTc1Nzc3NzAz/details">
+          <img class="thumb" src="./januaryPictures/recreateTrainScene.jpg" alt="Train scene creation">
           <div class="body">
             <div class="tag">Design</div>
             <h3>Create a Train Scene</h3>
@@ -183,8 +198,16 @@
 
       <!-- 3) Snow globe animation -->
       <article class="card" data-id="snowglobe">
-        <a class="hit" href="./januarySnowGlobeAnimation.html">
-          <img class="thumb" src="./januaryPictures/januarySnowGlobe.png" alt="Snow globe animation">
+        <a class="hit" href="https://classroom.google.com/c/Nzc0MjExNzg1NzY2/a/ODM5MTgxNTk4NzA0/details">
+<div class="thumb embed-thumb">
+  <iframe 
+    src="https://docs.google.com/presentation/d/e/2PACX-1vSEHUbYnXNNBTecyyLzOKKRA4ZZRD9tZphvaYdyO50JUzHUaQ2QoffINjOwmUT_CxxqE08YMBkTyCpi/pub?start=true&loop=true&delayms=1000&slide=id.g262c5fe598a_0_73"
+    loading="lazy"
+    allowfullscreen
+    referrerpolicy="no-referrer-when-downgrade">
+  </iframe>
+</div>
+
           <div class="body">
             <div class="tag">Animation</div>
             <h3>Build a Snow Globe Animation</h3>
@@ -211,13 +234,11 @@
     <!-- NOVEMBER SHOWCASE SECTION -->
     <section class="showcase">
       <h2>🍁 November Choice Board Showcase</h2>
-      <p>Use this space to celebrate student work! Paste your Google Slides “Publish to web” embed iframe below.</p>
-
       <div class="embedWrap">
         <!-- Replace this iframe with your published Slides embed code -->
         <iframe
           src="about:blank"
-          title="November Choice Board Showcase (Embedded Slides)"
+          title="November Choice Board Showcase"
           loading="lazy"
           referrerpolicy="no-referrer-when-downgrade"
           allowfullscreen>
