@@ -3,7 +3,8 @@
    - Update ENDPOINT if needed.
 */
 
-const ENDPOINT = "https://script.google.com/macros/s/AKfycbzYb0s4THN4hcBm7X9hDeIKRToDSuQWbxRje-wVwiR9f38KJ0X8l82Aa0hw-LO8OsO3cQ/exec";
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbxfXsNv5eOMbcO-3Lrk0H0ZLZ2MWd67yVHW1ITwyHl_XqxEyQZoiXW_15pMkqTq8VZf5Q/exec";
+
 
 const form = document.getElementById("survey");
 const msg = document.getElementById("msg");
