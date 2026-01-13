@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>📚 Read-A-Thon Survey</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#111a2e; --ink:#eaf0ff; --muted:#b8c3e6;
+      --accent:#6ee7ff; --border:rgba(255,255,255,.12);
+    }
+    body{
+      margin:0; font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background: radial-gradient(900px 500px at 20% 10%, rgba(110,231,255,.18), transparent 60%),
+                  radial-gradient(900px 500px at 90% 30%, rgba(167,139,250,.16), transparent 60%),
+                  var(--bg);
+      padding: 22px;
+      display:flex; justify-content:center;
+    }
+    .wrap{ width:min(980px, 100%); }
+    .card{
+      background: rgba(17,26,46,.86);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    }
+    h1{ margin:0 0 8px; font-size: clamp(1.4rem, 3vw, 2rem); }
+    .sub{ margin:0 0 14px; color:var(--muted); line-height:1.4; }
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 720px){ .grid{ grid-template-columns: 1fr; } }
+    label{ display:block; font-weight:700; margin:10px 0 6px; }
+    select, input[type="text"], textarea{
+      width:100%; box-sizing:border-box;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--ink);
+      outline:none;
+    }
+    textarea{ min-height: 90px; resize: vertical; }
+    .checks{ display:flex; flex-wrap:wrap; gap:10px; }
+    .checks label{ font-weight:600; margin:0; display:flex; gap:8px; align-items:center; }
+    .hr{ height:1px; background: var(--border); margin: 14px 0; }
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    button{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.06);
+      color:var(--ink);
+      padding:10px 14px;
+      border-radius:14px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    button.primary{ border-color: rgba(110,231,255,.35); background: rgba(110,231,255,.16); }
+    .msg{ margin-top:10px; color:var(--muted); }
+    .ok{ color:#7dffb6; }
+    .bad{ color:#ff8b8b; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>📚 Read-A-Thon Ideas Survey</h1>
+      <p class="sub">Earn everything with <b>reading minutes</b> only. No real money. Be honest — we’re designing this for YOU!</p>
+
+      <!-- IMPORTANT: paste your Apps Script Web App URL here -->
+      <script>
+        const ENDPOINT = "PASTE_YOUR_WEB_APP_URL_HERE";
+      </script>
+
+      <form id="survey">
+
+        <div class="grid">
+          <div>
+            <label>What grade are you in?</label>
+            <select name="grade" required>
+              <option value="">Choose…</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </div>
+
+          <div>
+            <label>What should our currency be called?</label>
+            <input type="text" name="currencyName" placeholder="Book Bucks, Page Points, Story Tokens..." />
+          </div>
+        </div>
+
+        <label>How should you earn currency? (pick all that you like)</label>
+        <div class="checks" data-group="earningMethods">
+          <label><input type="checkbox" value="Minutes read"> Minutes read</label>
+          <label><input type="checkbox" value="Books finished"> Books finished</label>
+          <label><input type="checkbox" value="Reading every day"> Reading every day</label>
+          <label><input type="checkbox" value="Sharing about a book"> Sharing about a book</label>
+          <label><input type="checkbox" value="Harder/longer books"> Harder/longer books</label>
+        </div>
+
+        <label>How often should the “store” be open?</label>
+        <select name="spendFrequency">
+          <option value="">Choose…</option>
+          <option>Anytime</option>
+          <option>Once a week</option>
+          <option>At the end only</option>
+          <option>Special store days</option>
+        </select>
+
+        <div class="hr"></div>
+
+        <label>What types of avatars do you want? (pick all)</label>
+        <div class="checks" data-group="avatarTypes">
+          <label><input type="checkbox" value="Animals"> Animals</label>
+          <label><input type="checkbox" value="Fantasy (dragons, wizards)"> Fantasy</label>
+          <label><input type="checkbox" value="Explorers/adventurers"> Explorers</label>
+          <label><input type="checkbox" value="Robots/sci-fi"> Robots/Sci-Fi</label>
+          <label><input type="checkbox" value="Cute/funny characters"> Cute/Funny</label>
+          <label><input type="checkbox" value="Book-themed characters"> Book-themed</label>
+        </div>
+
+        <label>Do you want avatars to feel…</label>
+        <select name="avatarVibe">
+          <option value="">Choose…</option>
+          <option>Cute</option>
+          <option>Cool</option>
+          <option>Funny</option>
+          <option>Epic</option>
+          <option>A mix</option>
+        </select>
+
+        <label>Do you want pets?</label>
+        <select name="wantsPets">
+          <option value="">Choose…</option>
+          <option>Yes!</option>
+          <option>Maybe</option>
+          <option>No thanks</option>
+        </select>
+
+        <label>What kinds of pets should we include? (pick all)</label>
+        <div class="checks" data-group="petTypes">
+          <label><input type="checkbox" value="Real animals"> Real animals</label>
+          <label><input type="checkbox" value="Magical creatures"> Magical creatures</label>
+          <label><input type="checkbox" value="Tiny cute creatures"> Tiny cute creatures</label>
+          <label><input type="checkbox" value="Robot pets"> Robot pets</label>
+          <label><input type="checkbox" value="Book-themed pets"> Book-themed</label>
+        </div>
+
+        <div class="hr"></div>
+
+        <label>What items should avatars unlock? (pick all)</label>
+        <div class="checks" data-group="itemTypes">
+          <label><input type="checkbox" value="Hats"> Hats</label>
+          <label><input type="checkbox" value="Glasses"> Glasses</label>
+          <label><input type="checkbox" value="Capes"> Capes</label>
+          <label><input type="checkbox" value="Costumes"> Costumes</label>
+          <label><input type="checkbox" value="Badges/titles"> Badges/Titles</label>
+          <label><input type="checkbox" value="Effects (sparkles/glow)"> Effects</label>
+        </div>
+
+        <label>What should cost the MOST reading minutes? (pick all)</label>
+        <div class="checks" data-group="highCostItems">
+          <label><input type="checkbox" value="Rare outfits"> Rare outfits</label>
+          <label><input type="checkbox" value="Rare pets"> Rare pets</label>
+          <label><input type="checkbox" value="Special badges"> Special badges</label>
+          <label><input type="checkbox" value="Room decorations"> Room decorations</label>
+          <label><input type="checkbox" value="Mystery surprise"> Mystery surprise</label>
+        </div>
+
+        <div class="hr"></div>
+
+        <label>What room/background themes should we have? (pick all)</label>
+        <div class="checks" data-group="roomThemes">
+          <label><input type="checkbox" value="Library/Reading room"> Library</label>
+          <label><input type="checkbox" value="Castle"> Castle</label>
+          <label><input type="checkbox" value="Forest"> Forest</label>
+          <label><input type="checkbox" value="Space"> Space</label>
+          <label><input type="checkbox" value="Cozy bedroom"> Cozy</label>
+          <label><input type="checkbox" value="Underwater"> Underwater</label>
+          <label><input type="checkbox" value="Jungle"> Jungle</label>
+        </div>
+
+        <label>What decor should be in the room? (pick all)</label>
+        <div class="checks" data-group="decorTypes">
+          <label><input type="checkbox" value="Posters"> Posters</label>
+          <label><input type="checkbox" value="Banners"> Banners</label>
+          <label><input type="checkbox" value="Bookshelves"> Bookshelves</label>
+          <label><input type="checkbox" value="Pet area"> Pet area</label>
+          <label><input type="checkbox" value="Trophy shelf"> Trophy shelf</label>
+        </div>
+
+        <div class="hr"></div>
+
+        <label>Which prizes would you be excited to earn? (pick all)</label>
+        <div class="checks" data-group="prizeInterests">
+          <label><input type="checkbox" value="Stickers"> Stickers</label>
+          <label><input type="checkbox" value="Bookmarks"> Bookmarks</label>
+          <label><input type="checkbox" value="Fun pens/pencils"> Fun pens/pencils</label>
+          <label><input type="checkbox" value="Keychains"> Keychains</label>
+          <label><input type="checkbox" value="Squishies/fidgets"> Squishies/fidgets</label>
+          <label><input type="checkbox" value="Small plushies"> Small plushies</label>
+          <label><input type="checkbox" value="Mystery prize"> Mystery prize</label>
+        </div>
+
+        <label>Which prizes would you save LOTS of minutes for? (pick all)</label>
+        <div class="checks" data-group="saveForPrizes">
+          <label><input type="checkbox" value="Big squishy"> Big squishy</label>
+          <label><input type="checkbox" value="Collectible item"> Collectible item</label>
+          <label><input type="checkbox" value="Teacher reward (read w/ teacher, etc.)"> Teacher reward</label>
+          <label><input type="checkbox" value="Mystery big prize"> Mystery big prize</label>
+          <label><input type="checkbox" value="Extra avatar rewards"> Extra avatar rewards</label>
+        </div>
+
+        <label>If we did a fundraiser for novelty prizes, what would you WANT? (pick all)</label>
+        <div class="checks" data-group="fundraiserPrizeInterests">
+          <label><input type="checkbox" value="Keychains"> Keychains</label>
+          <label><input type="checkbox" value="Squishies"> Squishies</label>
+          <label><input type="checkbox" value="Plush toys"> Plush toys</label>
+          <label><input type="checkbox" value="Fidgets"> Fidgets</label>
+          <label><input type="checkbox" value="Special bookmarks"> Special bookmarks</label>
+          <label><input type="checkbox" value="Sticker packs"> Sticker packs</label>
+        </div>
+
+        <label>What ONE prize would you be most excited to earn?</label>
+        <input type="text" name="topPrize" placeholder="Example: squishy, keychain, plushie..." />
+
+        <label>One idea you REALLY want us to include:</label>
+        <textarea name="oneBigIdea" placeholder="Tell us your best idea!"></textarea>
+
+        <div class="btnRow">
+          <button class="primary" type="submit">✅ Submit</button>
+          <button type="button" id="resetBtn">🔄 Clear</button>
+        </div>
+
+        <div class="msg" id="msg"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById("survey");
+    const msg = document.getElementById("msg");
+    const resetBtn = document.getElementById("resetBtn");
+
+    function getChecked(groupName){
+      const boxWrap = document.querySelector(`[data-group="${groupName}"]`);
+      if(!boxWrap) return [];
+      return Array.from(boxWrap.querySelectorAll("input[type=checkbox]:checked")).map(cb => cb.value);
+    }
+
+    resetBtn.addEventListener("click", () => {
+      form.reset();
+      msg.textContent = "";
+      msg.className = "msg";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      msg.textContent = "Submitting…";
+      msg.className = "msg";
+
+      const fd = new FormData(form);
+
+      const payload = {
+        grade: fd.get("grade"),
+        currencyName: fd.get("currencyName"),
+        earningMethods: getChecked("earningMethods"),
+        spendFrequency: fd.get("spendFrequency"),
+        avatarTypes: getChecked("avatarTypes"),
+        avatarVibe: fd.get("avatarVibe"),
+        wantsPets: fd.get("wantsPets"),
+        petTypes: getChecked("petTypes"),
+        itemTypes: getChecked("itemTypes"),
+        highCostItems: getChecked("highCostItems"),
+        roomThemes: getChecked("roomThemes"),
+        decorTypes: getChecked("decorTypes"),
+        prizeInterests: getChecked("prizeInterests"),
+        saveForPrizes: getChecked("saveForPrizes"),
+        fundraiserPrizeInterests: getChecked("fundraiserPrizeInterests"),
+        topPrize: fd.get("topPrize"),
+        oneBigIdea: fd.get("oneBigIdea")
+      };
+
+      try{
+        const res = await fetch(ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" }, // Apps Script friendly
+          body: JSON.stringify(payload)
+        });
+        const out = await res.json();
+
+        if(out.ok){
+          msg.textContent = "✅ Submitted! Thank you for helping us build the Read-A-Thon!";
+          msg.className = "msg ok";
+          form.reset();
+        } else {
+          msg.textContent = "❌ Something went wrong: " + (out.error || "Unknown error");
+          msg.className = "msg bad";
+        }
+      } catch(err){
+        msg.textContent = "❌ Could not submit. " + err;
+        msg.className = "msg bad";
+      }
+    });
+  </script>
+</body>
+</html>

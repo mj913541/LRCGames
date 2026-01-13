@@ -131,6 +131,7 @@ const WORK_CLOSE_TASKS = [
   "Collect name tags",
   "5 minutes classroom straighten",
   "Clear desk",
+  "Plug in chromebooke",
 ];
 
 // Weekly big rocks
@@ -147,35 +148,35 @@ const DEFAULT_WEEKLY_TASKS = {
     { title: "Sub plans", statusType: "generic" },
     { title: "Read-A-Thon Fundraiser", statusType: "generic" },
     { title: "Ordering supplies", statusType: "generic" },
-    {
-      title: "Decorate 2 shelves to match the genre color sections",
-      statusType: "generic",
-    },
+    {title: "Decorate 2 shelves to match the genre color sections", statusType: "generic",},
   ],
   home: [
     { title: "Meal plan & grocery list", statusType: "generic" },
-    { title: "Laundry cycle(s)", statusType: "laundry" },
+    { title: "Laundry", statusType: "laundry" },
     { title: "Tidy main rooms", statusType: "generic" },
-    { title: "Budget / bills check-in", statusType: "generic" },
+    { title: "Budget check-in", statusType: "generic" },
   ],
 };
 
 const WEEKLY_STATUS_TYPES = {
   // For lesson planning (3-step)
   lessons: {
-    order: ["planned", "prepped", "completed"],
+    order: ["planned", "prepped", "slides", "completed"],
     labelMap: {
       planned: "Planned",
       prepped: "Prepped",
+      slides: "slides",
       completed: "Completed",
     },
     percentageMap: {
-      planned: 33,
-      prepped: 66,
+      planned: 25,
+      prepped: 50,
+      slides: 75,
       completed: 100,
     },
     classMap: {
       planned: "weekly-status--planned",
+      prepped: "weekly-status--prepped",
       prepped: "weekly-status--prepped",
       completed: "weekly-status--completed",
     },
@@ -203,25 +204,25 @@ const WEEKLY_STATUS_TYPES = {
 
   // Laundry (4-step)
   laundry: {
-    order: ["wash", "dry", "fold", "put-away"],
+    order: ["wash", "dry", "fold", "putaway"],
     labelMap: {
       wash: "Wash",
       dry: "Dry",
       fold: "Fold",
-      "put-away": "Put away",
+      putaway: "Put away",
     },
     percentageMap: {
       wash: 25,
       dry: 50,
       fold: 75,
-      "put-away": 100,
+      putaway: 100,
     },
     // Re-uses your existing color classes:
     classMap: {
       wash: "weekly-status--planned",
       dry: "weekly-status--prepped",
       fold: "weekly-status--prepped",
-      "put-away": "weekly-status--completed",
+      putaway: "weekly-status--completed",
     },
   },
 };
