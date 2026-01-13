@@ -5,7 +5,6 @@
 
 const ENDPOINT = "https://script.google.com/macros/s/AKfycbxfXsNv5eOMbcO-3Lrk0H0ZLZ2MWd67yVHW1ITwyHl_XqxEyQZoiXW_15pMkqTq8VZf5Q/exec";
 
-
 const form = document.getElementById("survey");
 const msg = document.getElementById("msg");
 const resetBtn = document.getElementById("resetBtn");
@@ -17,7 +16,7 @@ const progressBar = document.getElementById("progressBar");
 const endpointHint = document.getElementById("endpointHint");
 
 const steps = Array.from(document.querySelectorAll(".step"));
-let stepIndex = 0; // 0-based
+let stepIndex = 0;
 
 function showStep(i){
   steps.forEach((s, idx) => s.classList.toggle("active", idx === i));
@@ -26,12 +25,7 @@ function showStep(i){
   progressBar.style.width = `${(humanStep / steps.length) * 100}%`;
 
   backBtn.disabled = (i === 0);
-
-  if (i === steps.length - 1){
-    nextBtn.textContent = "✅ Submit";
-  } else {
-    nextBtn.textContent = "Next ➜";
-  }
+  nextBtn.textContent = (i === steps.length - 1) ? "✅ Submit" : "Next ➜";
 
   msg.textContent = "";
   msg.className = "msg";
@@ -44,8 +38,8 @@ function getChecked(groupName){
     .map(cb => cb.value);
 }
 
-// Prize checkboxes are spread across cards, so we tag them with data-prize="1"
-function getPrizeChecks(){
+// Novelty prize checkboxes are spread across cards, so we tag them with data-prize="1"
+function getNoveltyPrizeChecks(){
   return Array.from(document.querySelectorAll('input[type="checkbox"][data-prize="1"]:checked'))
     .map(cb => cb.value);
 }
@@ -55,8 +49,25 @@ function valRadio(name){
   return el ? el.value : "";
 }
 
+function excitedText(v){
+  if (v <= 1) return "Not excited 😐";
+  if (v === 2) return "A little excited 🙂";
+  if (v === 3) return "Excited 😄";
+  if (v === 4) return "Really excited 😆";
+  return "SUPER excited! 🦁💛";
+}
+
+function wireExcited(){
+  const ex = document.getElementById("excited");
+  const exLabel = document.getElementById("excitedLabel");
+  if (!ex || !exLabel) return;
+  exLabel.textContent = excitedText(Number(ex.value || 5));
+  ex.addEventListener("input", () => {
+    exLabel.textContent = excitedText(Number(ex.value));
+  });
+}
+
 function validateCurrentStep(){
-  // Only enforce required fields in Step 1
   if (stepIndex === 0){
     const grade = valRadio("grade");
     const teacher = valRadio("teacher");
@@ -71,6 +82,12 @@ function validateCurrentStep(){
 
 resetBtn.addEventListener("click", () => {
   form.reset();
+  const ex = document.getElementById("excited");
+  const exLabel = document.getElementById("excitedLabel");
+  if (ex && exLabel){
+    ex.value = 5;
+    exLabel.textContent = excitedText(5);
+  }
   stepIndex = 0;
   showStep(stepIndex);
 });
@@ -88,10 +105,11 @@ nextBtn.addEventListener("click", async () => {
   if (stepIndex < steps.length - 1){
     stepIndex++;
     showStep(stepIndex);
+    // If we just moved onto the last step, wire slider label
+    wireExcited();
     return;
   }
 
-  // Last step -> submit
   msg.textContent = "Submitting…";
   msg.className = "msg";
 
@@ -119,21 +137,28 @@ nextBtn.addEventListener("click", async () => {
 
     itemTypes: getChecked("itemTypes"),
     itemTypesOther: fd.get("itemTypesOther") || "",
-
     highCostItems: getChecked("highCostItems"),
     highCostOther: fd.get("highCostOther") || "",
 
     roomThemes: getChecked("roomThemes"),
     roomThemesOther: fd.get("roomThemesOther") || "",
-
     decorTypes: getChecked("decorTypes"),
     decorOther: fd.get("decorOther") || "",
 
     otherSpendIdeas: fd.get("otherSpendIdeas") || "",
     streakRewards: fd.get("streakRewards") || "",
 
-    fundraiserPrizeInterests: getPrizeChecks(),
+    fundraiserPrizeInterests: getNoveltyPrizeChecks(),
     fundraiserOther: fd.get("fundraiserOther") || "",
+
+    prizeChoices: getChecked("prizeChoices"),
+    prizeOtherIdea: fd.get("prizeOtherIdea") || "",
+    sabotage: valRadio("sabotage"),
+    sabotageOther: fd.get("sabotageOther") || "",
+    prizeStyle: valRadio("prizeStyle"),
+    prizeStyleOther: fd.get("prizeStyleOther") || "",
+    excited: Number(fd.get("excited") || 0),
+    comments: fd.get("comments") || "",
 
     topPrize: fd.get("topPrize") || "",
     oneBigIdea: fd.get("oneBigIdea") || ""
@@ -152,6 +177,12 @@ nextBtn.addEventListener("click", async () => {
       msg.textContent = "✅ Submitted! Thank you!";
       msg.className = "msg ok";
       form.reset();
+      const ex = document.getElementById("excited");
+      const exLabel = document.getElementById("excitedLabel");
+      if (ex && exLabel){
+        ex.value = 5;
+        exLabel.textContent = excitedText(5);
+      }
       stepIndex = 0;
       showStep(stepIndex);
     } else {
@@ -169,6 +200,7 @@ try{
   if (!ENDPOINT || ENDPOINT.includes("PASTE") || !ENDPOINT.startsWith("https://script.google.com/")){
     endpointHint.hidden = false;
   }
-} catch(e){ /* ignore */ }
+} catch(e){}
 
+wireExcited();
 showStep(stepIndex);

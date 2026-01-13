@@ -14,13 +14,12 @@
       <p class="sub">Earn everything with <b>reading minutes</b> only. No real money. Answer a few questions at a time.</p>
 
       <div class="topbar">
-        <div class="progressText" id="progressText">Step 1 of 8</div>
+        <div class="progressText" id="progressText">Step 1 of 9</div>
         <div class="progressTrack" aria-label="progress">
           <div class="progressBar" id="progressBar"></div>
         </div>
       </div>
 
-      <!-- Optional: show a friendly hint if script URL isn't set -->
       <div class="hint" id="endpointHint" hidden>
         ⚠️ This page needs a valid Apps Script Web App URL. Open <b>survey.js</b> and set <code>ENDPOINT</code>.
       </div>
@@ -54,6 +53,8 @@
         <section class="step" data-step="2">
           <label>3) What should our reading currency be called?</label>
           <input type="text" name="currencyName" placeholder="Book Bucks, Page Points, Story Tokens..." />
+          <div class="help">Other (type your idea):</div>
+          <input type="text" name="currencyOther" placeholder="Type your own currency name..." />
 
           <label>4) How often should the “store” be open?</label>
           <div class="choices">
@@ -184,7 +185,6 @@
           <label>15) If we did a fundraiser for novelty prizes, what would you WANT? (pick all)</label>
           <p class="smallHelp">These pictures are just examples. Pick what sounds fun!</p>
 
-          <!-- Each checkbox uses data-prize="1" so JS can collect them (since layout isn't a single .checks group). -->
           <div class="prizeCard">
             <div class="prizeTitle">
               <label class="choice" style="margin:0;">
@@ -290,13 +290,75 @@
             </div>
           </div>
 
-          <label style="margin-top:14px;">Other prize idea (type it):</label>
-          <input type="text" name="fundraiserOther" placeholder="Type other prize ideas..." />
+          <label style="margin-top:14px;">Other novelty prize idea (type it):</label>
+          <input type="text" name="fundraiserOther" placeholder="Type another prize idea..." />
+        </section>
 
-          <label>16) What ONE prize would you be most excited to earn real money for?</label>
+        <!-- STEP 9 -->
+        <section class="step" data-step="9">
+          <label>16) Which prizes would you be most excited about? (pick all)</label>
+          <p class="smallHelp">Choose all the prizes you’d LOVE to earn.</p>
+
+          <div class="checks" data-group="prizeChoices">
+            <label><input type="checkbox" value="Stuffed animals / plushies"> 🧸 Stuffed animals / plushies</label>
+            <label><input type="checkbox" value="Pizza party"> 🍕 Pizza party</label>
+            <label><input type="checkbox" value="Raffle tickets for fun prizes"> 🎟️ Raffle tickets</label>
+            <label><input type="checkbox" value="Extra recess / outdoor game time"> 🌟 Extra recess</label>
+            <label><input type="checkbox" value="Art supplies bundle"> 🖍️ Art supplies bundle</label>
+            <label><input type="checkbox" value="Pick-a-Book prize"> 📚 Pick-a-Book prize</label>
+            <label><input type="checkbox" value="Cupcake or treat coupon"> 🧁 Treat coupon</label>
+            <label><input type="checkbox" value="Glow party or dance party"> 🎉 Glow/Dance party</label>
+            <label><input type="checkbox" value="Movie in the LRC"> 🍿 Movie in the LRC</label>
+            <label><input type="checkbox" value="Headphone pass"> 🎧 Headphone pass</label>
+            <label><input type="checkbox" value="Lion mascot merch"> 🦁 Lion mascot merch</label>
+            <label><input type="checkbox" value="Golden Ticket privileges"> 🎫 Golden Ticket</label>
+            <label><input type="checkbox" value="Journals / fun notebooks"> 📓 Journals / fun notebooks</label>
+            <label><input type="checkbox" value="Fuzzy pens / fun novelty pens"> ✏️ Fuzzy pens / fun pens</label>
+            <label><input type="checkbox" value="Other novelty items"> 🎁 Other novelty items</label>
+          </div>
+
+          <label style="margin-top:14px;">Other prize idea (optional):</label>
+          <input type="text" name="prizeOtherIdea" placeholder="Type your idea here…" />
+
+          <div class="hr"></div>
+
+          <label>17) Would you like the chance to use reading points to “sabotage” other classes or Houses in fun ways?</label>
+          <p class="smallHelp">Examples: freeze another class for 1 minute, block points for a short time, etc. Teachers keep it fair and friendly!</p>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="sabotage" value="Yes, that sounds fun"> ✅ Yes</label>
+            <label class="choice"><input type="radio" name="sabotage" value="Maybe — I want to hear more"> 🤔 Maybe</label>
+            <label class="choice"><input type="radio" name="sabotage" value="No — I'd rather just earn points for my own class"> 🚫 No</label>
+            <label class="choice"><input type="radio" name="sabotage" value="Other"> Other</label>
+          </div>
+          <div class="help">Other (type your idea):</div>
+          <input type="text" name="sabotageOther" placeholder="Optional…" />
+
+          <label>18) Do you like prizes that everyone earns OR prizes you earn based on your own reading/fundraising?</label>
+          <div class="choices">
+            <label class="choice"><input type="radio" name="prizeStyle" value="Everyone earns the same prize"> 👫 Everyone earns the same prize</label>
+            <label class="choice"><input type="radio" name="prizeStyle" value="I like earning my own prizes"> 🏆 I like earning my own prizes</label>
+            <label class="choice"><input type="radio" name="prizeStyle" value="I like BOTH"> 🎯 I like BOTH</label>
+            <label class="choice"><input type="radio" name="prizeStyle" value="Other"> Other</label>
+          </div>
+          <div class="help">Other (type your idea):</div>
+          <input type="text" name="prizeStyleOther" placeholder="Optional…" />
+
+          <label>19) How excited are you for our reading challenge?</label>
+          <div class="rangeRow">
+            <div class="rangeNums"><span>1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+            <input id="excited" type="range" name="excited" min="1" max="5" step="1" value="5" />
+            <div class="rangePill" id="excitedLabel">SUPER excited! 🦁💛</div>
+          </div>
+
+          <label>20) Anything else you want to tell us?</label>
+          <textarea name="comments" placeholder="Type here (optional)…"></textarea>
+
+          <div class="hr"></div>
+
+          <label>21) What ONE prize would you be most excited to earn?</label>
           <input type="text" name="topPrize" placeholder="Example: squishy, keychain, plushie..." />
 
-          <label>17) Some fun ideas you REALLY want us to include:</label>
+          <label>22) Some ideas you REALLY want us to include:</label>
           <textarea name="oneBigIdea" placeholder="Tell us your best ideas!"></textarea>
         </section>
 
