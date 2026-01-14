@@ -34,16 +34,42 @@
       🦁 Welcome to <span class="text-green-700">LRC Quest</span>
     </h1>
 
-    <p class="text-gray-600 mb-4 text-sm">
-      Sign in with your school Google account to enter the jungle.
-    </p>
+    <!-- STEP 1: CODE -->
+    <div id="stepCode">
+      <p class="text-gray-600 mb-4 text-sm">
+        Enter your class code to enter the jungle.
+      </p>
 
-    <button
-      id="googleLoginBtn"
-      class="w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition"
-    >
-      Continue with Google
-    </button>
+      <input
+        id="codeInput"
+        class="w-full px-3 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-green-200"
+        placeholder="ex: lrcgrade3"
+        autocomplete="off"
+        autocapitalize="none"
+        spellcheck="false"
+      />
+
+      <button
+        id="codeBtn"
+        class="w-full mt-3 py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition"
+      >
+        Continue
+      </button>
+    </div>
+
+    <!-- STEP 2: HOMEROOMS -->
+    <div id="stepHomeroom" class="hidden">
+      <p id="homeroomTitle" class="text-gray-700 mb-3 text-sm font-semibold"></p>
+
+      <div id="homeroomList" class="grid grid-cols-1 gap-2"></div>
+
+      <button
+        id="backBtn"
+        class="w-full mt-3 py-2.5 rounded-lg font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition border border-green-100"
+      >
+        ← Back
+      </button>
+    </div>
 
     <p id="status" class="mt-4 text-sm text-gray-600"></p>
 
@@ -53,107 +79,190 @@
   </div>
 
   <!-- Firebase + Core Logic -->
-<script type="module">
-  import {
-    getAuthInstance,
-    loadOrCreatePlayer,
-    setLocalStudent,
-    setLocalProgress,
-    setLocalTier
-  } from "./scripts/lrcQuestCore.js";
+  <script type="module">
+    import { getAuthInstance } from "./scripts/lrcQuestCore.js";
 
-  import {
-    GoogleAuthProvider,
-    signInWithPopup,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    import {
+      signInAnonymously
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-  const auth = getAuthInstance();
-  const provider = new GoogleAuthProvider();
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      orderBy,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-  // Allow redirect back to a protected page after login
-  const urlParams = new URLSearchParams(window.location.search);
-  const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
+    const auth = getAuthInstance();
+    const db = getFirestore(auth.app);
 
-  const btn = document.getElementById("googleLoginBtn");
-  const statusEl = document.getElementById("status");
+    // Allow redirect back to a protected page after login
+    const urlParams = new URLSearchParams(window.location.search);
+    const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
 
-  // --- Role & domain helpers (client-side only, for gating login) ---
+    const stepCode = document.getElementById("stepCode");
+    const stepHomeroom = document.getElementById("stepHomeroom");
 
-  const ADMIN_EMAILS = [
-    "malbrecht3317@gmail.com",
-    "malbrecht@sd308.org"
-  ];
+    const codeInput = document.getElementById("codeInput");
+    const codeBtn = document.getElementById("codeBtn");
+    const backBtn = document.getElementById("backBtn");
 
-  function classifyRole(email) {
-    if (!email) return "blocked";
-    const e = email.toLowerCase();
+    const homeroomTitle = document.getElementById("homeroomTitle");
+    const homeroomList = document.getElementById("homeroomList");
 
-    if (ADMIN_EMAILS.includes(e)) return "admin";
-    if (e.endsWith("@sd308.org")) return "staff";
-    if (e.endsWith("@students.sd308.org")) return "student";
-    return "blocked";
-  }
+    const statusEl = document.getElementById("status");
 
-  btn.addEventListener("click", async () => {
-    statusEl.textContent = "Opening Google sign-in...";
+    function setStatus(msg, ok = true) {
+      statusEl.textContent = msg;
+      statusEl.className = "mt-4 text-sm " + (ok ? "text-gray-600" : "text-red-600");
+    }
 
-    try {
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      const email = user.email || "";
-      const role = classifyRole(email);
+    function showHomerooms() {
+      stepCode.classList.add("hidden");
+      stepHomeroom.classList.remove("hidden");
+    }
 
-      // Block non-district / non-approved accounts
-      if (role === "blocked") {
-        statusEl.textContent =
-          "This Google account is not allowed to use LRC Quest. " +
-          "Please sign in with your SD308 school Google account.";
-        await signOut(auth);
+    function showCodeStep() {
+      stepHomeroom.classList.add("hidden");
+      stepCode.classList.remove("hidden");
+      homeroomList.innerHTML = "";
+      homeroomTitle.textContent = "";
+    }
+
+    async function ensureAnonAuth() {
+      try {
+        if (!auth.currentUser) {
+          await signInAnonymously(auth);
+        }
+      } catch (e) {
+        // If your Firestore rules allow reads without auth, this is fine.
+        console.warn("Anonymous auth failed:", e);
+      }
+    }
+
+    async function resolveGradeDocIdFromCode(codeRaw) {
+      const code = String(codeRaw || "").trim().toLowerCase();
+      if (!code) return null;
+
+      // schools/main/gradeCodes : documents like 1..5 and staff, each with { code, active }
+      const gradeCodesRef = collection(db, "schools", "main", "gradeCodes");
+
+      // Query by code + active (fast + clean)
+      const q = query(
+        gradeCodesRef,
+        where("code", "==", code),
+        where("active", "==", true)
+      );
+
+      const snap = await getDocs(q);
+      if (snap.empty) return null;
+
+      // Doc ID will be "1","2","3","4","5", or "staff"
+      return snap.docs[0].id;
+    }
+
+    async function loadHomeroomsForGrade(gradeNumber) {
+      // schools/main/homerooms documents:
+      // { grade: 3, label: "Ms. Cocco", active: true, sort: 3 }
+      const homeroomsRef = collection(db, "schools", "main", "homerooms");
+
+      const q = query(
+        homeroomsRef,
+        where("active", "==", true),
+        where("grade", "==", Number(gradeNumber)),
+        orderBy("sort")
+      );
+
+      const snap = await getDocs(q);
+      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+
+    function renderHomerooms(grade, rooms) {
+      homeroomList.innerHTML = "";
+
+      homeroomTitle.textContent = `Grade ${grade}: Choose your class`;
+
+      if (!rooms.length) {
+        const p = document.createElement("p");
+        p.className = "text-sm text-red-600";
+        p.textContent = "No homerooms found for this grade yet.";
+        homeroomList.appendChild(p);
         return;
       }
 
-      const student = {
-        uid: user.uid,
-        fullName: user.displayName || "",
-        email: email
-      };
+      rooms.forEach((room) => {
+        const btn = document.createElement("button");
+        btn.className =
+          "w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition";
+        btn.textContent = room.label || room.id;
 
-      // Save identity locally (shared for all pages)
-      setLocalStudent(student);
+        btn.addEventListener("click", () => {
+          // Save selection for the next step (we’ll add roster + PIN next)
+          sessionStorage.setItem("lrc_grade", String(grade));
+          sessionStorage.setItem("lrc_homeroomId", String(room.id));
+          sessionStorage.setItem("lrc_homeroomLabel", String(room.label || room.id));
 
-      statusEl.textContent = "Loading your progress...";
+          setStatus(`Selected: ${room.label || room.id}. Next step: student roster + PIN.`, true);
 
-      // Load or create the player document (progress + tier)
-      const playerData = await loadOrCreatePlayer(
-        student.uid,
-        student.email,
-        student.fullName
-      );
+          // Optional: if you want to immediately route to a roster page later:
+          // window.location.href = `roster.html?redirect=${encodeURIComponent(DESTINATION_PAGE)}`;
+        });
 
-      setLocalProgress(playerData.progress || {});
-      setLocalTier(playerData.subscriptionTier || "free");
-
-      statusEl.textContent = "Heading into the jungle...";
-
-      const [firstName, ...rest] = (student.fullName || "").split(" ");
-      const lastName = rest.join(" ");
-
-      const params = new URLSearchParams({
-        fn: firstName || "",
-        ln: lastName || "",
-        email: student.email || "",
-        uid: student.uid || ""
+        homeroomList.appendChild(btn);
       });
-
-      window.location.href = `${DESTINATION_PAGE}?${params.toString()}`;
-    } catch (err) {
-      console.error(err);
-      statusEl.textContent = "Login failed or was canceled. Try again.";
     }
-  });
-</script>
 
+    // Back button
+    backBtn.addEventListener("click", () => {
+      showCodeStep();
+      setStatus("");
+    });
+
+    // Enter key submits
+    codeInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") codeBtn.click();
+    });
+
+    // Main: code -> staff route or grade -> homerooms
+    codeBtn.addEventListener("click", async () => {
+      await ensureAnonAuth();
+
+      setStatus("Checking code...");
+      try {
+        const gradeId = await resolveGradeDocIdFromCode(codeInput.value);
+
+        if (!gradeId) {
+          setStatus("Code not found. Try lrcgrade1, lrcgrade2, … or lrcstaff.", false);
+          return;
+        }
+
+        if (gradeId === "staff") {
+          // Later we’ll add staff PIN + route to dashboard
+          setStatus("Staff code accepted. Next: staff PIN + dashboard route.", true);
+
+          // If you already have a staff dashboard page, uncomment and set it:
+          // window.location.href = "teacherDashboard.html";
+          return;
+        }
+
+        const rooms = await loadHomeroomsForGrade(gradeId);
+        showHomerooms();
+        renderHomerooms(gradeId, rooms);
+        setStatus("Tap your classroom.", true);
+      } catch (err) {
+        console.error(err);
+        setStatus("Something went wrong checking the code.", false);
+      }
+    });
+
+    // Start
+    (async function init() {
+      setStatus("Ready. Enter your code.");
+      await ensureAnonAuth();
+    })();
+  </script>
 
 </body>
 </html>
