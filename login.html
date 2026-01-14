@@ -196,7 +196,16 @@
         const btn = document.createElement("button");
         btn.className =
           "w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition";
-        btn.textContent = room.label || room.id;
+btn.innerHTML = `
+  <div class="flex items-center gap-3">
+    <img src="${room.photoUrl}"
+         alt="${room.label}"
+         class="w-12 h-12 rounded-full object-cover border"
+         onerror="this.style.display='none'" />
+    <span>${room.label}</span>
+  </div>
+`;
+
 
         btn.addEventListener("click", () => {
           // Save selection for the next step (we’ll add roster + PIN next)
