@@ -1,3 +1,7 @@
+<!-- =========================
+File: /login.html
+Level 1: login.html (root)
+========================= -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,74 +10,13 @@
   <title>LRC Quest – Login</title>
 
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-
-  <style>
-    body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(to bottom, #ecfeff, #d1fae5);
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
-    .card {
-      background: white;
-      border-radius: 1.5rem;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.14);
-      max-width: 760px;
-      width: 100%;
-      padding: 1.5rem 1.25rem;
-      text-align: center;
-    }
-
-   .grade-icon {
-  width: 100px;
-  height: 100px;
-  cursor: pointer;
-  transition: transform 0.3s ease;
-  
-  /* 🔑 CENTERING FIX */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background-size: cover;
-  background-position: center center;
-  background-repeat: no-repeat;
-}
-
-    .grade-icon:hover { transform: scale(1.2); }
-
-    /* NEW: your actual grade image paths (note: these will override the gradient background visually) */
-    #grade1 { background-image: url("./lrcQuestMain/assets/img/grades/grade1.png"); }
-    #grade2 { background-image: url("./lrcQuestMain/assets/img/grades/grade2.png"); }
-    #grade3 { background-image: url("./lrcQuestMain/assets/img/grades/grade3.png"); }
-    #grade4 { background-image: url("./lrcQuestMain/assets/img/grades/grade4.png"); }
-    #grade5 { background-image: url("./lrcQuestMain/assets/img/grades/grade5.png"); }
-    #gradeECK { background-image: url("./lrcQuestMain/assets/img/grades/gradeECK.png"); }
-
-    /* If an image fails to load, we’ll show text; this helps the text pop a bit */
-    .grade-icon .fallback {
-      background: rgba(0,0,0,0.25);
-      padding: 2px 8px;
-      border-radius: 999px;
-    }
-
-#gradeGrid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  justify-items: center;
-  align-items: center;
-  gap: 1rem;
-}
-
-  </style>
+  <link rel="stylesheet" href="./lrcQuestMain/assets/css/login/login.css">
 </head>
 <body>
 
   <div class="card">
     <h1 class="text-2xl font-bold mb-2">
-      d 🦁 Welcome to <span class="text-green-700">LRC Quest</span>
+      🦁 Welcome to <span class="text-green-700">LRC Quest</span>
     </h1>
 
     <!-- STEP 1: GRADE PICKER -->
@@ -82,12 +25,14 @@
         Tap your grade to enter the jungle.
       </p>
 
-      <div id="gradeGrid" class="grid grid-cols-3 gap-3 justify-items-center mb-2">
-        <!-- Injected by JS (buttons below) -->
+      <div id="gradeGrid">
+        <!-- Injected by JS -->
       </div>
 
-      <button id="staffLink"
-        class="w-full mt-3 py-2.5 rounded-lg font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition border border-green-100">
+      <button
+        id="staffLink"
+        class="w-full mt-3 py-2.5 rounded-lg font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition border border-green-100"
+      >
         Staff / Teacher
       </button>
     </div>
@@ -97,8 +42,10 @@
       <p id="homeroomTitle" class="text-gray-700 mb-3 text-sm font-semibold"></p>
       <div id="homeroomList" class="grid grid-cols-1 gap-2"></div>
 
-      <button id="backBtn"
-        class="w-full mt-3 py-2.5 rounded-lg font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition border border-green-100">
+      <button
+        id="backBtn"
+        class="w-full mt-3 py-2.5 rounded-lg font-semibold text-green-700 bg-green-50 hover:bg-green-100 transition border border-green-100"
+      >
         ← Back
       </button>
     </div>
@@ -110,196 +57,6 @@
     </p>
   </div>
 
-  <script type="module">
-    import { getAuthInstance } from "./lrcQuestMain/scripts/lrcQuestCore.js";
-    import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    import {
-      getFirestore,
-      collection,
-      query,
-      where,
-      orderBy,
-      getDocs
-    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-    const auth = getAuthInstance();
-    const db = getFirestore(auth.app);
-
-    // Optional redirect support (kept for later roster step)
-    const urlParams = new URLSearchParams(window.location.search);
-    const DESTINATION_PAGE = urlParams.get("redirect") || "questHub.html";
-
-    // UI
-    const stepGrade = document.getElementById("stepGrade");
-    const gradeGrid = document.getElementById("gradeGrid");
-    const staffLink = document.getElementById("staffLink");
-
-    const stepHomeroom = document.getElementById("stepHomeroom");
-    const backBtn = document.getElementById("backBtn");
-    const homeroomTitle = document.getElementById("homeroomTitle");
-    const homeroomList = document.getElementById("homeroomList");
-
-    const statusEl = document.getElementById("status");
-
-    function setStatus(msg, ok = true) {
-      statusEl.textContent = msg || "";
-      statusEl.className = "mt-4 text-sm " + (ok ? "text-gray-600" : "text-red-600");
-    }
-
-    function displayGrade(g) {
-      const gs = String(g);
-      return gs === "0" ? "EC-K" : `Grade ${gs}`;
-    }
-
-    function showHomerooms() {
-      stepGrade.classList.add("hidden");
-      stepHomeroom.classList.remove("hidden");
-    }
-
-    function showGradePicker() {
-      stepHomeroom.classList.add("hidden");
-      stepGrade.classList.remove("hidden");
-      homeroomList.innerHTML = "";
-      homeroomTitle.textContent = "";
-    }
-
-    async function ensureAnonAuth() {
-      if (auth.currentUser) return;
-      await signInAnonymously(auth);
-    }
-
-    // Uses your (now-built) index: active + grade + orderBy(sort)
-    async function loadHomeroomsForGrade(gradeNumber) {
-      const homeroomsRef = collection(db, "schools", "main", "homerooms");
-      const q = query(
-        homeroomsRef,
-        where("active", "==", true),
-        where("grade", "==", Number(gradeNumber)),
-        orderBy("sort")
-      );
-      const snap = await getDocs(q);
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    }
-
-    function renderHomerooms(grade, rooms) {
-      homeroomList.innerHTML = "";
-      homeroomTitle.textContent = `${displayGrade(grade)}: Choose your class`;
-
-      if (!rooms.length) {
-        const p = document.createElement("p");
-        p.className = "text-sm text-red-600";
-        p.textContent = "No homerooms found for this grade yet.";
-        homeroomList.appendChild(p);
-        return;
-      }
-
-      rooms.forEach((room) => {
-        const btn = document.createElement("button");
-        btn.className =
-          "w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition";
-
-        const label = room.label || room.id;
-        const photo = (room.photoUrl && String(room.photoUrl).trim()) ? String(room.photoUrl).trim() : "";
-
-        btn.innerHTML = `
-          <div class="flex items-center gap-3 justify-start px-3">
-            ${
-              photo
-                ? `<img src="${photo}"
-                        alt="${label}"
-                        class="w-12 h-12 rounded-full object-cover border border-white/40"
-                        onerror="this.style.display='none'" />`
-                : `<div class="w-12 h-12 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-green-800 font-bold">
-                     ${String(label).trim().charAt(0)}
-                   </div>`
-            }
-            <span class="text-left">${label}</span>
-          </div>
-        `;
-
-        btn.addEventListener("click", () => {
-          sessionStorage.setItem("lrc_grade", String(grade));
-          sessionStorage.setItem("lrc_gradeLabel", displayGrade(grade));
-          sessionStorage.setItem("lrc_homeroomId", String(room.id));
-          sessionStorage.setItem("lrc_homeroomLabel", String(label));
-
-          setStatus(`Selected: ${label}. Next step: student roster + PIN.`, true);
-
-          // Later:
-          // window.location.href = `roster.html?redirect=${encodeURIComponent(DESTINATION_PAGE)}`;
-        });
-
-        homeroomList.appendChild(btn);
-      });
-    }
-
-    function renderGradeButtons() {
-      // We render 1–5 as circular "grade-icon" buttons (images are defined in CSS by #grade1..#grade5)
-      const grades = [
-        { id: "0", domId: "gradeECK", label: "EC-K" },
-        { id: "1", domId: "grade1", label: "1" },
-        { id: "2", domId: "grade2", label: "2" },
-        { id: "3", domId: "grade3", label: "3" },
-        { id: "4", domId: "grade4", label: "4" },
-        { id: "5", domId: "grade5", label: "" },
-      ];
-
-      gradeGrid.innerHTML = "";
-
-      grades.forEach(g => {
-        const a = document.createElement("a");
-        a.href = "#";
-        a.id = g.domId;
-        a.className = "grade-icon";
-        a.setAttribute("data-grade", g.id);
-
-        // Fallback text (still looks cool with your text-shadow) if image doesn’t load
-a.innerHTML = "";
-a.setAttribute("aria-label", `Grade ${g.label}`);
-
-        a.addEventListener("click", async (e) => {
-          e.preventDefault();
-          try {
-            await ensureAnonAuth();
-            setStatus("Loading homerooms...");
-            const rooms = await loadHomeroomsForGrade(g.id);
-            showHomerooms();
-            renderHomerooms(g.id, rooms);
-            setStatus("Tap your classroom.", true);
-          } catch (err) {
-            console.error(err);
-            setStatus("Couldn’t load homerooms. (Check Firestore rules/index.)", false);
-          }
-        });
-
-        gradeGrid.appendChild(a);
-      });
-    }
-
-    staffLink.addEventListener("click", async () => {
-      try {
-        await ensureAnonAuth();
-        setStatus("Staff login coming next (PIN + dashboard route).", true);
-        // Later:
-        // window.location.href = "teacherDashboard.html";
-      } catch (err) {
-        console.error(err);
-        setStatus("Couldn’t start staff login.", false);
-      }
-    });
-
-    backBtn.addEventListener("click", () => {
-      showGradePicker();
-      setStatus("");
-    });
-
-    (async function init() {
-      setStatus("Ready. Choose your grade.");
-      // Optional: pre-auth so first tap feels instant (you can remove if you want)
-      try { await ensureAnonAuth(); } catch {}
-      renderGradeButtons();
-    })();
-  </script>
-
+  <script type="module" src="./lrcQuestMain/scripts/login/login.js"></script>
 </body>
 </html>
