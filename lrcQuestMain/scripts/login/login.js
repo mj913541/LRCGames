@@ -1,6 +1,5 @@
 // ==========================================
 // File: /lrcQuestMain/scripts/login/login.js
-// Level 2: lrcQuestMain/scripts/login/login.js
 // ==========================================
 
 import { getAuthInstance } from "../lrcQuestCore.js";
@@ -87,25 +86,27 @@ function renderHomerooms(grade, rooms) {
 
   rooms.forEach((room) => {
     const btn = document.createElement("button");
+
+    // OPTION B: Card-style grid item
     btn.className =
-      "w-full py-2.5 rounded-lg font-semibold text-white bg-green-600 hover:bg-green-700 transition";
+      "p-4 rounded-xl bg-green-600 hover:bg-green-700 transition text-white flex flex-col items-center shadow-md hover:shadow-xl";
 
     const label = room.label || room.id;
     const photo = (room.photoUrl && String(room.photoUrl).trim()) ? String(room.photoUrl).trim() : "";
 
     btn.innerHTML = `
-      <div class="flex items-center gap-3 justify-start px-3">
+      <div class="flex flex-col items-center gap-2">
         ${
           photo
             ? `<img src="${photo}"
                     alt="${label}"
-                    class="w-12 h-12 rounded-full object-cover border border-white/40"
+                    class="w-20 h-20 rounded-full object-cover border-2 border-white"
                     onerror="this.style.display='none'" />`
-            : `<div class="w-12 h-12 rounded-full bg-green-50 border border-green-100 flex items-center justify-center text-green-800 font-bold">
+            : `<div class="w-20 h-20 rounded-full bg-green-50 border-2 border-white flex items-center justify-center text-green-800 font-bold">
                  ${String(label).trim().charAt(0)}
                </div>`
         }
-        <span class="text-left">${label}</span>
+        <span class="text-center font-semibold leading-tight">${label}</span>
       </div>
     `;
 
@@ -128,12 +129,12 @@ function renderHomerooms(grade, rooms) {
 
 function renderGradeButtons() {
   const grades = [
-    { id: "0", domId: "gradeECK", label: "EC-K" },
-    { id: "1", domId: "grade1", label: "1" },
-    { id: "2", domId: "grade2", label: "2" },
-    { id: "3", domId: "grade3", label: "3" },
-    { id: "4", domId: "grade4", label: "4" },
-    { id: "5", domId: "grade5", label: "5" },
+    { id: "0", domId: "gradeECK", aria: "EC-K" },
+    { id: "1", domId: "grade1", aria: "Grade 1" },
+    { id: "2", domId: "grade2", aria: "Grade 2" },
+    { id: "3", domId: "grade3", aria: "Grade 3" },
+    { id: "4", domId: "grade4", aria: "Grade 4" },
+    { id: "5", domId: "grade5", aria: "Grade 5" },
   ];
 
   gradeGrid.innerHTML = "";
@@ -145,9 +146,9 @@ function renderGradeButtons() {
     a.className = "grade-icon";
     a.setAttribute("data-grade", g.id);
 
-    // No visible text over the icons
+    // No text overlay (icons already show the grade)
     a.innerHTML = "";
-    a.setAttribute("aria-label", displayGrade(g.id));
+    a.setAttribute("aria-label", g.aria);
 
     a.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -188,16 +189,3 @@ backBtn.addEventListener("click", () => {
   try { await ensureAnonAuth(); } catch {}
   renderGradeButtons();
 })();
-
-const adminIcon = document.getElementById("adminIcon");
-const staffIcon = document.getElementById("staffIcon");
-
-adminIcon?.addEventListener("click", () => {
-  // You said you’re okay logging in each time
-  window.location.href = "/lrcQuestMain/admin/adminLogin.html";
-});
-
-staffIcon?.addEventListener("click", () => {
-  // Later: staff PIN login
-  window.location.href = "/lrcQuestMain/staff/staffLogin.html";
-});
