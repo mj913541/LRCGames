@@ -188,3 +188,16 @@ backBtn.addEventListener("click", () => {
   try { await ensureAnonAuth(); } catch {}
   renderGradeButtons();
 })();
+
+const adminIcon = document.getElementById("adminIcon");
+const staffIcon = document.getElementById("staffIcon");
+
+adminIcon?.addEventListener("click", () => {
+  // You said you’re okay logging in each time
+  window.location.href = "/lrcQuestMain/admin/adminLogin.html";
+});
+
+staffIcon?.addEventListener("click", () => {
+  // Later: staff PIN login
+  window.location.href = "/lrcQuestMain/staff/staffLogin.html";
+});
