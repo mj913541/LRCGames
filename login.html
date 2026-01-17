@@ -70,7 +70,12 @@
 
       <!-- OPTION B: Grid layout for homerooms -->
   
-      <div id="homeroomList" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+      <div
+  id="homeroomList"
+  class="grid gap-4"
+  style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));"
+></div>
+
 
 
       <button
