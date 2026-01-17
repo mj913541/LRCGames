@@ -26,30 +26,25 @@
       text-align: center;
     }
 
-    /* ---------- Grade icon style you provided ---------- */
-    .grade-icon {
-      width: 80px;
-      height: 80px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: transform 0.3s;
-      font-size: 1.8em;
-      font-weight: bold;
-      color: #fff;
-      font-variant: small-caps;
-      text-shadow: 2px 2px 2px #000;
-      box-shadow: 2px 2px 3px #000;
-      text-decoration: none;
-      user-select: none;
-      /* NEW: image support */
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      overflow: hidden;
-    }
+   .grade-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+  
+  /* 🔑 CENTERING FIX */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+
+  box-shadow: 2px 2px 3px #000;
+}
+
 
     .grade-icon:hover { transform: scale(1.2); }
 
@@ -86,6 +81,15 @@
       padding: 2px 8px;
       border-radius: 999px;
     }
+
+#gradeGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  justify-items: center;
+  align-items: center;
+  gap: 1rem;
+}
+
   </style>
 </head>
 <body>
