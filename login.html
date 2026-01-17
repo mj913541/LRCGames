@@ -77,6 +77,9 @@
     #grade4 { background-image: url("./lrcQuestMain/assets/img/grades/grade4.png"); }
     #grade5 { background-image: url("./lrcQuestMain/assets/img/grades/grade5.png"); }
 
+    /* EC-K (grade 0) */
+    #gradeECK { background-image: url("./lrcQuestMain/assets/img/grades/gradeECK.png"); }
+
     /* If an image fails to load, we’ll show text; this helps the text pop a bit */
     .grade-icon .fallback {
       background: rgba(0,0,0,0.25);
@@ -162,6 +165,11 @@
       statusEl.className = "mt-4 text-sm " + (ok ? "text-gray-600" : "text-red-600");
     }
 
+    function displayGrade(g) {
+      const gs = String(g);
+      return gs === "0" ? "EC-K" : `Grade ${gs}`;
+    }
+
     function showHomerooms() {
       stepGrade.classList.add("hidden");
       stepHomeroom.classList.remove("hidden");
@@ -194,7 +202,7 @@
 
     function renderHomerooms(grade, rooms) {
       homeroomList.innerHTML = "";
-      homeroomTitle.textContent = `Grade ${grade}: Choose your class`;
+      homeroomTitle.textContent = `${displayGrade(grade)}: Choose your class`;
 
       if (!rooms.length) {
         const p = document.createElement("p");
@@ -230,6 +238,7 @@
 
         btn.addEventListener("click", () => {
           sessionStorage.setItem("lrc_grade", String(grade));
+          sessionStorage.setItem("lrc_gradeLabel", displayGrade(grade));
           sessionStorage.setItem("lrc_homeroomId", String(room.id));
           sessionStorage.setItem("lrc_homeroomLabel", String(label));
 
@@ -246,6 +255,7 @@
     function renderGradeButtons() {
       // We render 1–5 as circular "grade-icon" buttons (images are defined in CSS by #grade1..#grade5)
       const grades = [
+        { id: "0", domId: "gradeECK", label: "EC-K" },
         { id: "1", domId: "grade1", label: "1" },
         { id: "2", domId: "grade2", label: "2" },
         { id: "3", domId: "grade3", label: "3" },
@@ -263,7 +273,7 @@
         a.setAttribute("data-grade", g.id);
 
         // Fallback text (still looks cool with your text-shadow) if image doesn’t load
-        a.innerHTML = `<span class="fallback">G${g.label}</span>`;
+        a.innerHTML = `<span class="fallback">${g.label === "EC-K" ? "EC-K" : "G" + g.label}</span>`;
 
         a.addEventListener("click", async (e) => {
           e.preventDefault();
