@@ -189,3 +189,15 @@ backBtn.addEventListener("click", () => {
   try { await ensureAnonAuth(); } catch {}
   renderGradeButtons();
 })();
+
+const adminIcon = document.getElementById("adminIcon");
+const staffIcon = document.getElementById("staffIcon");
+
+adminIcon?.addEventListener("click", () => {
+  window.location.href = "/lrcQuestMain/admin/adminLogin.html";
+});
+
+staffIcon?.addEventListener("click", () => {
+  // Placeholder for staff PIN login
+  window.location.href = "/lrcQuestMain/staff/staffLogin.html";
+});
