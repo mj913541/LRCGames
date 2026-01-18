@@ -66,79 +66,82 @@
     <div class="small">Authorized admin: <code>malbrecht3317@gmail.com</code></div>
   </main>
 
-  <script type="module">
-    // ✅ CHANGE THIS to the page you want after successful admin login
-    const ADMIN_REDIRECT = "./adminDashboard.html"; // e.g. "/planner.html" or "/questHub.html"
+<script type="module">
+  // ✅ Change this to your admin landing page
+  const ADMIN_REDIRECT = "/lrcQuestMain/admin/adminHub.html"; 
+  // If you don't have an admin hub yet, you can temporarily use:
+  // const ADMIN_REDIRECT = "/questHub.html";
 
-    // If you already have these exported from lrcQuestCore.js, we'll use them.
-    // Otherwise, this page will still work as long as lrcQuestCore exports:
-    //   auth, signInWithGoogle(), signOutUser()
+  // ✅ IMPORTANT: correct path to core
   import { auth, signInAdminWithGoogle, isAdminUser, logOut } from "/lrcQuestMain/scripts/lrcQuestCore.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
-    const ALLOWED_EMAIL = "malbrecht3317@gmail.com";
+  const btnGoogle = document.getElementById("btnGoogle");
+  const btnSignOut = document.getElementById("btnSignOut");
+  const btnBack = document.getElementById("btnBack");
+  const msg = document.getElementById("msg");
 
-    const btnGoogle = document.getElementById("btnGoogle");
-    const btnSignOut = document.getElementById("btnSignOut");
-    const btnBack = document.getElementById("btnBack");
-    const msg = document.getElementById("msg");
+  function showMessage(text, isBad = false) {
+    msg.textContent = text;
+    msg.classList.add("show");
+    msg.classList.toggle("bad", !!isBad);
+  }
 
-    function showMessage(text, isBad=false){
-      msg.textContent = text;
-      msg.classList.toggle("show", true);
-      msg.classList.toggle("bad", !!isBad);
+  function clearMessage() {
+    msg.classList.remove("show", "bad");
+    msg.textContent = "";
+  }
+
+  btnBack?.addEventListener("click", () => {
+    window.location.href = "/lrcQuestMain/index.html"; // adjust if your home path differs
+  });
+
+  btnSignOut?.addEventListener("click", async () => {
+    clearMessage();
+    try {
+      await logOut(); // ✅ correct function
+    } catch (e) {
+      console.error(e);
+      showMessage("Could not sign out.", true);
     }
+  });
 
-    function clearMessage(){
-      msg.classList.remove("show","bad");
-      msg.textContent = "";
-    }
+  btnGoogle?.addEventListener("click", async () => {
+    clearMessage();
+    btnGoogle.disabled = true;
 
-    btnBack.addEventListener("click", () => {
-      window.location.href = "/";
-    });
+    try {
+      await signInAdminWithGoogle(); // ✅ correct function
+      // redirect handled by auth listener below
+    } catch (e) {
+      console.error(e);
 
-    btnSignOut.addEventListener("click", async () => {
-      clearMessage();
-      await signOutUser();
-      showMessage("Signed out.");
-    });
-
-    btnGoogle.addEventListener("click", async () => {
-      btnGoogle.disabled = true;
-      clearMessage();
-      try {
-        await signInWithGoogle();
-
-        // onAuthStateChanged below will handle redirect/denial
-      } catch (e) {
-        console.error(e);
+      if (String(e?.message || "").includes("NOT_AUTHORIZED_ADMIN")) {
+        showMessage("That Google account is not authorized for admin access.", true);
+      } else {
         showMessage("Login cancelled or failed. Please try again.", true);
-      } finally {
-        btnGoogle.disabled = false;
       }
-    });
+    } finally {
+      btnGoogle.disabled = false;
+    }
+  });
 
-    // Auto-handle state:
-    // - If already logged in with the right email → redirect
-    // - If logged in with wrong email → sign out + message
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) {
-        clearMessage();
-        return;
-      }
+  // Auto-redirect if already signed in as admin
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
 
-      const email = (user.email || "").toLowerCase();
-      if (email === ALLOWED_EMAIL) {
-        showMessage("Welcome, Admin. Redirecting...");
-        window.location.href = ADMIN_REDIRECT;
-        return;
-      }
-
-      // Wrong Google account (or anonymous)
-      await signOutUser();
+    if (isAdminUser(user)) {
+      showMessage("Welcome, Admin. Redirecting...");
+      window.location.href = ADMIN_REDIRECT;
+    } else {
+      // If someone signs in with a non-admin Google account, boot them out
+      try {
+        await logOut();
+      } catch {}
       showMessage("That Google account is not authorized for admin access.", true);
-    });
-  </script>
+    }
+  });
+</script>
+
 </body>
 </html>
