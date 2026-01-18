@@ -239,5 +239,9 @@ export async function logOut() {
   localStorage.removeItem("lrcQuestProgress");
   localStorage.removeItem("lrcQuestTier");
 
-  window.location.href = wasAdmin ? "adminLogin.html" : "login.html";
+  // ✅ Absolute redirects (works from ANY folder)
+  window.location.href = wasAdmin
+    ? "/lrcQuestMain/admin/adminLogin.html"
+    : "/login.html";
 }
+
