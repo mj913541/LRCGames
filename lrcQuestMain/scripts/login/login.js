@@ -207,7 +207,7 @@ const staffIcon = document.getElementById("staffIcon");
 // ✅ If your admin login page is at /lrcQuestMain/admin/adminLogin.html keep this.
 // If you moved it to site root (/adminLogin.html), change it accordingly.
 adminIcon?.addEventListener("click", () => {
-  window.location.href = "/lrcQuestMain/admin/adminLogin.html";
+  window.location.href = "../lrcQuestMain/admin/adminLogin.html";
 });
 
 staffIcon?.addEventListener("click", () => {
