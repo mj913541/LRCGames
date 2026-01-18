@@ -73,7 +73,7 @@
     // If you already have these exported from lrcQuestCore.js, we'll use them.
     // Otherwise, this page will still work as long as lrcQuestCore exports:
     //   auth, signInWithGoogle(), signOutUser()
-    import { auth, signInWithGoogle, signOutUser } from "/scripts/lrcQuestCore.js";
+  import { auth, signInAdminWithGoogle, isAdminUser, logOut } from "/lrcQuestMain/scripts/lrcQuestCore.js";
     import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
     const ALLOWED_EMAIL = "malbrecht3317@gmail.com";
