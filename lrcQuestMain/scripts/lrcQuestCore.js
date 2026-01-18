@@ -1,8 +1,9 @@
 // -------------------------------------------------------------
 // LRC Quest Core - Shared Logic for All Pages
+// -------------------------------------------------------------
 // Supports:
-// - Anonymous students (homeroom / grade / PIN / username)
-// - Google Admin (Mrs. A ONLY)
+// • Anonymous students (homeroom / grade / PIN / username)
+// • Google Admin (Mrs. A ONLY: malbrecht3317@gmail.com)
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------
@@ -27,7 +28,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 // -------------------------------------------------------------
-// Firebase Configuration (YOUR PROJECT)
+// Firebase Configuration
 // -------------------------------------------------------------
 
 const firebaseConfig = {
@@ -44,8 +45,18 @@ const firebaseConfig = {
 // -------------------------------------------------------------
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// -------------------------------------------------------------
+// EXPORTS for legacy compatibility
+// -------------------------------------------------------------
+
+export { auth, db };
+
+export function getAuthInstance() {
+  return auth;
+}
 
 // -------------------------------------------------------------
 // Constants
@@ -54,7 +65,7 @@ export const db = getFirestore(app);
 const ADMIN_EMAIL = "malbrecht3317@gmail.com";
 
 // -------------------------------------------------------------
-// Local Storage Helpers (Students)
+// Local Storage Helpers
 // -------------------------------------------------------------
 
 export function getLocalStudent() {
@@ -106,7 +117,7 @@ export function isAnonStudent(user = auth.currentUser) {
 // Sign-in Helpers
 // -------------------------------------------------------------
 
-// Student login (after PIN / homeroom check on UI)
+// Student login (after PIN / homeroom validation on UI)
 export async function signInStudentAnonymously() {
   return await signInAnonymously(auth);
 }
@@ -128,8 +139,9 @@ export async function signInAdminWithGoogle() {
 // -------------------------------------------------------------
 // Require Login Guard
 // -------------------------------------------------------------
-// - Allows anonymous students OR Google admin
-// - Redirects if not signed in
+// Allows:
+// • anonymous students
+// • Google admin
 // -------------------------------------------------------------
 
 export function requireLogin(callback) {
@@ -178,7 +190,7 @@ export async function loadOrCreatePlayer(uid, profile = {}) {
 }
 
 // -------------------------------------------------------------
-// Save Progress Update
+// Save Progress
 // -------------------------------------------------------------
 
 export async function saveProgress(updateFn) {

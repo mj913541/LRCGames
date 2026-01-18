@@ -2,19 +2,20 @@
 // File: /lrcQuestMain/scripts/login/login.js
 // ==========================================
 
-import { getAuthInstance } from "../lrcQuestCore.js";
+// ✅ Use the shared Firebase instances from your core file
+// Path: login.js is in /scripts/login/, core is in /scripts/
+import { auth, db } from "../lrcQuestCore.js";
+
+// ✅ Anonymous student sign-in (students do NOT use Google)
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+
 import {
-  getFirestore,
   collection,
   query,
   where,
   orderBy,
   getDocs
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
-const auth = getAuthInstance();
-const db = getFirestore(auth.app);
 
 // Optional redirect support (kept for later roster step)
 const urlParams = new URLSearchParams(window.location.search);
@@ -54,6 +55,10 @@ function showGradePicker() {
   homeroomTitle.textContent = "";
 }
 
+// ----------------------------------------------------------
+// Auth: ensure anonymous student auth exists before reads
+// (Your Firestore rules require request.auth != null for /schools)
+// ----------------------------------------------------------
 async function ensureAnonAuth() {
   if (auth.currentUser) return;
   await signInAnonymously(auth);
@@ -87,7 +92,7 @@ function renderHomerooms(grade, rooms) {
   rooms.forEach((room) => {
     const btn = document.createElement("button");
 
-    // OPTION B: Card-style grid item
+    // Card-style grid item
     btn.className =
       "p-4 rounded-xl bg-green-600 hover:bg-green-700 transition text-white flex flex-col items-center shadow-md hover:shadow-xl";
 
@@ -111,6 +116,7 @@ function renderHomerooms(grade, rooms) {
     `;
 
     btn.addEventListener("click", () => {
+      // Save selections for the next step (roster + PIN)
       sessionStorage.setItem("lrc_grade", String(grade));
       sessionStorage.setItem("lrc_gradeLabel", displayGrade(grade));
       sessionStorage.setItem("lrc_homeroomId", String(room.id));
@@ -145,19 +151,21 @@ function renderGradeButtons() {
     a.id = g.domId;
     a.className = "grade-icon";
     a.setAttribute("data-grade", g.id);
+    a.setAttribute("aria-label", g.aria);
 
     // No text overlay (icons already show the grade)
     a.innerHTML = "";
-    a.setAttribute("aria-label", g.aria);
 
     a.addEventListener("click", async (e) => {
       e.preventDefault();
       try {
         await ensureAnonAuth();
         setStatus("Loading homerooms...");
+
         const rooms = await loadHomeroomsForGrade(g.id);
         showHomerooms();
         renderHomerooms(g.id, rooms);
+
         setStatus("Tap your classroom.", true);
       } catch (err) {
         console.error(err);
@@ -169,8 +177,9 @@ function renderGradeButtons() {
   });
 }
 
-staffLink.addEventListener("click", async () => {
+staffLink?.addEventListener("click", async () => {
   try {
+    // Staff page can still rely on auth existing (anonymous ok for now)
     await ensureAnonAuth();
     setStatus("Staff login coming next (PIN + dashboard route).", true);
   } catch (err) {
@@ -179,20 +188,24 @@ staffLink.addEventListener("click", async () => {
   }
 });
 
-backBtn.addEventListener("click", () => {
+backBtn?.addEventListener("click", () => {
   showGradePicker();
   setStatus("");
 });
 
+// Init
 (async function init() {
   setStatus("Ready. Choose your grade.");
   try { await ensureAnonAuth(); } catch {}
   renderGradeButtons();
 })();
 
+// Admin + Staff icons (paths depend on where you put the pages)
 const adminIcon = document.getElementById("adminIcon");
 const staffIcon = document.getElementById("staffIcon");
 
+// ✅ If your admin login page is at /lrcQuestMain/admin/adminLogin.html keep this.
+// If you moved it to site root (/adminLogin.html), change it accordingly.
 adminIcon?.addEventListener("click", () => {
   window.location.href = "/lrcQuestMain/admin/adminLogin.html";
 });
