@@ -133,13 +133,18 @@
     if (isAdminUser(user)) {
       showMessage("Welcome, Admin. Redirecting...");
       window.location.href = ADMIN_REDIRECT;
-    } else {
-      // If someone signs in with a non-admin Google account, boot them out
-      try {
-        await logOut();
-      } catch {}
-      showMessage("That Google account is not authorized for admin access.", true);
-    }
+} else {
+  // If someone is signed in (anonymous or wrong Google),
+  // sign them out BUT STAY on this admin login page.
+  try {
+    const { signOut } = await import("https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js");
+    await signOut(auth);
+  } catch (e) {
+    console.error(e);
+  }
+  showMessage("Admin access requires signing in with the authorized Google account.", true);
+}
+
   });
 </script>
 
