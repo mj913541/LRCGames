@@ -193,6 +193,48 @@ backBtn?.addEventListener("click", () => {
   setStatus("");
 });
 
+
+
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+document.getElementById("testStudentLogin")?.addEventListener("click", async () => {
+  try {
+    await ensureAnonAuth();
+
+    const grade = sessionStorage.getItem("lrc_grade");
+    if (!grade) return setStatus("Pick a grade first.", false);
+
+    const studentId = prompt("Enter studentId (example: 12345678):");
+    if (!studentId) return;
+
+    const enteredPin = prompt("Enter PIN:");
+    if (!enteredPin) return;
+
+    const studentRef = doc(db, "schools", "main", "gradeCodes", String(grade), "students", String(studentId).trim());
+    const snap = await getDoc(studentRef);
+
+    if (!snap.exists()) return setStatus("Student not found in gradeCodes roster.", false);
+
+    const student = snap.data();
+    if (String(student.pin) !== String(enteredPin).trim()) {
+      return setStatus("PIN incorrect.", false);
+    }
+
+    // Success: store session + go to hub
+    sessionStorage.setItem("lrc_studentId", String(studentId).trim());
+    sessionStorage.setItem("lrc_studentName", student.displayName || `${student.firstName || ""} ${student.lastName || ""}`.trim());
+
+    setStatus(`✅ Logged in as ${sessionStorage.getItem("lrc_studentName")}`, true);
+    window.location.href = DESTINATION_PAGE;
+  } catch (e) {
+    console.error(e);
+    setStatus("Login test failed. Check console.", false);
+  }
+});
+
+
+
+
 // Init
 (async function init() {
   setStatus("Ready. Choose your grade.");
