@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Monarch Bracket Battle</title>
+
+  <style>
+    :root{
+      --bg:#f6d688;
+      --ink:#1f2937;
+      --line:#6b7280;
+      --card:#ffffff;
+      --shadow: 0 10px 24px rgba(0,0,0,.12);
+      --radius:14px;
+
+      --c-grey:#d4d4d4;
+      --c-red:#f4a1a1;
+      --c-green:#bfe3b3;
+      --c-blue:#a9c7ff;
+      --c-purple:#b7a7df;
+
+      --wire: 3px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--ink);
+      background:
+        radial-gradient(900px 420px at 50% 20%, rgba(255,255,255,.35), transparent 60%),
+        radial-gradient(900px 420px at 10% 80%, rgba(255,255,255,.22), transparent 60%),
+        var(--bg);
+      min-height:100vh;
+    }
+
+    .wrap{
+      width:min(1400px, 98vw);
+      margin: 10px auto 24px;
+      padding: 10px 8px 18px;
+      position:relative;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:10px;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 12px;
+      background:rgba(255,255,255,.35);
+      border:1px solid rgba(0,0,0,.08);
+      border-radius:18px;
+      box-shadow: 0 6px 16px rgba(0,0,0,.08);
+    }
+    .title h1{
+      font-size:18px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .title small{
+      display:block;
+      color:#374151;
+      opacity:.9;
+      margin-top:2px;
+      font-weight:600;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .btn{
+      border:1px solid rgba(0,0,0,.18);
+      background:rgba(255,255,255,.75);
+      padding:10px 12px;
+      border-radius:14px;
+      cursor:pointer;
+      font-weight:800;
+      box-shadow: 0 6px 14px rgba(0,0,0,.08);
+      transition:.15s transform, .15s filter;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); filter:brightness(1.03); }
+    .btn[disabled]{ opacity:.55; cursor:not-allowed; transform:none; }
+
+    .pill{
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid rgba(0,0,0,.15);
+      background:rgba(255,255,255,.55);
+      font-weight:800;
+      font-size:12px;
+    }
+
+    .hint{
+      font-size:12px;
+      color:#374151;
+      opacity:.9;
+      font-weight:600;
+    }
+
+    /* BRACKET */
+    .bracket{
+      position:relative;
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 10px;
+      align-items:center;
+      min-height: 560px;
+      padding: 8px;
+    }
+
+    .side{
+      position:relative;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items:center;
+    }
+
+    .round{
+      display:flex;
+      flex-direction:column;
+      gap: 22px;
+      padding: 4px;
+    }
+
+    .match{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      gap: 8px;
+    }
+
+    .pair{
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+
+    /* Book tile (cover above title) */
+    .bookTile{
+      border-radius: var(--radius);
+      border: 2px solid rgba(0,0,0,.22);
+      background: var(--card);
+      padding: 10px 10px 12px;
+      box-shadow: var(--shadow);
+      min-height: 92px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap: 8px;
+      position:relative;
+      overflow:hidden;
+      text-align:center;
+    }
+
+    .bookTile::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(135deg, rgba(255,255,255,.35), transparent 45%);
+      pointer-events:none;
+      opacity:.85;
+    }
+
+    .bookTile.c-grey{ background: var(--c-grey); }
+    .bookTile.c-red{ background: var(--c-red); }
+    .bookTile.c-green{ background: var(--c-green); }
+    .bookTile.c-blue{ background: var(--c-blue); }
+    .bookTile.c-purple{ background: var(--c-purple); }
+
+    .coverLink{
+      display:block;
+      width: 64px;
+      height: 64px;
+      border-radius: 10px;
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,.25);
+      background: rgba(255,255,255,.55);
+      box-shadow: 0 6px 14px rgba(0,0,0,.10);
+      position:relative;
+      z-index:1;
+    }
+    .coverLink img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .coverFallback{
+      width:100%;
+      height:100%;
+      display:grid;
+      place-items:center;
+      font-weight:1000;
+      color: rgba(0,0,0,.65);
+    }
+
+    .titleLink{
+      position:relative;
+      z-index:1;
+      display:inline-block;
+      text-decoration:none;
+      color: var(--ink);
+      font-weight: 1000;
+      line-height:1.15;
+      padding: 2px 6px;
+      border-radius: 10px;
+    }
+    .titleLink:hover{
+      text-decoration: underline;
+    }
+
+    .slot{
+      background: rgba(255,255,255,.95);
+      border: 2px solid rgba(0,0,0,.45);
+      box-shadow: 0 10px 22px rgba(0,0,0,.12);
+      font-weight: 1000;
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      text-align:center;
+      min-height: 46px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+    }
+
+    /* center */
+    .center{
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap: 14px;
+      padding: 6px 6px 18px;
+      min-height: 520px;
+    }
+
+    .logoCard{
+      width:min(360px, 92%);
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.12);
+      border-radius: 22px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.10);
+      text-align:center;
+    }
+    .logoRow{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .logoText{
+      font-weight: 1000;
+      letter-spacing:.5px;
+      font-size: 20px;
+      margin:0;
+    }
+    .subText{
+      margin:4px 0 0;
+      font-weight:900;
+      opacity:.9;
+      font-size:12px;
+    }
+
+    .monarchImg{
+      width: 120px;
+      height: 120px;
+      border-radius: 18px;
+      overflow:hidden;
+      border: 2px solid rgba(0,0,0,.2);
+      box-shadow: 0 8px 18px rgba(0,0,0,.12);
+      background: rgba(255,255,255,.45);
+      display:grid;
+      place-items:center;
+      position:relative;
+    }
+    .monarchImg img{
+      width:100%;
+      height:100%;
+      object-fit:contain;
+      display:block;
+      background: rgba(255,255,255,.6);
+    }
+
+    .trophy{
+      width:min(380px, 94%);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      padding: 10px 14px 18px;
+      border-radius: 26px;
+      background:
+        radial-gradient(140px 140px at 50% 30%, rgba(255,255,255,.55), transparent 70%),
+        #f59e0b;
+      border: 4px solid rgba(0,0,0,.2);
+      box-shadow: 0 18px 34px rgba(0,0,0,.16);
+      position:relative;
+    }
+    .trophyTitle{
+      font-size: 18px;
+      font-weight: 1000;
+      margin: 6px 0 0;
+      letter-spacing:.4px;
+      text-shadow: 0 2px 0 rgba(255,255,255,.35);
+    }
+
+    /* CONNECTOR LINES (simple) */
+    .match.leftWires .bookTile::before{
+      content:"";
+      position:absolute;
+      left: calc(100% + 6px);
+      top: 50%;
+      width: 22px;
+      height: var(--wire);
+      background: var(--line);
+      transform: translateY(-50%);
+    }
+    .match.rightWires .bookTile::before{
+      content:"";
+      position:absolute;
+      right: calc(100% + 6px);
+      top: 50%;
+      width: 22px;
+      height: var(--wire);
+      background: var(--line);
+      transform: translateY(-50%);
+    }
+    .match.leftWires::after{
+      content:"";
+      position:absolute;
+      right: -26px;
+      top: 50%;
+      width: 26px;
+      height: var(--wire);
+      background: var(--line);
+      transform: translateY(-50%);
+    }
+    .match.rightWires::after{
+      content:"";
+      position:absolute;
+      left: -26px;
+      top: 50%;
+      width: 26px;
+      height: var(--wire);
+      background: var(--line);
+      transform: translateY(-50%);
+    }
+
+    /* EDIT PANEL */
+    .editPanel{
+      width:min(900px, 98%);
+      margin: 12px auto 0;
+      padding: 12px 12px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(0,0,0,.12);
+      box-shadow: 0 10px 22px rgba(0,0,0,.10);
+      display:none;
+      gap:10px;
+    }
+    .editPanel.show{ display:block; }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .field label{
+      font-size:12px;
+      font-weight:900;
+      opacity:.9;
+    }
+    .field input{
+      padding: 10px 10px;
+      border-radius: 14px;
+      border:1px solid rgba(0,0,0,.18);
+      background: rgba(255,255,255,.85);
+      font-weight:800;
+      outline:none;
+    }
+
+    /* PIN MODAL */
+    .modalBack{
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.45);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 16px;
+      z-index:9999;
+    }
+    .modalBack.show{ display:flex; }
+    .modal{
+      width:min(420px, 96%);
+      background: #fff;
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(0,0,0,.12);
+      box-shadow: 0 18px 50px rgba(0,0,0,.22);
+    }
+    .modal h2{ margin:0 0 8px; font-size:18px; }
+    .modal p{ margin:0 0 12px; color:#374151; font-weight:700; }
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+
+    @media (max-width: 1100px){
+      .bracket{ grid-template-columns: 1fr; gap: 18px; }
+      .center{ order: -1; min-height: unset; }
+      .match.leftWires::after, .match.rightWires::after,
+      .match.leftWires .bookTile::before, .match.rightWires .bookTile::before{
+        display:none;
+      }
+      .grid2{ grid-template-columns:1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="title">
+        <div>
+          <h1>Monarch Award Bracket Battle</h1>
+          <small id="statusText">Loading bracket…</small>
+        </div>
+      </div>
+
+      <div class="controls">
+        <span class="pill" id="modePill">VIEW MODE</span>
+        <button class="btn" id="teacherBtn">Teacher Edit</button>
+        <button class="btn" id="saveBtn" disabled>Save Changes</button>
+        <button class="btn" id="printBtn">Print</button>
+      </div>
+    </div>
+
+    <div class="bracket">
+      <!-- LEFT SIDE -->
+      <section class="side left" aria-label="Left bracket">
+        <div class="round" id="leftRound1"></div>
+        <div class="round" id="leftRound2"></div>
+      </section>
+
+      <!-- CENTER -->
+      <section class="center" aria-label="Finals">
+        <div class="logoCard">
+          <div class="logoRow">
+            <div class="monarchImg" title="Monarch image (teacher can set URL)">
+              <img id="monarchLogoImg" alt="Monarch logo" style="display:none;" />
+              <div id="monarchLogoFallback" class="hint" style="padding:10px; text-align:center;">
+                Monarch Image<br/>URL goes here
+              </div>
+            </div>
+            <div>
+              <p class="logoText">Monarch Award</p>
+              <p class="subText">Bracket Championship</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:14px; width:min(540px, 96%); justify-content:center; flex-wrap:wrap;">
+          <div class="slot" data-path="center.leftFinalist">Left Finalist</div>
+          <div class="slot" data-path="center.rightFinalist">Right Finalist</div>
+          <div class="slot" data-path="center.leftChampion">Left Champion</div>
+          <div class="slot" data-path="center.rightChampion">Right Champion</div>
+        </div>
+
+        <div class="trophy">
+          <div class="trophyTitle">WINNER! 🏆</div>
+          <div class="slot" data-path="center.winner" style="width:min(320px, 92%); font-size:18px;">Your Winner Here</div>
+        </div>
+      </section>
+
+      <!-- RIGHT SIDE -->
+      <section class="side right" aria-label="Right bracket">
+        <div class="round" id="rightRound2"></div>
+        <div class="round" id="rightRound1"></div>
+      </section>
+    </div>
+
+    <!-- TEACHER EDIT PANEL -->
+    <div class="editPanel" id="editPanel">
+      <div class="hint" style="font-weight:900;">
+        Edit Mode is ON ✅ (Don’t forget to click <b>Save Changes</b>.)
+      </div>
+      <div class="grid2">
+        <div class="field">
+          <label>Monarch image URL (center logo)</label>
+          <input id="monarchImageUrl" type="text" placeholder="Paste image URL (png/jpg/webp)..." />
+        </div>
+        <div class="field">
+          <label>Optional: “click-through” link for Monarch image</label>
+          <input id="monarchImageLink" type="text" placeholder="Paste link (optional)..." />
+        </div>
+      </div>
+      <div class="hint">Book cover URLs can be from Follett/OPAC screenshots you host, publisher sites, or your own uploaded images.</div>
+    </div>
+  </div>
+
+  <!-- PIN MODAL -->
+  <div class="modalBack" id="pinBack">
+    <div class="modal">
+      <h2>Teacher Edit Mode</h2>
+      <p>Enter your teacher PIN to unlock editing.</p>
+      <div class="row">
+        <input id="pinInput" type="password" inputmode="numeric"
+               style="flex:1; padding:12px; border-radius:14px; border:1px solid rgba(0,0,0,.2); font-weight:900; font-size:16px;"
+               placeholder="PIN" />
+        <button class="btn" id="pinGoBtn">Unlock</button>
+      </div>
+      <div id="pinErr" class="hint" style="color:#b91c1c; margin-top:8px; display:none; font-weight:900;">
+        Incorrect PIN.
+      </div>
+      <div class="hint" style="margin-top:10px;">
+        Note: PIN is a convenience lock. Real write-protection should be done with Firestore rules (see below).
+      </div>
+      <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+        <button class="btn" id="pinCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ---------------------------------------------------------
+    // ✅ Firebase core (your shared file)
+    // Adjust this path if you place this HTML elsewhere.
+    // ---------------------------------------------------------
+    import { db } from "../scripts/lrcQuestCore.js";
+
+    import {
+      doc, onSnapshot, setDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+    // ---------------------------------------------------------
+    // SETTINGS
+    // ---------------------------------------------------------
+    const TEACHER_PIN = "0913";
+    const BRACKET_DOC_PATH = ["monarch", "bracket2026"]; // /monarch/bracket2026 (single doc)
+    const bracketRef = doc(db, ...BRACKET_DOC_PATH);
+
+    // ---------------------------------------------------------
+    // UI refs
+    // ---------------------------------------------------------
+    const statusText = document.getElementById("statusText");
+    const modePill = document.getElementById("modePill");
+    const teacherBtn = document.getElementById("teacherBtn");
+    const saveBtn = document.getElementById("saveBtn");
+    const printBtn = document.getElementById("printBtn");
+
+    const editPanel = document.getElementById("editPanel");
+    const monarchImageUrl = document.getElementById("monarchImageUrl");
+    const monarchImageLink = document.getElementById("monarchImageLink");
+
+    const monarchLogoImg = document.getElementById("monarchLogoImg");
+    const monarchLogoFallback = document.getElementById("monarchLogoFallback");
+
+    // pin modal
+    const pinBack = document.getElementById("pinBack");
+    const pinInput = document.getElementById("pinInput");
+    const pinGoBtn = document.getElementById("pinGoBtn");
+    const pinCancelBtn = document.getElementById("pinCancelBtn");
+    const pinErr = document.getElementById("pinErr");
+
+    // bracket containers
+    const leftRound1 = document.getElementById("leftRound1");
+    const leftRound2 = document.getElementById("leftRound2");
+    const rightRound1 = document.getElementById("rightRound1");
+    const rightRound2 = document.getElementById("rightRound2");
+
+    // ---------------------------------------------------------
+    // State
+    // ---------------------------------------------------------
+    let isTeacher = false;
+    let currentData = null;      // last Firestore state
+    let draftData = null;        // editable copy (teacher)
+    let unsub = null;
+
+    // ---------------------------------------------------------
+    // Default data (first-time publish)
+    // Each book has: title, coverUrl, linkUrl
+    // ---------------------------------------------------------
+    const DEFAULT_DATA = {
+      monarch: { imageUrl: "", imageLink: "" },
+      left: {
+        round1: [
+          { color: "c-grey",
+            a:{ title:"Just Snow Already!", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Mr. S", coverUrl:"./assets/covers/2026/mrS.png", linkUrl:"" }
+          },
+          { color: "c-red",
+            a:{ title:"Bathe the Cat", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Negative Cat", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-green",
+            a:{ title:"Butt or Face", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Claude", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-blue",
+            a:{ title:"Flower Garden", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"World’s Best Class Plant", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-purple",
+            a:{ title:"Yoshi, Sea Turtle Genius", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Home is Calling: Monarch Butterflies", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          }
+        ],
+        round2: ["— Round 2 Winner —","— Round 2 Winner —","— Round 2 Winner —","— Round 2 Winner —","— Round 2 Winner —"]
+      },
+      right: {
+        round1: [
+          { color: "c-grey",
+            a:{ title:"Beneath", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Who’s Afraid of the Light?", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-red",
+            a:{ title:"Knight Owl", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Thunder and Cluck", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-green",
+            a:{ title:"Hamsters Make Terrible Roommates", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Homegrown", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-blue",
+            a:{ title:"Sydney and Taylor", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"We Are Definitely Human", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          },
+          { color: "c-purple",
+            a:{ title:"Red Jacket", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" },
+            b:{ title:"Time to Make Art", coverUrl:"./assets/covers/2026/justSnowAlready.png", linkUrl:"" }
+          }
+        ],
+        round2: ["— Round 2 Winner —","— Round 2 Winner —","— Round 2 Winner —","— Round 2 Winner —","— Round 2 Winner —"]
+      },
+      center: {
+        leftFinalist: "Left Finalist",
+        rightFinalist: "Right Finalist",
+        leftChampion: "Left Champion",
+        rightChampion: "Right Champion",
+        winner: "Your Winner Here"
+      }
+    };
+
+    const deepClone = (obj) => JSON.parse(JSON.stringify(obj));
+
+    // ---------------------------------------------------------
+    // Rendering helpers
+    // ---------------------------------------------------------
+    function coverBlock(book, editable, onUpdate){
+      const wrap = document.createElement("div");
+      wrap.className = "bookTile";
+      // color class gets added by parent
+      wrap.dataset.kind = "book";
+
+      // cover link
+      const coverA = document.createElement("a");
+      coverA.className = "coverLink";
+      coverA.href = book.linkUrl || "#";
+      coverA.target = book.linkUrl ? "_blank" : "_self";
+      coverA.rel = "noopener noreferrer";
+      coverA.title = book.linkUrl ? "Open link" : "No link set";
+
+      if (book.coverUrl){
+        const img = document.createElement("img");
+        img.src = book.coverUrl;
+        img.alt = book.title || "Book cover";
+        coverA.appendChild(img);
+      } else {
+        const fb = document.createElement("div");
+        fb.className = "coverFallback";
+        fb.textContent = "COVER";
+        coverA.appendChild(fb);
+      }
+
+      // title link
+      const titleA = document.createElement("a");
+      titleA.className = "titleLink";
+      titleA.href = book.linkUrl || "#";
+      titleA.target = book.linkUrl ? "_blank" : "_self";
+      titleA.rel = "noopener noreferrer";
+      titleA.textContent = book.title || "Untitled";
+
+      // teacher editing: clicking opens small prompts (simple + fast)
+      if (editable){
+        coverA.style.cursor = "pointer";
+        titleA.style.cursor = "pointer";
+
+        wrap.addEventListener("dblclick", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const newTitle = prompt("Edit title:", book.title || "") ?? book.title;
+          const newCover = prompt("Edit cover image URL:", book.coverUrl || "") ?? book.coverUrl;
+          const newLink  = prompt("Edit link URL (optional):", book.linkUrl || "") ?? book.linkUrl;
+
+          const updated = {
+            title: (newTitle ?? "").trim(),
+            coverUrl: (newCover ?? "").trim(),
+            linkUrl: (newLink ?? "").trim()
+          };
+          onUpdate(updated);
+        });
+
+        // tiny label hint
+        const hint = document.createElement("div");
+        hint.className = "hint";
+        hint.style.fontWeight = "900";
+        hint.style.opacity = ".85";
+        hint.style.position = "relative";
+        hint.style.zIndex = "1";
+        hint.textContent = "double-click to edit";
+        wrap.appendChild(hint);
+      }
+
+      wrap.appendChild(coverA);
+      wrap.appendChild(titleA);
+      return wrap;
+    }
+
+    function renderRound1(container, matches, side, editable){
+      container.innerHTML = "";
+      matches.forEach((m, idx) => {
+        const match = document.createElement("div");
+        match.className = `match ${side === "left" ? "leftWires" : "rightWires"}`;
+
+        const pair = document.createElement("div");
+        pair.className = "pair";
+
+        const makeUpdater = (which) => (newBook) => {
+          draftData[side].round1[idx][which] = newBook;
+          markDirty();
+          renderAll(); // re-render so cover/title updates instantly
+        };
+
+        const tileA = coverBlock(m.a, editable, makeUpdater("a"));
+        tileA.classList.add(m.color);
+
+        const tileB = coverBlock(m.b, editable, makeUpdater("b"));
+        tileB.classList.add(m.color);
+
+        pair.appendChild(tileA);
+        pair.appendChild(tileB);
+
+        match.appendChild(pair);
+        container.appendChild(match);
+      });
+    }
+
+    function renderRound2(container, labels, colorOrder, side, editable){
+      container.innerHTML = "";
+      labels.forEach((txt, i) => {
+        const div = document.createElement("div");
+        div.className = `slot ${colorOrder[i] || ""}`;
+        div.textContent = txt || "— Round 2 Winner —";
+        div.dataset.path = `${side}.round2.${i}`;
+
+        if (editable){
+          div.style.cursor = "pointer";
+          div.title = "Click to edit";
+          div.addEventListener("click", () => {
+            const cur = draftData[side].round2[i] || "";
+            const next = prompt("Edit Round 2 label:", cur) ?? cur;
+            draftData[side].round2[i] = (next || "").trim();
+            markDirty();
+            renderAll();
+          });
+        }
+        container.appendChild(div);
+      });
+    }
+
+    function renderCenter(editable){
+      // Monarch image
+      const url = (draftData?.monarch?.imageUrl ?? currentData?.monarch?.imageUrl ?? "") || "";
+      const link = (draftData?.monarch?.imageLink ?? currentData?.monarch?.imageLink ?? "") || "";
+
+      monarchImageUrl.value = url;
+      monarchImageLink.value = link;
+
+      if (url){
+        monarchLogoImg.src = url;
+        monarchLogoImg.style.display = "block";
+        monarchLogoFallback.style.display = "none";
+      } else {
+        monarchLogoImg.removeAttribute("src");
+        monarchLogoImg.style.display = "none";
+        monarchLogoFallback.style.display = "block";
+      }
+
+      // make logo clickable if link set
+      const monarchWrap = monarchLogoImg.parentElement;
+      monarchWrap.style.cursor = link ? "pointer" : (editable ? "pointer" : "default");
+      monarchWrap.onclick = () => {
+        if (editable){
+          // in edit mode, clicking the logo nudges them to use the fields
+          monarchImageUrl.focus();
+          return;
+        }
+        if (link) window.open(link, "_blank", "noopener,noreferrer");
+      };
+
+      // Center slots
+      document.querySelectorAll(".slot[data-path^='center.']").forEach(el => {
+        const path = el.dataset.path.split(".")[1];
+        el.textContent = draftData.center[path] || "";
+
+        if (editable){
+          el.style.cursor = "pointer";
+          el.title = "Click to edit";
+          el.onclick = () => {
+            const cur = draftData.center[path] || "";
+            const next = prompt("Edit this slot:", cur) ?? cur;
+            draftData.center[path] = (next || "").trim();
+            markDirty();
+            renderAll();
+          };
+        } else {
+          el.style.cursor = "default";
+          el.onclick = null;
+        }
+      });
+    }
+
+    function renderAll(){
+      const data = isTeacher ? draftData : currentData;
+      if (!data) return;
+
+      renderRound1(leftRound1, data.left.round1, "left", isTeacher);
+      renderRound2(leftRound2, data.left.round2, ["c-grey","c-red","c-green","c-blue","c-purple"], "left", isTeacher);
+
+      renderRound2(rightRound2, data.right.round2, ["c-grey","c-red","c-green","c-blue","c-purple"], "right", isTeacher);
+      renderRound1(rightRound1, data.right.round1, "right", isTeacher);
+
+      renderCenter(isTeacher);
+    }
+
+    // ---------------------------------------------------------
+    // Dirty tracking / Save
+    // ---------------------------------------------------------
+    let dirty = false;
+    function markDirty(){
+      dirty = true;
+      saveBtn.disabled = !isTeacher || !dirty;
+    }
+
+    saveBtn.addEventListener("click", async () => {
+      if (!isTeacher || !dirty) return;
+
+      // pull monarch fields into draftData
+      draftData.monarch.imageUrl = (monarchImageUrl.value || "").trim();
+      draftData.monarch.imageLink = (monarchImageLink.value || "").trim();
+
+      saveBtn.disabled = true;
+      statusText.textContent = "Saving…";
+
+      try{
+        await setDoc(bracketRef, {
+          ...draftData,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+
+        dirty = false;
+        statusText.textContent = "Saved ✅ (Everyone’s page will update automatically.)";
+      } catch(err){
+        console.error(err);
+        statusText.textContent = "Save failed. Check Firestore rules / permissions.";
+        saveBtn.disabled = false;
+      }
+    });
+
+    printBtn.addEventListener("click", () => window.print());
+
+    // ---------------------------------------------------------
+    // Teacher PIN flow
+    // ---------------------------------------------------------
+    teacherBtn.addEventListener("click", () => {
+      pinErr.style.display = "none";
+      pinInput.value = "";
+      pinBack.classList.add("show");
+      setTimeout(()=>pinInput.focus(), 50);
+    });
+
+    pinCancelBtn.addEventListener("click", () => {
+      pinBack.classList.remove("show");
+    });
+
+    pinGoBtn.addEventListener("click", () => {
+      const entered = (pinInput.value || "").trim();
+      if (entered !== TEACHER_PIN){
+        pinErr.style.display = "block";
+        return;
+      }
+
+      pinBack.classList.remove("show");
+      isTeacher = true;
+      modePill.textContent = "EDIT MODE";
+      editPanel.classList.add("show");
+      statusText.textContent = "Edit mode unlocked. Double-click a book tile to edit.";
+      teacherBtn.textContent = "Exit Edit";
+
+      // teacher edits a local draft copy, then Save writes to Firestore
+      draftData = deepClone(currentData || DEFAULT_DATA);
+      dirty = false;
+      saveBtn.disabled = true;
+      renderAll();
+    });
+
+    // Exit Edit
+    teacherBtn.addEventListener("dblclick", () => {
+      if (!isTeacher) return;
+      isTeacher = false;
+      modePill.textContent = "VIEW MODE";
+      editPanel.classList.remove("show");
+      teacherBtn.textContent = "Teacher Edit";
+      dirty = false;
+      saveBtn.disabled = true;
+      statusText.textContent = "View mode (read-only).";
+      renderAll();
+    });
+
+    // ---------------------------------------------------------
+    // Live load from Firestore (everyone sees updates)
+    // ---------------------------------------------------------
+    function startLive(){
+      statusText.textContent = "Loading bracket…";
+
+      unsub = onSnapshot(bracketRef, async (snap) => {
+        if (!snap.exists()){
+          // First-time publish: create default doc (will succeed only if rules allow)
+          statusText.textContent = "Publishing default bracket…";
+          try{
+            await setDoc(bracketRef, { ...DEFAULT_DATA, updatedAt: serverTimestamp() }, { merge: true });
+            return;
+          } catch(e){
+            // If rules block this, page will still render DEFAULT locally
+            console.warn("Could not auto-create bracket doc (rules likely block).", e);
+            currentData = deepClone(DEFAULT_DATA);
+            statusText.textContent = "Loaded (local default). Ask MJ to publish.";
+            renderAll();
+            return;
+          }
+        }
+
+        currentData = snap.data();
+        if (!isTeacher){
+          statusText.textContent = "Loaded ✅ (Live updates on)";
+          renderAll();
+        } else {
+          // if teacher is editing, don't overwrite the draft while they type;
+          // but we can still reflect that it updated
+          statusText.textContent = "Live updated (you’re in Edit Mode; your draft is not overwritten).";
+        }
+      }, (err) => {
+        console.error(err);
+        statusText.textContent = "Live load failed. Check Firebase config / rules.";
+      });
+    }
+
+    // Monarch fields: if teacher edits the URL fields, mark dirty
+    monarchImageUrl.addEventListener("input", () => { if (isTeacher) markDirty(); });
+    monarchImageLink.addEventListener("input", () => { if (isTeacher) markDirty(); });
+
+    startLive();
+  </script>
+</body>
+</html>
