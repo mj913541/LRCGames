@@ -541,9 +541,6 @@
       <div id="pinErr" class="hint" style="color:#b91c1c; margin-top:8px; display:none; font-weight:900;">
         Incorrect PIN.
       </div>
-      <div class="hint" style="margin-top:10px;">
-        Note: PIN is a convenience lock. Real write-protection should be done with Firestore rules (see below).
-      </div>
       <div style="display:flex; justify-content:flex-end; margin-top:12px;">
         <button class="btn" id="pinCancelBtn">Cancel</button>
       </div>
@@ -555,7 +552,8 @@
     // ✅ Firebase core (your shared file)
     // Adjust this path if you place this HTML elsewhere.
     // ---------------------------------------------------------
-    import { db } from "../scripts/lrcQuestCore.js";
+import { db } from "../../scripts/lrcQuestCore.js";
+
 
     import {
       doc, onSnapshot, setDoc, serverTimestamp
