@@ -37,13 +37,26 @@ let selectedStudentId = null;
 let selectedStudentName = null;
 
 // Start: load grades dynamically from Firestore
-main().catch(e => setStatus(e.message || String(e)));
+main();
 
 async function main() {
-  setStatus("Loading grades…");
-  await renderGradesFromFirestore();
-  setStatus("");
+  try {
+    setStatus("Signing in…");
+
+    // ✅ MUST be signed in before reading /schools/**
+    if (!auth.currentUser) {
+      await signInAnonymously(auth);
+    }
+
+    setStatus("Loading grades…");
+    await renderGradesFromFirestore();
+    setStatus("");
+  } catch (e) {
+    // ✅ Show the real error on the page
+    setStatus("ERROR: " + (e?.message || String(e)));
+  }
 }
+
 
 btn.onclick = async () => {
   setStatus("");
