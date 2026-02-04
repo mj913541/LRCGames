@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Read-a-Thon Prize Store</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      background: #f4f6fb;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .balance {
+      text-align: center;
+      font-size: 1.4em;
+      margin-bottom: 20px;
+    }
+    .store {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .item {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,.08);
+    }
+    .item h3 {
+      margin-top: 0;
+    }
+    .price {
+      font-weight: bold;
+      margin: 8px 0;
+    }
+    button {
+      background: #4f46e5;
+      color: white;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+    .test-tools {
+      margin-top: 30px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎉 Read-a-Thon Prize Store</h1>
+
+<div class="balance">
+  You have <strong><span id="currency">0</span></strong> Sparks ✨
+</div>
+
+<div class="store" id="store"></div>
+
+<div class="test-tools">
+  <button onclick="addTestCurrency()">+50 Currency (Test)</button>
+  <button onclick="resetStore()">Reset</button>
+</div>
+
+<script>
+/* ---------------------------
+   DATA
+---------------------------- */
+
+const CURRENCY_LABEL = "Sparks";
+
+const items = [
+  { id: "avatar_lion_hat", name: "Lion Leaf Crown", category: "Avatar", cost: 25, hidden: false },
+  { id: "avatar_cape", name: "Hero Cape", category: "Avatar", cost: 30, hidden: false },
+
+  { id: "pet_dragon", name: "Dragon Pet", category: "Pet", cost: 50, hidden: false },
+  { id: "pet_owl", name: "Owl Pet", category: "Pet", cost: 40, hidden: false },
+
+  { id: "bg_library", name: "Library Background", category: "Digital", cost: 20, hidden: false },
+
+  { id: "secret_item", name: "??? Mystery Item", category: "Hidden", cost: 3, hidden: true }
+];
+
+/* ---------------------------
+   STATE
+---------------------------- */
+
+let currency = Number(localStorage.getItem("currency")) || 0;
+let purchases = JSON.parse(localStorage.getItem("purchases") || "[]");
+
+/* ---------------------------
+   RENDER
+---------------------------- */
+
+function render() {
+  document.getElementById("currency").textContent = currency;
+  const store = document.getElementById("store");
+  store.innerHTML = "";
+
+  items.filter(i => !i.hidden).forEach(item => {
+    const card = document.createElement("div");
+    card.className = "item";
+
+    const canAfford = currency >= item.cost;
+
+    card.innerHTML = `
+      <h3>${item.name}</h3>
+      <div>${item.category}</div>
+      <div class="price">${item.cost} ${CURRENCY_LABEL}</div>
+      <button ${!canAfford ? "disabled" : ""}>
+        Buy
+      </button>
+    `;
+
+    card.querySelector("button").onclick = () => confirmPurchase(item);
+    store.appendChild(card);
+  });
+}
+
+/* ---------------------------
+   PURCHASE FLOW
+---------------------------- */
+
+function confirmPurchase(item) {
+  const ok = confirm(`Are you sure you want to buy "${item.name}" for ${item.cost} ${CURRENCY_LABEL}?`);
+  if (!ok) return;
+
+  currency -= item.cost;
+  purchases.push({
+    itemId: item.id,
+    name: item.name,
+    cost: item.cost,
+    time: new Date().toISOString()
+  });
+
+  save();
+  render();
+  alert(`🎉 You bought ${item.name}!`);
+}
+
+/* ---------------------------
+   STORAGE
+---------------------------- */
+
+function save() {
+  localStorage.setItem("currency", currency);
+  localStorage.setItem("purchases", JSON.stringify(purchases));
+}
+
+/* ---------------------------
+   TEST CONTROLS
+---------------------------- */
+
+function addTestCurrency() {
+  currency += 50;
+  save();
+  render();
+}
+
+function resetStore() {
+  if (!confirm("Reset all data?")) return;
+  localStorage.clear();
+  currency = 0;
+  purchases = [];
+  render();
+}
+
+/* ---------------------------
+   INIT
+---------------------------- */
+
+render();
+</script>
+
+</body>
+</html>
