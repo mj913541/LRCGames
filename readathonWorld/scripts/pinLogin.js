@@ -203,14 +203,31 @@ function tileHtml(item, type) {
     type === "homeroom" ? `data-homeroom="${escapeAttr(item.id)}" data-type="homeroom"` :
     `data-student="${escapeAttr(item.id)}" data-type="student"`;
 
+  // ✅ Auto image path for grades
+  const imgSrc = type === "grade"
+    ? `/readathonWorld/assets/ui/grade-${item.id}.png`
+    : null;
+
+  const imgBlock = imgSrc ? `
+    <div class="aspect-[16/9] bg-black/30 overflow-hidden">
+      <img src="${imgSrc}" alt=""
+           class="w-full h-full object-cover"
+           onerror="this.style.display='none'">
+    </div>
+  ` : "";
+
   return `
     <button ${dataAttr}
-      class="group text-left rounded-2xl border border-white/10 bg-white/5 hover:bg-white/10 transition p-4">
-      <div class="font-extrabold">${escapeHtml(item.label)}</div>
-      <div class="text-xs text-white/60 mt-1">${escapeHtml(item.id)}</div>
+      class="group text-left rounded-2xl overflow-hidden border border-white/10 bg-white/5 hover:bg-white/10 transition">
+      ${imgBlock}
+      <div class="p-4">
+        <div class="font-extrabold">${escapeHtml(item.label)}</div>
+        <div class="text-xs text-white/60 mt-1">${escapeHtml(item.id)}</div>
+      </div>
     </button>
   `;
 }
+
 
 function highlightSelected(type, selectedId) {
   document.querySelectorAll(`[data-type="${type}"]`).forEach(el => {
