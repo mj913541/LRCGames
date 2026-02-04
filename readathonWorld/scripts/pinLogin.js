@@ -3,7 +3,8 @@
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
-import { auth, db } from "../../scripts/lrcQuestCore.js";
+import { auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
+
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   collection,

@@ -2,7 +2,8 @@
 // Shared utilities for Read-A-Thon World (static site, ES modules).
 // ✅ Uses existing Firebase instances from /scripts/lrcQuestCore.js (do NOT reinitialize Firebase)
 
-import { auth, db } from "../../scripts/lrcQuestCore.js";
+import { auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
+
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
