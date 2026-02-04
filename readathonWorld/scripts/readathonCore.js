@@ -4,7 +4,6 @@
 
 import { auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
 
-
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   doc,
