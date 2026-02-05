@@ -1,9 +1,9 @@
 // -------------------------------------------------------------
-// LRC Quest Core - Shared Logic for All Pages
+// AAA LRC Quest Core - Shared Logic for All Pages
 // -------------------------------------------------------------
 // Supports:
 // • Anonymous students (homeroom / grade / PIN / username)
-// • Google Admin (Mrs. A ONLY: malbrecht3317@gmail.com)
+// • Google Admin (Mrs. A ONLY)
 // -------------------------------------------------------------
 
 // -------------------------------------------------------------
@@ -44,15 +44,13 @@ const firebaseConfig = {
 // Initialize Firebase (ONCE)
 // -------------------------------------------------------------
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+export const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const db = getFirestore(app);
 
 // -------------------------------------------------------------
 // EXPORTS for legacy compatibility
 // -------------------------------------------------------------
-
-export { auth, db };
 
 export function getAuthInstance() {
   return auth;
@@ -139,10 +137,6 @@ export async function signInAdminWithGoogle() {
 // -------------------------------------------------------------
 // Require Login Guard
 // -------------------------------------------------------------
-// Allows:
-// • anonymous students
-// • Google admin
-// -------------------------------------------------------------
 
 export function requireLogin(callback) {
   onAuthStateChanged(auth, (user) => {
@@ -205,10 +199,8 @@ export async function saveProgress(updateFn) {
   const current = getLocalProgress();
   const updated = updateFn(current);
 
-  // Save locally
   setLocalProgress(updated);
 
-  // Save to Firestore
   const ref = doc(db, "players", user.uid);
   await setDoc(
     ref,
@@ -239,9 +231,7 @@ export async function logOut() {
   localStorage.removeItem("lrcQuestProgress");
   localStorage.removeItem("lrcQuestTier");
 
-  // ✅ Absolute redirects (works from ANY folder)
   window.location.href = wasAdmin
     ? "/lrcQuestMain/admin/adminLogin.html"
     : "/login.html";
 }
-
