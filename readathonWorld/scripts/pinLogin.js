@@ -1,5 +1,5 @@
 // /readathonWorld/scripts/pinLogin.js
-// ggg Flow: Grade → Homeroom → Student Name → PIN
+// aaa Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
@@ -8,7 +8,8 @@ document.body.insertAdjacentHTML(
   "afterbegin",
   "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>"
 );
-console.log("PINLOGIN VERSION", "2026-02-05-STEP6");
+
+console.log("PINLOGIN VERSION", "2026-02-05-FULL-RENDER");
 
 import { app, auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -54,16 +55,18 @@ async function main() {
       await signInAnonymously(auth);
     }
 
-setStatus("Signed in anonymously ✅");
-await debugInventory();           // 👈 ADD THIS LINE
-await debugTopCollections(); 
-await renderGradesFromFirestore();
+    setStatus("Signed in anonymously ✅");
 
-} catch (e) {
-  console.warn("DEBUG collection error:", name, e?.code, e?.message);
-  results.push({ name, size: e?.code || "ERR" });
-}
+    // Debug helpers (safe to leave while you build)
+    await debugInventory();
+    await debugTopCollections();
 
+    // Normal flow
+    await renderGradesFromFirestore();
+  } catch (e) {
+    console.error("MAIN ERROR", e);
+    setStatus("ERROR: " + (e?.message || String(e)));
+  }
 }
 
 btn.onclick = async () => {
@@ -109,6 +112,7 @@ btn.onclick = async () => {
 
     setStatus("✅ Request sent! Please wait for staff approval.");
   } catch (e) {
+    console.error("REQUEST ERROR", e);
     setStatus("ERROR: " + (e?.message || String(e)));
   }
 };
@@ -146,9 +150,9 @@ async function renderGradesFromFirestore() {
     .map(g => tileHtml({ id: g.id, label: gradeLabel(g.id) }, "grade"))
     .join("");
 
-  gradeGrid.querySelectorAll("[data-grade]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      selectedGrade = btn.dataset.grade;
+  gradeGrid.querySelectorAll("[data-grade]").forEach(btnEl => {
+    btnEl.addEventListener("click", async () => {
+      selectedGrade = btnEl.dataset.grade;
       selectedHomeroom = null;
       selectedStudentId = null;
       selectedStudentName = null;
@@ -162,7 +166,6 @@ async function renderGradesFromFirestore() {
     });
   });
 
-  // Clear status once grades render
   setStatus("");
 }
 
@@ -185,9 +188,9 @@ async function renderHomeroomsFromFirestore(gradeId) {
     .map(h => tileHtml({ id: h.id, label: homeroomLabel(h.id) }, "homeroom"))
     .join("");
 
-  homeroomGrid.querySelectorAll("[data-homeroom]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      selectedHomeroom = btn.dataset.homeroom;
+  homeroomGrid.querySelectorAll("[data-homeroom]").forEach(btnEl => {
+    btnEl.addEventListener("click", async () => {
+      selectedHomeroom = btnEl.dataset.homeroom;
       selectedStudentId = null;
       selectedStudentName = null;
 
@@ -219,9 +222,9 @@ async function renderStudentsFromFirestore(gradeId, homeroomId) {
     .map(s => tileHtml({ id: s.id, label: s.displayName || s.id }, "student"))
     .join("");
 
-  studentGrid.querySelectorAll("[data-student]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      selectedStudentId = btn.dataset.student;
+  studentGrid.querySelectorAll("[data-student]").forEach(btnEl => {
+    btnEl.addEventListener("click", async () => {
+      selectedStudentId = btnEl.dataset.student;
 
       const ref = doc(
         db,
@@ -241,6 +244,81 @@ async function renderStudentsFromFirestore(gradeId, homeroomId) {
       setStatus("");
     });
   });
+}
+
+// ---------------------------
+// Debug helpers
+// ---------------------------
+
+async function debugInventory() {
+  // 1) List top-level school docs
+  const schoolsSnap = await getDocs(collection(db, "schools"));
+  const schoolIds = schoolsSnap.docs.map(d => d.id);
+
+  console.log("DEBUG schools:", schoolIds);
+  setStatus(`DEBUG schools: ${schoolIds.join(", ") || "(none)"}`);
+
+  // 2) If our SCHOOL_DOC_ID isn't there, stop right away
+  if (!schoolIds.includes(SCHOOL_DOC_ID)) {
+    console.warn(`DEBUG: SCHOOL_DOC_ID="${SCHOOL_DOC_ID}" not found in /schools`);
+    return;
+  }
+
+  // 3) List grades under the selected school
+  const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
+  const gradeIds = gradesSnap.docs.map(d => d.id);
+
+  console.log(`DEBUG grades under schools/${SCHOOL_DOC_ID}:`, gradeIds);
+  setStatus(`DEBUG grades under ${SCHOOL_DOC_ID}: ${gradeIds.join(", ") || "(none)"}`);
+
+  // 4) Check if the school doc itself exists + what fields it has
+  const schoolDocSnap = await getDoc(doc(db, "schools", SCHOOL_DOC_ID));
+  console.log("DEBUG school doc exists:", schoolDocSnap.exists());
+  console.log("DEBUG school doc data:", schoolDocSnap.data() || null);
+}
+
+async function debugTopCollections() {
+  const candidates = [
+    "grades",
+    "homerooms",
+    "students",
+    "players",
+    "users",
+    "rosters",
+    "roster",
+    "classrooms",
+    "classes",
+    "teacherRosters",
+    "studentRosters",
+    "readathonStudents",
+    "schoolsRoster",
+    "districts"
+  ];
+
+  const results = [];
+
+  for (const colName of candidates) {
+    try {
+      const snap = await getDocs(collection(db, colName));
+      results.push({ name: colName, size: snap.size });
+    } catch (e) {
+      console.warn("DEBUG collection error:", colName, e?.code, e?.message);
+      results.push({ name: colName, size: e?.code || "ERR" });
+    }
+  }
+
+  console.table(results);
+
+  const ok = results
+    .filter(r => typeof r.size === "number" && r.size > 0)
+    .map(r => `${r.name}=${r.size}`)
+    .join(" | ");
+
+  const errs = results.some(r => r.size === "ERR" || String(r.size).includes("denied"))
+    ? " | (some denied)"
+    : "";
+
+  setStatus("Top-level sizes: " + (ok || "(none found)") + errs);
 }
 
 // ---------------------------
@@ -295,7 +373,10 @@ function highlightSelected(type, selectedId) {
 
 function gradeLabel(id) {
   if (id === "k" || id === "0") return "Kindergarten";
-  return `${id}th Grade`.replace("1th", "1st").replace("2th", "2nd").replace("3th", "3rd");
+  return `${id}th Grade`
+    .replace("1th", "1st")
+    .replace("2th", "2nd")
+    .replace("3th", "3rd");
 }
 
 function homeroomLabel(id) {
@@ -326,69 +407,4 @@ function escapeAttr(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
-}
-async function debugInventory() {
-  // 1) List top-level school docs
-  const schoolsSnap = await getDocs(collection(db, "schools"));
-  const schoolIds = schoolsSnap.docs.map(d => d.id);
-
-  console.log("DEBUG schools:", schoolIds);
-  setStatus(`DEBUG schools: ${schoolIds.join(", ") || "(none)"}`);
-
-  // 2) If our SCHOOL_DOC_ID isn't there, stop right away
-  if (!schoolIds.includes(SCHOOL_DOC_ID)) {
-    console.warn(`DEBUG: SCHOOL_DOC_ID="${SCHOOL_DOC_ID}" not found in /schools`);
-    return;
-  }
-
-  // 3) List grades under the selected school
-  const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
-  const gradeIds = gradesSnap.docs.map(d => d.id);
-
-  console.log(`DEBUG grades under schools/${SCHOOL_DOC_ID}:`, gradeIds);
-  setStatus(`DEBUG grades under ${SCHOOL_DOC_ID}: ${gradeIds.join(", ") || "(none)"}`);
-
-  // 4) Check if the school doc itself exists + what fields it has
-  const schoolDocSnap = await getDoc(doc(db, "schools", SCHOOL_DOC_ID));
-  console.log("DEBUG school doc exists:", schoolDocSnap.exists());
-  console.log("DEBUG school doc data:", schoolDocSnap.data() || null);
-}
-async function debugTopCollections() {
-  const candidates = [
-    "grades",
-    "homerooms",
-    "students",
-    "players",
-    "users",
-    "rosters",
-    "roster",
-    "classrooms",
-    "classes",
-    "teacherRosters",
-    "studentRosters",
-    "readathonStudents",
-    "schoolsRoster",
-    "districts"
-  ];
-
-  const results = [];
-
-  for (const name of candidates) {
-    try {
-      const snap = await getDocs(collection(db, name));
-      results.push({ name, size: snap.size });
-    } catch (e) {
-      results.push({ name, size: "ERR" });
-    }
-  }
-
-  console.table(results);
-  setStatus(
-    "Top-level sizes: " +
-      results
-        .filter(r => typeof r.size === "number" && r.size > 0)
-        .map(r => `${r.name}=${r.size}`)
-        .join(" | ") +
-      (results.some(r => r.size === "ERR") ? " | (some ERR)" : "")
-  );
 }
