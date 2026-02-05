@@ -1,5 +1,5 @@
 // /readathonWorld/scripts/pinLogin.js
-// AAFlow: Grade → Homeroom → Student Name → PIN
+// BBB Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
@@ -8,7 +8,8 @@ document.body.insertAdjacentHTML(
   "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>"
 );
 
-import { auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
+import { app, auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
+
 
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
@@ -44,21 +45,71 @@ let selectedStudentName = null;
 // Start
 main();
 
-async function main() {
-  try {
-    setStatus("Signing in…");
+async function renderGradesFromFirestore() {
+  gradeGrid.innerHTML = `<div class="text-sm text-white/60">Loading…</div>`;
+  homeroomGrid.innerHTML = "";
+  studentGrid.innerHTML = "";
 
-    // ✅ Must be signed in before reading /schools/**
-    if (!auth.currentUser) {
-      await signInAnonymously(auth);
-    }
+  // 🔍 Debug: show project + direct doc access
+  setStatus(`Project: ${app.options.projectId} | probing grade/4…`);
 
-    setStatus("Signed in anonymously ✅");
-    await renderGradesFromFirestore();
-  } catch (e) {
-    setStatus("ERROR: " + (e?.message || String(e)));
+  const testSnap = await getDoc(
+    doc(db, "schools", SCHOOL_DOC_ID, "grades", "4")
+  );
+
+  setStatus(
+    `Project: ${app.options.projectId} | grade/4 exists: ${testSnap.exists()}`
+  );
+
+  // 📂 List grades
+  const gradesSnap = await getDocs(
+    collection(db, "schools", SCHOOL_DOC_ID, "grades")
+  );
+
+  setStatus(
+    `Project: ${app.options.projectId} | grades list count: ${gradesSnap.size}`
+  );
+
+  const grades = gradesSnap.docs.map(d => ({ id: d.id }));
+
+  if (!grades.length) {
+    gradeGrid.innerHTML = `<div class="text-sm text-white/60">No grades found.</div>`;
+    return;
   }
+
+  // 🎨 Render grade tiles
+  gradeGrid.innerHTML = grades
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
+    .map(g =>
+      tileHtml(
+        { id: g.id, label: gradeLabel(g.id) },
+        "grade"
+      )
+    )
+    .join("");
+
+  // 🖱️ Wire click handlers
+  gradeGrid.querySelectorAll("[data-grade]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      selectedGrade = btn.dataset.grade;
+      selectedHomeroom = null;
+      selectedStudentId = null;
+      selectedStudentName = null;
+
+      pickedGradeEl.textContent = gradeLabel(selectedGrade);
+      pickedHomeroomEl.textContent = "—";
+      pickedStudentEl.textContent = "—";
+
+      highlightSelected("grade", selectedGrade);
+      await renderHomeroomsFromFirestore(selectedGrade);
+    });
+  });
+
+  // Clear status once grades render
+  setStatus("");
 }
+
+
 
 btn.onclick = async () => {
   try {
