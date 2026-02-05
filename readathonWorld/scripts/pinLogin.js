@@ -1,16 +1,15 @@
 // /readathonWorld/scripts/pinLogin.js
-// BBB Flow: Grade → Homeroom → Student Name → PIN
+// CCC Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
+// Visual proof the JS module loaded
 document.body.insertAdjacentHTML(
   "afterbegin",
   "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>"
 );
 
 import { app, auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
-
-
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 import {
   collection,
@@ -45,71 +44,21 @@ let selectedStudentName = null;
 // Start
 main();
 
-async function renderGradesFromFirestore() {
-  gradeGrid.innerHTML = `<div class="text-sm text-white/60">Loading…</div>`;
-  homeroomGrid.innerHTML = "";
-  studentGrid.innerHTML = "";
+async function main() {
+  try {
+    setStatus("Signing in…");
 
-  // 🔍 Debug: show project + direct doc access
-  setStatus(`Project: ${app.options.projectId} | probing grade/4…`);
+    // ✅ Must be signed in before reading /schools/**
+    if (!auth.currentUser) {
+      await signInAnonymously(auth);
+    }
 
-  const testSnap = await getDoc(
-    doc(db, "schools", SCHOOL_DOC_ID, "grades", "4")
-  );
-
-  setStatus(
-    `Project: ${app.options.projectId} | grade/4 exists: ${testSnap.exists()}`
-  );
-
-  // 📂 List grades
-  const gradesSnap = await getDocs(
-    collection(db, "schools", SCHOOL_DOC_ID, "grades")
-  );
-
-  setStatus(
-    `Project: ${app.options.projectId} | grades list count: ${gradesSnap.size}`
-  );
-
-  const grades = gradesSnap.docs.map(d => ({ id: d.id }));
-
-  if (!grades.length) {
-    gradeGrid.innerHTML = `<div class="text-sm text-white/60">No grades found.</div>`;
-    return;
+    setStatus("Signed in anonymously ✅");
+    await renderGradesFromFirestore();
+  } catch (e) {
+    setStatus("ERROR: " + (e?.message || String(e)));
   }
-
-  // 🎨 Render grade tiles
-  gradeGrid.innerHTML = grades
-    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
-    .map(g =>
-      tileHtml(
-        { id: g.id, label: gradeLabel(g.id) },
-        "grade"
-      )
-    )
-    .join("");
-
-  // 🖱️ Wire click handlers
-  gradeGrid.querySelectorAll("[data-grade]").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      selectedGrade = btn.dataset.grade;
-      selectedHomeroom = null;
-      selectedStudentId = null;
-      selectedStudentName = null;
-
-      pickedGradeEl.textContent = gradeLabel(selectedGrade);
-      pickedHomeroomEl.textContent = "—";
-      pickedStudentEl.textContent = "—";
-
-      highlightSelected("grade", selectedGrade);
-      await renderHomeroomsFromFirestore(selectedGrade);
-    });
-  });
-
-  // Clear status once grades render
-  setStatus("");
 }
-
-
 
 btn.onclick = async () => {
   try {
@@ -167,13 +116,15 @@ async function renderGradesFromFirestore() {
   homeroomGrid.innerHTML = "";
   studentGrid.innerHTML = "";
 
-  // ✅ PROBE #1: direct get() of a known grade doc
-  setStatus("Probing grade doc 4…");
+  // Debug: show project id so we know which Firebase project you're actually connected to
+  setStatus(`Project: ${app?.options?.projectId || "(unknown)"} | Probing grade 4…`);
+
+  // Debug probe: can we read a known grade doc?
   const testRef = doc(db, "schools", SCHOOL_DOC_ID, "grades", "4");
   const testSnap = await getDoc(testRef);
-  setStatus("Test grade 4 exists? " + (testSnap.exists() ? "YES ✅" : "NO ❌"));
+  setStatus(`Project: ${app?.options?.projectId || "(unknown)"} | grade/4 exists: ${testSnap.exists()}`);
 
-  // ✅ PROBE #2: list grades (getDocs)
+  // Now list all grade docs
   const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
   setStatus(`Grades list query returned: ${gradesSnap.size}`);
 
