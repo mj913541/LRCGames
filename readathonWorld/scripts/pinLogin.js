@@ -111,6 +111,8 @@ async function renderGradesFromFirestore() {
   studentGrid.innerHTML = "";
 
   const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
+setStatus(`Grades query ran. Docs returned: ${gradesSnap.size}`);
+
   const grades = gradesSnap.docs.map(d => ({ id: d.id }));
 
   if (!grades.length) {
