@@ -1,5 +1,5 @@
 // /readathonWorld/scripts/pinLogin.js
-// ddd Flow: Grade → Homeroom → Student Name → PIN
+// eee Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
@@ -55,6 +55,7 @@ async function main() {
 
 setStatus("Signed in anonymously ✅");
 await debugInventory();           // 👈 ADD THIS LINE
+await debugTopCollections(); 
 await renderGradesFromFirestore();
 
   } catch (e) {
@@ -348,4 +349,43 @@ async function debugInventory() {
   const schoolDocSnap = await getDoc(doc(db, "schools", SCHOOL_DOC_ID));
   console.log("DEBUG school doc exists:", schoolDocSnap.exists());
   console.log("DEBUG school doc data:", schoolDocSnap.data() || null);
+}
+async function debugTopCollections() {
+  const candidates = [
+    "grades",
+    "homerooms",
+    "students",
+    "players",
+    "users",
+    "rosters",
+    "roster",
+    "classrooms",
+    "classes",
+    "teacherRosters",
+    "studentRosters",
+    "readathonStudents",
+    "schoolsRoster",
+    "districts"
+  ];
+
+  const results = [];
+
+  for (const name of candidates) {
+    try {
+      const snap = await getDocs(collection(db, name));
+      results.push({ name, size: snap.size });
+    } catch (e) {
+      results.push({ name, size: "ERR" });
+    }
+  }
+
+  console.table(results);
+  setStatus(
+    "Top-level sizes: " +
+      results
+        .filter(r => typeof r.size === "number" && r.size > 0)
+        .map(r => `${r.name}=${r.size}`)
+        .join(" | ") +
+      (results.some(r => r.size === "ERR") ? " | (some ERR)" : "")
+  );
 }
