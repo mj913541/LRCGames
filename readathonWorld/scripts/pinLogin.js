@@ -1,5 +1,5 @@
 // /readathonWorld/scripts/pinLogin.js
-// eee Flow: Grade → Homeroom → Student Name → PIN
+// fff Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
@@ -58,9 +58,11 @@ await debugInventory();           // 👈 ADD THIS LINE
 await debugTopCollections(); 
 await renderGradesFromFirestore();
 
-  } catch (e) {
-    setStatus("ERROR: " + (e?.message || String(e)));
-  }
+} catch (e) {
+  console.warn("DEBUG collection error:", name, e?.code, e?.message);
+  results.push({ name, size: e?.code || "ERR" });
+}
+
 }
 
 btn.onclick = async () => {
