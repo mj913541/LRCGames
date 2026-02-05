@@ -2,6 +2,7 @@
 // Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
+document.body.insertAdjacentHTML("afterbegin", "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>");
 
 import { auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
 
