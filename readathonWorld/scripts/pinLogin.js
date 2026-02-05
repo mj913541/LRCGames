@@ -1,5 +1,5 @@
 // /readathonWorld/scripts/pinLogin.js
-// CCC Flow: Grade → Homeroom → Student Name → PIN
+// ddd Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
@@ -53,8 +53,10 @@ async function main() {
       await signInAnonymously(auth);
     }
 
-    setStatus("Signed in anonymously ✅");
-    await renderGradesFromFirestore();
+setStatus("Signed in anonymously ✅");
+await debugInventory();           // 👈 ADD THIS LINE
+await renderGradesFromFirestore();
+
   } catch (e) {
     setStatus("ERROR: " + (e?.message || String(e)));
   }
@@ -320,4 +322,30 @@ function escapeAttr(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
+}
+async function debugInventory() {
+  // 1) List top-level school docs
+  const schoolsSnap = await getDocs(collection(db, "schools"));
+  const schoolIds = schoolsSnap.docs.map(d => d.id);
+
+  console.log("DEBUG schools:", schoolIds);
+  setStatus(`DEBUG schools: ${schoolIds.join(", ") || "(none)"}`);
+
+  // 2) If our SCHOOL_DOC_ID isn't there, stop right away
+  if (!schoolIds.includes(SCHOOL_DOC_ID)) {
+    console.warn(`DEBUG: SCHOOL_DOC_ID="${SCHOOL_DOC_ID}" not found in /schools`);
+    return;
+  }
+
+  // 3) List grades under the selected school
+  const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
+  const gradeIds = gradesSnap.docs.map(d => d.id);
+
+  console.log(`DEBUG grades under schools/${SCHOOL_DOC_ID}:`, gradeIds);
+  setStatus(`DEBUG grades under ${SCHOOL_DOC_ID}: ${gradeIds.join(", ") || "(none)"}`);
+
+  // 4) Check if the school doc itself exists + what fields it has
+  const schoolDocSnap = await getDoc(doc(db, "schools", SCHOOL_DOC_ID));
+  console.log("DEBUG school doc exists:", schoolDocSnap.exists());
+  console.log("DEBUG school doc data:", schoolDocSnap.data() || null);
 }
