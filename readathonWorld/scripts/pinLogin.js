@@ -1,8 +1,12 @@
 // /readathonWorld/scripts/pinLogin.js
-// Flow: Grade → Homeroom → Student Name → PIN
+// AAFlow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
-document.body.insertAdjacentHTML("afterbegin", "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>");
+
+document.body.insertAdjacentHTML(
+  "afterbegin",
+  "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>"
+);
 
 import { auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
 
@@ -37,69 +41,70 @@ let selectedHomeroom = null;
 let selectedStudentId = null;
 let selectedStudentName = null;
 
-// Start: load grades dynamically from Firestore
+// Start
 main();
 
 async function main() {
   try {
     setStatus("Signing in…");
 
-    // ✅ MUST be signed in before reading /schools/**
+    // ✅ Must be signed in before reading /schools/**
     if (!auth.currentUser) {
       await signInAnonymously(auth);
     }
 
-    setStatus("Loading grades…");
+    setStatus("Signed in anonymously ✅");
     await renderGradesFromFirestore();
-    setStatus("");
   } catch (e) {
-    // ✅ Show the real error on the page
     setStatus("ERROR: " + (e?.message || String(e)));
   }
 }
 
-
 btn.onclick = async () => {
-  setStatus("");
+  try {
+    setStatus("");
 
-  const pin = pinEl.value.trim();
+    const pin = pinEl.value.trim();
 
-  if (!selectedGrade) return setStatus("Pick your grade.");
-  if (!selectedHomeroom) return setStatus("Pick your homeroom.");
-  if (!selectedStudentId) return setStatus("Pick your name.");
-  if (!/^\d{4,6}$/.test(pin)) return setStatus("PIN must be 4–6 digits.");
+    if (!selectedGrade) return setStatus("Pick your grade.");
+    if (!selectedHomeroom) return setStatus("Pick your homeroom.");
+    if (!selectedStudentId) return setStatus("Pick your name.");
+    if (!/^\d{4,6}$/.test(pin)) return setStatus("PIN must be 4–6 digits.");
 
-  setStatus("Sending request…");
+    setStatus("Sending request…");
 
-  // Ensure signed in anonymously
-  const userCred = auth.currentUser
-    ? { user: auth.currentUser }
-    : await signInAnonymously(auth);
+    // Ensure signed in anonymously
+    const userCred = auth.currentUser
+      ? { user: auth.currentUser }
+      : await signInAnonymously(auth);
 
-  const uid = userCred.user.uid;
+    const uid = userCred.user.uid;
 
-  const studentDocPath =
-    `schools/${SCHOOL_DOC_ID}/grades/${selectedGrade}/homerooms/${selectedHomeroom}/students/${selectedStudentId}`;
+    const studentDocPath =
+      `schools/${SCHOOL_DOC_ID}/grades/${selectedGrade}/homerooms/${selectedHomeroom}/students/${selectedStudentId}`;
 
-  await addDoc(collection(db, "readathonRequests"), {
-    type: "linkAccount",
-    status: "pending",
+    await addDoc(collection(db, "readathonRequests"), {
+      type: "linkAccount",
+      status: "pending",
 
-    requesterUid: uid,
-    pinEntered: pin,
+      requesterUid: uid,
+      pinEntered: pin,
 
-    schoolId: SCHOOL_DOC_ID,
-    gradeId: selectedGrade,
-    homeroomId: selectedHomeroom,
+      schoolId: SCHOOL_DOC_ID,
+      gradeId: selectedGrade,
+      homeroomId: selectedHomeroom,
 
-    studentId: selectedStudentId,
-    studentName: selectedStudentName,
+      studentId: selectedStudentId,
+      studentName: selectedStudentName,
 
-    studentDocPath,
-    createdAt: serverTimestamp()
-  });
+      studentDocPath,
+      createdAt: serverTimestamp()
+    });
 
-  setStatus("✅ Request sent! Please wait for staff approval.");
+    setStatus("✅ Request sent! Please wait for staff approval.");
+  } catch (e) {
+    setStatus("ERROR: " + (e?.message || String(e)));
+  }
 };
 
 // ---------------------------
@@ -111,8 +116,15 @@ async function renderGradesFromFirestore() {
   homeroomGrid.innerHTML = "";
   studentGrid.innerHTML = "";
 
+  // ✅ PROBE #1: direct get() of a known grade doc
+  setStatus("Probing grade doc 4…");
+  const testRef = doc(db, "schools", SCHOOL_DOC_ID, "grades", "4");
+  const testSnap = await getDoc(testRef);
+  setStatus("Test grade 4 exists? " + (testSnap.exists() ? "YES ✅" : "NO ❌"));
+
+  // ✅ PROBE #2: list grades (getDocs)
   const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
-setStatus(`Grades query ran. Docs returned: ${gradesSnap.size}`);
+  setStatus(`Grades list query returned: ${gradesSnap.size}`);
 
   const grades = gradesSnap.docs.map(d => ({ id: d.id }));
 
@@ -122,7 +134,7 @@ setStatus(`Grades query ran. Docs returned: ${gradesSnap.size}`);
   }
 
   gradeGrid.innerHTML = grades
-    .sort((a,b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
+    .sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }))
     .map(g => tileHtml({ id: g.id, label: gradeLabel(g.id) }, "grade"))
     .join("");
 
@@ -141,13 +153,18 @@ setStatus(`Grades query ran. Docs returned: ${gradesSnap.size}`);
       await renderHomeroomsFromFirestore(selectedGrade);
     });
   });
+
+  // Clear status once grades render
+  setStatus("");
 }
 
 async function renderHomeroomsFromFirestore(gradeId) {
   homeroomGrid.innerHTML = `<div class="text-sm text-white/60">Loading…</div>`;
   studentGrid.innerHTML = "";
 
-  const hrSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms"));
+  const hrSnap = await getDocs(
+    collection(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms")
+  );
   const homerooms = hrSnap.docs.map(d => ({ id: d.id }));
 
   if (!homerooms.length) {
@@ -156,7 +173,7 @@ async function renderHomeroomsFromFirestore(gradeId) {
   }
 
   homeroomGrid.innerHTML = homerooms
-    .sort((a,b) => a.id.localeCompare(b.id))
+    .sort((a, b) => a.id.localeCompare(b.id))
     .map(h => tileHtml({ id: h.id, label: homeroomLabel(h.id) }, "homeroom"))
     .join("");
 
@@ -189,19 +206,27 @@ async function renderStudentsFromFirestore(gradeId, homeroomId) {
     return;
   }
 
-  // Show name tiles (use displayName)
   studentGrid.innerHTML = students
-    .sort((a,b) => (a.displayName || "").localeCompare(b.displayName || ""))
+    .sort((a, b) => (a.displayName || "").localeCompare(b.displayName || ""))
     .map(s => tileHtml({ id: s.id, label: s.displayName || s.id }, "student"))
     .join("");
 
   studentGrid.querySelectorAll("[data-student]").forEach(btn => {
     btn.addEventListener("click", async () => {
       selectedStudentId = btn.dataset.student;
-      const ref = doc(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms", homeroomId, "students", selectedStudentId);
-      const snap = await getDoc(ref);
 
-      selectedStudentName = snap.exists() ? (snap.data().displayName || selectedStudentId) : selectedStudentId;
+      const ref = doc(
+        db,
+        "schools", SCHOOL_DOC_ID,
+        "grades", gradeId,
+        "homerooms", homeroomId,
+        "students", selectedStudentId
+      );
+
+      const snap = await getDoc(ref);
+      selectedStudentName = snap.exists()
+        ? (snap.data().displayName || selectedStudentId)
+        : selectedStudentId;
 
       pickedStudentEl.textContent = selectedStudentName;
       highlightSelected("student", selectedStudentId);
@@ -220,7 +245,7 @@ function tileHtml(item, type) {
     type === "homeroom" ? `data-homeroom="${escapeAttr(item.id)}" data-type="homeroom"` :
     `data-student="${escapeAttr(item.id)}" data-type="student"`;
 
-  // ✅ Auto image path for grades
+  // Optional grade image
   const imgSrc = type === "grade"
     ? `/readathonWorld/assets/ui/grade-${item.id}.png`
     : null;
@@ -245,7 +270,6 @@ function tileHtml(item, type) {
   `;
 }
 
-
 function highlightSelected(type, selectedId) {
   document.querySelectorAll(`[data-type="${type}"]`).forEach(el => {
     const id =
@@ -262,13 +286,11 @@ function highlightSelected(type, selectedId) {
 }
 
 function gradeLabel(id) {
-  if (id === "k") return "Kindergarten";
-  if (id === "0") return "Kindergarten";
-  return `${id}th Grade`.replace("1th","1st").replace("2th","2nd").replace("3th","3rd");
+  if (id === "k" || id === "0") return "Kindergarten";
+  return `${id}th Grade`.replace("1th", "1st").replace("2th", "2nd").replace("3th", "3rd");
 }
 
 function homeroomLabel(id) {
-  // Pretty label: "mrsa" -> "Mrs A" (basic)
   return id
     .replaceAll("_", " ")
     .replace(/^mrs/, "Mrs ")
