@@ -17,24 +17,34 @@ function setError(msg) {
   if (errEl) errEl.textContent = msg || "";
 }
 
-googleBtn.addEventListener("click", async () => {
-  setError("");
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    setError(e?.message || "Google sign-in failed.");
-  }
-});
+if (!googleBtn) {
+  console.error("❌ Missing #googleBtn in admin.html");
+} else {
+  googleBtn.addEventListener("click", async () => {
+    setError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (e) {
+      setError(e?.message || "Google sign-in failed.");
+    }
+  });
+}
 
-signOutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-});
+if (!signOutBtn) {
+  console.error("❌ Missing #signOutBtn in admin.html");
+} else {
+  signOutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+  });
+}
 
 onAuthStateChanged(auth, (user) => {
   const loggedIn = !!user;
-  loginBox.classList.toggle("hidden", loggedIn);
-  adminBox.classList.toggle("hidden", !loggedIn);
-  signOutBtn.style.display = loggedIn ? "inline-flex" : "none";
+
+  if (loginBox) loginBox.classList.toggle("hidden", loggedIn);
+  if (adminBox) adminBox.classList.toggle("hidden", !loggedIn);
+  if (signOutBtn) signOutBtn.style.display = loggedIn ? "inline-flex" : "none";
+
   if (loggedIn) setError("");
 });
