@@ -27,16 +27,19 @@
         <p class="muted">Sign in to approve minutes and manage students.</p>
       </div>
 
-      <!-- Login form -->
-      <div id="loginBox" class="step">
-        <div class="step-title">Mrs. A Sign-in</div>
-        <div class="pin-row">
-          <input id="email" class="pin-input" type="email" autocomplete="username" placeholder="Email" />
-          <input id="password" class="pin-input" type="password" autocomplete="current-password" placeholder="Password" />
-          <button id="signInBtn" class="btn btn-secondary" type="button">Sign in</button>
-        </div>
-        <div id="err" class="tiny muted" style="margin-top:10px;"></div>
-      </div>
+<!-- Login box -->
+<div id="loginBox" class="step">
+  <div class="step-title">Mrs. A Sign-in</div>
+
+  <div class="cta-row">
+    <button id="googleBtn" class="btn btn-secondary" type="button">
+      🟢 Sign in with Google
+    </button>
+  </div>
+
+  <div id="err" class="tiny muted" style="margin-top:10px;"></div>
+</div>
+
 
       <!-- Logged-in view -->
       <div id="adminBox" class="step hidden">
