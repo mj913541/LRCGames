@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-a-thon World</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="bg-canopy"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">🦁</div>
+      <div class="brand-text">
+        <div class="brand-title">Read-a-thon World</div>
+        <div class="brand-subtitle">Jungle Adventure • Reading Rubies • Prize Power</div>
+      </div>
+    </div>
+    <button id="soundToggle" class="btn btn-ghost" type="button" aria-pressed="false">
+      🔊 Sound
+    </button>
+  </header>
+
+  <main class="container">
+    <section class="hero card">
+      <div class="hero-left">
+        <h1>Welcome, Lions!</h1>
+        <p class="lead">
+          Read to earn <span class="pill">💎 Reading Rubies</span>, decorate your avatar,
+          and help our school reach the jungle goals!
+        </p>
+
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#" id="startLogin">Start</a>
+          <a class="btn btn-secondary" href="#" id="staffLogin">Staff Login</a>
+        </div>
+
+        <div class="note">
+          <strong>Mrs. A approves minutes</strong> before rubies are awarded.
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <div class="goal-panel">
+          <div class="goal-title">School Goals</div>
+
+          <div class="goal">
+            <div class="goal-label">
+              <span>💰 Fundraising Goal</span>
+              <span class="goal-value" id="goalMoneyText">$0 / $4,000</span>
+            </div>
+            <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="4000" aria-valuenow="0">
+              <div class="meter-fill" id="goalMoneyFill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="goal">
+            <div class="goal-label">
+              <span>📚 Minutes Goal</span>
+              <span class="goal-value" id="goalMinutesText">0 / 200,000</span>
+            </div>
+            <div class="meter" role="progressbar" aria-valuemin="0" aria-valuemax="200000" aria-valuenow="0">
+              <div class="meter-fill" id="goalMinutesFill" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <div class="tiny">
+            (We’ll connect these to Firestore in a later step.)
+          </div>
+        </div>
+
+        <div class="mascot">
+          <div class="mascot-bubble">Roar for Reading!</div>
+          <div class="mascot-face" aria-hidden="true">🦁</div>
+          <div class="mascot-grass" aria-hidden="true"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card mini">
+        <h2>1) Read</h2>
+        <p>Log minutes from home or school.</p>
+      </div>
+      <div class="card mini">
+        <h2>2) Earn</h2>
+        <p>Approved minutes become rubies.</p>
+      </div>
+      <div class="card mini">
+        <h2>3) Spend</h2>
+        <p>Buy avatar clothes & room decor forever.</p>
+      </div>
+      <div class="card mini">
+        <h2>4) Prizes</h2>
+        <p>Earn 15% prize credit from dollars raised.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div>© <span id="year"></span> Read-a-thon World • Lions in the Jungle</div>
+  </footer>
+
+  <!-- Firebase + app scripts -->
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
