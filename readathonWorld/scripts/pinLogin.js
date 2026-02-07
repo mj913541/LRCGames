@@ -1,5 +1,5 @@
 // /readathonWorld/scripts/pinLogin.js
-// aaa Flow: Grade → Homeroom → Student Name → PIN
+// Flow: Grade → Homeroom → Student Name → PIN
 // Creates a LINK REQUEST for staff approval (does not auto-link).
 // ✅ Uses existing Firebase instances (no re-init).
 
@@ -9,7 +9,7 @@ document.body.insertAdjacentHTML(
   "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>"
 );
 
-console.log("PINLOGIN VERSION", "2026-02-07-ACTIVE-FILTER");
+console.log("PINLOGIN VERSION", "2026-02-07-FIXED-RULES-PATH");
 
 import { app, auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -59,11 +59,7 @@ async function main() {
 
     setStatus("Signed in anonymously ✅");
 
-    // Debug helpers (safe to leave while you build)
-    await debugInventory();
-    await debugTopCollections();
-
-    // Normal flow
+    // ✅ Normal flow (no top-level listing debug calls)
     await renderGradesFromFirestore();
   } catch (e) {
     console.error("MAIN ERROR", e);
@@ -94,23 +90,28 @@ btn.onclick = async () => {
     const studentDocPath =
       `schools/${SCHOOL_DOC_ID}/grades/${selectedGrade}/homerooms/${selectedHomeroom}/students/${selectedStudentId}`;
 
-    await addDoc(collection(db, "readathonRequests"), {
-      type: "linkAccount",
-      status: "pending",
+    // ✅ FIX: write to the path your rules allow:
+    // /schools/{schoolId}/readathon/linkRequests/{reqId}
+    await addDoc(
+      collection(db, "schools", SCHOOL_DOC_ID, "readathon", "linkRequests"),
+      {
+        type: "linkAccount",
+        status: "pending",
 
-      requesterUid: uid,
-      pinEntered: pin,
+        requesterUid: uid,
+        pinEntered: pin,
 
-      schoolId: SCHOOL_DOC_ID,
-      gradeId: selectedGrade,
-      homeroomId: selectedHomeroom,
+        schoolId: SCHOOL_DOC_ID,
+        gradeId: selectedGrade,
+        homeroomId: selectedHomeroom,
 
-      studentId: selectedStudentId,
-      studentName: selectedStudentName,
+        studentId: selectedStudentId,
+        studentName: selectedStudentName,
 
-      studentDocPath,
-      createdAt: serverTimestamp()
-    });
+        studentDocPath,
+        createdAt: serverTimestamp()
+      }
+    );
 
     setStatus("✅ Request sent! Please wait for staff approval.");
   } catch (e) {
@@ -261,87 +262,6 @@ async function renderStudentsFromFirestore(gradeId, homeroomId) {
       setStatus("");
     });
   });
-}
-
-// ---------------------------
-// Debug helpers
-// ---------------------------
-
-async function debugInventory() {
-  // 1) List top-level school docs
-  const schoolsSnap = await getDocs(collection(db, "schools"));
-  const schoolIds = schoolsSnap.docs.map(d => d.id);
-
-  console.log("DEBUG schools:", schoolIds);
-  setStatus(`DEBUG schools: ${schoolIds.join(", ") || "(none)"}`);
-
-  // 2) If our SCHOOL_DOC_ID isn't there, stop right away
-  if (!schoolIds.includes(SCHOOL_DOC_ID)) {
-    console.warn(`DEBUG: SCHOOL_DOC_ID="${SCHOOL_DOC_ID}" not found in /schools`);
-    return;
-  }
-
-  // 3) List ACTIVE grades under the selected school
-  const gradesSnap = await getDocs(
-    query(
-      collection(db, "schools", SCHOOL_DOC_ID, "grades"),
-      where("active", "==", true)
-    )
-  );
-
-  const gradeIds = gradesSnap.docs.map(d => d.id);
-
-  console.log(`DEBUG active grades under schools/${SCHOOL_DOC_ID}:`, gradeIds);
-  setStatus(`DEBUG active grades under ${SCHOOL_DOC_ID}: ${gradeIds.join(", ") || "(none)"}`);
-
-  // 4) Check if the school doc itself exists + what fields it has
-  const schoolDocSnap = await getDoc(doc(db, "schools", SCHOOL_DOC_ID));
-  console.log("DEBUG school doc exists:", schoolDocSnap.exists());
-  console.log("DEBUG school doc data:", schoolDocSnap.data() || null);
-}
-
-async function debugTopCollections() {
-  const candidates = [
-    "grades",
-    "homerooms",
-    "students",
-    "players",
-    "users",
-    "rosters",
-    "roster",
-    "classrooms",
-    "classes",
-    "teacherRosters",
-    "studentRosters",
-    "readathonStudents",
-    "schoolsRoster",
-    "districts"
-  ];
-
-  const results = [];
-
-  for (const colName of candidates) {
-    try {
-      const snap = await getDocs(collection(db, colName));
-      results.push({ name: colName, size: snap.size });
-    } catch (e) {
-      console.warn("DEBUG collection error:", colName, e?.code, e?.message);
-      results.push({ name: colName, size: e?.code || "ERR" });
-    }
-  }
-
-  console.table(results);
-
-  const ok = results
-    .filter(r => typeof r.size === "number" && r.size > 0)
-    .map(r => `${r.name}=${r.size}`)
-    .join(" | ");
-
-  const errs = results.some(r => r.size === "ERR" || String(r.size).includes("denied"))
-    ? " | (some denied)"
-    : "";
-
-  setStatus("Top-level sizes: " + (ok || "(none found)") + errs);
 }
 
 // ---------------------------
