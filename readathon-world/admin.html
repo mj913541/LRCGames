@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-a-thon World • Admin</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="bg-canopy"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" style="text-decoration:none; color:inherit;">
+      <div class="brand-mark" aria-hidden="true">🦁</div>
+      <div class="brand-text">
+        <div class="brand-title">Read-a-thon World</div>
+        <div class="brand-subtitle">Mrs. A • Admin Camp</div>
+      </div>
+    </a>
+    <button id="signOutBtn" class="btn btn-ghost" type="button" style="display:none;">🚪 Sign out</button>
+  </header>
+
+  <main class="container">
+    <section class="card flow">
+      <div class="flow-header">
+        <h1>Admin Login</h1>
+        <p class="muted">Sign in to approve minutes and manage students.</p>
+      </div>
+
+      <!-- Login form -->
+      <div id="loginBox" class="step">
+        <div class="step-title">Mrs. A Sign-in</div>
+        <div class="pin-row">
+          <input id="email" class="pin-input" type="email" autocomplete="username" placeholder="Email" />
+          <input id="password" class="pin-input" type="password" autocomplete="current-password" placeholder="Password" />
+          <button id="signInBtn" class="btn btn-secondary" type="button">Sign in</button>
+        </div>
+        <div id="err" class="tiny muted" style="margin-top:10px;"></div>
+      </div>
+
+      <!-- Logged-in view -->
+      <div id="adminBox" class="step hidden">
+        <div class="step-title">✅ Signed in</div>
+        <p class="muted">Next step we’ll add: bulk upload, approvals, batch updates.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="index.html">🏠 Back to Hub</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/admin.js"></script>
+</body>
+</html>

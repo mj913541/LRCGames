@@ -1,6 +1,7 @@
 // js/firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 
 // Your web app's Firebase configuration
@@ -18,6 +19,7 @@ const firebaseConfig = {
 // Initialize Firebase
 export const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 console.log("✅ Firebase initialized (no analytics)");
 console.log("✅ app.js loaded");
