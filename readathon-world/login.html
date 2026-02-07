@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-a-thon World • Login</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div class="bg-canopy"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" style="text-decoration:none; color:inherit;">
+      <div class="brand-mark" aria-hidden="true">🦁</div>
+      <div class="brand-text">
+        <div class="brand-title">Read-a-thon World</div>
+        <div class="brand-subtitle">Login Trail</div>
+      </div>
+    </a>
+    <button id="backBtn" class="btn btn-ghost" type="button">⬅ Back</button>
+  </header>
+
+  <main class="container">
+    <section class="card flow">
+      <div class="flow-header">
+        <h1 id="flowTitle">Student Login</h1>
+        <p id="flowHint" class="muted">Pick your grade to begin.</p>
+      </div>
+
+      <!-- STEP: Grade -->
+      <div class="step" data-step="grade">
+        <div class="step-title">Choose your grade</div>
+        <div class="choices" id="gradeChoices"></div>
+      </div>
+
+      <!-- STEP: Homeroom -->
+      <div class="step hidden" data-step="homeroom">
+        <div class="step-title">Choose your homeroom</div>
+        <div class="choices" id="homeroomChoices"></div>
+      </div>
+
+      <!-- STEP: Student -->
+      <div class="step hidden" data-step="student">
+        <div class="step-title">Choose your name</div>
+        <div class="choices list" id="studentChoices"></div>
+      </div>
+
+      <!-- STEP: PIN -->
+      <div class="step hidden" data-step="pin">
+        <div class="step-title">Enter your PIN</div>
+
+        <div class="pin-row">
+          <input id="pinInput" class="pin-input" inputmode="numeric" maxlength="6" placeholder="••••" />
+          <button id="pinGo" class="btn btn-primary" type="button">Enter Jungle</button>
+        </div>
+
+        <div class="tiny muted">
+          (Next step we’ll verify this against Firestore securely.)
+        </div>
+      </div>
+
+      <!-- STEP: Staff -->
+      <div class="step hidden" data-step="staff">
+        <div class="step-title">Staff Login</div>
+        <div class="pin-row">
+          <input id="staffCode" class="pin-input" placeholder="Staff code" />
+          <button id="staffGo" class="btn btn-secondary" type="button">Enter Staff Camp</button>
+        </div>
+        <div class="tiny muted">
+          (We’ll replace this with secure staff auth in a later step.)
+        </div>
+      </div>
+
+      <div class="flow-footer">
+        <div class="trail" id="trailText">Trail: Grade</div>
+        <button id="resetBtn" class="btn btn-ghost" type="button">🔁 Start Over</button>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
