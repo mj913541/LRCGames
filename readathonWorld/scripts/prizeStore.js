@@ -15,7 +15,11 @@ const els = {
 };
 
 let uid = null;
+
+// NEW: track earned/spent/balance separately
 let moneyRaised = 0;
+let moneySpent = 0;
+let moneyBalance = 0;
 
 main().catch(err => toast(err.message || String(err), "error"));
 
@@ -26,7 +30,10 @@ async function main() {
   watchProfile(uid, (profile) => {
     const ra = profile?.readathon || {};
     moneyRaised = Number(ra.moneyRaised || 0);
-    els.money.textContent = fmtMoney(moneyRaised);
+    moneySpent = Number(ra.moneySpent || 0);
+
+    moneyBalance = Math.max(0, moneyRaised - moneySpent);
+    els.money.textContent = fmtMoney(moneyBalance);
   });
 
   const items = await fetchShopItems(COLLECTIONS.prizeStore);
@@ -41,6 +48,14 @@ function render(items) {
 
   els.items.innerHTML = items.map(item => {
     const cost = Number(item.costMoney || 0);
+    const canAfford = cost > 0 && moneyBalance >= cost;
+
+    const btnClass = canAfford
+      ? "redeemBtn rounded-xl bg-emerald-500/60 hover:bg-emerald-500/80 px-4 py-2 font-semibold"
+      : "redeemBtn rounded-xl bg-white/10 px-4 py-2 font-semibold opacity-50 cursor-not-allowed";
+
+    const btnLabel = canAfford ? "Request" : "Not enough";
+
     return `
       <div class="rounded-2xl bg-black/30 border border-white/10 overflow-hidden">
         <div class="aspect-[16/10] bg-black/40">
@@ -49,13 +64,19 @@ function render(items) {
         <div class="p-4">
           <div class="font-extrabold">${escapeHtml(item.name || item.id)}</div>
           <div class="text-sm text-white/70 mt-1">${escapeHtml(item.description || "")}</div>
-          <div class="mt-3 flex items-center justify-between">
+
+          <div class="mt-3 flex items-center justify-between gap-3">
             <div class="text-sm">Cost: <span class="font-bold">$${cost.toFixed(2)}</span></div>
-            <button data-id="${escapeHtml(item.id)}"
-                    class="redeemBtn rounded-xl bg-emerald-500/60 hover:bg-emerald-500/80 px-4 py-2 font-semibold">
-              Request
+
+            <button
+              data-id="${escapeHtml(item.id)}"
+              data-cost="${cost}"
+              ${canAfford ? "" : "disabled"}
+              class="${btnClass}">
+              ${btnLabel}
             </button>
           </div>
+
           <div class="text-xs text-white/55 mt-2">Staff must approve before it’s redeemed.</div>
         </div>
       </div>
@@ -70,6 +91,9 @@ function render(items) {
 
       const cost = Number(item.costMoney || 0);
       if (cost <= 0) return toast("This prize has no cost configured.");
+
+      // ✅ IMPORTANT: re-check balance right before requesting
+      if (moneyBalance < cost) return toast("Not enough money for that prize.", "error");
 
       await createReadathonRequest({
         uid,

@@ -1,7 +1,6 @@
 // /readathonWorld/scripts/dashboard.js
 import {
   requireAuthOrRedirect,
-  getProfile,
   watchProfile,
   isStaffOrAdmin,
   fmtMoney,
@@ -13,9 +12,18 @@ import {
 
 const els = {
   who: document.getElementById("who"),
+
   minutesRead: document.getElementById("minutesRead"),
+
+  // NEW (balance view)
+  sparksBalance: document.getElementById("sparksBalance"),
   sparksEarned: document.getElementById("sparksEarned"),
+  sparksSpent: document.getElementById("sparksSpent"),
+
+  moneyBalance: document.getElementById("moneyBalance"),
   moneyRaised: document.getElementById("moneyRaised"),
+  moneySpent: document.getElementById("moneySpent"),
+
   adminLink: document.getElementById("adminLink"),
 
   minutesInput: document.getElementById("minutesInput"),
@@ -46,9 +54,27 @@ async function main() {
     els.who.textContent = `Signed in as: ${display}`;
 
     const ra = profile.readathon || {};
+
+    // Minutes
     els.minutesRead.textContent = fmtInt(ra.minutesRead);
-    els.sparksEarned.textContent = fmtInt(ra.sparksEarned);
-    els.moneyRaised.textContent = fmtMoney(ra.moneyRaised);
+
+    // Sparks: Earned - Spent = Balance
+    const se = Number(ra.sparksEarned || 0);
+    const ss = Number(ra.sparksSpent || 0);
+    const sb = Math.max(0, se - ss);
+
+    els.sparksEarned.textContent = fmtInt(se);
+    els.sparksSpent.textContent = fmtInt(ss);
+    els.sparksBalance.textContent = fmtInt(sb);
+
+    // Money: Raised - Spent = Balance
+    const mr = Number(ra.moneyRaised || 0);
+    const ms = Number(ra.moneySpent || 0);
+    const mb = Math.max(0, mr - ms);
+
+    els.moneyRaised.textContent = fmtMoney(mr);
+    els.moneySpent.textContent = fmtMoney(ms);
+    els.moneyBalance.textContent = fmtMoney(mb);
 
     if (isStaffOrAdmin(profile)) els.adminLink.classList.remove("hidden");
   });

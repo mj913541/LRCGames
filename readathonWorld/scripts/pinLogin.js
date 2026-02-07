@@ -9,7 +9,7 @@ document.body.insertAdjacentHTML(
   "<div style='position:fixed;top:10px;left:10px;z-index:9999;background:#22c55e;color:#000;padding:8px 10px;border-radius:10px;font-weight:700'>JS LOADED</div>"
 );
 
-console.log("PINLOGIN VERSION", "2026-02-05-FULL-RENDER");
+console.log("PINLOGIN VERSION", "2026-02-07-ACTIVE-FILTER");
 
 import { app, auth, db } from "/lrcQuestMain/scripts/lrcQuestCore.js";
 import { signInAnonymously } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
@@ -19,7 +19,9 @@ import {
   doc,
   getDoc,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
 const SCHOOL_DOC_ID = "main";
@@ -134,14 +136,20 @@ async function renderGradesFromFirestore() {
   const testSnap = await getDoc(testRef);
   setStatus(`Project: ${app?.options?.projectId || "(unknown)"} | grade/4 exists: ${testSnap.exists()}`);
 
-  // Now list all grade docs
-  const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
-  setStatus(`Grades list query returned: ${gradesSnap.size}`);
+  // ✅ Now list ONLY ACTIVE grade docs
+  const gradesSnap = await getDocs(
+    query(
+      collection(db, "schools", SCHOOL_DOC_ID, "grades"),
+      where("active", "==", true)
+    )
+  );
+
+  setStatus(`Active grades list query returned: ${gradesSnap.size}`);
 
   const grades = gradesSnap.docs.map(d => ({ id: d.id }));
 
   if (!grades.length) {
-    gradeGrid.innerHTML = `<div class="text-sm text-white/60">No grades found.</div>`;
+    gradeGrid.innerHTML = `<div class="text-sm text-white/60">No active grades found.</div>`;
     return;
   }
 
@@ -173,13 +181,18 @@ async function renderHomeroomsFromFirestore(gradeId) {
   homeroomGrid.innerHTML = `<div class="text-sm text-white/60">Loading…</div>`;
   studentGrid.innerHTML = "";
 
+  // ✅ ONLY ACTIVE homerooms
   const hrSnap = await getDocs(
-    collection(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms")
+    query(
+      collection(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms"),
+      where("active", "==", true)
+    )
   );
+
   const homerooms = hrSnap.docs.map(d => ({ id: d.id }));
 
   if (!homerooms.length) {
-    homeroomGrid.innerHTML = `<div class="text-sm text-white/60">No homerooms found for this grade.</div>`;
+    homeroomGrid.innerHTML = `<div class="text-sm text-white/60">No active homerooms found for this grade.</div>`;
     return;
   }
 
@@ -206,14 +219,18 @@ async function renderHomeroomsFromFirestore(gradeId) {
 async function renderStudentsFromFirestore(gradeId, homeroomId) {
   studentGrid.innerHTML = `<div class="text-sm text-white/60">Loading…</div>`;
 
+  // ✅ ONLY ACTIVE students
   const studentsSnap = await getDocs(
-    collection(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms", homeroomId, "students")
+    query(
+      collection(db, "schools", SCHOOL_DOC_ID, "grades", gradeId, "homerooms", homeroomId, "students"),
+      where("active", "==", true)
+    )
   );
 
   const students = studentsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   if (!students.length) {
-    studentGrid.innerHTML = `<div class="text-sm text-white/60">No students found.</div>`;
+    studentGrid.innerHTML = `<div class="text-sm text-white/60">No active students found.</div>`;
     return;
   }
 
@@ -264,12 +281,18 @@ async function debugInventory() {
     return;
   }
 
-  // 3) List grades under the selected school
-  const gradesSnap = await getDocs(collection(db, "schools", SCHOOL_DOC_ID, "grades"));
+  // 3) List ACTIVE grades under the selected school
+  const gradesSnap = await getDocs(
+    query(
+      collection(db, "schools", SCHOOL_DOC_ID, "grades"),
+      where("active", "==", true)
+    )
+  );
+
   const gradeIds = gradesSnap.docs.map(d => d.id);
 
-  console.log(`DEBUG grades under schools/${SCHOOL_DOC_ID}:`, gradeIds);
-  setStatus(`DEBUG grades under ${SCHOOL_DOC_ID}: ${gradeIds.join(", ") || "(none)"}`);
+  console.log(`DEBUG active grades under schools/${SCHOOL_DOC_ID}:`, gradeIds);
+  setStatus(`DEBUG active grades under ${SCHOOL_DOC_ID}: ${gradeIds.join(", ") || "(none)"}`);
 
   // 4) Check if the school doc itself exists + what fields it has
   const schoolDocSnap = await getDoc(doc(db, "schools", SCHOOL_DOC_ID));
