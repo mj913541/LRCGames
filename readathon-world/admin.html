@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AAA Read-a-thon World • Admin</title>
+  <title>ccc Read-a-thon World • Admin</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
@@ -42,13 +42,45 @@
 
 
       <!-- Logged-in view -->
-      <div id="adminBox" class="step hidden">
-        <div class="step-title">✅ Signed in</div>
-        <p class="muted">Next step we’ll add: bulk upload, approvals, batch updates.</p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="index.html">🏠 Back to Hub</a>
-        </div>
-      </div>
+<!-- Logged-in view -->
+<div id="adminBox" class="step hidden">
+  <div class="step-title">✅ Signed in</div>
+
+  <div id="adminStatus" class="note" style="margin-top:10px;">
+    Checking admin access…
+  </div>
+
+  <div id="adminMenu" class="hidden" style="margin-top:14px;">
+    <div class="step-title">Admin Camp Menu</div>
+
+    <div class="choices" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+      <a class="choice" href="#" id="menuUpload">
+        <div class="choice-emoji">📥</div>
+        <div class="choice-label">Bulk Upload Students (CSV)</div>
+      </a>
+
+      <a class="choice" href="#" id="menuBatch">
+        <div class="choice-emoji">🧮</div>
+        <div class="choice-label">Batch Update Minutes & Dollars (CSV)</div>
+      </a>
+
+      <a class="choice" href="#" id="menuApprove">
+        <div class="choice-emoji">✅</div>
+        <div class="choice-label">Approve Minute Submissions</div>
+      </a>
+
+      <a class="choice" href="#" id="menuStore">
+        <div class="choice-emoji">🛍️</div>
+        <div class="choice-label">Manage Store Items</div>
+      </a>
+    </div>
+
+    <div class="tiny muted" style="margin-top:10px;">
+      (Menus are placeholders — next steps will build each tool.)
+    </div>
+  </div>
+</div>
+
     </section>
   </main>
 
