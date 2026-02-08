@@ -304,6 +304,8 @@ body{
 }
 
 .step.hidden{ display:none; }
+.hidden { display: none !important; }
+
 
 .choices{
   display:grid;
@@ -385,3 +387,4 @@ body{
 @media (max-width: 520px){
   .choices{ grid-template-columns: 1fr; }
 }
+
