@@ -1,10 +1,8 @@
 import { auth, db } from "./firebase.js";
 import {
-  GoogleAuthProvider,
-  signInWithRedirect,
-  getRedirectResult,
   onAuthStateChanged,
-  signOut
+  signOut,
+  signInWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
@@ -12,23 +10,21 @@ import {
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// --- Grab elements safely ---
 const el = (id) => document.getElementById(id);
 
-const googleBtn = el("googleBtn");
+const emailEl = el("email");
+const passEl = el("password");
+const signInBtn = el("signInBtn");
 const signOutBtn = el("signOutBtn");
 const errEl = el("err");
 
 const loginBox = el("loginBox");
 const adminBox = el("adminBox");
-
 const adminStatus = el("adminStatus");
 const adminMenu = el("adminMenu");
 
-// Menu links (placeholders)
 const menuIds = ["menuUpload", "menuBatch", "menuApprove", "menuStore"];
 
-// --- Helpers ---
 function setError(msg) {
   if (errEl) errEl.textContent = msg || "";
 }
@@ -45,45 +41,6 @@ function setAdminStatus(html, ok) {
     : `⚠️ <strong>Not authorized.</strong> ${html || ""}`;
 }
 
-function log(...args) {
-  console.log("[ADMIN]", ...args);
-}
-
-// --- Auth actions ---
-async function startGoogleRedirect() {
-  setError("");
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithRedirect(auth, provider);
-  } catch (e) {
-    setError(e?.message || "Google sign-in failed to start.");
-    log("signInWithRedirect error:", e);
-  }
-}
-
-async function handleRedirectReturn() {
-  try {
-    const result = await getRedirectResult(auth);
-    if (result?.user) {
-      log("Redirect sign-in returned user:", result.user.uid);
-    } else {
-      log("No redirect result (normal on first load).");
-    }
-  } catch (e) {
-    setError(e?.message || "Google redirect sign-in failed.");
-    log("getRedirectResult error:", e);
-  }
-}
-
-async function doSignOut() {
-  try {
-    await signOut(auth);
-  } catch (e) {
-    log("signOut error:", e);
-  }
-}
-
-// --- Admin check ---
 async function verifyAdmin(uid) {
   show(adminMenu, false);
   if (adminStatus) adminStatus.textContent = "Checking admin access…";
@@ -96,52 +53,57 @@ async function verifyAdmin(uid) {
       const data = snap.data() || {};
       setAdminStatus(`Signed in as ${data.email || "admin"}.`, true);
       show(adminMenu, true);
-      log("Admin verified:", uid, data.email || "");
     } else {
-      // This usually means the doc doesn't exist (but read was allowed).
       setAdminStatus("Your admins/{uid} document is missing in Firestore.", false);
-      log("Admin doc missing for uid:", uid);
+      show(adminMenu, false);
     }
   } catch (e) {
     const code = e?.code || "";
     if (code.includes("permission-denied")) {
-      setAdminStatus("You are signed in, but your UID is not on the admin allowlist.", false);
-      log("permission-denied reading admins/", uid, e);
+      setAdminStatus("Signed in, but not on the admin allowlist.", false);
     } else {
       setAdminStatus(`Admin check failed: ${e?.message || "unknown error"}`, false);
-      log("Admin check error:", e);
     }
+    show(adminMenu, false);
   }
 }
 
-// --- Wire up events ---
-if (googleBtn) {
-  googleBtn.addEventListener("click", () => {
-    console.log("[ADMIN] Google button clicked");
-    startGoogleRedirect();
+if (signInBtn) {
+  signInBtn.addEventListener("click", async () => {
+    setError("");
+
+    const email = (emailEl?.value || "").trim();
+    const password = passEl?.value || "";
+
+    if (!email || !password) {
+      return setError("Please enter your email and password.");
+    }
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (e) {
+      setError(e?.message || "Sign-in failed.");
+    }
   });
 }
 
-
 if (signOutBtn) {
-  signOutBtn.addEventListener("click", doSignOut);
-} else {
-  log("Missing #signOutBtn");
+  signOutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+  });
 }
 
+// Placeholder menu links (so they don't navigate yet)
 menuIds.forEach((id) => {
   const a = el(id);
   if (!a) return;
   a.addEventListener("click", (e) => {
     e.preventDefault();
-    alert("Coming next step! This is just a placeholder menu.");
+    alert("Coming next step! This is just the menu placeholder.");
   });
 });
 
-// --- Listen for auth state ---
 onAuthStateChanged(auth, async (user) => {
-  log("Auth state changed:", user ? user.uid : "signed out");
-
   const loggedIn = !!user;
 
   show(loginBox, !loggedIn);
@@ -156,9 +118,5 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // Logged in: check allowlist in Firestore
   await verifyAdmin(user.uid);
 });
-
-// --- Init ---
-handleRedirectReturn();
