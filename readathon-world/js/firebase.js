@@ -8,7 +8,7 @@ import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-aut
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDpXoneclJAl5kFr7doJmSlgqoN6teGWzI",
-  authDomain: "lrcquest-3039e.firebaseapp.com",
+  authDomain: "lrcquest-3039e.web.app",
   projectId: "lrcquest-3039e",
   storageBucket: "lrcquest-3039e.firebasestorage.app",
   messagingSenderId: "72063656342",
