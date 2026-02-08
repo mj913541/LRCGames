@@ -116,10 +116,12 @@ async function verifyAdmin(uid) {
 
 // --- Wire up events ---
 if (googleBtn) {
-  googleBtn.addEventListener("click", startGoogleRedirect);
-} else {
-  log("Missing #googleBtn");
+  googleBtn.addEventListener("click", () => {
+    console.log("[ADMIN] Google button clicked");
+    startGoogleRedirect();
+  });
 }
+
 
 if (signOutBtn) {
   signOutBtn.addEventListener("click", doSignOut);
