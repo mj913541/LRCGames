@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-a-thon World • Bulk Upload Students</title>
+  <link rel="stylesheet" href="../styles.css" />
+  <style>
+    /* Small page-specific styles (keeps your global CSS intact) */
+    .panel { max-width: 980px; margin: 24px auto; padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.92); box-shadow: 0 10px 30px rgba(0,0,0,0.12); }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .row > * { flex: 1; min-width: 220px; }
+    .btn { cursor: pointer; border: 0; border-radius: 14px; padding: 12px 14px; font-weight: 700; }
+    .btn.primary { background: #1f8f5f; color: #fff; }
+    .btn.ghost { background: #eef7f2; }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .hint { font-size: 0.95rem; opacity: 0.85; }
+    .status { margin-top: 12px; padding: 12px; border-radius: 14px; background: #f6fbff; border: 1px solid #d9ecff; }
+    .err { background: #fff4f4; border-color: #ffd2d2; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; overflow: hidden; border-radius: 14px; }
+    th, td { padding: 10px 8px; border-bottom: 1px solid rgba(0,0,0,0.08); text-align: left; }
+    th { background: rgba(0,0,0,0.04); }
+    .badge { display:inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 0.85rem; }
+    .ok { background: #e9fff0; }
+    .warn { background: #fff8e8; }
+    .bad { background: #ffecec; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .progress { height: 12px; border-radius: 999px; background: rgba(0,0,0,0.08); overflow: hidden; }
+    .progress > div { height: 100%; width: 0%; background: #1f8f5f; transition: width 200ms ease; }
+  </style>
+</head>
+
+<body>
+  <div class="panel">
+    <h1>🌿 Bulk Upload Students (CSV)</h1>
+    <p class="hint">
+      Upload a CSV with headers:
+      <span class="mono">displayName, grade, homeroom, studentId, pin</span>
+      <br/>PINs are hashed before saving (raw PINs are never stored).
+    </p>
+
+    <div class="row" style="margin-top:12px;">
+      <div>
+        <label class="hint"><strong>CSV File</strong></label><br/>
+        <input id="csvFile" type="file" accept=".csv,text/csv" />
+      </div>
+
+      <div>
+        <label class="hint"><strong>Write behavior</strong></label><br/>
+        <label style="display:flex;gap:10px;align-items:center;">
+          <input id="overwrite" type="checkbox" />
+          <span>Overwrite existing students (same studentId)</span>
+        </label>
+        <label style="display:flex;gap:10px;align-items:center;">
+          <input id="dryRun" type="checkbox" checked />
+          <span>Dry run first (no writes)</span>
+        </label>
+      </div>
+
+      <div style="text-align:right;">
+        <button id="parseBtn" class="btn ghost">Preview CSV</button>
+        <button id="uploadBtn" class="btn primary" disabled>Upload to Firestore</button>
+      </div>
+    </div>
+
+    <div id="status" class="status" style="display:none;"></div>
+    <div class="progress" style="margin-top:12px; display:none;" id="progressWrap">
+      <div id="progressBar"></div>
+    </div>
+
+    <div id="summary" style="margin-top:12px;"></div>
+    <div id="preview"></div>
+
+    <hr style="margin:18px 0; opacity:0.25;" />
+    <p class="hint">
+      Tip: If you export from Google Sheets, ensure the first row is the header row.
+    </p>
+  </div>
+
+  <!-- Firebase + your app init -->
+<script type="module" src="../firebase.js"></script>
+  <script type="module" src="./bulk-upload.js"></script>
+</body>
+</html>
