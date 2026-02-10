@@ -1,13 +1,19 @@
-import { auth, db } from "../firebase.js";
+import { auth, db } from "../js/firebase.js";
 
 import {
-  doc, writeBatch, serverTimestamp,
-  getDocs, collection, query, where, documentId
+  doc,
+  writeBatch,
+  serverTimestamp,
+  getDocs,
+  collection,
+  query,
+  where,
+  documentId
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import { onAuthStateChanged } from
-  "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
+import {
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 // ---------- UI ----------
 const $ = (id) => document.getElementById(id);
