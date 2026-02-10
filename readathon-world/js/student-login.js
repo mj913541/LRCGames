@@ -179,7 +179,7 @@ async function doLogin() {
       setStatus(`✅ Welcome, <strong>${escapeHtml(res.data.profile.displayName)}</strong>! Entering your world…`);
       // Redirect to your main student world page
       // Change this to wherever your student “world” lives.
-      window.location.href = "./index.html";
+window.location.href = "./student-home.html";
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
       pin = "";

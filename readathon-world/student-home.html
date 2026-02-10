@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Home • Read-a-thon World</title>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Room + avatar (safe placeholder for now) */
+    .room {
+      position: relative;
+      height: 300px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(#c9f0d6, #8fd3a8);
+      border: 3px solid rgba(0,0,0,0.12);
+      margin-top: 12px;
+    }
+    .room-wall {
+      position: absolute;
+      inset: 0 0 42% 0;
+      background: linear-gradient(#dff7ea, #b7e4cc);
+    }
+    .room-floor {
+      position: absolute;
+      bottom: 0;
+      height: 42%;
+      width: 100%;
+      background: linear-gradient(#7fbf7f, #5aa05a);
+    }
+    .room-title-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .avatar {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 72px;
+      z-index: 2;
+      cursor: pointer;
+      user-select: none;
+      transition: transform .18s ease;
+      filter: drop-shadow(0 8px 8px rgba(0,0,0,.18));
+    }
+    .avatar:hover { transform: translateX(-50%) scale(1.07); }
+    .chips { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    .chip {
+      background: rgba(0,0,0,0.06);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+    .stat-strong { font-size: 22px; }
+  </style>
+</head>
+
+<body>
+  <div class="bg-canopy"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" style="text-decoration:none; color:inherit;">
+      <div class="brand-mark" aria-hidden="true">🦁</div>
+      <div class="brand-text">
+        <div class="brand-title">Read-a-thon World</div>
+        <div class="brand-subtitle">My Jungle Home</div>
+      </div>
+    </a>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a class="btn btn-primary" href="submit.html">📚 Submit Minutes</a>
+      <button id="signOutBtn" class="btn btn-ghost" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Welcome -->
+    <section class="card">
+      <h1 style="margin:0;">Welcome, <span id="studentName">Reader</span>!</h1>
+      <p class="muted" style="margin:6px 0 0;">
+        Pending minutes wait for Mrs. A • Approved minutes can become rubies 💎
+      </p>
+
+      <div class="chips">
+        <div class="chip">🏫 <span id="teacherName">Homeroom</span></div>
+        <div class="chip">⭐ Grade <span id="grade">?</span></div>
+      </div>
+
+      <div id="statusNote" class="note" style="margin-top:12px; display:none;"></div>
+    </section>
+
+    <!-- Stats -->
+    <section class="card">
+      <div class="room-title-row">
+        <h2 style="margin:0;">📊 My Reading Progress</h2>
+        <a class="btn btn-secondary" href="submit.html" style="text-decoration:none;">+ Add Minutes</a>
+      </div>
+
+      <div class="choices" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top:12px;">
+        <div class="choice">
+          <div class="choice-emoji">✅</div>
+          <div class="choice-label">
+            Approved Minutes<br />
+            <strong class="stat-strong" id="approvedMinutes">—</strong>
+          </div>
+        </div>
+
+        <div class="choice">
+          <div class="choice-emoji">⏳</div>
+          <div class="choice-label">
+            Pending Minutes<br />
+            <strong class="stat-strong" id="pendingMinutes">0</strong>
+          </div>
+        </div>
+
+        <div class="choice">
+          <div class="choice-emoji">💎</div>
+          <div class="choice-label">
+            Rubies<br />
+            <strong class="stat-strong" id="rubies">—</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="tiny muted" style="margin-top:10px;">
+        Tip: If approved minutes/rubies show “—”, we just need the safe “public totals” read enabled.
+      </div>
+    </section>
+
+    <!-- Avatar Room -->
+    <section class="card">
+      <div class="room-title-row">
+        <h2 style="margin:0;">🌿 My Jungle Room</h2>
+        <span class="pill">Coming soon: clothes + decor!</span>
+      </div>
+
+      <div class="room" aria-label="Student room">
+        <div class="room-wall"></div>
+        <div class="room-floor"></div>
+
+        <!-- Avatar placeholder -->
+        <div class="avatar" id="avatar" title="Click me!">🦁</div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/firebase.js"></script>
+  <script type="module" src="js/student-home.js"></script>
+</body>
+</html>
