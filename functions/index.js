@@ -1,102 +1,107 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const crypto = require("crypto");
-
 admin.initializeApp();
+
 const db = admin.firestore();
 
-function sha256Hex(str) {
-  return crypto.createHash("sha256").update(str, "utf8").digest("hex");
+async function requireAdmin(context) {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+  }
+  const uid = context.auth.uid;
+  const adminDoc = await db.doc(`admins/${uid}`).get();
+  if (!adminDoc.exists) {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
+  return uid;
 }
 
-// Callable: returns roster for a grade + homeroom (no PIN info)
-exports.getRoster = functions.https.onCall(async (data) => {
-  const grade = (data?.grade ?? "").toString().trim();
-  const homeroom = (data?.homeroom ?? "").toString().trim();
+exports.convertRubies = functions.https.onCall(async (data, context) => {
+  await requireAdmin(context);
 
-  if (!grade || !homeroom) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing grade or homeroom.");
+  const teacherId = (data && data.teacherId) ? String(data.teacherId) : null; // optional filter
+  const dryRun = !!(data && data.dryRun);
+
+  // Load conversion rule
+  const rulesSnap = await db.doc("config/rules").get();
+  const minutesPerRuby = rulesSnap.exists && rulesSnap.data().minutesPerRuby
+    ? Number(rulesSnap.data().minutesPerRuby)
+    : 10;
+
+  if (!Number.isFinite(minutesPerRuby) || minutesPerRuby <= 0) {
+    throw new functions.https.HttpsError("failed-precondition", "Invalid minutesPerRuby.");
   }
 
-  const snap = await db
-    .collection("students")
-    .where("grade", "==", grade)
-    .where("homeroom", "==", homeroom)
-    .where("active", "==", true)
-    .get();
+  // Query students (optionally by teacherId)
+  let q = db.collection("students");
+  if (teacherId) q = q.where("teacherId", "==", teacherId);
 
-  const students = snap.docs.map((d) => {
-    const s = d.data();
-    return {
-      studentId: s.studentId || d.id,
-      displayName: s.displayName || "Student",
-    };
+  // Keep callable fast: cap per run (you can run multiple times)
+  q = q.limit(400);
+
+  const snap = await q.get();
+
+  let scanned = 0;
+  let updated = 0;
+  let totalRubiesAdded = 0;
+  let totalMinutesConsumed = 0;
+
+  const batch = db.batch();
+
+  snap.forEach(docSnap => {
+    scanned++;
+    const s = docSnap.data() || {};
+
+    const approved = Number(s.totalApprovedMinutes || 0);
+    const converted = Number(s.convertedApprovedMinutes || 0);
+    const balance = Number(s.rubiesBalance || 0);
+
+    const newMinutes = approved - converted;
+    if (!Number.isFinite(newMinutes) || newMinutes < minutesPerRuby) return;
+
+    const newRubies = Math.floor(newMinutes / minutesPerRuby);
+    const minutesConsumed = newRubies * minutesPerRuby;
+
+    if (newRubies <= 0) return;
+
+    updated++;
+    totalRubiesAdded += newRubies;
+    totalMinutesConsumed += minutesConsumed;
+
+    if (!dryRun) {
+      batch.set(docSnap.ref, {
+        rubiesBalance: balance + newRubies,
+        convertedApprovedMinutes: converted + minutesConsumed,
+        rubiesLastConvertedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: true });
+
+      // Optional: append an audit log entry
+      const logRef = db.collection("conversionLogs").doc();
+      batch.set(logRef, {
+        studentId: docSnap.id,
+        teacherId: s.teacherId || null,
+        approvedBefore: approved,
+        convertedBefore: converted,
+        rubiesAdded: newRubies,
+        minutesConsumed,
+        minutesPerRuby,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    }
   });
 
-  students.sort((a, b) => a.displayName.localeCompare(b.displayName));
-  return { students };
-});
-
-// Callable: verifies PIN, then writes users/{uid}
-exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Please sign in first.");
+  if (!dryRun) {
+    await batch.commit();
   }
-
-  const studentId = (data?.studentId ?? "").toString().trim();
-  const pin = (data?.pin ?? "").toString().trim();
-
-  if (!studentId || !/^\d{3,6}$/.test(pin)) {
-    throw new functions.https.HttpsError("invalid-argument", "Bad studentId or PIN.");
-  }
-
-  const ref = db.collection("students").doc(studentId);
-  const docSnap = await ref.get();
-
-  if (!docSnap.exists) {
-    throw new functions.https.HttpsError("not-found", "Student not found.");
-  }
-
-  const s = docSnap.data();
-  if (!s.active) {
-    throw new functions.https.HttpsError("failed-precondition", "This student is not active.");
-  }
-
-  const salt = s.pinSalt;
-  const expectedHash = s.pinHash;
-  if (!salt || !expectedHash) {
-    throw new functions.https.HttpsError("failed-precondition", "PIN not set for this student.");
-  }
-
-  const computed = sha256Hex(`${salt}:${pin}`);
-  if (computed !== expectedHash) {
-    throw new functions.https.HttpsError("permission-denied", "That PIN didn’t match. Try again!");
-  }
-
-  const uid = context.auth.uid;
-  await db.collection("users").doc(uid).set(
-    {
-      uid,
-      studentId: s.studentId || studentId,
-      displayName: s.displayName || "Student",
-      grade: s.grade || "",
-      homeroom: s.homeroom || "",
-      role: "student",
-      rubies: admin.firestore.FieldValue.increment(0),
-      minutesApproved: admin.firestore.FieldValue.increment(0),
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
 
   return {
     ok: true,
-    profile: {
-      displayName: s.displayName || "Student",
-      grade: s.grade || "",
-      homeroom: s.homeroom || "",
-      studentId: s.studentId || studentId,
-    },
+    dryRun,
+    teacherId: teacherId || null,
+    minutesPerRuby,
+    scanned,
+    studentsUpdated: updated,
+    totalRubiesAdded,
+    totalMinutesConsumed
   };
 });
