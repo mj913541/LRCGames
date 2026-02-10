@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Approve Minutes • Admin</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body class="bg">
+  <main class="card" style="width:min(980px, 98vw);">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+      <div>
+        <h1 style="margin:0;">✅ Approve Minutes</h1>
+        <p class="sub" style="margin:6px 0 0;">Review student submissions and approve or reject.</p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span class="chip">Admin: <strong id="adminEmail">…</strong></span>
+        <button class="btn" id="signOutBtn" style="width:auto; padding:10px 14px;">Sign out</button>
+      </div>
+    </div>
+
+    <hr style="margin:14px 0; opacity:.2;" />
+
+    <!-- Filters -->
+    <section class="who" style="align-items:flex-end;">
+      <div style="flex:1; min-width:220px;">
+        <label class="lbl" for="statusFilter">Status</label>
+        <select id="statusFilter" class="inp">
+          <option value="pending" selected>Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="all">All</option>
+        </select>
+      </div>
+
+      <div style="flex:1; min-width:220px;">
+        <label class="lbl" for="teacherFilter">Teacher / Class</label>
+        <input id="teacherFilter" class="inp" placeholder="Type teacherId or teacher name…" />
+      </div>
+
+      <div style="flex:1; min-width:220px;">
+        <label class="lbl" for="studentFilter">Student</label>
+        <input id="studentFilter" class="inp" placeholder="Type student name or ID…" />
+      </div>
+
+      <div style="flex:0 0 200px;">
+        <label class="lbl" for="dateFilter">Reading Date</label>
+        <input id="dateFilter" type="date" class="inp" />
+      </div>
+
+      <button class="btn" id="refreshBtn" style="width:auto; padding:10px 14px;">🔄 Refresh</button>
+    </section>
+
+    <p id="msg" class="msg"></p>
+
+    <!-- List -->
+    <section id="list" style="margin-top:10px;"></section>
+  </main>
+
+  <script type="module" src="./admin-approve.js"></script>
+</body>
+</html>

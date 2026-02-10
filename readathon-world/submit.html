@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Submit Minutes • Read-a-thon World</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <style>.bg { min-height: 100vh; display:flex; align-items:center; justify-content:center; padding: 18px; }
+.card { width: min(520px, 96vw); background: rgba(255,255,255,.92); border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+h1 { margin: 0 0 6px; }
+.sub { margin: 0 0 14px; opacity: .85; }
+.lbl { display:block; margin: 12px 0 6px; font-weight: 700; }
+.inp { width: 100%; padding: 12px 12px; border-radius: 14px; border: 2px solid rgba(0,0,0,.12); font-size: 16px; }
+.inp.big { font-size: 22px; font-weight: 800; text-align: center; }
+.btn { width: 100%; margin-top: 14px; padding: 12px; border: 0; border-radius: 14px; font-size: 18px; font-weight: 900; cursor: pointer; }
+.msg { margin-top: 10px; min-height: 22px; font-weight: 700; }
+.who { display:flex; gap: 8px; flex-wrap:wrap; margin: 10px 0 4px; }
+.chip { background: rgba(0,0,0,.06); padding: 6px 10px; border-radius: 999px; font-weight: 800; }
+.tiny { margin-top: 14px; font-size: 14px; opacity: .85; text-align:center; }
+</style>
+</head>
+<body class="bg">
+  <main class="card">
+    <h1>📚 Log Your Reading!</h1>
+    <p class="sub">Tell Mrs. A how many minutes you read today.</p>
+
+    <section class="who" id="whoBox" hidden>
+      <div class="chip">👤 <span id="studentName"></span></div>
+      <div class="chip">🏫 <span id="teacherName"></span></div>
+      <div class="chip">⭐ Grade <span id="grade"></span></div>
+    </section>
+
+    <form id="minuteForm">
+      <label class="lbl" for="minutes">Minutes Read</label>
+      <input id="minutes" type="number" min="1" max="600" inputmode="numeric" required
+             placeholder="Type a number (like 20)" class="inp big" />
+
+      <label class="lbl" for="readingDate">Reading Date</label>
+      <input id="readingDate" type="date" class="inp" required />
+
+      <label class="lbl" for="note">Optional Note</label>
+      <input id="note" type="text" maxlength="80" class="inp"
+             placeholder="What did you read? (optional)" />
+
+      <button id="submitBtn" class="btn" type="submit">✅ Send to Mrs. A</button>
+      <p id="msg" class="msg"></p>
+    </form>
+
+    <div class="tiny">
+      <a href="./student.html">← Back to Home</a>
+    </div>
+  </main>
+
+  <script type="module" src="./submit.js"></script>
+</body>
+</html>
