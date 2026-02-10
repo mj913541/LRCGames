@@ -28,6 +28,48 @@
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
     .progress { height: 12px; border-radius: 999px; background: rgba(0,0,0,0.08); overflow: hidden; }
     .progress > div { height: 100%; width: 0%; background: #1f8f5f; transition: width 200ms ease; }
+    /* ---- Page-only text contrast fix ---- */
+.panel {
+  color: #1e2a24; /* dark jungle green */
+}
+
+.panel h1,
+.panel h2,
+.panel h3 {
+  color: #132018;
+}
+
+.panel p,
+.panel label,
+.panel li,
+.panel th,
+.panel td {
+  color: #24352c;
+}
+
+.panel .hint {
+  color: #3a4a42; /* darker than global hint */
+  opacity: 1;
+}
+
+/* Buttons text */
+.panel .btn {
+  color: #ffffff;
+}
+
+.panel .btn.ghost {
+  color: #1f3b2f;
+}
+
+/* Status boxes */
+.panel .status {
+  color: #1e2a24;
+}
+
+.panel .status.err {
+  color: #5a1f1f;
+}
+
   </style>
 </head>
 

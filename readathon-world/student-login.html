@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-a-thon World • Student Login</title>
+  <link rel="stylesheet" href="./css/styles.css" />
+  <style>
+    .card { max-width: 980px; margin: 18px auto; padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.93); box-shadow: 0 12px 30px rgba(0,0,0,0.14); }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .row > * { flex: 1; min-width: 220px; }
+    .title { font-size: 1.6rem; margin: 0 0 8px; }
+    .sub { opacity: 0.85; margin: 0 0 14px; }
+    .btn { border:0; border-radius: 16px; padding: 12px 14px; font-weight: 800; cursor:pointer; }
+    .btn.primary { background:#1f8f5f; color:#fff; }
+    .btn.ghost { background:#eef7f2; color:#143424; }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .status { margin-top:12px; padding: 12px; border-radius: 14px; background:#f6fbff; border:1px solid #d9ecff; }
+    .status.err { background:#fff4f4; border-color:#ffd2d2; }
+    .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    .key { padding: 18px 10px; border-radius: 18px; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); font-size: 1.2rem; font-weight: 900; }
+    .pinDots { display:flex; gap:10px; margin-top: 10px; }
+    .dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.12); }
+    .dot.filled { background: #1f8f5f; }
+    select { width:100%; padding: 12px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.15); }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1 class="title">🌿 Welcome to Read-a-thon World!</h1>
+    <p class="sub">Pick your class, then enter your PIN.</p>
+
+    <div class="row">
+      <div>
+        <label><strong>Grade</strong></label><br/>
+        <select id="gradeSel">
+          <option value="">Choose…</option>
+          <option value="K">K</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+
+      <div>
+        <label><strong>Homeroom</strong></label><br/>
+        <select id="roomSel" disabled>
+          <option value="">Choose grade first…</option>
+        </select>
+      </div>
+
+      <div>
+        <label><strong>Your Name</strong></label><br/>
+        <select id="studentSel" disabled>
+          <option value="">Choose homeroom first…</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label><strong>PIN</strong></label>
+      <div class="pinDots" id="dots"></div>
+
+      <div class="grid" id="keypad" aria-label="PIN keypad">
+        <button class="key" data-k="1">1</button>
+        <button class="key" data-k="2">2</button>
+        <button class="key" data-k="3">3</button>
+        <button class="key" data-k="4">4</button>
+        <button class="key" data-k="5">5</button>
+        <button class="key" data-k="6">6</button>
+        <button class="key" data-k="7">7</button>
+        <button class="key" data-k="8">8</button>
+        <button class="key" data-k="9">9</button>
+        <button class="key" data-k="clr">Clear</button>
+        <button class="key" data-k="0">0</button>
+        <button class="key" data-k="bk">⌫</button>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="loginBtn" class="btn primary" disabled>Enter World 💎</button>
+        <button id="resetBtn" class="btn ghost">Start Over</button>
+      </div>
+
+      <div id="status" class="status" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/student-login.js"></script>
+</body>
+</html>
