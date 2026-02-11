@@ -13,8 +13,7 @@ import {
   collection,
   getDocs,
   query,
-  where,
-  orderBy
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const $ = (id) => document.getElementById(id);
@@ -98,11 +97,12 @@ async function ensureAnonAuth() {
  * Loads homerooms from:
  * schools/main/grades/{grade}/homerooms/*
  * Only active homerooms show in dropdown.
- * Dropdown option value = homeroomId (doc.id), label = displayName
+ * Dropdown option value = doc.id (e.g. day_1), label = displayName (e.g. Mrs. Day)
  */
 async function populateHomeroomsFromFirestore(grade) {
   clearStatus();
 
+  // Reset dependent selects
   roomSel.disabled = true;
   roomSel.innerHTML = `<option value="">Loading…</option>`;
 
@@ -110,21 +110,10 @@ async function populateHomeroomsFromFirestore(grade) {
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   try {
-    // IMPORTANT: grade is used as a path segment (e.g. "1", "K", "EC")
     const homeroomsRef = collection(db, "schools", "main", "grades", String(grade), "homerooms");
 
-    // Only show active homerooms; order by displayName if present
-    // If some docs don't have displayName yet, ordering can error.
-    // We'll try ordered query first, then fall back to non-ordered.
-    let snap;
-    try {
-      const q = query(homeroomsRef, where("active", "==", true), orderBy("displayName"));
-      snap = await getDocs(q);
-    } catch (e) {
-      console.warn("Ordered homeroom query failed; falling back:", e);
-      const q = query(homeroomsRef, where("active", "==", true));
-      snap = await getDocs(q);
-    }
+    // No orderBy => no composite index needed
+    const snap = await getDocs(query(homeroomsRef, where("active", "==", true)));
 
     if (snap.empty) {
       roomSel.innerHTML = `<option value="">No homerooms found</option>`;
@@ -135,12 +124,12 @@ async function populateHomeroomsFromFirestore(grade) {
     const options = [];
     snap.forEach((docSnap) => {
       const data = docSnap.data() || {};
-      const id = docSnap.id; // e.g. "day_1"
-      const label = data.displayName || id; // e.g. "Mrs. Day"
+      const id = docSnap.id;                 // "day_1"
+      const label = data.displayName || id;  // "Mrs. Day"
       options.push({ id, label });
     });
 
-    // If we fell back (no orderBy), sort client-side nicely
+    // Sort client-side so teachers appear alphabetically
     options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
 
     roomSel.innerHTML =
@@ -157,6 +146,7 @@ async function populateHomeroomsFromFirestore(grade) {
 
 async function populateStudents(grade, homeroomId) {
   clearStatus();
+
   studentSel.disabled = true;
   studentSel.innerHTML = `<option value="">Loading…</option>`;
 
@@ -165,8 +155,17 @@ async function populateStudents(grade, homeroomId) {
 
     const getRoster = httpsCallable(functions, "getRoster");
 
-    // IMPORTANT: we send homeroomId (like "day_1"), not "Mrs. Day"
-    const res = await getRoster({ grade: String(grade), homeroom: String(homeroomId) });
+    // Send multiple keys to match backend expectations (prevents 400 param mismatch)
+    const payload = {
+      grade: String(grade),
+      gradeNum: Number(grade),
+      homeroom: String(homeroomId),
+      homeroomId: String(homeroomId)
+    };
+
+    console.log("Calling getRoster with:", payload);
+
+    const res = await getRoster(payload);
 
     rosterCache = res?.data?.students || [];
     if (!rosterCache.length) {
@@ -177,13 +176,22 @@ async function populateStudents(grade, homeroomId) {
 
     studentSel.innerHTML =
       `<option value="">Choose…</option>` +
-      rosterCache.map(s => `<option value="${escapeHtml(s.studentId)}">${escapeHtml(s.displayName)}</option>`).join("");
+      rosterCache.map(s =>
+        `<option value="${escapeHtml(s.studentId)}">${escapeHtml(s.displayName)}</option>`
+      ).join("");
 
     studentSel.disabled = false;
   } catch (e) {
     console.error(e);
     studentSel.innerHTML = `<option value="">Try again</option>`;
-    setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
+
+    // Helpful clue for you while debugging
+    const msg = (e?.message || "").toLowerCase();
+    if (msg.includes("missing grade") || msg.includes("missing") || msg.includes("homeroom")) {
+      setStatus(`Roster service says grade/homeroom is missing. We may need to adjust getRoster to match your Firestore structure.`, "err");
+    } else {
+      setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
+    }
   }
 }
 
