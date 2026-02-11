@@ -41,11 +41,12 @@ exports.getRoster = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "Missing grade or homeroom.");
   }
 
-  const studentsRef = db
-    .collection("schools").doc("main")
-    .collection("grades").doc(grade)
-    .collection("homerooms").doc(homeroomId)
-    .collection("students");
+const studentsRef = db
+  .collection("schools").doc("main")
+  .collection("grades").doc(gradeId)
+  .collection("homerooms").doc(homeroomId)
+  .collection("students");
+
 
   const snap = await studentsRef.get();
 

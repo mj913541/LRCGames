@@ -162,12 +162,11 @@ async function populateStudents(grade, homeroomId) {
     const getRoster = httpsCallable(functions, "getRoster");
 
     // Send multiple keys to match backend expectations (prevents 400 param mismatch)
-    const payload = {
-      grade: String(grade),
-      gradeNum: Number(grade),
-      homeroom: String(homeroomId),
-      homeroomId: String(homeroomId)
-    };
+const payload = {
+  gradeId: String(grade),
+  homeroomId: String(homeroomId)
+};
+
 
     console.log("Calling getRoster with:", payload);
 
@@ -282,8 +281,15 @@ roomSel.addEventListener("change", async () => {
   setLoginEnabled();
   clearStatus();
 
-  const grade = gradeSel.value;
-  const homeroomId = roomSel.value;
+const gradeId = safeString(data?.gradeId);
+const homeroomId = safeString(data?.homeroomId);
+
+if (!gradeId || !homeroomId) {
+  throw new functions.https.HttpsError(
+    "invalid-argument",
+    "Missing gradeId or homeroomId."
+  );
+}
 
   // Reset students dropdown
   studentSel.disabled = true;
