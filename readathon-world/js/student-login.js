@@ -1,3 +1,6 @@
+// js/student-login.js
+// Real student login: Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
+
 import { auth, functions, db } from "./firebase.js";
 
 import {
@@ -5,9 +8,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-import {
-  httpsCallable
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
+import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
 import {
   collection,
@@ -30,7 +31,7 @@ const statusBox = $("status");
 let uid = null;
 let pin = "";
 let selectedStudentId = "";
-let rosterCache = []; // {studentId, displayName}
+let rosterCache = []; // { studentId, displayName }
 
 function setStatus(msg, type = "ok") {
   statusBox.style.display = "block";
@@ -53,7 +54,8 @@ function renderDots(len = 4) {
 }
 
 function escapeHtml(s) {
-  return (s ?? "").toString()
+  return (s ?? "")
+    .toString()
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -92,23 +94,24 @@ async function ensureAnonAuth() {
     await signInAnonymously(auth);
   }
 
-  // IMPORTANT: force token creation/refresh
+  // Force token creation/refresh so callable has context.auth
   await auth.currentUser.getIdToken(true);
+
+  // Optional debug (safe)
+  console.log("Anon UID:", auth.currentUser?.uid);
+  console.log("Has token:", !!(await auth.currentUser?.getIdToken()));
 
   return auth.currentUser;
 }
 
-
 /**
- * Loads homerooms from:
+ * Homerooms come from:
  * schools/main/grades/{grade}/homerooms/*
- * Only active homerooms show in dropdown.
- * Dropdown option value = doc.id (e.g. day_1), label = displayName (e.g. Mrs. Day)
+ * Only active==true show. Label uses displayName, value uses doc.id (homeroomId).
  */
 async function populateHomeroomsFromFirestore(grade) {
   clearStatus();
 
-  // Reset dependent selects
   roomSel.disabled = true;
   roomSel.innerHTML = `<option value="">Loading…</option>`;
 
@@ -116,31 +119,44 @@ async function populateHomeroomsFromFirestore(grade) {
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   try {
-    const homeroomsRef = collection(db, "schools", "main", "grades", String(grade), "homerooms");
+    const homeroomsRef = collection(
+      db,
+      "schools",
+      "main",
+      "grades",
+      String(grade),
+      "homerooms"
+    );
 
-    // No orderBy => no composite index needed
     const snap = await getDocs(query(homeroomsRef, where("active", "==", true)));
 
     if (snap.empty) {
       roomSel.innerHTML = `<option value="">No homerooms found</option>`;
-      setStatus(`I can’t find any homerooms for this grade yet. Ask your teacher for help.`, "err");
+      setStatus(
+        `I can’t find any homerooms for this grade yet. Ask your teacher for help.`,
+        "err"
+      );
       return;
     }
 
     const options = [];
     snap.forEach((docSnap) => {
       const data = docSnap.data() || {};
-      const id = docSnap.id;                 // "day_1"
-      const label = data.displayName || id;  // "Mrs. Day"
+      const id = docSnap.id; // e.g. day_1
+      const label = data.displayName || id; // e.g. Mrs. Day
       options.push({ id, label });
     });
 
-    // Sort client-side so teachers appear alphabetically
     options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
 
     roomSel.innerHTML =
       `<option value="">Choose…</option>` +
-      options.map(o => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`).join("");
+      options
+        .map(
+          (o) =>
+            `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`
+        )
+        .join("");
 
     roomSel.disabled = false;
   } catch (e) {
@@ -161,12 +177,11 @@ async function populateStudents(grade, homeroomId) {
 
     const getRoster = httpsCallable(functions, "getRoster");
 
-    // Send multiple keys to match backend expectations (prevents 400 param mismatch)
-const payload = {
-  gradeId: String(grade),
-  homeroomId: String(homeroomId)
-};
-
+    // Standard payload (matches updated backend getRoster)
+    const payload = {
+      gradeId: String(grade || ""),
+      homeroomId: String(homeroomId || "")
+    };
 
     console.log("Calling getRoster with:", payload);
 
@@ -175,25 +190,32 @@ const payload = {
     rosterCache = res?.data?.students || [];
     if (!rosterCache.length) {
       studentSel.innerHTML = `<option value="">No students found</option>`;
-      setStatus(`Hmm… I couldn’t find a roster for that class. Ask your teacher for help.`, "err");
+      setStatus(
+        `Hmm… I couldn’t find a roster for that class. Ask your teacher for help.`,
+        "err"
+      );
       return;
     }
 
     studentSel.innerHTML =
       `<option value="">Choose…</option>` +
-      rosterCache.map(s =>
-        `<option value="${escapeHtml(s.studentId)}">${escapeHtml(s.displayName)}</option>`
-      ).join("");
+      rosterCache
+        .map(
+          (s) =>
+            `<option value="${escapeHtml(s.studentId)}">${escapeHtml(
+              s.displayName
+            )}</option>`
+        )
+        .join("");
 
     studentSel.disabled = false;
   } catch (e) {
     console.error(e);
     studentSel.innerHTML = `<option value="">Try again</option>`;
 
-    // Helpful clue for you while debugging
     const msg = (e?.message || "").toLowerCase();
-    if (msg.includes("missing grade") || msg.includes("missing") || msg.includes("homeroom")) {
-      setStatus(`Roster service says grade/homeroom is missing. We may need to adjust getRoster to match your Firestore structure.`, "err");
+    if (msg.includes("sign in") || msg.includes("unauth") || msg.includes("unauthorized")) {
+      setStatus(`I couldn’t sign you in. Please refresh the page and try again.`, "err");
     } else {
       setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
     }
@@ -221,7 +243,11 @@ async function doLogin() {
     const res = await verify({ studentId: selectedStudentId, pin });
 
     if (res?.data?.ok) {
-      setStatus(`✅ Welcome, <strong>${escapeHtml(res.data.profile.displayName)}</strong>! Entering your world…`);
+      setStatus(
+        `✅ Welcome, <strong>${escapeHtml(
+          res.data.profile?.displayName || "Reader"
+        )}</strong>! Entering your world…`
+      );
       window.location.href = "./student-home.html";
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
@@ -230,10 +256,12 @@ async function doLogin() {
     }
   } catch (e) {
     console.error(e);
-    const msg = e?.message || "Login failed.";
+    const msg = (e?.message || "").toLowerCase();
 
-    if (msg.toLowerCase().includes("pin")) {
+    if (msg.includes("pin")) {
       setStatus(`That PIN didn’t match. Try again!`, "err");
+    } else if (msg.includes("unauth")) {
+      setStatus(`I couldn’t sign you in. Please refresh and try again.`, "err");
     } else {
       setStatus(`Oops! Something went wrong. Try again.`, "err");
     }
@@ -245,7 +273,10 @@ async function doLogin() {
   }
 }
 
-// --- Events ---
+/* =========================
+   Events
+========================= */
+
 renderDots(4);
 
 onAuthStateChanged(auth, (user) => {
@@ -262,7 +293,6 @@ gradeSel.addEventListener("change", async () => {
 
   const grade = gradeSel.value;
 
-  // Reset dependent selects
   roomSel.disabled = true;
   roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
   studentSel.disabled = true;
@@ -281,17 +311,9 @@ roomSel.addEventListener("change", async () => {
   setLoginEnabled();
   clearStatus();
 
-const gradeId = safeString(data?.gradeId);
-const homeroomId = safeString(data?.homeroomId);
+  const grade = gradeSel.value;
+  const homeroomId = roomSel.value;
 
-if (!gradeId || !homeroomId) {
-  throw new functions.https.HttpsError(
-    "invalid-argument",
-    "Missing gradeId or homeroomId."
-  );
-}
-
-  // Reset students dropdown
   studentSel.disabled = true;
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
