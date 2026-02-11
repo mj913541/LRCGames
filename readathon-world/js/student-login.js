@@ -88,10 +88,16 @@ function setLoginEnabled() {
 }
 
 async function ensureAnonAuth() {
-  if (auth.currentUser) return auth.currentUser;
-  const cred = await signInAnonymously(auth);
-  return cred.user;
+  if (!auth.currentUser) {
+    await signInAnonymously(auth);
+  }
+
+  // IMPORTANT: force token creation/refresh
+  await auth.currentUser.getIdToken(true);
+
+  return auth.currentUser;
 }
+
 
 /**
  * Loads homerooms from:
