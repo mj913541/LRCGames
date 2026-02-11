@@ -1,4 +1,4 @@
-import { auth, functions } from "./firebase.js";
+import { auth, functions, db } from "./firebase.js";
 
 import {
   signInAnonymously,
@@ -8,6 +8,14 @@ import {
 import {
   httpsCallable
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
+
+import {
+  collection,
+  getDocs,
+  query,
+  where,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -24,7 +32,6 @@ let uid = null;
 let pin = "";
 let selectedStudentId = "";
 let rosterCache = []; // {studentId, displayName}
-let homeroomsByGrade = {}; // we’ll build from roster results
 
 function setStatus(msg, type = "ok") {
   statusBox.style.display = "block";
@@ -46,76 +53,6 @@ function renderDots(len = 4) {
   }
 }
 
-function resetAll() {
-  pin = "";
-  selectedStudentId = "";
-  rosterCache = [];
-  homeroomsByGrade = {};
-  gradeSel.value = "";
-  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
-  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-  roomSel.disabled = true;
-  studentSel.disabled = true;
-  loginBtn.disabled = true;
-  renderDots(4);
-  clearStatus();
-}
-
-function setLoginEnabled() {
-  const ok =
-    gradeSel.value &&
-    roomSel.value &&
-    studentSel.value &&
-    pin.length >= 3; // allow 3–6 like your uploader
-  loginBtn.disabled = !ok;
-}
-
-async function ensureAnonAuth() {
-  if (auth.currentUser) return auth.currentUser;
-  const cred = await signInAnonymously(auth);
-  return cred.user;
-}
-
-async function loadHomeroomsForGrade(grade) {
-  // You currently don’t have a separate homeroom directory.
-  // We’ll ask the user to pick homeroom from a locally configured list OR
-  // we can generate it from your existing students collection via a callable.
-  //
-  // Simplest: add a callable later to return homerooms list for grade.
-  // For now, we’ll prompt user to pick a homeroom AFTER we fetch roster by grade+homeroom,
-  // so we need a known list.
-  //
-  // Since you already have teacher icons / names, you probably have a list in your UI.
-  // Quick solution: manually list homerooms here (you can paste in later).
-  //
-  // To keep you moving today, we’ll allow typing-style via select values you maintain.
-  return null;
-}
-
-/**
- * IMPORTANT:
- * Since your structure includes grade/homeroom pickers, we need homeroom options.
- * Easiest is: store a public config doc with homerooms.
- * We'll do that now (simple + safe).
- */
-const HOMEROOMS = {
-  K: ["Mrs. Smith", "Ms. Jones"],
-  1: ["Mrs. Brown", "Mr. Lee"],
-  2: ["Mrs. Patel"],
-  3: ["Mrs. A"],
-  4: ["Ms. Green"],
-  5: ["Mrs. White"]
-};
-
-function populateHomerooms(grade) {
-  const rooms = HOMEROOMS[grade] || [];
-  roomSel.innerHTML = `<option value="">Choose…</option>` +
-    rooms.map(r => `<option value="${escapeHtml(r)}">${escapeHtml(r)}</option>`).join("");
-  roomSel.disabled = rooms.length === 0;
-  studentSel.disabled = true;
-  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-}
-
 function escapeHtml(s) {
   return (s ?? "").toString()
     .replaceAll("&", "&amp;")
@@ -125,7 +62,100 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
-async function populateStudents(grade, homeroom) {
+function resetAll() {
+  pin = "";
+  selectedStudentId = "";
+  rosterCache = [];
+
+  gradeSel.value = "";
+  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  roomSel.disabled = true;
+  studentSel.disabled = true;
+  loginBtn.disabled = true;
+
+  renderDots(4);
+  clearStatus();
+}
+
+function setLoginEnabled() {
+  const ok =
+    gradeSel.value &&
+    roomSel.value &&
+    studentSel.value &&
+    pin.length >= 3; // allow 3–6
+  loginBtn.disabled = !ok;
+}
+
+async function ensureAnonAuth() {
+  if (auth.currentUser) return auth.currentUser;
+  const cred = await signInAnonymously(auth);
+  return cred.user;
+}
+
+/**
+ * Loads homerooms from:
+ * schools/main/grades/{grade}/homerooms/*
+ * Only active homerooms show in dropdown.
+ * Dropdown option value = homeroomId (doc.id), label = displayName
+ */
+async function populateHomeroomsFromFirestore(grade) {
+  clearStatus();
+
+  roomSel.disabled = true;
+  roomSel.innerHTML = `<option value="">Loading…</option>`;
+
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  try {
+    // IMPORTANT: grade is used as a path segment (e.g. "1", "K", "EC")
+    const homeroomsRef = collection(db, "schools", "main", "grades", String(grade), "homerooms");
+
+    // Only show active homerooms; order by displayName if present
+    // If some docs don't have displayName yet, ordering can error.
+    // We'll try ordered query first, then fall back to non-ordered.
+    let snap;
+    try {
+      const q = query(homeroomsRef, where("active", "==", true), orderBy("displayName"));
+      snap = await getDocs(q);
+    } catch (e) {
+      console.warn("Ordered homeroom query failed; falling back:", e);
+      const q = query(homeroomsRef, where("active", "==", true));
+      snap = await getDocs(q);
+    }
+
+    if (snap.empty) {
+      roomSel.innerHTML = `<option value="">No homerooms found</option>`;
+      setStatus(`I can’t find any homerooms for this grade yet. Ask your teacher for help.`, "err");
+      return;
+    }
+
+    const options = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      const id = docSnap.id; // e.g. "day_1"
+      const label = data.displayName || id; // e.g. "Mrs. Day"
+      options.push({ id, label });
+    });
+
+    // If we fell back (no orderBy), sort client-side nicely
+    options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+
+    roomSel.innerHTML =
+      `<option value="">Choose…</option>` +
+      options.map(o => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`).join("");
+
+    roomSel.disabled = false;
+  } catch (e) {
+    console.error(e);
+    roomSel.innerHTML = `<option value="">Error loading homerooms</option>`;
+    setStatus(`Oops! I couldn’t load homerooms. Try again in a moment.`, "err");
+  }
+}
+
+async function populateStudents(grade, homeroomId) {
   clearStatus();
   studentSel.disabled = true;
   studentSel.innerHTML = `<option value="">Loading…</option>`;
@@ -134,7 +164,9 @@ async function populateStudents(grade, homeroom) {
     await ensureAnonAuth();
 
     const getRoster = httpsCallable(functions, "getRoster");
-    const res = await getRoster({ grade, homeroom });
+
+    // IMPORTANT: we send homeroomId (like "day_1"), not "Mrs. Day"
+    const res = await getRoster({ grade: String(grade), homeroom: String(homeroomId) });
 
     rosterCache = res?.data?.students || [];
     if (!rosterCache.length) {
@@ -177,9 +209,7 @@ async function doLogin() {
 
     if (res?.data?.ok) {
       setStatus(`✅ Welcome, <strong>${escapeHtml(res.data.profile.displayName)}</strong>! Entering your world…`);
-      // Redirect to your main student world page
-      // Change this to wherever your student “world” lives.
-window.location.href = "./student-home.html";
+      window.location.href = "./student-home.html";
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
       pin = "";
@@ -188,12 +218,13 @@ window.location.href = "./student-home.html";
   } catch (e) {
     console.error(e);
     const msg = e?.message || "Login failed.";
-    // Kid-friendly messaging
+
     if (msg.toLowerCase().includes("pin")) {
       setStatus(`That PIN didn’t match. Try again!`, "err");
     } else {
       setStatus(`Oops! Something went wrong. Try again.`, "err");
     }
+
     pin = "";
     renderDots(4);
   } finally {
@@ -208,36 +239,45 @@ onAuthStateChanged(auth, (user) => {
   uid = user?.uid || null;
 });
 
-gradeSel.addEventListener("change", () => {
+gradeSel.addEventListener("change", async () => {
   pin = "";
   selectedStudentId = "";
+  rosterCache = [];
   renderDots(4);
   setLoginEnabled();
   clearStatus();
 
   const grade = gradeSel.value;
-  if (!grade) {
-    roomSel.disabled = true;
-    roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
-    studentSel.disabled = true;
-    studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-    return;
-  }
 
-  populateHomerooms(grade);
+  // Reset dependent selects
+  roomSel.disabled = true;
+  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  if (!grade) return;
+
+  await populateHomeroomsFromFirestore(grade);
 });
 
 roomSel.addEventListener("change", async () => {
   pin = "";
   selectedStudentId = "";
+  rosterCache = [];
   renderDots(4);
   setLoginEnabled();
+  clearStatus();
 
   const grade = gradeSel.value;
-  const homeroom = roomSel.value;
-  if (!grade || !homeroom) return;
+  const homeroomId = roomSel.value;
 
-  await populateStudents(grade, homeroom);
+  // Reset students dropdown
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  if (!grade || !homeroomId) return;
+
+  await populateStudents(grade, homeroomId);
 });
 
 studentSel.addEventListener("change", () => {
