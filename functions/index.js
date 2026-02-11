@@ -20,25 +20,16 @@ async function requireAdmin(context) {
   return uid;
 }
 
-/**
- * NOTE:
- * For real PIN verification you should hash+salt and compare hashes.
- * Since I don’t know your exact hashing approach from earlier steps,
- * this supports BOTH:
- *   - stored plain pin in students/{studentId}.pin  (not recommended)
- *   - stored pinHash + pinSalt (recommended) -> you’ll plug in comparePinHash()
- */
 function safeString(x) {
   return (x === undefined || x === null) ? "" : String(x);
 }
 
 /* =========================
-   Roster: get students for a class
-   Path:
+   getRoster
+   Reads from:
    schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
 ========================= */
 exports.getRoster = functions.https.onCall(async (data, context) => {
-  // Students will be anonymous-auth signed in before calling
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
   }
@@ -47,10 +38,7 @@ exports.getRoster = functions.https.onCall(async (data, context) => {
   const homeroomId = safeString(data?.homeroomId || data?.homeroom);
 
   if (!grade || !homeroomId) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Missing grade or homeroom."
-    );
+    throw new functions.https.HttpsError("invalid-argument", "Missing grade or homeroom.");
   }
 
   const studentsRef = db
@@ -73,21 +61,10 @@ exports.getRoster = functions.https.onCall(async (data, context) => {
 });
 
 /* =========================
-   PIN verification: verifyStudentPin
-   - checks the PIN for studentId
-   - writes verified session doc to users/{uid}
+   verifyStudentPin (TEMP)
+   - Accepts only PIN "1111"
+   - Writes session to users/{uid}
 ========================= */
-
-// TODO (if you use hashing): implement this based on how you created pinHash.
-// For now it throws if pinHash exists, so you don't accidentally accept wrong pins.
-async function comparePinHash(pin, pinHash, pinSalt) {
-  // Plug in the same hashing used during bulk upload.
-  // Example patterns:
-  // - crypto.pbkdf2Sync(pin, salt, iterations, keylen, 'sha256').toString('hex')
-  // - bcrypt.compare(pin, hash)
-  throw new Error("PIN hashing compare not implemented in this snippet.");
-}
-
 exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
@@ -101,47 +78,27 @@ exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "Missing studentId or pin.");
   }
 
-  // 1) Load private student record (Admin SDK bypasses rules)
+  // TEMP PIN RULE
+  if (pin !== "1111") {
+    return { ok: false };
+  }
+
+  // Load private student record to build session (Admin SDK bypasses rules)
   const studentSnap = await db.doc(`students/${studentId}`).get();
   if (!studentSnap.exists) {
     throw new functions.https.HttpsError("not-found", "Student not found.");
   }
   const s = studentSnap.data() || {};
 
-  // 2) Verify PIN
-  let pinOk = false;
+  // teacherId should match what your minute rules expect (teacherId)
+  // If your private student doc uses homeroomId, we map it.
+  const teacherId = safeString(s.homeroomId || s.teacherId || s.homeroom || "");
+  const grade = safeString(s.grade);
 
-  // If you (temporarily) stored pin in plaintext (NOT recommended)
-  if (s.pin) {
-    pinOk = safeString(s.pin) === pin;
-  } else if (s.pinHash && s.pinSalt) {
-    // If you stored hash+salt, you MUST implement comparePinHash
-    try {
-      pinOk = await comparePinHash(pin, s.pinHash, s.pinSalt);
-    } catch (e) {
-      console.error("comparePinHash not configured:", e);
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "PIN hashing is enabled but compare function is not configured."
-      );
-    }
-  } else {
-    throw new functions.https.HttpsError(
-      "failed-precondition",
-      "No PIN data found for this student."
-    );
-  }
-
-  if (!pinOk) {
-    return { ok: false };
-  }
-
-  // 3) Write verified session to users/{uid}
-  // Make sure these fields match your Firestore rules for minute submissions.
   const session = {
     studentId,
-    grade: safeString(s.grade),
-    teacherId: safeString(s.homeroomId || s.teacherId || s.homeroom || ""),
+    grade,
+    teacherId,
     studentName: safeString(s.displayName || s.studentName || s.name || ""),
     teacherName: safeString(s.teacherName || s.homeroomDisplayName || ""),
     updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -160,7 +117,7 @@ exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
 });
 
 /* =========================
-   Rubies conversion: convertRubies (your existing code)
+   convertRubies (your existing)
 ========================= */
 exports.convertRubies = functions.https.onCall(async (data, context) => {
   await requireAdmin(context);
