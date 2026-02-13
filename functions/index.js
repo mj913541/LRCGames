@@ -4,19 +4,18 @@ admin.initializeApp();
 
 const db = admin.firestore();
 
-/* =========================
-   Helpers
-========================= */
-
 async function requireAdmin(context) {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
   }
+
   const uid = context.auth.uid;
+
   const adminDoc = await db.doc(`admins/${uid}`).get();
   if (!adminDoc.exists) {
     throw new functions.https.HttpsError("permission-denied", "Admin only.");
   }
+
   return uid;
 }
 
@@ -24,12 +23,7 @@ function safeString(x) {
   return x === undefined || x === null ? "" : String(x);
 }
 
-/* =========================
-   getRoster
-   Reads from:
-   schools/main/grades/{gradeId}/homerooms/{homeroomId}/students/*
-   Returns: [{ studentId, displayName }]
-========================= */
+
 exports.getRoster = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
