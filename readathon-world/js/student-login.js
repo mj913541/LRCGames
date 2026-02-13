@@ -249,6 +249,8 @@ async function populateStudents(grade, homeroomId) {
 }
 
 async function doLogin() {
+  console.log("✅ doLogin() fired");
+
   clearStatus();
 
   if (!selectedStudentId) {
