@@ -1,4 +1,4 @@
-// bbb js/student-login.js
+// ccc js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
 import { auth, functions, db, httpsCallable } from "./firebase.js";
@@ -275,7 +275,8 @@ async function doLogin() {
           res.data.profile?.displayName || "Reader"
         )}</strong>! Entering your world…`
       );
-      window.location.href = "/student-home.html";
+      window.location.href = "/readathon-world/student-home.html";
+
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
       pin = "";
