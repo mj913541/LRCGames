@@ -1,4 +1,4 @@
-// aaa js/student-login.js
+// ccc js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
 import { auth, functions, db } from "./firebase.js";
@@ -271,7 +271,7 @@ async function doLogin() {
 
     const verify = httpsCallable(functions, "verifyStudentPin");
     const res = await verify({ studentId: selectedStudentId, pin, gradeId, homeroomId });
-console.log("verifyStudentPin response:", res?.data);
+
     if (res?.data?.ok) {
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
