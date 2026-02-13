@@ -1,4 +1,4 @@
-// ccc js/student-login.js
+// aaa js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
 import { auth, functions, db } from "./firebase.js";
@@ -265,13 +265,11 @@ async function doLogin() {
 
   try {
     await ensureAnonAuth();
-
     const gradeId = String(gradeSel.value || "");
     const homeroomId = String(roomSel.value || "");
 
     const verify = httpsCallable(functions, "verifyStudentPin");
     const res = await verify({ studentId: selectedStudentId, pin, gradeId, homeroomId });
-
     if (res?.data?.ok) {
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
