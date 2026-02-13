@@ -1,5 +1,5 @@
-// js/student-login.js
-// Real student login: Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
+// aaa js/student-login.js
+// Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
 import { auth, functions, db } from "./firebase.js";
 
@@ -104,7 +104,7 @@ async function ensureAnonAuth() {
     });
   });
 
-  // Force token refresh so callable definitely has it
+  // Force token refresh
   await user.getIdToken(true);
 
   console.log("Anon UID:", user.uid);
@@ -113,7 +113,11 @@ async function ensureAnonAuth() {
   return user;
 }
 
-
+/**
+ * Homerooms come from:
+ * schools/main/grades/{grade}/homerooms/*
+ * Only active==true show.
+ */
 async function populateHomeroomsFromFirestore(grade) {
   clearStatus();
 
@@ -124,6 +128,8 @@ async function populateHomeroomsFromFirestore(grade) {
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   try {
+    await ensureAnonAuth(); // ✅ IMPORTANT (rules require signed in)
+
     const homeroomsRef = collection(
       db,
       "schools",
@@ -147,8 +153,8 @@ async function populateHomeroomsFromFirestore(grade) {
     const options = [];
     snap.forEach((docSnap) => {
       const data = docSnap.data() || {};
-      const id = docSnap.id; // e.g. day_1
-      const label = data.displayName || id; // e.g. Mrs. Day
+      const id = docSnap.id;
+      const label = data.displayName || id;
       options.push({ id, label });
     });
 
@@ -171,6 +177,11 @@ async function populateHomeroomsFromFirestore(grade) {
   }
 }
 
+/**
+ * Students come from:
+ * schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
+ * Only active==true show (if field exists)
+ */
 async function populateStudents(grade, homeroomId) {
   clearStatus();
 
@@ -178,25 +189,36 @@ async function populateStudents(grade, homeroomId) {
   studentSel.innerHTML = `<option value="">Loading…</option>`;
 
   try {
-    await ensureAnonAuth();
+    await ensureAnonAuth(); // ✅ IMPORTANT
 
-    const getRoster = httpsCallable(functions, "getRoster");
+    const studentsRef = collection(
+      db,
+      "schools",
+      "main",
+      "grades",
+      String(grade),
+      "homerooms",
+      String(homeroomId),
+      "students"
+    );
 
-    // Standard payload (matches updated backend getRoster)
-    const payload = {
-      gradeId: String(grade || ""),
-      homeroomId: String(homeroomId || "")
-    };
+    // If you don't have "active" on student docs, remove this query() and just do getDocs(studentsRef)
+    const snap = await getDocs(query(studentsRef, where("active", "==", true)));
 
-    console.log("Calling getRoster with:", payload);
+    rosterCache = snap.docs
+      .map((d) => {
+        const s = d.data() || {};
+        return {
+          studentId: s.studentId || d.id,
+          displayName: s.displayName || s.studentName || s.name || "Student"
+        };
+      })
+      .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName)));
 
-    const res = await getRoster(payload);
-
-    rosterCache = res?.data?.students || [];
     if (!rosterCache.length) {
       studentSel.innerHTML = `<option value="">No students found</option>`;
       setStatus(
-        `Hmm… I couldn’t find a roster for that class. Ask your teacher for help.`,
+        `Hmm… I couldn’t find any names for that class. Ask your teacher for help.`,
         "err"
       );
       return;
@@ -219,8 +241,8 @@ async function populateStudents(grade, homeroomId) {
     studentSel.innerHTML = `<option value="">Try again</option>`;
 
     const msg = (e?.message || "").toLowerCase();
-    if (msg.includes("sign in") || msg.includes("unauth") || msg.includes("unauthorized")) {
-      setStatus(`I couldn’t sign you in. Please refresh the page and try again.`, "err");
+    if (msg.includes("permission") || msg.includes("unauth")) {
+      setStatus(`I couldn’t load names yet. Please refresh and try again.`, "err");
     } else {
       setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
     }
@@ -244,8 +266,11 @@ async function doLogin() {
   try {
     await ensureAnonAuth();
 
+    const gradeId = String(gradeSel.value || "");
+    const homeroomId = String(roomSel.value || "");
+
     const verify = httpsCallable(functions, "verifyStudentPin");
-    const res = await verify({ studentId: selectedStudentId, pin });
+    const res = await verify({ studentId: selectedStudentId, pin, gradeId, homeroomId });
 
     if (res?.data?.ok) {
       setStatus(
@@ -263,13 +288,9 @@ async function doLogin() {
     console.error(e);
     const msg = (e?.message || "").toLowerCase();
 
-    if (msg.includes("pin")) {
-      setStatus(`That PIN didn’t match. Try again!`, "err");
-    } else if (msg.includes("unauth")) {
-      setStatus(`I couldn’t sign you in. Please refresh and try again.`, "err");
-    } else {
-      setStatus(`Oops! Something went wrong. Try again.`, "err");
-    }
+    if (msg.includes("pin")) setStatus(`That PIN didn’t match. Try again!`, "err");
+    else if (msg.includes("unauth")) setStatus(`Please refresh and try again.`, "err");
+    else setStatus(`Oops! Something went wrong. Try again.`, "err");
 
     pin = "";
     renderDots(4);
@@ -278,7 +299,9 @@ async function doLogin() {
   }
 }
 
-
+/* =========================
+   Events
+========================= */
 
 renderDots(4);
 
