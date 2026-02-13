@@ -1,14 +1,13 @@
-// aaa js/student-login.js
+// bbb js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
-import { auth, functions, db } from "./firebase.js";
+import { auth, functions, db, httpsCallable } from "./firebase.js";
+
 
 import {
   signInAnonymously,
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
 import {
   collection,
