@@ -21,50 +21,61 @@ async function requireAdmin(context) {
 }
 
 function safeString(x) {
-  return (x === undefined || x === null) ? "" : String(x);
+  return x === undefined || x === null ? "" : String(x);
 }
 
 /* =========================
    getRoster
    Reads from:
-   schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
+   schools/main/grades/{gradeId}/homerooms/{homeroomId}/students/*
+   Returns: [{ studentId, displayName }]
 ========================= */
 exports.getRoster = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
   }
 
-  const grade = safeString(data?.grade || data?.gradeId || data?.gradeNum);
-  const homeroomId = safeString(data?.homeroomId || data?.homeroom);
+  const gradeId = safeString(data?.gradeId ?? data?.grade ?? data?.gradeNum);
+  const homeroomId = safeString(data?.homeroomId ?? data?.homeroom);
 
-  if (!grade || !homeroomId) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing grade or homeroom.");
+  if (!gradeId || !homeroomId) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Missing gradeId or homeroomId."
+    );
   }
 
-const studentsRef = db
-  .collection("schools").doc("main")
-  .collection("grades").doc(gradeId)
-  .collection("homerooms").doc(homeroomId)
-  .collection("students");
-
+  const studentsRef = db
+    .collection("schools").doc("main")
+    .collection("grades").doc(gradeId)
+    .collection("homerooms").doc(homeroomId)
+    .collection("students");
 
   const snap = await studentsRef.get();
 
-  const students = snap.docs.map((d) => {
-    const s = d.data() || {};
-    return {
-      studentId: s.studentId || d.id,
-      displayName: s.displayName || s.studentName || s.name || "Student"
-    };
-  }).sort((a, b) => String(a.displayName).localeCompare(String(b.displayName)));
+  const students = snap.docs
+    .map((d) => {
+      const s = d.data() || {};
+      return {
+        studentId: safeString(s.studentId || d.id),
+        displayName: safeString(s.displayName || s.studentName || s.name || "Student"),
+        active: s.active !== false, // treat missing as active
+      };
+    })
+    .filter((s) => s.active)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }))
+    .map(({ studentId, displayName }) => ({ studentId, displayName }));
 
   return { ok: true, students };
 });
 
 /* =========================
-   verifyStudentPin (TEMP)
-   - Accepts only PIN "1111"
-   - Writes session to users/{uid}
+   verifyStudentPin
+   - Reads PIN from: studentSecrets/{studentId}
+   - Reads roster/profile from:
+       schools/main/grades/{gradeId}/homerooms/{homeroomId}/students/{studentId}
+     (fallback: students/{studentId})
+   - Writes session to: users/{uid}
 ========================= */
 exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
@@ -72,37 +83,83 @@ exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
   }
 
   const uid = context.auth.uid;
+
   const studentId = safeString(data?.studentId);
   const pin = safeString(data?.pin);
+
+  // We strongly prefer these so we can build a clean session from the directory
+  const gradeId = safeString(data?.gradeId ?? data?.grade);
+  const homeroomId = safeString(data?.homeroomId ?? data?.homeroom);
 
   if (!studentId || !pin) {
     throw new functions.https.HttpsError("invalid-argument", "Missing studentId or pin.");
   }
 
-  // TEMP PIN RULE
-  if (pin !== "1111") {
-    return { ok: false };
+  // 1) Check secret PIN (Admin SDK bypasses rules)
+  const secretSnap = await db.doc(`studentSecrets/${studentId}`).get();
+  if (!secretSnap.exists) {
+    return { ok: false, reason: "no-secret" };
   }
 
-  // Load private student record to build session (Admin SDK bypasses rules)
-  const studentSnap = await db.doc(`students/${studentId}`).get();
-  if (!studentSnap.exists) {
-    throw new functions.https.HttpsError("not-found", "Student not found.");
+  const realPin = safeString(secretSnap.data()?.pin).trim();
+  if (!realPin || pin.trim() !== realPin) {
+    return { ok: false, reason: "bad-pin" };
   }
-  const s = studentSnap.data() || {};
 
-  // teacherId should match what your minute rules expect (teacherId)
-  // If your private student doc uses homeroomId, we map it.
-  const teacherId = safeString(s.homeroomId || s.teacherId || s.homeroom || "");
-  const grade = safeString(s.grade);
+  // 2) Load profile info (prefer the directory doc)
+  let studentProfile = null;
 
+  if (gradeId && homeroomId) {
+    const rosterRef = db
+      .collection("schools").doc("main")
+      .collection("grades").doc(gradeId)
+      .collection("homerooms").doc(homeroomId)
+      .collection("students").doc(studentId);
+
+    const rosterSnap = await rosterRef.get();
+    if (rosterSnap.exists) studentProfile = rosterSnap.data() || {};
+  }
+
+  // Fallback: if you still have a top-level students collection used by readathon
+  if (!studentProfile) {
+    const fallbackSnap = await db.doc(`students/${studentId}`).get();
+    if (fallbackSnap.exists) studentProfile = fallbackSnap.data() || {};
+  }
+
+  if (!studentProfile) {
+    throw new functions.https.HttpsError("not-found", "Student profile not found.");
+  }
+
+  const resolvedGrade = safeString(studentProfile.grade ?? gradeId);
+  const resolvedTeacherId = safeString(
+    studentProfile.teacherId ??
+    studentProfile.homeroomId ??
+    homeroomId ??
+    studentProfile.homeroom ??
+    ""
+  );
+
+  const studentName = safeString(
+    studentProfile.displayName ??
+    studentProfile.studentName ??
+    studentProfile.name ??
+    ""
+  );
+
+  const teacherName = safeString(
+    studentProfile.teacherName ??
+    studentProfile.homeroomDisplayName ??
+    ""
+  );
+
+  // 3) Write session to users/{uid}
   const session = {
     studentId,
-    grade,
-    teacherId,
-    studentName: safeString(s.displayName || s.studentName || s.name || ""),
-    teacherName: safeString(s.teacherName || s.homeroomDisplayName || ""),
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    grade: resolvedGrade,
+    teacherId: resolvedTeacherId,
+    studentName,
+    teacherName,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   };
 
   await db.doc(`users/${uid}`).set(session, { merge: true });
@@ -110,10 +167,10 @@ exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
   return {
     ok: true,
     profile: {
-      displayName: session.studentName,
-      grade: session.grade,
-      teacherId: session.teacherId
-    }
+      displayName: studentName,
+      grade: resolvedGrade,
+      teacherId: resolvedTeacherId,
+    },
   };
 });
 

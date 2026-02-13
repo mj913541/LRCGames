@@ -94,21 +94,26 @@ async function ensureAnonAuth() {
     await signInAnonymously(auth);
   }
 
-  // Force token creation/refresh so callable has context.auth
-  await auth.currentUser.getIdToken(true);
+  // Wait until Firebase finishes setting the auth state
+  const user = await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (u) {
+        unsub();
+        resolve(u);
+      }
+    });
+  });
 
-  // Optional debug (safe)
-  console.log("Anon UID:", auth.currentUser?.uid);
-  console.log("Has token:", !!(await auth.currentUser?.getIdToken()));
+  // Force token refresh so callable definitely has it
+  await user.getIdToken(true);
 
-  return auth.currentUser;
+  console.log("Anon UID:", user.uid);
+  console.log("Has token:", !!(await user.getIdToken()));
+
+  return user;
 }
 
-/**
- * Homerooms come from:
- * schools/main/grades/{grade}/homerooms/*
- * Only active==true show. Label uses displayName, value uses doc.id (homeroomId).
- */
+
 async function populateHomeroomsFromFirestore(grade) {
   clearStatus();
 
@@ -273,9 +278,7 @@ async function doLogin() {
   }
 }
 
-/* =========================
-   Events
-========================= */
+
 
 renderDots(4);
 
