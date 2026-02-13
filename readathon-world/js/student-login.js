@@ -1,4 +1,4 @@
-// bbb js/student-login.js
+// aaa js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
 import { auth, functions, db } from "./firebase.js";

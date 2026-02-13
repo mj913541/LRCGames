@@ -1,8 +1,13 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-admin.initializeApp();
+const crypto = require("crypto");
 
+admin.initializeApp();
 const db = admin.firestore();
+
+/* =========================
+   Helpers
+========================= */
 
 async function requireAdmin(context) {
   if (!context.auth) {
@@ -23,7 +28,10 @@ function safeString(x) {
   return x === undefined || x === null ? "" : String(x);
 }
 
-
+/* =========================
+   getRoster
+   schools/main/grades/{gradeId}/homerooms/{homeroomId}/students/*
+========================= */
 exports.getRoster = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
@@ -57,7 +65,9 @@ exports.getRoster = functions.https.onCall(async (data, context) => {
       };
     })
     .filter((s) => s.active)
-    .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }))
+    .sort((a, b) =>
+      a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" })
+    )
     .map(({ studentId, displayName }) => ({ studentId, displayName }));
 
   return { ok: true, students };
@@ -65,42 +75,51 @@ exports.getRoster = functions.https.onCall(async (data, context) => {
 
 /* =========================
    verifyStudentPin
-   - Reads PIN from: studentSecrets/{studentId}
-   - Reads roster/profile from:
-       schools/main/grades/{gradeId}/homerooms/{homeroomId}/students/{studentId}
-     (fallback: students/{studentId})
-   - Writes session to: users/{uid}
+   - Reads SHA-256 pinHash from studentSecrets/{studentId}.pinHash
+   - Compares to SHA-256(pin)
+   - Loads roster profile from schools/main/.../students/{studentId}
+   - Writes session to users/{uid}
 ========================= */
 exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
+  // 🔍 TEMP DEBUG (so we can see why you're getting 401)
+  console.log("verifyStudentPin auth:", context.auth);
+
   if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+    // Returning (instead of throwing) makes debugging easier in the browser
+    return { ok: false, debug: "NO_AUTH_CONTEXT" };
   }
 
   const uid = context.auth.uid;
 
-  const studentId = safeString(data?.studentId);
-  const pin = safeString(data?.pin);
+  const studentId = safeString(data?.studentId).trim();
+  const pin = safeString(data?.pin).trim();
 
-  // We strongly prefer these so we can build a clean session from the directory
-  const gradeId = safeString(data?.gradeId ?? data?.grade);
-  const homeroomId = safeString(data?.homeroomId ?? data?.homeroom);
+  const gradeId = safeString(data?.gradeId ?? data?.grade).trim();
+  const homeroomId = safeString(data?.homeroomId ?? data?.homeroom).trim();
 
   if (!studentId || !pin) {
     throw new functions.https.HttpsError("invalid-argument", "Missing studentId or pin.");
   }
 
-  // 1) Check secret PIN (Admin SDK bypasses rules)
+  // 1) Read pinHash from secrets
   const secretSnap = await db.doc(`studentSecrets/${studentId}`).get();
-  if (!secretSnap.exists) {
-    return { ok: false, reason: "no-secret" };
-  }
+  if (!secretSnap.exists) return { ok: false, reason: "no-secret" };
 
-  const realPin = safeString(secretSnap.data()?.pin).trim();
-  if (!realPin || pin.trim() !== realPin) {
+  const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
+  if (!storedHash) return { ok: false, reason: "no-hash" };
+
+  // 2) Hash entered pin with SHA-256 hex
+  const enteredHash = crypto
+    .createHash("sha256")
+    .update(pin, "utf8")
+    .digest("hex")
+    .toLowerCase();
+
+  if (enteredHash !== storedHash) {
     return { ok: false, reason: "bad-pin" };
   }
 
-  // 2) Load profile info (prefer the directory doc)
+  // 3) Load roster profile (prefer the directory doc)
   let studentProfile = null;
 
   if (gradeId && homeroomId) {
@@ -114,7 +133,7 @@ exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
     if (rosterSnap.exists) studentProfile = rosterSnap.data() || {};
   }
 
-  // Fallback: if you still have a top-level students collection used by readathon
+  // Optional fallback (if you keep a top-level students collection for other features)
   if (!studentProfile) {
     const fallbackSnap = await db.doc(`students/${studentId}`).get();
     if (fallbackSnap.exists) studentProfile = fallbackSnap.data() || {};
@@ -124,29 +143,24 @@ exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("not-found", "Student profile not found.");
   }
 
-  const resolvedGrade = safeString(studentProfile.grade ?? gradeId);
+  const resolvedGrade = safeString(studentProfile.grade ?? studentProfile.gradeId ?? gradeId);
   const resolvedTeacherId = safeString(
     studentProfile.teacherId ??
-    studentProfile.homeroomId ??
-    homeroomId ??
-    studentProfile.homeroom ??
-    ""
+      studentProfile.homeroomId ??
+      homeroomId ??
+      studentProfile.homeroom ??
+      ""
   );
 
   const studentName = safeString(
-    studentProfile.displayName ??
-    studentProfile.studentName ??
-    studentProfile.name ??
-    ""
+    studentProfile.displayName ?? studentProfile.studentName ?? studentProfile.name ?? ""
   );
 
   const teacherName = safeString(
-    studentProfile.teacherName ??
-    studentProfile.homeroomDisplayName ??
-    ""
+    studentProfile.teacherName ?? studentProfile.homeroomDisplayName ?? ""
   );
 
-  // 3) Write session to users/{uid}
+  // 4) Save session
   const session = {
     studentId,
     grade: resolvedGrade,
@@ -178,9 +192,10 @@ exports.convertRubies = functions.https.onCall(async (data, context) => {
   const dryRun = !!(data && data.dryRun);
 
   const rulesSnap = await db.doc("config/rules").get();
-  const minutesPerRuby = rulesSnap.exists && rulesSnap.data().minutesPerRuby
-    ? Number(rulesSnap.data().minutesPerRuby)
-    : 10;
+  const minutesPerRuby =
+    rulesSnap.exists && rulesSnap.data().minutesPerRuby
+      ? Number(rulesSnap.data().minutesPerRuby)
+      : 10;
 
   if (!Number.isFinite(minutesPerRuby) || minutesPerRuby <= 0) {
     throw new functions.https.HttpsError("failed-precondition", "Invalid minutesPerRuby.");
@@ -199,7 +214,7 @@ exports.convertRubies = functions.https.onCall(async (data, context) => {
 
   const batch = db.batch();
 
-  snap.forEach(docSnap => {
+  snap.forEach((docSnap) => {
     scanned++;
     const s = docSnap.data() || {};
 
@@ -219,11 +234,15 @@ exports.convertRubies = functions.https.onCall(async (data, context) => {
     totalMinutesConsumed += minutesConsumed;
 
     if (!dryRun) {
-      batch.set(docSnap.ref, {
-        rubiesBalance: balance + newRubies,
-        convertedApprovedMinutes: converted + minutesConsumed,
-        rubiesLastConvertedAt: admin.firestore.FieldValue.serverTimestamp(),
-      }, { merge: true });
+      batch.set(
+        docSnap.ref,
+        {
+          rubiesBalance: balance + newRubies,
+          convertedApprovedMinutes: converted + minutesConsumed,
+          rubiesLastConvertedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
 
       const logRef = db.collection("conversionLogs").doc();
       batch.set(logRef, {
@@ -249,6 +268,6 @@ exports.convertRubies = functions.https.onCall(async (data, context) => {
     scanned,
     studentsUpdated: updated,
     totalRubiesAdded,
-    totalMinutesConsumed
+    totalMinutesConsumed,
   };
 });
