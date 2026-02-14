@@ -23,8 +23,6 @@ const adminBox = el("adminBox");
 const adminStatus = el("adminStatus");
 const adminMenu = el("adminMenu");
 
-const menuIds = ["menuUpload", "menuBatch", "menuApprove", "menuStore"];
-
 function setError(msg) {
   if (errEl) errEl.textContent = msg || "";
 }
