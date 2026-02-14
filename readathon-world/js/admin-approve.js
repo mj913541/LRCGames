@@ -244,7 +244,7 @@ async function rejectSubmission(submissionId, decisionNote) {
 
 signOutBtn.addEventListener("click", async () => {
   await signOut(auth);
-  window.location.href = "./admin.html"; // adjust if your admin login page is different
+  window.location.href = "/admin.html"; // adjust if your admin login page is different
 });
 
 refreshBtn.addEventListener("click", fetchSubmissions);
