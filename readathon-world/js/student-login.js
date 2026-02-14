@@ -1,8 +1,7 @@
-// fudge js/student-login.js
-// Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
+// js/student-login.js
+// Grade -> Homeroom -> Name -> PIN -> verifyStudentPinHttp -> redirect
 
-import { auth, functions, db, httpsCallable } from "./firebase.js";
-
+import { auth, db } from "./firebase.js";
 
 import {
   signInAnonymously,
@@ -113,9 +112,8 @@ async function ensureAnonAuth() {
 }
 
 /**
- * Homerooms come from:
+ * Homerooms:
  * schools/main/grades/{grade}/homerooms/*
- * Only active==true show.
  */
 async function populateHomeroomsFromFirestore(grade) {
   clearStatus();
@@ -127,7 +125,7 @@ async function populateHomeroomsFromFirestore(grade) {
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   try {
-    await ensureAnonAuth(); // ✅ IMPORTANT (rules require signed in)
+    await ensureAnonAuth();
 
     const homeroomsRef = collection(
       db,
@@ -152,9 +150,10 @@ async function populateHomeroomsFromFirestore(grade) {
     const options = [];
     snap.forEach((docSnap) => {
       const data = docSnap.data() || {};
-      const id = docSnap.id;
-      const label = data.displayName || id;
-      options.push({ id, label });
+      options.push({
+        id: docSnap.id,
+        label: data.displayName || docSnap.id
+      });
     });
 
     options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
@@ -177,9 +176,8 @@ async function populateHomeroomsFromFirestore(grade) {
 }
 
 /**
- * Students come from:
+ * Students:
  * schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
- * Only active==true show (if field exists)
  */
 async function populateStudents(grade, homeroomId) {
   clearStatus();
@@ -188,7 +186,7 @@ async function populateStudents(grade, homeroomId) {
   studentSel.innerHTML = `<option value="">Loading…</option>`;
 
   try {
-    await ensureAnonAuth(); // ✅ IMPORTANT
+    await ensureAnonAuth();
 
     const studentsRef = collection(
       db,
@@ -201,7 +199,6 @@ async function populateStudents(grade, homeroomId) {
       "students"
     );
 
-    // If you don't have "active" on student docs, remove this query() and just do getDocs(studentsRef)
     const snap = await getDocs(query(studentsRef, where("active", "==", true)));
 
     rosterCache = snap.docs
@@ -238,13 +235,7 @@ async function populateStudents(grade, homeroomId) {
   } catch (e) {
     console.error(e);
     studentSel.innerHTML = `<option value="">Try again</option>`;
-
-    const msg = (e?.message || "").toLowerCase();
-    if (msg.includes("permission") || msg.includes("unauth")) {
-      setStatus(`I couldn’t load names yet. Please refresh and try again.`, "err");
-    } else {
-      setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
-    }
+    setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
   }
 }
 
@@ -265,36 +256,38 @@ async function doLogin() {
 
   try {
     await ensureAnonAuth();
+
     const gradeId = String(gradeSel.value || "");
     const homeroomId = String(roomSel.value || "");
-
     const token = await auth.currentUser.getIdToken(true);
 
-const resp = await fetch("https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`
-  },
-  body: JSON.stringify({
-    studentId: selectedStudentId,
-    pin,
-    gradeId,
-    homeroomId
-  })
-});
+    const resp = await fetch(
+      "https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          studentId: selectedStudentId,
+          pin,
+          gradeId,
+          homeroomId
+        })
+      }
+    );
 
-const resData = await resp.json();
-console.log("verifyStudentPinHttp response:", resData);
+    const resData = await resp.json();
+    console.log("verifyStudentPinHttp response:", resData);
 
-  if (resData?.ok) {
+    if (resData?.ok) {
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
           resData.profile?.displayName || "Reader"
         )}</strong>! Entering your world…`
       );
       window.location.href = "/readathon-world/student-home.html";
-
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
       pin = "";
@@ -302,12 +295,7 @@ console.log("verifyStudentPinHttp response:", resData);
     }
   } catch (e) {
     console.error(e);
-    const msg = (e?.message || "").toLowerCase();
-
-    if (msg.includes("pin")) setStatus(`That PIN didn’t match. Try again!`, "err");
-    else if (msg.includes("unauth")) setStatus(`Please refresh and try again.`, "err");
-    else setStatus(`Oops! Something went wrong. Try again.`, "err");
-
+    setStatus(`Oops! Something went wrong. Try again.`, "err");
     pin = "";
     renderDots(4);
   } finally {
@@ -341,7 +329,6 @@ gradeSel.addEventListener("change", async () => {
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   if (!grade) return;
-
   await populateHomeroomsFromFirestore(grade);
 });
 
@@ -360,7 +347,6 @@ roomSel.addEventListener("change", async () => {
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   if (!grade || !homeroomId) return;
-
   await populateStudents(grade, homeroomId);
 });
 
@@ -383,10 +369,13 @@ keypad.addEventListener("click", (e) => {
   renderDots(4);
   setLoginEnabled();
 });
+
+// Prevent any form submit refresh issues
 loginBtn.addEventListener("click", (e) => {
   e.preventDefault();
   doLogin();
 });
+
 resetBtn.addEventListener("click", resetAll);
 
 resetAll();
