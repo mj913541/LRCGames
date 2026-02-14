@@ -1,4 +1,5 @@
-import { auth, db } from "./firebase.js";
+import { auth, db } from "../firebase.js";
+
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -55,7 +56,7 @@ async function loadSession(uid) {
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     // Student must be signed in anonymously already (from PIN login flow)
-    window.location.href = "./index.html";
+    window.location.href = "/index.html";
     return;
   }
 
@@ -103,22 +104,27 @@ form.addEventListener("submit", async (e) => {
 
   try {
     await addDoc(collection(db, "minuteSubmissions"), {
-      studentUid: currentUid,
-      studentId: sessionData.studentId,
-      grade: sessionData.grade,
-      teacherId: sessionData.teacherId,
+  studentUid: currentUid,
+  studentId: sessionData.studentId,
+  studentName: sessionData.studentName || null,
 
-      minutes,
-      readingDate,
-      ...(note ? { note } : {}),
+  grade: sessionData.grade,
+  teacherId: sessionData.teacherId || null,
+  teacherName: sessionData.teacherName || null,
 
-      status: "pending",
-      createdAt: serverTimestamp(),
+  minutes,
+  readingDate,
+  ...(note ? { note } : {}),
 
-      reviewedAt: null,
-      reviewedBy: null,
-      decisionNote: null
-    });
+  status: "pending",
+  createdAt: serverTimestamp(),
+
+  reviewedAt: null,
+  reviewedBy: null,
+  decisionNote: null
+});
+console.log("Submitted minutes to minuteSubmissions ✅");
+
 
     minutesEl.value = "";
     noteEl.value = "";
