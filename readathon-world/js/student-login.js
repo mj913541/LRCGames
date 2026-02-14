@@ -1,4 +1,4 @@
-// aaa js/student-login.js
+// fudge js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPin -> redirect
 
 import { auth, functions, db, httpsCallable } from "./firebase.js";
