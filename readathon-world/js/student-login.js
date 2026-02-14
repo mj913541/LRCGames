@@ -268,13 +268,29 @@ async function doLogin() {
     const gradeId = String(gradeSel.value || "");
     const homeroomId = String(roomSel.value || "");
 
-    const verify = httpsCallable(functions, "verifyStudentPin");
-    const res = await verify({ studentId: selectedStudentId, pin, gradeId, homeroomId });
-    console.log("verifyStudentPin response:", res?.data);
-    if (res?.data?.ok) {
+    const token = await auth.currentUser.getIdToken(true);
+
+const resp = await fetch("https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  },
+  body: JSON.stringify({
+    studentId: selectedStudentId,
+    pin,
+    gradeId,
+    homeroomId
+  })
+});
+
+const resData = await resp.json();
+console.log("verifyStudentPinHttp response:", resData);
+
+  if (resData?.ok) {
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
-          res.data.profile?.displayName || "Reader"
+          resData.profile?.displayName || "Reader"
         )}</strong>! Entering your world…`
       );
       window.location.href = "/readathon-world/student-home.html";

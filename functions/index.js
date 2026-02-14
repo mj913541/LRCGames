@@ -271,3 +271,77 @@ exports.convertRubies = functions.https.onCall(async (data, context) => {
     totalMinutesConsumed,
   };
 });
+
+exports.verifyStudentPinHttp = functions.https.onRequest(async (req, res) => {
+  try {
+    // Allow only POST
+    if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+
+    const authHeader = req.get("Authorization") || "";
+    const match = authHeader.match(/^Bearer (.+)$/);
+    if (!match) return res.status(401).json({ ok: false, error: "MISSING_TOKEN" });
+
+    const decoded = await admin.auth().verifyIdToken(match[1]);
+    const uid = decoded.uid;
+
+    const studentId = safeString(req.body?.studentId).trim();
+    const pin = safeString(req.body?.pin).trim();
+    const gradeId = safeString(req.body?.gradeId ?? req.body?.grade).trim();
+    const homeroomId = safeString(req.body?.homeroomId ?? req.body?.homeroom).trim();
+
+    if (!studentId || !pin) return res.status(400).json({ ok: false, error: "MISSING_ARGS" });
+
+    // Read pinHash from secrets
+    const secretSnap = await db.doc(`studentSecrets/${studentId}`).get();
+    if (!secretSnap.exists) return res.json({ ok: false, reason: "no-secret" });
+
+    const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
+    if (!storedHash) return res.json({ ok: false, reason: "no-hash" });
+
+    const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
+    if (enteredHash !== storedHash) return res.json({ ok: false, reason: "bad-pin" });
+
+    // Load roster profile
+    let studentProfile = null;
+    if (gradeId && homeroomId) {
+      const rosterRef = db
+        .collection("schools").doc("main")
+        .collection("grades").doc(gradeId)
+        .collection("homerooms").doc(homeroomId)
+        .collection("students").doc(studentId);
+
+      const rosterSnap = await rosterRef.get();
+      if (rosterSnap.exists) studentProfile = rosterSnap.data() || {};
+    }
+
+    if (!studentProfile) {
+      const fallbackSnap = await db.doc(`students/${studentId}`).get();
+      if (fallbackSnap.exists) studentProfile = fallbackSnap.data() || {};
+    }
+
+    if (!studentProfile) return res.status(404).json({ ok: false, error: "NO_PROFILE" });
+
+    const resolvedGrade = safeString(studentProfile.grade ?? studentProfile.gradeId ?? gradeId);
+    const resolvedTeacherId = safeString(
+      studentProfile.teacherId ?? studentProfile.homeroomId ?? homeroomId ?? studentProfile.homeroom ?? ""
+    );
+    const studentName = safeString(studentProfile.displayName ?? studentProfile.studentName ?? studentProfile.name ?? "");
+
+    await db.doc(`users/${uid}`).set(
+      {
+        studentId,
+        grade: resolvedGrade,
+        teacherId: resolvedTeacherId,
+        studentName,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    return res.json({ ok: true, profile: { displayName: studentName, grade: resolvedGrade, teacherId: resolvedTeacherId } });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+  }
+});
+
