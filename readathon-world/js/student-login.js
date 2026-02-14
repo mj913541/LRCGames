@@ -250,7 +250,6 @@ async function populateStudents(grade, homeroomId) {
 
 async function doLogin() {
   console.log("✅ doLogin() fired");
-
   clearStatus();
 
   if (!selectedStudentId) {
@@ -271,6 +270,7 @@ async function doLogin() {
 
     const verify = httpsCallable(functions, "verifyStudentPin");
     const res = await verify({ studentId: selectedStudentId, pin, gradeId, homeroomId });
+    console.log("verifyStudentPin response:", res?.data);
     if (res?.data?.ok) {
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
@@ -367,8 +367,10 @@ keypad.addEventListener("click", (e) => {
   renderDots(4);
   setLoginEnabled();
 });
-
-loginBtn.addEventListener("click", doLogin);
+loginBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  doLogin();
+});
 resetBtn.addEventListener("click", resetAll);
 
 resetAll();
