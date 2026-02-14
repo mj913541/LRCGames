@@ -93,16 +93,6 @@ if (signOutBtn) {
   });
 }
 
-// Placeholder menu links (so they don't navigate yet)
-menuIds.forEach((id) => {
-  const a = el(id);
-  if (!a) return;
-  a.addEventListener("click", (e) => {
-    e.preventDefault();
-    alert("Coming next step! This is just the menu placeholder.");
-  });
-});
-
 onAuthStateChanged(auth, async (user) => {
   const loggedIn = !!user;
 
