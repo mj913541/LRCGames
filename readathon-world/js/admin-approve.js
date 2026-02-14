@@ -21,7 +21,7 @@ import {
    DOM
 ================================= */
 
-const listEl = document.getElementById("submissionList");
+const listEl = document.getElementById("list");
 const msgEl = document.getElementById("msg");
 
 function setMsg(text, ok = false) {
