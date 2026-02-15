@@ -1,7 +1,7 @@
 // js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPinHttp -> redirect
 
-import { auth, db } from "./firebase.js";
+import { auth, db } from "/readathon-world/js/firebase.js";
 
 import {
   signInAnonymously,

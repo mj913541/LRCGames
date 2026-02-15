@@ -1,4 +1,4 @@
-import { auth } from "./firebase.js";
+import { auth, db } from "/readathon-world/js/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
