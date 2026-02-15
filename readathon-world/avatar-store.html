@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jungle Trading Post</title>
+  <link rel="stylesheet" href="./css/readathon.css">
+</head>
+<body class="world-bg">
+  <main class="panel" style="max-width: 980px; margin: 18px auto;">
+    <header style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+      <div>
+        <h1 style="margin:0;">🛖 Jungle Trading Post</h1>
+        <div class="chip" id="balanceChip">Rubies: —</div>
+      </div>
+      <a class="btn" href="./student-home.html">← Back</a>
+    </header>
+
+    <section style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <select id="cat" class="input">
+        <option value="all">All items</option>
+        <option value="hat">Hats</option>
+        <option value="shirt">Shirts</option>
+        <option value="pants">Pants</option>
+        <option value="shoes">Shoes</option>
+        <option value="accessory">Accessories</option>
+        <option value="room">Room Decor</option>
+      </select>
+
+      <input id="search" class="input" placeholder="Search items…" style="flex:1; min-width:220px;">
+      <div id="msg" class="chip" style="opacity:.9;"></div>
+    </section>
+
+    <section id="grid" style="margin-top:14px; display:grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap:12px;">
+      <!-- cards -->
+    </section>
+  </main>
+
+  <script type="module" src="./js/avatar-store.js"></script>
+</body>
+</html>
