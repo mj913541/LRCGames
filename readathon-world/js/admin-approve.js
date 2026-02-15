@@ -25,6 +25,7 @@ const listEl = document.getElementById("list");
 const msgEl = document.getElementById("msg");
 
 function setMsg(text, ok = false) {
+  if (!msgEl) return;
   msgEl.textContent = text || "";
   msgEl.style.color = ok ? "green" : "crimson";
 }
@@ -39,13 +40,13 @@ async function requireAdmin(user) {
 
   if (!snap.exists()) {
     alert("Admin access required.");
-    window.location.href = "../index.html";
+    window.location.href = "/readathon-world/index.html";
   }
 }
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "../index.html";
+    window.location.href = "/readathon-world/index.html";
     return;
   }
 
@@ -59,6 +60,8 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadPending() {
   setMsg("");
+  if (!listEl) return;
+
   listEl.innerHTML = "<p>Loading...</p>";
 
   try {
@@ -78,13 +81,12 @@ async function loadPending() {
     listEl.innerHTML = "";
 
     snap.forEach(docSnap => {
-      const data = docSnap.data();
-      renderSubmission(docSnap.id, data);
+      renderSubmission(docSnap.id, docSnap.data());
     });
 
   } catch (err) {
     console.error(err);
-    setMsg("Error loading submissions.");
+    setMsg(err.message || "Error loading submissions.");
     listEl.innerHTML = "";
   }
 }
@@ -114,17 +116,17 @@ function renderSubmission(id, data) {
     </div>
   `;
 
-  const approveBtn = card.querySelector(".approve-btn");
-  const rejectBtn = card.querySelector(".reject-btn");
+  card.querySelector(".approve-btn")
+    .addEventListener("click", () => approveSubmission(id));
 
-  approveBtn.addEventListener("click", () => approveSubmission(id));
-  rejectBtn.addEventListener("click", () => rejectSubmission(id));
+  card.querySelector(".reject-btn")
+    .addEventListener("click", () => rejectSubmission(id));
 
   listEl.appendChild(card);
 }
 
 /* ===============================
-   APPROVE (TRANSACTION)
+   APPROVE (TRANSACTION SAFE)
 ================================= */
 
 async function approveSubmission(submissionId) {
@@ -132,6 +134,7 @@ async function approveSubmission(submissionId) {
   const submissionRef = doc(db, "minuteSubmissions", submissionId);
 
   try {
+
     await runTransaction(db, async (transaction) => {
 
       const submissionSnap = await transaction.get(submissionRef);
@@ -149,7 +152,7 @@ async function approveSubmission(submissionId) {
       const studentId = submission.studentId;
       const minutes = submission.minutes;
 
-      // 🔥 Read ruby rule from config
+      // Read conversion rule
       const configRef = doc(db, "config", "rules");
       const configSnap = await transaction.get(configRef);
 
@@ -170,13 +173,17 @@ async function approveSubmission(submissionId) {
       const newTotalMinutes =
         (existing.totalApprovedMinutes || 0) + minutes;
 
-      const newTotalRubies =
-        (existing.totalRubies || 0) + rubiesToAdd;
+      const newRubiesBalance =
+        (existing.rubiesBalance || 0) + rubiesToAdd;
 
-      // Update student totals (merge safe)
+      const newLifetimeRubiesEarned =
+        (existing.lifetimeRubiesEarned || 0) + rubiesToAdd;
+
+      // Update student totals
       transaction.set(studentRef, {
         totalApprovedMinutes: newTotalMinutes,
-        totalRubies: newTotalRubies
+        rubiesBalance: newRubiesBalance,
+        lifetimeRubiesEarned: newLifetimeRubiesEarned
       }, { merge: true });
 
       // Mark submission approved
