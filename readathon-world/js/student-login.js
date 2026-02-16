@@ -1,4 +1,4 @@
-// reloadoldjs/student-login.js
+// js/student-login.js
 // Grade -> Homeroom -> Name -> PIN -> verifyStudentPinHttp -> redirect
 
 import { auth, db } from "/readathon-world/js/firebase.js";
@@ -26,10 +26,13 @@ const loginBtn = $("loginBtn");
 const resetBtn = $("resetBtn");
 const statusBox = $("status");
 
-let uid = null;
 let pin = "";
 let selectedStudentId = "";
-let rosterCache = []; // { studentId, displayName }
+let rosterCache = [];
+
+/* =========================
+   UI Helpers
+========================= */
 
 function setStatus(msg, type = "ok") {
   statusBox.style.display = "block";
@@ -83,16 +86,20 @@ function setLoginEnabled() {
     gradeSel.value &&
     roomSel.value &&
     studentSel.value &&
-    pin.length >= 3; // allow 3–6
+    pin.length === 4; // strict 4-digit PIN
+
   loginBtn.disabled = !ok;
 }
+
+/* =========================
+   Auth
+========================= */
 
 async function ensureAnonAuth() {
   if (!auth.currentUser) {
     await signInAnonymously(auth);
   }
 
-  // Wait until Firebase finishes setting the auth state
   const user = await new Promise((resolve) => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (u) {
@@ -102,25 +109,19 @@ async function ensureAnonAuth() {
     });
   });
 
-  // Force token refresh
   await user.getIdToken(true);
-
-  console.log("Anon UID:", user.uid);
-  console.log("Has token:", !!(await user.getIdToken()));
-
   return user;
 }
 
-/**
- * Homerooms:
- * schools/main/grades/{grade}/homerooms/*
- */
+/* =========================
+   Load Homerooms
+========================= */
+
 async function populateHomeroomsFromFirestore(grade) {
   clearStatus();
 
   roomSel.disabled = true;
   roomSel.innerHTML = `<option value="">Loading…</option>`;
-
   studentSel.disabled = true;
   studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
@@ -136,27 +137,27 @@ async function populateHomeroomsFromFirestore(grade) {
       "homerooms"
     );
 
-    const snap = await getDocs(query(homeroomsRef, where("active", "==", true)));
+    const snap = await getDocs(
+      query(homeroomsRef, where("active", "==", true))
+    );
 
     if (snap.empty) {
       roomSel.innerHTML = `<option value="">No homerooms found</option>`;
-      setStatus(
-        `I can’t find any homerooms for this grade yet. Ask your teacher for help.`,
-        "err"
-      );
+      setStatus(`No classes found for this grade.`, "err");
       return;
     }
 
-    const options = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data() || {};
-      options.push({
-        id: docSnap.id,
-        label: data.displayName || docSnap.id
-      });
+    const options = snap.docs.map((d) => {
+      const data = d.data() || {};
+      return {
+        id: d.id,
+        label: data.displayName || d.id
+      };
     });
 
-    options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+    options.sort((a, b) =>
+      String(a.label).localeCompare(String(b.label))
+    );
 
     roomSel.innerHTML =
       `<option value="">Choose…</option>` +
@@ -168,17 +169,18 @@ async function populateHomeroomsFromFirestore(grade) {
         .join("");
 
     roomSel.disabled = false;
+
   } catch (e) {
     console.error(e);
     roomSel.innerHTML = `<option value="">Error loading homerooms</option>`;
-    setStatus(`Oops! I couldn’t load homerooms. Try again in a moment.`, "err");
+    setStatus(`Could not load classes. Try again.`, "err");
   }
 }
 
-/**
- * Students:
- * schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
- */
+/* =========================
+   Load Students
+========================= */
+
 async function populateStudents(grade, homeroomId) {
   clearStatus();
 
@@ -199,24 +201,26 @@ async function populateStudents(grade, homeroomId) {
       "students"
     );
 
-    const snap = await getDocs(query(studentsRef, where("active", "==", true)));
+    const snap = await getDocs(
+      query(studentsRef, where("active", "==", true))
+    );
 
     rosterCache = snap.docs
       .map((d) => {
         const s = d.data() || {};
         return {
           studentId: s.studentId || d.id,
-          displayName: s.displayName || s.studentName || s.name || "Student"
+          displayName:
+            s.displayName || s.studentName || s.name || "Student"
         };
       })
-      .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName)));
+      .sort((a, b) =>
+        String(a.displayName).localeCompare(String(b.displayName))
+      );
 
     if (!rosterCache.length) {
       studentSel.innerHTML = `<option value="">No students found</option>`;
-      setStatus(
-        `Hmm… I couldn’t find any names for that class. Ask your teacher for help.`,
-        "err"
-      );
+      setStatus(`No names found for that class.`, "err");
       return;
     }
 
@@ -232,34 +236,39 @@ async function populateStudents(grade, homeroomId) {
         .join("");
 
     studentSel.disabled = false;
+
   } catch (e) {
     console.error(e);
     studentSel.innerHTML = `<option value="">Try again</option>`;
-    setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
+    setStatus(`Error loading students.`, "err");
   }
 }
 
+/* =========================
+   Login
+========================= */
+
 async function doLogin() {
-  console.log("✅ doLogin() fired");
   clearStatus();
 
   if (!selectedStudentId) {
     setStatus(`Pick your name first. 🙂`, "err");
     return;
   }
-  if (!/^\d{3,6}$/.test(pin)) {
-    setStatus(`PIN should be 3–6 numbers.`, "err");
+
+  if (!/^\d{4}$/.test(pin)) {
+    setStatus(`PIN must be exactly 4 numbers.`, "err");
     return;
   }
 
   loginBtn.disabled = true;
 
   try {
-    await ensureAnonAuth();
+    const user = await ensureAnonAuth();
+    const token = await user.getIdToken(true);
 
-    const gradeId = String(gradeSel.value || "");
-    const homeroomId = String(roomSel.value || "");
-    const token = await auth.currentUser.getIdToken(true);
+    const gradeId = String(gradeSel.value);
+    const homeroomId = String(roomSel.value);
 
     const resp = await fetch(
       "https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp",
@@ -279,28 +288,45 @@ async function doLogin() {
     );
 
     const resData = await resp.json();
-    console.log("verifyStudentPinHttp response:", resData);
 
     if (resData?.ok) {
+
+      const studentPath =
+        `schools/main/grades/${gradeId}/homerooms/${homeroomId}/students/${selectedStudentId}`;
+
+      sessionStorage.setItem("studentPath", studentPath);
+      sessionStorage.setItem("gradeId", gradeId);
+      sessionStorage.setItem("homeroomId", homeroomId);
+      sessionStorage.setItem("studentId", selectedStudentId);
+      sessionStorage.setItem(
+        "displayName",
+        resData.profile?.displayName || ""
+      );
+
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
           resData.profile?.displayName || "Reader"
         )}</strong>! Entering your world…`
       );
-      window.location.href = "/readathon-world/student-home.html";
+
+      setTimeout(() => {
+        window.location.href = "/readathon-world/student-home.html";
+      }, 600);
+
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
       pin = "";
       renderDots(4);
     }
+
   } catch (e) {
     console.error(e);
-    setStatus(`Oops! Something went wrong. Try again.`, "err");
+    setStatus(`Something went wrong. Try again.`, "err");
     pin = "";
     renderDots(4);
-  } finally {
-    setLoginEnabled();
   }
+
+  setLoginEnabled();
 }
 
 /* =========================
@@ -309,17 +335,11 @@ async function doLogin() {
 
 renderDots(4);
 
-onAuthStateChanged(auth, (user) => {
-  uid = user?.uid || null;
-});
-
 gradeSel.addEventListener("change", async () => {
   pin = "";
   selectedStudentId = "";
-  rosterCache = [];
   renderDots(4);
   setLoginEnabled();
-  clearStatus();
 
   const grade = gradeSel.value;
 
@@ -335,10 +355,8 @@ gradeSel.addEventListener("change", async () => {
 roomSel.addEventListener("change", async () => {
   pin = "";
   selectedStudentId = "";
-  rosterCache = [];
   renderDots(4);
   setLoginEnabled();
-  clearStatus();
 
   const grade = gradeSel.value;
   const homeroomId = roomSel.value;
@@ -362,15 +380,12 @@ keypad.addEventListener("click", (e) => {
 
   if (k === "clr") pin = "";
   else if (k === "bk") pin = pin.slice(0, -1);
-  else if (/^\d$/.test(k)) {
-    if (pin.length < 6) pin += k;
-  }
+  else if (/^\d$/.test(k) && pin.length < 4) pin += k;
 
   renderDots(4);
   setLoginEnabled();
 });
 
-// Prevent any form submit refresh issues
 loginBtn.addEventListener("click", (e) => {
   e.preventDefault();
   doLogin();
