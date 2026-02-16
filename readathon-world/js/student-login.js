@@ -282,11 +282,24 @@ async function doLogin() {
     console.log("verifyStudentPinHttp response:", resData);
 
     if (resData?.ok) {
+      // ✅ NEW: persist what the home page needs to avoid bouncing back to login
+      const studentPath = `schools/main/grades/${gradeId}/homerooms/${homeroomId}/students/${selectedStudentId}`;
+
+      sessionStorage.setItem("studentPath", studentPath);
+      sessionStorage.setItem("studentId", selectedStudentId);
+      sessionStorage.setItem("gradeId", gradeId);
+      sessionStorage.setItem("homeroomId", homeroomId);
+      // optional: store displayName if the function returns it
+      if (resData?.profile?.displayName) {
+        sessionStorage.setItem("displayName", resData.profile.displayName);
+      }
+
       setStatus(
         `✅ Welcome, <strong>${escapeHtml(
           resData.profile?.displayName || "Reader"
         )}</strong>! Entering your world…`
       );
+
       window.location.href = "/readathon-world/student-home.html";
     } else {
       setStatus(`That PIN didn’t match. Try again!`, "err");
@@ -356,13 +369,16 @@ studentSel.addEventListener("change", () => {
 });
 
 keypad.addEventListener("click", (e) => {
-  const btn = e.target.closest("button");
+  const btn = e.target.closest("button[data-k]");
   if (!btn) return;
-  const k = btn.dataset.k;
 
-  if (k === "clr") pin = "";
-  else if (k === "bk") pin = pin.slice(0, -1);
-  else if (/^\d$/.test(k)) {
+  const k = btn.getAttribute("data-k");
+
+  if (k === "clr") {
+    pin = "";
+  } else if (k === "bk") {
+    pin = pin.slice(0, -1);
+  } else if (/^\d$/.test(k)) {
     if (pin.length < 6) pin += k;
   }
 
@@ -370,12 +386,8 @@ keypad.addEventListener("click", (e) => {
   setLoginEnabled();
 });
 
-// Prevent any form submit refresh issues
-loginBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  doLogin();
-});
-
+loginBtn.addEventListener("click", doLogin);
 resetBtn.addEventListener("click", resetAll);
 
+// Init
 resetAll();
