@@ -1,8 +1,16 @@
 import { auth, db } from "/readathon-world/js/firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
-  collection, query, where, orderBy, getDocs, doc, getDoc,
-  runTransaction, serverTimestamp, setDoc
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  doc,
+  getDoc,
+  runTransaction,
+  serverTimestamp,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const grid = document.getElementById("grid");
@@ -16,28 +24,44 @@ let session = null;
 let rubiesBalance = 0;
 let items = [];
 let owned = new Set();
+let equipped = {}; // { body, outfit, accessory, background, pet }
 
-function setMsg(text, ok=false) {
+/* ===============================
+   UI Helpers
+================================ */
+
+function setMsg(text, ok = false) {
   msg.textContent = text || "";
-  msg.style.color = ok ? "green" : "crimson";
+  msg.className = `notice ${ok ? "good" : "bad"}`;
 }
+
+function updateBalanceUI() {
+  const amt = balanceChip.querySelector(".amt");
+  if (amt) amt.textContent = rubiesBalance;
+}
+
+/* ===============================
+   Data Loaders
+================================ */
 
 async function loadSession(u) {
-  const s = await getDoc(doc(db, "users", u));
-  return s.exists() ? s.data() : null;
+  const snap = await getDoc(doc(db, "users", u));
+  return snap.exists() ? snap.data() : null;
 }
 
-async function loadBalance(studentId) {
+async function loadStudentData(studentId) {
   const snap = await getDoc(doc(db, "students", studentId));
   const data = snap.exists() ? snap.data() : {};
   rubiesBalance = Number(data.rubiesBalance ?? 0);
-  balanceChip.querySelector(".amt").textContent = rubiesBalance;
+  equipped = data.equipped || {};
+  updateBalanceUI();
 }
 
 async function loadOwned(studentId) {
   owned = new Set();
-  const invCol = collection(db, "students", studentId, "inventory");
-  const invSnap = await getDocs(invCol);
+  const invSnap = await getDocs(
+    collection(db, "students", studentId, "inventory")
+  );
   invSnap.forEach(d => owned.add(d.id));
 }
 
@@ -51,96 +75,143 @@ async function loadItems() {
   items = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+/* ===============================
+   Render
+================================ */
+
 function render() {
   const category = cat.value;
   const q = (search.value || "").trim().toLowerCase();
 
   const filtered = items.filter(it => {
     if (category !== "all" && it.category !== category) return false;
-    if (q && !(String(it.name || "").toLowerCase().includes(q))) return false;
+    if (q && !String(it.name || "").toLowerCase().includes(q)) return false;
     return true;
   });
 
   grid.innerHTML = filtered.map(it => {
+
     const isOwned = owned.has(it.id);
-    const canAfford = (rubiesBalance >= (it.price || 0));
-    const disabled = isOwned || !canAfford;
+    const isEquipped = equipped[it.category] === it.id;
+    const price = Number(it.price ?? 0);
+    const canAfford = rubiesBalance >= price;
+
+    let buttonHTML = "";
+
+    if (!isOwned) {
+      buttonHTML = `
+        <button class="btn buy"
+          data-buy="${it.id}"
+          ${!canAfford ? "disabled" : ""}>
+          ${canAfford ? `Buy 💎 ${price}` : "Not enough 💎"}
+        </button>
+      `;
+    } else if (!isEquipped) {
+      buttonHTML = `
+        <button class="btn equip"
+          data-equip="${it.id}"
+          data-cat="${it.category}">
+          Equip
+        </button>
+      `;
+    } else {
+      buttonHTML = `
+        <button class="btn unequip" disabled>
+          Equipped ✅
+        </button>
+      `;
+    }
 
     return `
-      <div class="card" style="padding:12px; border-radius:14px;">
-        <div style="aspect-ratio: 1 / 1; border-radius:12px; overflow:hidden; background:rgba(0,0,0,.08); display:flex; align-items:center; justify-content:center;">
-          ${it.imageUrl ? `<img src="${it.imageUrl}" alt="${it.name || "Item"}" style="width:100%; height:100%; object-fit:cover;">` : `<div style="font-size:40px;">🧺</div>`}
+      <div class="card ${isEquipped ? "equipped" : ""}">
+        <div class="cardTop">
+          <div class="leftMini">
+            <div class="emoji">
+              ${it.emoji || "🎁"}
+            </div>
+            <div class="titleBox">
+              <h3 class="itemName">${it.name || it.id}</h3>
+              <div class="meta">${it.category}</div>
+            </div>
+          </div>
+
+          <div class="priceTag">
+            <div class="rubyRow">💎 ${price}</div>
+          </div>
         </div>
-        <h3 style="margin:10px 0 6px 0;">${it.name || it.id}</h3>
-        <div class="chip">💎 ${it.price ?? 0}</div>
-        <div style="margin-top:10px; display:flex; gap:8px;">
-          <button class="btn" data-buy="${it.id}" ${disabled ? "disabled" : ""}>
-            ${isOwned ? "Owned ✅" : (canAfford ? "Buy" : "Not enough 💎")}
-          </button>
+
+        <p class="desc">${it.description || ""}</p>
+
+        <div class="btnRow">
+          ${buttonHTML}
         </div>
       </div>
     `;
   }).join("");
 
+  /* Buy buttons */
   grid.querySelectorAll("[data-buy]").forEach(btn => {
-    btn.addEventListener("click", () => buy(btn.getAttribute("data-buy")));
+    btn.addEventListener("click", () =>
+      buy(btn.getAttribute("data-buy"))
+    );
+  });
+
+  /* Equip buttons */
+  grid.querySelectorAll("[data-equip]").forEach(btn => {
+    btn.addEventListener("click", () =>
+      equip(
+        btn.getAttribute("data-equip"),
+        btn.getAttribute("data-cat")
+      )
+    );
   });
 }
 
+/* ===============================
+   Purchase
+================================ */
+
 async function buy(itemId) {
-  setMsg("");
+
   const studentId = session?.studentId;
   if (!uid || !studentId) return setMsg("Please sign in again.");
 
   const itemRef = doc(db, "storeItems", itemId);
   const studentRef = doc(db, "students", studentId);
   const invRef = doc(db, "students", studentId, "inventory", itemId);
-  const purchaseRef = doc(collection(db, "purchases")); // auto id
 
   try {
     await runTransaction(db, async (tx) => {
-      const [itemSnap, stuSnap, invSnap] = await Promise.all([
-        tx.get(itemRef),
-        tx.get(studentRef),
-        tx.get(invRef)
-      ]);
+
+      const itemSnap = await tx.get(itemRef);
+      const stuSnap = await tx.get(studentRef);
+      const invSnap = await tx.get(invRef);
 
       if (!itemSnap.exists()) throw new Error("Item missing.");
-      const item = itemSnap.data();
-      if (!item.active) throw new Error("Item not active.");
-
       if (invSnap.exists()) throw new Error("You already own this.");
 
+      const item = itemSnap.data();
       const price = Number(item.price ?? 0);
       const stu = stuSnap.exists() ? stuSnap.data() : {};
       const current = Number(stu.rubiesBalance ?? 0);
 
       if (current < price) throw new Error("Not enough rubies.");
 
-      // 1) deduct rubies (spendable balance)
-      tx.set(studentRef, { rubiesBalance: current - price }, { merge: true });
+      tx.set(studentRef, {
+        rubiesBalance: current - price
+      }, { merge: true });
 
-      // 2) create inventory doc
       tx.set(invRef, {
-        itemId,
-        pricePaid: price,
-        purchasedAt: serverTimestamp()
-      });
-
-      // 3) ledger entry
-      tx.set(purchaseRef, {
-        studentId,
-        studentUid: uid,
         itemId,
         pricePaid: price,
         purchasedAt: serverTimestamp()
       });
     });
 
-    // refresh local view
-    await loadBalance(studentId);
+    await loadStudentData(studentId);
     await loadOwned(studentId);
     render();
+
     setMsg("Purchased! 🎉", true);
 
   } catch (err) {
@@ -149,7 +220,41 @@ async function buy(itemId) {
   }
 }
 
+/* ===============================
+   Equip
+================================ */
+
+async function equip(itemId, category) {
+
+  const studentId = session?.studentId;
+  if (!studentId) return;
+
+  const studentRef = doc(db, "students", studentId);
+
+  try {
+    await setDoc(studentRef, {
+      equipped: {
+        [category]: itemId
+      }
+    }, { merge: true });
+
+    equipped[category] = itemId;
+
+    render();
+    setMsg("Equipped! 🌿", true);
+
+  } catch (err) {
+    console.error(err);
+    setMsg("Could not equip item.");
+  }
+}
+
+/* ===============================
+   Init
+================================ */
+
 onAuthStateChanged(auth, async (user) => {
+
   if (!user) {
     window.location.href = "/readathon-world/index.html";
     return;
@@ -157,6 +262,7 @@ onAuthStateChanged(auth, async (user) => {
 
   uid = user.uid;
   session = await loadSession(uid);
+
   if (!session?.studentId) {
     setMsg("No student session found. Please sign in again.");
     return;
@@ -164,7 +270,7 @@ onAuthStateChanged(auth, async (user) => {
 
   await Promise.all([
     loadItems(),
-    loadBalance(session.studentId),
+    loadStudentData(session.studentId),
     loadOwned(session.studentId)
   ]);
 
