@@ -1,5 +1,5 @@
 // student-room.js
-import { db } from "./firebase.js";
+import { db } from "/readathon-world/js/firebase.js";
 import { doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 async function getItemMapByIds(ids) {
