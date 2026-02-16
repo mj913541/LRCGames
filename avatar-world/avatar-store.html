@@ -1,18 +1,124 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Avatar Store</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💎 Avatar Store | LRC Quest</title>
   <link rel="stylesheet" href="./avatar-store.css" />
 </head>
-<body>
-  <main class="panel">
-    <h1>🦁 Avatar World</h1>
-    <p>This is where students will spend Reading Rubies soon.</p>
 
-    <a class="btn" href="/readathon-world/student-home.html">← Back to Read-A-Thon</a>
-  </main>
+<body>
+  <div class="container">
+    <div class="shell vine-border">
+      <header class="header">
+        <div>
+          <div class="badge">🦁 Dress your Library Guardian • Spend Reading Rubies</div>
+          <div class="h1">
+            <span class="icon">🎨</span>
+            <span>Customize My Guardian</span>
+          </div>
+          <p class="sub">
+            Buy cozy outfits, silly hats, and glowing pets with your <b>Reading Rubies</b>.
+            Everything you buy stays in your closet forever.
+          </p>
+        </div>
+
+        <div class="right">
+          <div class="userCard">
+            <div class="userLine">
+              <span id="userNameLabel" style="font-weight:900;">Guardian</span>
+              <span id="userGradeLabel" class="dim"></span>
+            </div>
+            <div class="small" id="userHint">Signed in</div>
+          </div>
+
+          <div class="rubyPill" title="Reading Rubies">
+            <span class="ruby">💎</span>
+            <span class="amt" id="rubiesAmountLabel">0</span>
+            <span class="lbl">Reading Rubies</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="main">
+        <section class="section">
+          <div class="topRow">
+            <div class="avatarWrap">
+              <div class="avatarCircle" aria-label="Avatar preview">
+                <div class="avatarInner">
+                  <div id="avatarBaseIcon" aria-hidden="true">🦁</div>
+
+                  <div class="chips" aria-label="Equipped items">
+                    <div id="avatarHeadChip" class="chipMini head"></div>
+                    <div id="avatarBodyChip" class="chipMini body"></div>
+                    <div id="avatarBackChip" class="chipMini back"></div>
+                    <div id="avatarPetChip" class="chipMini pet"></div>
+                  </div>
+                </div>
+
+                <div class="levelTag">LVL <span id="avatarLevelLabel">1</span></div>
+              </div>
+
+              <div class="helper">
+                <div class="meta" style="margin-bottom:6px;">YOUR GUARDIAN</div>
+                Pick a category, shop with rubies, then <b>equip</b> items from your closet.
+                You can change your look anytime!
+                <div style="margin-top:6px; opacity:.85;">
+                  Tip: read more minutes to earn more rubies — and unlock surprise rewards from teachers.
+                </div>
+              </div>
+            </div>
+
+            <div class="controls" aria-label="Categories">
+              <button class="pillBtn active" data-category="head" type="button">🧢 Headgear</button>
+              <button class="pillBtn" data-category="body" type="button">🧥 Outfits</button>
+              <button class="pillBtn" data-category="back" type="button">🎒 Back</button>
+              <button class="pillBtn" data-category="pet" type="button">🐾 Pets</button>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <div class="tabRow" aria-label="Tabs">
+              <button class="pillBtn active" data-tab="shop" type="button">🏪 Shop</button>
+              <button class="pillBtn" data-tab="closet" type="button">🧺 My Closet</button>
+            </div>
+
+            <p class="tip">
+              Some rare items can be rewards during the Read‑A‑Thon — keep reading to discover them!
+            </p>
+          </div>
+
+          <div class="grid2">
+            <section>
+              <div class="panelHead">
+                <h2>🏪 Shop <span class="kicker">Spend Rubies</span></h2>
+                <div class="dim">Showing: <span id="shopCategoryLabel">Headgear</span></div>
+              </div>
+
+              <div id="shopEmptyMessage" class="notice">No more items to buy in this category… yet! Try another category or keep reading to unlock more.</div>
+              <div id="shopList" class="scrollGrid" aria-label="Shop items"></div>
+            </section>
+
+            <section>
+              <div class="panelHead">
+                <h2>🧺 My Closet <span class="kicker" style="color:#bbf7d0;">What I Own</span></h2>
+                <div class="dim">Category: <span id="closetCategoryLabel">Headgear</span></div>
+              </div>
+
+              <div id="closetEmptyMessage" class="notice">You don’t own any items in this category yet. Buy something in the Shop (or earn rewards)!</div>
+              <div id="closetList" class="scrollGrid" aria-label="Owned items"></div>
+            </section>
+          </div>
+
+          <div class="footerRow">
+            <div id="msg" class="notice bad" style="display:none;"></div>
+
+            <a class="backLink btn" href="/readathon-world/student-home.html">← Back to Read‑A‑Thon</a>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
   <script type="module" src="./avatar-store.js"></script>
 </body>
