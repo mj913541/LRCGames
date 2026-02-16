@@ -31,7 +31,7 @@ async function loadBalance(studentId) {
   const snap = await getDoc(doc(db, "students", studentId));
   const data = snap.exists() ? snap.data() : {};
   rubiesBalance = Number(data.rubiesBalance ?? 0);
-  balanceChip.textContent = `Rubies: ${rubiesBalance}`;
+  balanceChip.querySelector(".amt").textContent = rubiesBalance;
 }
 
 async function loadOwned(studentId) {
