@@ -126,9 +126,18 @@ function render() {
       <div class="card ${isEquipped ? "equipped" : ""}">
         <div class="cardTop">
           <div class="leftMini">
-            <div class="emoji">
-              ${it.emoji || "🎁"}
-            </div>
+<div class="emoji" style="overflow:hidden;">
+  ${
+    (it.imageUrl || it.imageURL)
+      ? `<img
+           src="${it.imageUrl || it.imageURL}"
+           alt="${it.name || "Item"}"
+           style="width:100%;height:100%;object-fit:cover;"
+         >`
+      : (it.emoji || "🎁")
+  }
+</div>
+
             <div class="titleBox">
               <h3 class="itemName">${it.name || it.id}</h3>
               <div class="meta">${it.category}</div>
