@@ -9,7 +9,9 @@ import {
   doc,
   getDoc,
   collection,
-  getDocs
+  getDocs,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* ==============================
@@ -35,9 +37,14 @@ function goToLogin() {
   window.location.href = "student-login.html";
 }
 
-function safeNum(v, fallback = 0) {
+function safeInt(v, fallback = 0) {
   const n = Number(v);
-  return Number.isFinite(n) ? n : fallback;
+  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+}
+
+function getStudentIdFromPath(studentPath) {
+  const parts = String(studentPath || "").split("/");
+  return parts[parts.length - 1] || "";
 }
 
 /* ==============================
@@ -56,52 +63,92 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  // Optional: fill chips from storage immediately (nice UX)
+  // Fill quick UI chips
   const gradeId = sessionStorage.getItem("gradeId");
   const homeroomId = sessionStorage.getItem("homeroomId");
+
   if (gradeEl && gradeId) gradeEl.textContent = gradeId;
   if (teacherEl && homeroomId) teacherEl.textContent = homeroomId;
 
-  await loadStudent(studentPath);
+  await loadStudentDashboard(user.uid, studentPath);
 });
 
 /* ==============================
-   Load Student Data
+   Main Loader
 ============================== */
 
-async function loadStudent(studentPath) {
-  const studentRef = doc(db, studentPath);
-  const snap = await getDoc(studentRef);
+async function loadStudentDashboard(studentUid, studentPath) {
 
-  if (!snap.exists()) {
-    console.warn("Student doc missing:", studentPath);
+  /* 1️⃣ Load roster doc (name + equipped) */
+
+  const rosterRef = doc(db, studentPath);
+  const rosterSnap = await getDoc(rosterRef);
+
+  if (!rosterSnap.exists()) {
+    console.warn("Roster doc missing:", studentPath);
     return;
   }
 
-  const student = snap.data() || {};
+  const roster = rosterSnap.data() || {};
 
-  // Name
-  if (nameEl) nameEl.textContent = student.displayName || sessionStorage.getItem("displayName") || "Reader";
+  if (nameEl) {
+    nameEl.textContent =
+      roster.displayName ||
+      sessionStorage.getItem("displayName") ||
+      "Reader";
+  }
 
-  // Minutes + Rubies (support your current field names gracefully)
-  // Your HTML expects: approvedMinutes, pendingMinutes, rubiesBalance
-  // Your rules draft also mentioned: totalApprovedMinutes, etc.
-  const approved =
-    safeNum(student.approvedMinutes, null) ??
-    safeNum(student.totalApprovedMinutes, 0);
+  const studentId = getStudentIdFromPath(studentPath);
 
-  const pending =
-    safeNum(student.pendingMinutes, 0);
+  /* 2️⃣ Load approved totals from /students/{studentId} */
 
-  const rubies =
-    safeNum(student.rubiesBalance, null) ??
-    safeNum(student.rubies, 0);
+  let approvedMinutes = 0;
+  let rubiesBalance = 0;
 
-  if (approvedEl) approvedEl.textContent = approved;
-  if (pendingEl) pendingEl.textContent = pending;
-  if (rubiesEl) rubiesEl.textContent = rubies;
+  try {
+    const totalsRef = doc(db, "students", studentId);
+    const totalsSnap = await getDoc(totalsRef);
 
-  await renderRoom(student.equipped || {});
+    if (totalsSnap.exists()) {
+      const totals = totalsSnap.data() || {};
+      approvedMinutes = safeInt(totals.totalApprovedMinutes, 0);
+      rubiesBalance = safeInt(totals.rubiesBalance, 0);
+    }
+  } catch (err) {
+    console.error("Totals read failed:", err);
+  }
+
+  /* 3️⃣ Calculate pending minutes */
+
+  let pendingMinutes = 0;
+
+  try {
+    const pendingQ = query(
+      collection(db, "minuteSubmissions"),
+      where("studentUid", "==", studentUid),
+      where("status", "==", "pending")
+    );
+
+    const pendingSnap = await getDocs(pendingQ);
+
+    pendingSnap.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      pendingMinutes += safeInt(data.minutes, 0);
+    });
+
+  } catch (err) {
+    console.error("Pending query failed:", err);
+  }
+
+  /* 4️⃣ Update UI */
+
+  if (approvedEl) approvedEl.textContent = approvedMinutes;
+  if (pendingEl) pendingEl.textContent = pendingMinutes;
+  if (rubiesEl) rubiesEl.textContent = rubiesBalance;
+
+  /* 5️⃣ Render Jungle Room */
+
+  await renderRoom(roster.equipped || {});
 }
 
 /* ==============================
@@ -109,15 +156,22 @@ async function loadStudent(studentPath) {
 ============================== */
 
 async function renderRoom(equipped) {
+
   if (!roomEl) {
-    console.warn("roomLayers element not found. Add <div id='roomLayers'></div> inside .room.");
+    console.warn("roomLayers element missing.");
     return;
   }
 
   roomEl.innerHTML = "";
 
-  // Load store items so we can map itemId -> imageURL
-  const storeSnap = await getDocs(collection(db, "storeItems"));
+  let storeSnap;
+  try {
+    storeSnap = await getDocs(collection(db, "storeItems"));
+  } catch (err) {
+    console.error("Store items read failed:", err);
+    return;
+  }
+
   const storeMap = new Map();
   storeSnap.forEach((d) => storeMap.set(d.id, d.data()));
 
@@ -133,7 +187,7 @@ async function renderRoom(equipped) {
     roomEl.appendChild(img);
   }
 
-  // Keep these in back-to-front order
+  // Back-to-front layering
   addLayer(equipped.background, "bg");
   addLayer(equipped.decor, "decor");
   addLayer(equipped.body, "body");
