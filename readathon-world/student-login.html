@@ -3,286 +3,91 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Student Login • Readathon World</title>
-
-  <!-- Use your existing main CSS if you have it -->
-  <link rel="stylesheet" href="/readathon-world/css/styles.css" />
-
+  <title>Read-a-thon World • Login</title>
+  <link rel="stylesheet" href="./css/styles.css" />
   <style>
-    :root{
-      --panel: rgba(255,255,255,.92);
-      --stroke: rgba(0,0,0,.12);
-      --shadow: 0 10px 30px rgba(0,0,0,.15);
-      --chip: rgba(0,0,0,.06);
-    }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(circle at 20% 10%, #d9ffe7, #8fd3a8 40%, #2c7a4b 100%);
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding:18px;
-    }
-    .panel{
-      width:min(980px, 100%);
-      background: var(--panel);
-      border: 2px solid var(--stroke);
-      border-radius: 18px;
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    header{
-      padding:16px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      border-bottom: 2px solid var(--stroke);
-      background: rgba(255,255,255,.7);
-    }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-    }
-    .mark{
-      width:44px;height:44px;border-radius:14px;
-      display:grid;place-items:center;
-      background: rgba(0,0,0,.06);
-      font-size:24px;
-    }
-    h1{ margin:0; font-size:18px; }
-    .sub{ margin:2px 0 0; opacity:.75; font-size:13px; }
-
-    .content{ padding:16px 18px 18px; }
-
-    .row{
-      display:flex;
-      gap:14px;
-      flex-wrap:wrap;
-      align-items:flex-start;
-    }
-    .col{
-      flex: 1 1 320px;
-      min-width: 280px;
-    }
-
-    .card{
-      background: rgba(255,255,255,.75);
-      border: 2px solid var(--stroke);
-      border-radius: 16px;
-      padding: 14px;
-      margin-bottom: 12px;
-    }
-    .title{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:10px;
-    }
-    .title h2{
-      margin:0;
-      font-size:16px;
-    }
-    .chip{
-      background: var(--chip);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 12px;
-    }
-
-    .grid{
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap:10px;
-    }
-    .tile{
-      border: 2px solid var(--stroke);
-      border-radius: 14px;
-      background: rgba(0,0,0,.03);
-      padding: 12px;
-      text-align:center;
-      cursor:pointer;
-      user-select:none;
-      transition: transform .12s ease, background .12s ease;
-      min-height: 74px;
-      display:flex;
-      flex-direction:column;
-      justify-content:center;
-      gap:4px;
-    }
-    .tile:hover{ transform: translateY(-2px); background: rgba(0,0,0,.05); }
-    .tile:active{ transform: translateY(0px) scale(.99); }
-    .tile strong{ font-size: 15px; }
-    .tile small{ opacity:.75; }
-
-    .path{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      align-items:center;
-      margin-top:10px;
-    }
-    .crumb{
-      background: var(--chip);
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 800;
-      font-size: 12px;
-    }
-    .btnrow{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-    button{
-      border: 0;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-weight: 900;
-      cursor:pointer;
-    }
-    .btn{
-      background:#1f7a4c;
-      color:white;
-    }
-    .btn:disabled{ opacity:.55; cursor:not-allowed; }
-    .btn-ghost{
-      background: rgba(0,0,0,.06);
-    }
-
-    .pin{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      align-items:center;
-    }
-    .pinbox{
-      font-size: 26px;
-      font-weight: 1000;
-      letter-spacing: 6px;
-      background: rgba(0,0,0,.06);
-      padding: 10px 14px;
-      border-radius: 14px;
-      min-width: 220px;
-      text-align:center;
-    }
-    .keypad{
-      display:grid;
-      grid-template-columns: repeat(3, 76px);
-      gap:10px;
-      justify-content:center;
-    }
-    .key{
-      height:56px;
-      border-radius: 14px;
-      border: 2px solid var(--stroke);
-      background: rgba(255,255,255,.9);
-      font-size: 18px;
-      font-weight: 1000;
-      cursor:pointer;
-    }
-    .key:active{ transform: scale(.98); }
-
-    .msg{
-      min-height: 20px;
-      font-weight: 800;
-      margin-top: 8px;
-    }
-
-    .muted{ opacity:.7; font-size: 13px; }
-
-    .hidden{ display:none !important; }
+    .card { max-width: 980px; margin: 18px auto; padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.93); box-shadow: 0 12px 30px rgba(0,0,0,0.14); }
+    .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .row > * { flex: 1; min-width: 220px; }
+    .title { font-size: 1.6rem; margin: 0 0 8px; }
+    .sub { opacity: 0.85; margin: 0 0 14px; }
+    .btn { border:0; border-radius: 16px; padding: 12px 14px; font-weight: 800; cursor:pointer; }
+    .btn.primary { background:#1f8f5f; color:#fff; }
+    .btn.ghost { background:#eef7f2; color:#143424; }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .status { margin-top:12px; padding: 12px; border-radius: 14px; background:#f6fbff; border:1px solid #d9ecff; }
+    .status.err { background:#fff4f4; border-color:#ffd2d2; }
+    .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 12px; }
+    .key { padding: 18px 10px; border-radius: 18px; background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.08); font-size: 1.2rem; font-weight: 900; }
+    .pinDots { display:flex; gap:10px; margin-top: 10px; }
+    .dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.12); }
+    .dot.filled { background: #1f8f5f; }
+    select { width:100%; padding: 12px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.15); }
   </style>
 </head>
-
 <body>
-  <div class="panel">
-    <header>
-      <div class="brand">
-        <div class="mark">🦁</div>
-        <div>
-          <h1>Student Login</h1>
-          <div class="sub">Choose your grade → homeroom → name → enter your PIN</div>
-        </div>
+  <div class="card">
+    <h1 class="title">🌿 Welcome to Read-a-thon World!</h1>
+    <p class="sub">Pick your class, then enter your PIN.</p>
+
+    <div class="row">
+      <div>
+        <label><strong>Grade</strong></label><br/>
+        <select id="gradeSel">
+          <option value="">Choose…</option>
+          <option value="K">K</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
       </div>
-      <div class="btnrow">
-        <button id="resetBtn" class="btn-ghost" type="button">↩ Reset</button>
+
+      <div>
+        <label><strong>Homeroom</strong></label><br/>
+        <select id="roomSel" disabled>
+          <option value="">Choose grade first…</option>
+        </select>
       </div>
-    </header>
 
-    <div class="content">
-      <div class="row">
-
-        <!-- LEFT: selection -->
-        <div class="col">
-          <div class="card">
-            <div class="title">
-              <h2 id="stepTitle">Step 1: Pick your grade</h2>
-              <span class="chip" id="stepChip">1 / 4</span>
-            </div>
-
-            <div class="path" id="crumbs">
-              <span class="crumb">Grade: —</span>
-              <span class="crumb">Homeroom: —</span>
-              <span class="crumb">Student: —</span>
-            </div>
-
-            <div id="grid" class="grid" style="margin-top:12px;">
-              <!-- tiles injected -->
-            </div>
-
-            <div class="msg" id="msg"></div>
-            <div class="muted" id="hint"></div>
-          </div>
-        </div>
-
-        <!-- RIGHT: pin -->
-        <div class="col">
-          <div class="card">
-            <div class="title">
-              <h2>Step 4: Enter your PIN</h2>
-              <span class="chip">PIN</span>
-            </div>
-
-            <div id="pinArea" class="pin hidden">
-              <div class="pinbox" id="pinBox">— — — —</div>
-
-              <div class="keypad">
-                <button class="key" data-k="1">1</button>
-                <button class="key" data-k="2">2</button>
-                <button class="key" data-k="3">3</button>
-                <button class="key" data-k="4">4</button>
-                <button class="key" data-k="5">5</button>
-                <button class="key" data-k="6">6</button>
-                <button class="key" data-k="7">7</button>
-                <button class="key" data-k="8">8</button>
-                <button class="key" data-k="9">9</button>
-                <button class="key" data-k="clear">⌫</button>
-                <button class="key" data-k="0">0</button>
-                <button class="key" data-k="ok">✅</button>
-              </div>
-
-              <div class="btnrow" style="justify-content:center;">
-                <button id="loginBtn" class="btn" type="button">✅ Sign In</button>
-              </div>
-            </div>
-
-            <div class="muted" id="pinHint">
-              Pick a student first — then the keypad will appear.
-            </div>
-          </div>
-        </div>
-
+      <div>
+        <label><strong>Your Name</strong></label><br/>
+        <select id="studentSel" disabled>
+          <option value="">Choose homeroom first…</option>
+        </select>
       </div>
+    </div>
+
+    <div style="margin-top:14px;">
+      <label><strong>PIN</strong></label>
+      <div class="pinDots" id="dots"></div>
+
+      <div class="grid" id="keypad" aria-label="PIN keypad">
+        <button class="key" data-k="1">1</button>
+        <button class="key" data-k="2">2</button>
+        <button class="key" data-k="3">3</button>
+        <button class="key" data-k="4">4</button>
+        <button class="key" data-k="5">5</button>
+        <button class="key" data-k="6">6</button>
+        <button class="key" data-k="7">7</button>
+        <button class="key" data-k="8">8</button>
+        <button class="key" data-k="9">9</button>
+        <button class="key" data-k="clr">Clear</button>
+        <button class="key" data-k="0">0</button>
+        <button class="key" data-k="bk">⌫</button>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <button id="loginBtn" class="btn primary" disabled>Enter World 💎</button>
+        <button id="resetBtn" class="btn ghost">Start Over</button>
+      </div>
+
+      <div id="status" class="status" style="display:none;"></div>
     </div>
   </div>
 
-  <script type="module" src="/readathon-world/js/student-login.js"></script>
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module" src="./js/student-login.js"></script>
 </body>
 </html>

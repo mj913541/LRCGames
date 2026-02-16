@@ -1,353 +1,381 @@
+// js/student-login.js
+// Grade -> Homeroom -> Name -> PIN -> verifyStudentPinHttp -> redirect
+
 import { auth, db } from "/readathon-world/js/firebase.js";
 
 import {
-  onAuthStateChanged,
-  signInAnonymously
+  signInAnonymously,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
   collection,
-  doc,
-  getDoc,
   getDocs,
   query,
-  orderBy,
-  setDoc
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import {
-  getFunctions,
-  httpsCallable
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
+const $ = (id) => document.getElementById(id);
 
-/* =========================
-   DOM
-========================= */
-const gridEl = document.getElementById("grid");
-const msgEl = document.getElementById("msg");
-const hintEl = document.getElementById("hint");
-const stepTitleEl = document.getElementById("stepTitle");
-const stepChipEl = document.getElementById("stepChip");
-const crumbsEl = document.getElementById("crumbs");
-const resetBtn = document.getElementById("resetBtn");
+const gradeSel = $("gradeSel");
+const roomSel = $("roomSel");
+const studentSel = $("studentSel");
+const keypad = $("keypad");
+const dots = $("dots");
+const loginBtn = $("loginBtn");
+const resetBtn = $("resetBtn");
+const statusBox = $("status");
 
-const pinArea = document.getElementById("pinArea");
-const pinHint = document.getElementById("pinHint");
-const pinBox = document.getElementById("pinBox");
-const loginBtn = document.getElementById("loginBtn");
-
-const functions = getFunctions();
-const verifyStudentPin = httpsCallable(functions, "verifyStudentPin");
-
-/* =========================
-   State
-========================= */
 let uid = null;
-
-let step = 1; // 1 grade, 2 homeroom, 3 student, 4 pin
-let picked = {
-  gradeId: null,
-  gradeLabel: null,
-  homeroomId: null,
-  homeroomLabel: null,
-  studentId: null,
-  studentName: null
-};
-
 let pin = "";
+let selectedStudentId = "";
+let rosterCache = []; // { studentId, displayName }
 
-/* =========================
-   Helpers
-========================= */
-function setMsg(text, ok=false) {
-  msgEl.textContent = text || "";
-  msgEl.style.color = ok ? "green" : "crimson";
+function setStatus(msg, type = "ok") {
+  statusBox.style.display = "block";
+  statusBox.className = `status ${type === "err" ? "err" : ""}`;
+  statusBox.innerHTML = msg;
 }
 
-function setHint(text) {
-  hintEl.textContent = text || "";
+function clearStatus() {
+  statusBox.style.display = "none";
+  statusBox.innerHTML = "";
 }
 
-function setStep(n) {
-  step = n;
-  stepChipEl.textContent = `${n} / 4`;
-
-  if (n === 1) stepTitleEl.textContent = "Step 1: Pick your grade";
-  if (n === 2) stepTitleEl.textContent = "Step 2: Pick your homeroom";
-  if (n === 3) stepTitleEl.textContent = "Step 3: Pick your name";
-  if (n === 4) stepTitleEl.textContent = "Step 4: Enter your PIN";
-
-  // show/hide pin area
-  const showPin = (n === 4);
-  pinArea.classList.toggle("hidden", !showPin);
-  pinHint.classList.toggle("hidden", showPin);
-
-  renderCrumbs();
-}
-
-function renderCrumbs() {
-  const grade = picked.gradeLabel || "—";
-  const room = picked.homeroomLabel || "—";
-  const student = picked.studentName || "—";
-  crumbsEl.innerHTML = `
-    <span class="crumb">Grade: ${escapeHtml(grade)}</span>
-    <span class="crumb">Homeroom: ${escapeHtml(room)}</span>
-    <span class="crumb">Student: ${escapeHtml(student)}</span>
-  `;
+function renderDots(len = 4) {
+  dots.innerHTML = "";
+  for (let i = 0; i < len; i++) {
+    const d = document.createElement("div");
+    d.className = "dot" + (i < pin.length ? " filled" : "");
+    dots.appendChild(d);
+  }
 }
 
 function escapeHtml(s) {
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+  return (s ?? "")
+    .toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function resetAll() {
+  pin = "";
+  selectedStudentId = "";
+  rosterCache = [];
+
+  gradeSel.value = "";
+  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  roomSel.disabled = true;
+  studentSel.disabled = true;
+  loginBtn.disabled = true;
+
+  renderDots(4);
+  clearStatus();
+}
+
+function setLoginEnabled() {
+  const ok =
+    gradeSel.value &&
+    roomSel.value &&
+    studentSel.value &&
+    pin.length >= 3; // allow 3–6
+  loginBtn.disabled = !ok;
 }
 
 async function ensureAnonAuth() {
-  if (auth.currentUser) return auth.currentUser;
-  await signInAnonymously(auth);
-  return auth.currentUser;
-}
-
-function pinDisplay() {
-  const shown = (pin + "____").slice(0, 4).split("").map(ch => ch === "_" ? "—" : "•").join(" ");
-  pinBox.textContent = shown;
-}
-
-/* =========================
-   Data Loads
-========================= */
-
-async function loadGrades() {
-  setMsg("");
-  setHint("Tap your grade.");
-  gridEl.innerHTML = `<div class="muted">Loading grades…</div>`;
-
-  // grades are docs under /schools/main/grades
-  const gradesCol = collection(db, "schools", "main", "grades");
-  const snap = await getDocs(gradesCol);
-
-  // Friendly order if IDs are numeric/known
-  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  docs.sort((a,b) => String(a.sortOrder ?? a.id).localeCompare(String(b.sortOrder ?? b.id), undefined, { numeric:true }));
-
-  gridEl.innerHTML = "";
-  docs.forEach(g => {
-    const label = g.label || g.name || g.id;
-    const tile = makeTile(label, g.subtitle || "Tap to choose");
-    tile.addEventListener("click", () => {
-      picked.gradeId = g.id;
-      picked.gradeLabel = label;
-      picked.homeroomId = null;
-      picked.homeroomLabel = null;
-      picked.studentId = null;
-      picked.studentName = null;
-      setStep(2);
-      loadHomerooms();
-    });
-    gridEl.appendChild(tile);
-  });
-
-  if (!docs.length) {
-    gridEl.innerHTML = `<div class="muted">No grades found.</div>`;
+  if (!auth.currentUser) {
+    await signInAnonymously(auth);
   }
-}
 
-async function loadHomerooms() {
-  setMsg("");
-  setHint("Tap your homeroom teacher.");
-  gridEl.innerHTML = `<div class="muted">Loading homerooms…</div>`;
-
-  const roomsCol = collection(db, "schools", "main", "grades", picked.gradeId, "homerooms");
-  const qRef = query(roomsCol, orderBy("sortOrder", "asc"));
-  const snap = await getDocs(qRef);
-
-  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  gridEl.innerHTML = "";
-  docs.forEach(r => {
-    const label = r.label || r.teacherName || r.name || r.id;
-    const tile = makeTile(label, r.subtitle || "Tap to choose");
-    tile.addEventListener("click", () => {
-      picked.homeroomId = r.id;
-      picked.homeroomLabel = label;
-      picked.studentId = null;
-      picked.studentName = null;
-      setStep(3);
-      loadStudents();
-    });
-    gridEl.appendChild(tile);
-  });
-
-  if (!docs.length) {
-    gridEl.innerHTML = `<div class="muted">No homerooms found.</div>`;
-  }
-}
-
-async function loadStudents() {
-  setMsg("");
-  setHint("Tap your name.");
-  gridEl.innerHTML = `<div class="muted">Loading students…</div>`;
-
-  const studentsCol = collection(
-    db,
-    "schools", "main",
-    "grades", picked.gradeId,
-    "homerooms", picked.homeroomId,
-    "students"
-  );
-
-  const qRef = query(studentsCol, orderBy("displayName", "asc"));
-  const snap = await getDocs(qRef);
-
-  const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-  gridEl.innerHTML = "";
-  docs.forEach(s => {
-    const label = s.displayName || s.name || s.id;
-    const tile = makeTile(label, s.subtitle || "Tap to choose");
-    tile.addEventListener("click", () => {
-      picked.studentId = s.studentId || s.id; // your student docs often have studentId field
-      picked.studentName = label;
-      setStep(4);
-      pin = "";
-      pinDisplay();
-      setHint("Enter your 4-digit PIN, then press ✅");
-    });
-    gridEl.appendChild(tile);
-  });
-
-  if (!docs.length) {
-    gridEl.innerHTML = `<div class="muted">No students found.</div>`;
-  }
-}
-
-/* =========================
-   UI Elements
-========================= */
-
-function makeTile(title, subtitle) {
-  const div = document.createElement("div");
-  div.className = "tile";
-  div.innerHTML = `
-    <strong>${escapeHtml(title)}</strong>
-    <small>${escapeHtml(subtitle)}</small>
-  `;
-  return div;
-}
-
-/* =========================
-   PIN + Login
-========================= */
-
-function wireKeypad() {
-  document.querySelectorAll(".key").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const k = btn.getAttribute("data-k");
-      if (!k) return;
-
-      setMsg("");
-
-      if (k === "clear") {
-        pin = pin.slice(0, -1);
-        pinDisplay();
-        return;
+  // Wait until Firebase finishes setting the auth state
+  const user = await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (u) {
+        unsub();
+        resolve(u);
       }
-
-      if (k === "ok") {
-        doLogin();
-        return;
-      }
-
-      if (pin.length >= 4) return;
-      pin += k;
-      pinDisplay();
     });
   });
 
-  loginBtn.addEventListener("click", doLogin);
+  // Force token refresh
+  await user.getIdToken(true);
+
+  console.log("Anon UID:", user.uid);
+  console.log("Has token:", !!(await user.getIdToken()));
+
+  return user;
+}
+
+/**
+ * Homerooms:
+ * schools/main/grades/{grade}/homerooms/*
+ */
+async function populateHomeroomsFromFirestore(grade) {
+  clearStatus();
+
+  roomSel.disabled = true;
+  roomSel.innerHTML = `<option value="">Loading…</option>`;
+
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  try {
+    await ensureAnonAuth();
+
+    const homeroomsRef = collection(
+      db,
+      "schools",
+      "main",
+      "grades",
+      String(grade),
+      "homerooms"
+    );
+
+    const snap = await getDocs(query(homeroomsRef, where("active", "==", true)));
+
+    if (snap.empty) {
+      roomSel.innerHTML = `<option value="">No homerooms found</option>`;
+      setStatus(
+        `I can’t find any homerooms for this grade yet. Ask your teacher for help.`,
+        "err"
+      );
+      return;
+    }
+
+    const options = [];
+    snap.forEach((docSnap) => {
+      const data = docSnap.data() || {};
+      options.push({
+        id: docSnap.id,
+        label: data.displayName || docSnap.id
+      });
+    });
+
+    options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+
+    roomSel.innerHTML =
+      `<option value="">Choose…</option>` +
+      options
+        .map(
+          (o) =>
+            `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`
+        )
+        .join("");
+
+    roomSel.disabled = false;
+  } catch (e) {
+    console.error(e);
+    roomSel.innerHTML = `<option value="">Error loading homerooms</option>`;
+    setStatus(`Oops! I couldn’t load homerooms. Try again in a moment.`, "err");
+  }
+}
+
+/**
+ * Students:
+ * schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
+ */
+async function populateStudents(grade, homeroomId) {
+  clearStatus();
+
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Loading…</option>`;
+
+  try {
+    await ensureAnonAuth();
+
+    const studentsRef = collection(
+      db,
+      "schools",
+      "main",
+      "grades",
+      String(grade),
+      "homerooms",
+      String(homeroomId),
+      "students"
+    );
+
+    const snap = await getDocs(query(studentsRef, where("active", "==", true)));
+
+    rosterCache = snap.docs
+      .map((d) => {
+        const s = d.data() || {};
+        return {
+          studentId: s.studentId || d.id,
+          displayName: s.displayName || s.studentName || s.name || "Student"
+        };
+      })
+      .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName)));
+
+    if (!rosterCache.length) {
+      studentSel.innerHTML = `<option value="">No students found</option>`;
+      setStatus(
+        `Hmm… I couldn’t find any names for that class. Ask your teacher for help.`,
+        "err"
+      );
+      return;
+    }
+
+    studentSel.innerHTML =
+      `<option value="">Choose…</option>` +
+      rosterCache
+        .map(
+          (s) =>
+            `<option value="${escapeHtml(s.studentId)}">${escapeHtml(
+              s.displayName
+            )}</option>`
+        )
+        .join("");
+
+    studentSel.disabled = false;
+  } catch (e) {
+    console.error(e);
+    studentSel.innerHTML = `<option value="">Try again</option>`;
+    setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
+  }
 }
 
 async function doLogin() {
-  if (!picked.studentId) return setMsg("Pick your name first.");
-  if (pin.length !== 4) return setMsg("Enter your 4-digit PIN.");
+  console.log("✅ doLogin() fired");
+  clearStatus();
+
+  if (!selectedStudentId) {
+    setStatus(`Pick your name first. 🙂`, "err");
+    return;
+  }
+  if (!/^\d{3,6}$/.test(pin)) {
+    setStatus(`PIN should be 3–6 numbers.`, "err");
+    return;
+  }
 
   loginBtn.disabled = true;
-  loginBtn.textContent = "Signing in…";
 
   try {
-    // Verify PIN via Cloud Function
-    const res = await verifyStudentPin({
-      studentId: String(picked.studentId),
-      pin: String(pin)
-    });
+    await ensureAnonAuth();
 
-    if (!res?.data?.ok) {
-      throw new Error(res?.data?.error || "Incorrect PIN.");
+    const gradeId = String(gradeSel.value || "");
+    const homeroomId = String(roomSel.value || "");
+    const token = await auth.currentUser.getIdToken(true);
+
+    const resp = await fetch(
+      "https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          studentId: selectedStudentId,
+          pin,
+          gradeId,
+          homeroomId
+        })
+      }
+    );
+
+    const resData = await resp.json();
+    console.log("verifyStudentPinHttp response:", resData);
+
+    if (resData?.ok) {
+      setStatus(
+        `✅ Welcome, <strong>${escapeHtml(
+          resData.profile?.displayName || "Reader"
+        )}</strong>! Entering your world…`
+      );
+      window.location.href = "/readathon-world/student-home.html";
+    } else {
+      setStatus(`That PIN didn’t match. Try again!`, "err");
+      pin = "";
+      renderDots(4);
     }
-
-    // Build session doc for this anon UID
-    const teacherId = picked.homeroomId;
-    const teacherName = picked.homeroomLabel;
-
-    await setDoc(doc(db, "users", uid), {
-      studentId: String(picked.studentId),
-      studentName: picked.studentName || null,
-      grade: String(picked.gradeId),
-      teacherId: teacherId || null,
-      teacherName: teacherName || null,
-      updatedAt: new Date().toISOString()
-    }, { merge: true });
-
-    setMsg("✅ Signed in!", true);
-
-    // Go to student home
-    window.location.href = "/readathon-world/student-home.html";
-
-  } catch (err) {
-    console.error(err);
-    setMsg(err.message || "Login failed. Try again.");
+  } catch (e) {
+    console.error(e);
+    setStatus(`Oops! Something went wrong. Try again.`, "err");
     pin = "";
-    pinDisplay();
+    renderDots(4);
   } finally {
-    loginBtn.disabled = false;
-    loginBtn.textContent = "✅ Sign In";
+    setLoginEnabled();
   }
 }
 
 /* =========================
-   Reset
+   Events
 ========================= */
-function resetAll() {
-  picked = {
-    gradeId: null,
-    gradeLabel: null,
-    homeroomId: null,
-    homeroomLabel: null,
-    studentId: null,
-    studentName: null
-  };
+
+renderDots(4);
+
+onAuthStateChanged(auth, (user) => {
+  uid = user?.uid || null;
+});
+
+gradeSel.addEventListener("change", async () => {
   pin = "";
-  pinDisplay();
-  setStep(1);
-  loadGrades();
-}
+  selectedStudentId = "";
+  rosterCache = [];
+  renderDots(4);
+  setLoginEnabled();
+  clearStatus();
 
-/* =========================
-   Start
-========================= */
-(async function init() {
-  wireKeypad();
+  const grade = gradeSel.value;
 
-  await ensureAnonAuth();
+  roomSel.disabled = true;
+  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) return;
-    uid = user.uid;
-    resetAll();
-  });
+  if (!grade) return;
+  await populateHomeroomsFromFirestore(grade);
+});
 
-  resetBtn.addEventListener("click", resetAll);
-})();
+roomSel.addEventListener("change", async () => {
+  pin = "";
+  selectedStudentId = "";
+  rosterCache = [];
+  renderDots(4);
+  setLoginEnabled();
+  clearStatus();
+
+  const grade = gradeSel.value;
+  const homeroomId = roomSel.value;
+
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  if (!grade || !homeroomId) return;
+  await populateStudents(grade, homeroomId);
+});
+
+studentSel.addEventListener("change", () => {
+  selectedStudentId = studentSel.value || "";
+  setLoginEnabled();
+});
+
+keypad.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const k = btn.dataset.k;
+
+  if (k === "clr") pin = "";
+  else if (k === "bk") pin = pin.slice(0, -1);
+  else if (/^\d$/.test(k)) {
+    if (pin.length < 6) pin += k;
+  }
+
+  renderDots(4);
+  setLoginEnabled();
+});
+
+// Prevent any form submit refresh issues
+loginBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  doLogin();
+});
+
+resetBtn.addEventListener("click", resetAll);
+
+resetAll();
