@@ -1,393 +1,153 @@
-// js/student-login.js
-// Grade -> Homeroom -> Name -> PIN -> verifyStudentPinHttp -> redirect
-
 import { auth, db } from "/readathon-world/js/firebase.js";
 
 import {
-  signInAnonymously,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
+  doc,
+  getDoc,
   collection,
-  getDocs,
-  query,
-  where
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const $ = (id) => document.getElementById(id);
+/* ==============================
+   UI References
+============================== */
 
-const gradeSel = $("gradeSel");
-const roomSel = $("roomSel");
-const studentSel = $("studentSel");
-const keypad = $("keypad");
-const dots = $("dots");
-const loginBtn = $("loginBtn");
-const resetBtn = $("resetBtn");
-const statusBox = $("status");
+const nameEl = document.getElementById("studentName");
+const teacherEl = document.getElementById("teacherName");
+const gradeEl = document.getElementById("grade");
 
-let uid = null;
-let pin = "";
-let selectedStudentId = "";
-let rosterCache = []; // { studentId, displayName }
+const approvedEl = document.getElementById("approvedMinutes");
+const pendingEl = document.getElementById("pendingMinutes");
+const rubiesEl = document.getElementById("rubies");
 
-function setStatus(msg, type = "ok") {
-  statusBox.style.display = "block";
-  statusBox.className = `status ${type === "err" ? "err" : ""}`;
-  statusBox.innerHTML = msg;
+const roomEl = document.getElementById("roomLayers");
+const signOutBtn = document.getElementById("signOutBtn");
+
+/* ==============================
+   Helpers
+============================== */
+
+function goToLogin() {
+  window.location.href = "student-login.html";
 }
 
-function clearStatus() {
-  statusBox.style.display = "none";
-  statusBox.innerHTML = "";
+function safeNum(v, fallback = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
 }
 
-function renderDots(len = 4) {
-  dots.innerHTML = "";
-  for (let i = 0; i < len; i++) {
-    const d = document.createElement("div");
-    d.className = "dot" + (i < pin.length ? " filled" : "");
-    dots.appendChild(d);
-  }
-}
+/* ==============================
+   Auth Guard
+============================== */
 
-function escapeHtml(s) {
-  return (s ?? "")
-    .toString()
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function resetAll() {
-  pin = "";
-  selectedStudentId = "";
-  rosterCache = [];
-
-  gradeSel.value = "";
-  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
-  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-
-  roomSel.disabled = true;
-  studentSel.disabled = true;
-  loginBtn.disabled = true;
-
-  renderDots(4);
-  clearStatus();
-}
-
-function setLoginEnabled() {
-  const ok =
-    gradeSel.value &&
-    roomSel.value &&
-    studentSel.value &&
-    pin.length >= 3; // allow 3–6
-  loginBtn.disabled = !ok;
-}
-
-async function ensureAnonAuth() {
-  if (!auth.currentUser) {
-    await signInAnonymously(auth);
-  }
-
-  // Wait until Firebase finishes setting the auth state
-  const user = await new Promise((resolve) => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (u) {
-        unsub();
-        resolve(u);
-      }
-    });
-  });
-
-  // Force token refresh
-  await user.getIdToken(true);
-
-  console.log("Anon UID:", user.uid);
-  console.log("Has token:", !!(await user.getIdToken()));
-
-  return user;
-}
-
-/**
- * Homerooms:
- * schools/main/grades/{grade}/homerooms/*
- */
-async function populateHomeroomsFromFirestore(grade) {
-  clearStatus();
-
-  roomSel.disabled = true;
-  roomSel.innerHTML = `<option value="">Loading…</option>`;
-
-  studentSel.disabled = true;
-  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-
-  try {
-    await ensureAnonAuth();
-
-    const homeroomsRef = collection(
-      db,
-      "schools",
-      "main",
-      "grades",
-      String(grade),
-      "homerooms"
-    );
-
-    const snap = await getDocs(query(homeroomsRef, where("active", "==", true)));
-
-    if (snap.empty) {
-      roomSel.innerHTML = `<option value="">No homerooms found</option>`;
-      setStatus(
-        `I can’t find any homerooms for this grade yet. Ask your teacher for help.`,
-        "err"
-      );
-      return;
-    }
-
-    const options = [];
-    snap.forEach((docSnap) => {
-      const data = docSnap.data() || {};
-      options.push({
-        id: docSnap.id,
-        label: data.displayName || docSnap.id
-      });
-    });
-
-    options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
-
-    roomSel.innerHTML =
-      `<option value="">Choose…</option>` +
-      options
-        .map(
-          (o) =>
-            `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`
-        )
-        .join("");
-
-    roomSel.disabled = false;
-  } catch (e) {
-    console.error(e);
-    roomSel.innerHTML = `<option value="">Error loading homerooms</option>`;
-    setStatus(`Oops! I couldn’t load homerooms. Try again in a moment.`, "err");
-  }
-}
-
-/**
- * Students:
- * schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
- */
-async function populateStudents(grade, homeroomId) {
-  clearStatus();
-
-  studentSel.disabled = true;
-  studentSel.innerHTML = `<option value="">Loading…</option>`;
-
-  try {
-    await ensureAnonAuth();
-
-    const studentsRef = collection(
-      db,
-      "schools",
-      "main",
-      "grades",
-      String(grade),
-      "homerooms",
-      String(homeroomId),
-      "students"
-    );
-
-    const snap = await getDocs(query(studentsRef, where("active", "==", true)));
-
-    rosterCache = snap.docs
-      .map((d) => {
-        const s = d.data() || {};
-        return {
-          studentId: s.studentId || d.id,
-          displayName: s.displayName || s.studentName || s.name || "Student"
-        };
-      })
-      .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName)));
-
-    if (!rosterCache.length) {
-      studentSel.innerHTML = `<option value="">No students found</option>`;
-      setStatus(
-        `Hmm… I couldn’t find any names for that class. Ask your teacher for help.`,
-        "err"
-      );
-      return;
-    }
-
-    studentSel.innerHTML =
-      `<option value="">Choose…</option>` +
-      rosterCache
-        .map(
-          (s) =>
-            `<option value="${escapeHtml(s.studentId)}">${escapeHtml(
-              s.displayName
-            )}</option>`
-        )
-        .join("");
-
-    studentSel.disabled = false;
-  } catch (e) {
-    console.error(e);
-    studentSel.innerHTML = `<option value="">Try again</option>`;
-    setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
-  }
-}
-
-async function doLogin() {
-  console.log("✅ doLogin() fired");
-  clearStatus();
-
-  if (!selectedStudentId) {
-    setStatus(`Pick your name first. 🙂`, "err");
-    return;
-  }
-  if (!/^\d{3,6}$/.test(pin)) {
-    setStatus(`PIN should be 3–6 numbers.`, "err");
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    goToLogin();
     return;
   }
 
-  loginBtn.disabled = true;
-
-  try {
-    await ensureAnonAuth();
-
-    const gradeId = String(gradeSel.value || "");
-    const homeroomId = String(roomSel.value || "");
-    const token = await auth.currentUser.getIdToken(true);
-
-    const resp = await fetch(
-      "https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          studentId: selectedStudentId,
-          pin,
-          gradeId,
-          homeroomId
-        })
-      }
-    );
-
-    const resData = await resp.json();
-    console.log("verifyStudentPinHttp response:", resData);
-
-    if (resData?.ok) {
-      // ✅ NEW: persist what the home page needs to avoid bouncing back to login
-      const studentPath = `schools/main/grades/${gradeId}/homerooms/${homeroomId}/students/${selectedStudentId}`;
-
-      sessionStorage.setItem("studentPath", studentPath);
-      sessionStorage.setItem("studentId", selectedStudentId);
-      sessionStorage.setItem("gradeId", gradeId);
-      sessionStorage.setItem("homeroomId", homeroomId);
-      // optional: store displayName if the function returns it
-      if (resData?.profile?.displayName) {
-        sessionStorage.setItem("displayName", resData.profile.displayName);
-      }
-
-      setStatus(
-        `✅ Welcome, <strong>${escapeHtml(
-          resData.profile?.displayName || "Reader"
-        )}</strong>! Entering your world…`
-      );
-
-      window.location.href = "/readathon-world/student-home.html";
-    } else {
-      setStatus(`That PIN didn’t match. Try again!`, "err");
-      pin = "";
-      renderDots(4);
-    }
-  } catch (e) {
-    console.error(e);
-    setStatus(`Oops! Something went wrong. Try again.`, "err");
-    pin = "";
-    renderDots(4);
-  } finally {
-    setLoginEnabled();
+  const studentPath = sessionStorage.getItem("studentPath");
+  if (!studentPath) {
+    goToLogin();
+    return;
   }
+
+  // Optional: fill chips from storage immediately (nice UX)
+  const gradeId = sessionStorage.getItem("gradeId");
+  const homeroomId = sessionStorage.getItem("homeroomId");
+  if (gradeEl && gradeId) gradeEl.textContent = gradeId;
+  if (teacherEl && homeroomId) teacherEl.textContent = homeroomId;
+
+  await loadStudent(studentPath);
+});
+
+/* ==============================
+   Load Student Data
+============================== */
+
+async function loadStudent(studentPath) {
+  const studentRef = doc(db, studentPath);
+  const snap = await getDoc(studentRef);
+
+  if (!snap.exists()) {
+    console.warn("Student doc missing:", studentPath);
+    return;
+  }
+
+  const student = snap.data() || {};
+
+  // Name
+  if (nameEl) nameEl.textContent = student.displayName || sessionStorage.getItem("displayName") || "Reader";
+
+  // Minutes + Rubies (support your current field names gracefully)
+  // Your HTML expects: approvedMinutes, pendingMinutes, rubiesBalance
+  // Your rules draft also mentioned: totalApprovedMinutes, etc.
+  const approved =
+    safeNum(student.approvedMinutes, null) ??
+    safeNum(student.totalApprovedMinutes, 0);
+
+  const pending =
+    safeNum(student.pendingMinutes, 0);
+
+  const rubies =
+    safeNum(student.rubiesBalance, null) ??
+    safeNum(student.rubies, 0);
+
+  if (approvedEl) approvedEl.textContent = approved;
+  if (pendingEl) pendingEl.textContent = pending;
+  if (rubiesEl) rubiesEl.textContent = rubies;
+
+  await renderRoom(student.equipped || {});
 }
 
-/* =========================
-   Events
-========================= */
+/* ==============================
+   Render Jungle Room
+============================== */
 
-renderDots(4);
-
-onAuthStateChanged(auth, (user) => {
-  uid = user?.uid || null;
-});
-
-gradeSel.addEventListener("change", async () => {
-  pin = "";
-  selectedStudentId = "";
-  rosterCache = [];
-  renderDots(4);
-  setLoginEnabled();
-  clearStatus();
-
-  const grade = gradeSel.value;
-
-  roomSel.disabled = true;
-  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
-  studentSel.disabled = true;
-  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-
-  if (!grade) return;
-  await populateHomeroomsFromFirestore(grade);
-});
-
-roomSel.addEventListener("change", async () => {
-  pin = "";
-  selectedStudentId = "";
-  rosterCache = [];
-  renderDots(4);
-  setLoginEnabled();
-  clearStatus();
-
-  const grade = gradeSel.value;
-  const homeroomId = roomSel.value;
-
-  studentSel.disabled = true;
-  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
-
-  if (!grade || !homeroomId) return;
-  await populateStudents(grade, homeroomId);
-});
-
-studentSel.addEventListener("change", () => {
-  selectedStudentId = studentSel.value || "";
-  setLoginEnabled();
-});
-
-keypad.addEventListener("click", (e) => {
-  const btn = e.target.closest("button[data-k]");
-  if (!btn) return;
-
-  const k = btn.getAttribute("data-k");
-
-  if (k === "clr") {
-    pin = "";
-  } else if (k === "bk") {
-    pin = pin.slice(0, -1);
-  } else if (/^\d$/.test(k)) {
-    if (pin.length < 6) pin += k;
+async function renderRoom(equipped) {
+  if (!roomEl) {
+    console.warn("roomLayers element not found. Add <div id='roomLayers'></div> inside .room.");
+    return;
   }
 
-  renderDots(4);
-  setLoginEnabled();
+  roomEl.innerHTML = "";
+
+  // Load store items so we can map itemId -> imageURL
+  const storeSnap = await getDocs(collection(db, "storeItems"));
+  const storeMap = new Map();
+  storeSnap.forEach((d) => storeMap.set(d.id, d.data()));
+
+  function addLayer(itemId, className) {
+    if (!itemId) return;
+
+    const item = storeMap.get(itemId);
+    if (!item || !item.imageURL) return;
+
+    const img = document.createElement("img");
+    img.src = item.imageURL;
+    img.className = `room-layer ${className}`;
+    roomEl.appendChild(img);
+  }
+
+  // Keep these in back-to-front order
+  addLayer(equipped.background, "bg");
+  addLayer(equipped.decor, "decor");
+  addLayer(equipped.body, "body");
+  addLayer(equipped.outfit, "outfit");
+  addLayer(equipped.accessory, "accessory");
+  addLayer(equipped.pet, "pet");
+}
+
+/* ==============================
+   Sign Out
+============================== */
+
+signOutBtn?.addEventListener("click", async () => {
+  await signOut(auth);
+  sessionStorage.clear();
+  window.location.href = "index.html";
 });
-
-loginBtn.addEventListener("click", doLogin);
-resetBtn.addEventListener("click", resetAll);
-
-// Init
-resetAll();
