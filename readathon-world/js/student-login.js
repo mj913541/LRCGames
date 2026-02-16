@@ -1,207 +1,381 @@
+// reloadoldjs/student-login.js
+// Grade -> Homeroom -> Name -> PIN -> verifyStudentPinHttp -> redirect
+
 import { auth, db } from "/readathon-world/js/firebase.js";
 
 import {
-  onAuthStateChanged,
-  signOut
+  signInAnonymously,
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
-  doc,
-  getDoc,
   collection,
   getDocs,
   query,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* ==============================
-   UI References
-============================== */
+const $ = (id) => document.getElementById(id);
 
-const nameEl = document.getElementById("studentName");
-const teacherEl = document.getElementById("teacherName");
-const gradeEl = document.getElementById("grade");
+const gradeSel = $("gradeSel");
+const roomSel = $("roomSel");
+const studentSel = $("studentSel");
+const keypad = $("keypad");
+const dots = $("dots");
+const loginBtn = $("loginBtn");
+const resetBtn = $("resetBtn");
+const statusBox = $("status");
 
-const approvedEl = document.getElementById("approvedMinutes");
-const pendingEl = document.getElementById("pendingMinutes");
-const rubiesEl = document.getElementById("rubies");
+let uid = null;
+let pin = "";
+let selectedStudentId = "";
+let rosterCache = []; // { studentId, displayName }
 
-const roomEl = document.getElementById("roomLayers");
-const signOutBtn = document.getElementById("signOutBtn");
-
-/* ==============================
-   Helpers
-============================== */
-
-function goToLogin() {
-  window.location.href = "student-login.html";
+function setStatus(msg, type = "ok") {
+  statusBox.style.display = "block";
+  statusBox.className = `status ${type === "err" ? "err" : ""}`;
+  statusBox.innerHTML = msg;
 }
 
-function safeInt(v, fallback = 0) {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.trunc(n) : fallback;
+function clearStatus() {
+  statusBox.style.display = "none";
+  statusBox.innerHTML = "";
 }
 
-function getStudentIdFromPath(studentPath) {
-  const parts = String(studentPath || "").split("/");
-  return parts[parts.length - 1] || "";
+function renderDots(len = 4) {
+  dots.innerHTML = "";
+  for (let i = 0; i < len; i++) {
+    const d = document.createElement("div");
+    d.className = "dot" + (i < pin.length ? " filled" : "");
+    dots.appendChild(d);
+  }
 }
 
-/* ==============================
-   Auth Guard
-============================== */
+function escapeHtml(s) {
+  return (s ?? "")
+    .toString()
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    goToLogin();
-    return;
+function resetAll() {
+  pin = "";
+  selectedStudentId = "";
+  rosterCache = [];
+
+  gradeSel.value = "";
+  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  roomSel.disabled = true;
+  studentSel.disabled = true;
+  loginBtn.disabled = true;
+
+  renderDots(4);
+  clearStatus();
+}
+
+function setLoginEnabled() {
+  const ok =
+    gradeSel.value &&
+    roomSel.value &&
+    studentSel.value &&
+    pin.length >= 3; // allow 3–6
+  loginBtn.disabled = !ok;
+}
+
+async function ensureAnonAuth() {
+  if (!auth.currentUser) {
+    await signInAnonymously(auth);
   }
 
-  const studentPath = sessionStorage.getItem("studentPath");
-  if (!studentPath) {
-    goToLogin();
-    return;
-  }
+  // Wait until Firebase finishes setting the auth state
+  const user = await new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (u) {
+        unsub();
+        resolve(u);
+      }
+    });
+  });
 
-  // Fill quick UI chips
-  const gradeId = sessionStorage.getItem("gradeId");
-  const homeroomId = sessionStorage.getItem("homeroomId");
+  // Force token refresh
+  await user.getIdToken(true);
 
-  if (gradeEl && gradeId) gradeEl.textContent = gradeId;
-  if (teacherEl && homeroomId) teacherEl.textContent = homeroomId;
+  console.log("Anon UID:", user.uid);
+  console.log("Has token:", !!(await user.getIdToken()));
 
-  await loadStudentDashboard(user.uid, studentPath);
-});
+  return user;
+}
 
-/* ==============================
-   Main Loader
-============================== */
+/**
+ * Homerooms:
+ * schools/main/grades/{grade}/homerooms/*
+ */
+async function populateHomeroomsFromFirestore(grade) {
+  clearStatus();
 
-async function loadStudentDashboard(studentUid, studentPath) {
+  roomSel.disabled = true;
+  roomSel.innerHTML = `<option value="">Loading…</option>`;
 
-  /* 1️⃣ Load roster doc (name + equipped) */
-
-  const rosterRef = doc(db, studentPath);
-  const rosterSnap = await getDoc(rosterRef);
-
-  if (!rosterSnap.exists()) {
-    console.warn("Roster doc missing:", studentPath);
-    return;
-  }
-
-  const roster = rosterSnap.data() || {};
-
-  if (nameEl) {
-    nameEl.textContent =
-      roster.displayName ||
-      sessionStorage.getItem("displayName") ||
-      "Reader";
-  }
-
-  const studentId = getStudentIdFromPath(studentPath);
-
-  /* 2️⃣ Load approved totals from /students/{studentId} */
-
-  let approvedMinutes = 0;
-  let rubiesBalance = 0;
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
 
   try {
-    const totalsRef = doc(db, "students", studentId);
-    const totalsSnap = await getDoc(totalsRef);
+    await ensureAnonAuth();
 
-    if (totalsSnap.exists()) {
-      const totals = totalsSnap.data() || {};
-      approvedMinutes = safeInt(totals.totalApprovedMinutes, 0);
-      rubiesBalance = safeInt(totals.rubiesBalance, 0);
-    }
-  } catch (err) {
-    console.error("Totals read failed:", err);
-  }
-
-  /* 3️⃣ Calculate pending minutes */
-
-  let pendingMinutes = 0;
-
-  try {
-    const pendingQ = query(
-      collection(db, "minuteSubmissions"),
-      where("studentUid", "==", studentUid),
-      where("status", "==", "pending")
+    const homeroomsRef = collection(
+      db,
+      "schools",
+      "main",
+      "grades",
+      String(grade),
+      "homerooms"
     );
 
-    const pendingSnap = await getDocs(pendingQ);
+    const snap = await getDocs(query(homeroomsRef, where("active", "==", true)));
 
-    pendingSnap.forEach((docSnap) => {
+    if (snap.empty) {
+      roomSel.innerHTML = `<option value="">No homerooms found</option>`;
+      setStatus(
+        `I can’t find any homerooms for this grade yet. Ask your teacher for help.`,
+        "err"
+      );
+      return;
+    }
+
+    const options = [];
+    snap.forEach((docSnap) => {
       const data = docSnap.data() || {};
-      pendingMinutes += safeInt(data.minutes, 0);
+      options.push({
+        id: docSnap.id,
+        label: data.displayName || docSnap.id
+      });
     });
 
-  } catch (err) {
-    console.error("Pending query failed:", err);
+    options.sort((a, b) => String(a.label).localeCompare(String(b.label)));
+
+    roomSel.innerHTML =
+      `<option value="">Choose…</option>` +
+      options
+        .map(
+          (o) =>
+            `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`
+        )
+        .join("");
+
+    roomSel.disabled = false;
+  } catch (e) {
+    console.error(e);
+    roomSel.innerHTML = `<option value="">Error loading homerooms</option>`;
+    setStatus(`Oops! I couldn’t load homerooms. Try again in a moment.`, "err");
   }
-
-  /* 4️⃣ Update UI */
-
-  if (approvedEl) approvedEl.textContent = approvedMinutes;
-  if (pendingEl) pendingEl.textContent = pendingMinutes;
-  if (rubiesEl) rubiesEl.textContent = rubiesBalance;
-
-  /* 5️⃣ Render Jungle Room */
-
-  await renderRoom(roster.equipped || {});
 }
 
-/* ==============================
-   Render Jungle Room
-============================== */
+/**
+ * Students:
+ * schools/main/grades/{grade}/homerooms/{homeroomId}/students/*
+ */
+async function populateStudents(grade, homeroomId) {
+  clearStatus();
 
-async function renderRoom(equipped) {
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Loading…</option>`;
 
-  if (!roomEl) {
-    console.warn("roomLayers element missing.");
-    return;
-  }
-
-  roomEl.innerHTML = "";
-
-  let storeSnap;
   try {
-    storeSnap = await getDocs(collection(db, "storeItems"));
-  } catch (err) {
-    console.error("Store items read failed:", err);
+    await ensureAnonAuth();
+
+    const studentsRef = collection(
+      db,
+      "schools",
+      "main",
+      "grades",
+      String(grade),
+      "homerooms",
+      String(homeroomId),
+      "students"
+    );
+
+    const snap = await getDocs(query(studentsRef, where("active", "==", true)));
+
+    rosterCache = snap.docs
+      .map((d) => {
+        const s = d.data() || {};
+        return {
+          studentId: s.studentId || d.id,
+          displayName: s.displayName || s.studentName || s.name || "Student"
+        };
+      })
+      .sort((a, b) => String(a.displayName).localeCompare(String(b.displayName)));
+
+    if (!rosterCache.length) {
+      studentSel.innerHTML = `<option value="">No students found</option>`;
+      setStatus(
+        `Hmm… I couldn’t find any names for that class. Ask your teacher for help.`,
+        "err"
+      );
+      return;
+    }
+
+    studentSel.innerHTML =
+      `<option value="">Choose…</option>` +
+      rosterCache
+        .map(
+          (s) =>
+            `<option value="${escapeHtml(s.studentId)}">${escapeHtml(
+              s.displayName
+            )}</option>`
+        )
+        .join("");
+
+    studentSel.disabled = false;
+  } catch (e) {
+    console.error(e);
+    studentSel.innerHTML = `<option value="">Try again</option>`;
+    setStatus(`Something went wrong loading names. Try again in a moment.`, "err");
+  }
+}
+
+async function doLogin() {
+  console.log("✅ doLogin() fired");
+  clearStatus();
+
+  if (!selectedStudentId) {
+    setStatus(`Pick your name first. 🙂`, "err");
+    return;
+  }
+  if (!/^\d{3,6}$/.test(pin)) {
+    setStatus(`PIN should be 3–6 numbers.`, "err");
     return;
   }
 
-  const storeMap = new Map();
-  storeSnap.forEach((d) => storeMap.set(d.id, d.data()));
+  loginBtn.disabled = true;
 
-  function addLayer(itemId, className) {
-    if (!itemId) return;
+  try {
+    await ensureAnonAuth();
 
-    const item = storeMap.get(itemId);
-    if (!item || !item.imageURL) return;
+    const gradeId = String(gradeSel.value || "");
+    const homeroomId = String(roomSel.value || "");
+    const token = await auth.currentUser.getIdToken(true);
 
-    const img = document.createElement("img");
-    img.src = item.imageURL;
-    img.className = `room-layer ${className}`;
-    roomEl.appendChild(img);
+    const resp = await fetch(
+      "https://us-central1-lrcquest-3039e.cloudfunctions.net/verifyStudentPinHttp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          studentId: selectedStudentId,
+          pin,
+          gradeId,
+          homeroomId
+        })
+      }
+    );
+
+    const resData = await resp.json();
+    console.log("verifyStudentPinHttp response:", resData);
+
+    if (resData?.ok) {
+      setStatus(
+        `✅ Welcome, <strong>${escapeHtml(
+          resData.profile?.displayName || "Reader"
+        )}</strong>! Entering your world…`
+      );
+      window.location.href = "/readathon-world/student-home.html";
+    } else {
+      setStatus(`That PIN didn’t match. Try again!`, "err");
+      pin = "";
+      renderDots(4);
+    }
+  } catch (e) {
+    console.error(e);
+    setStatus(`Oops! Something went wrong. Try again.`, "err");
+    pin = "";
+    renderDots(4);
+  } finally {
+    setLoginEnabled();
   }
-
-  // Back-to-front layering
-  addLayer(equipped.background, "bg");
-  addLayer(equipped.decor, "decor");
-  addLayer(equipped.body, "body");
-  addLayer(equipped.outfit, "outfit");
-  addLayer(equipped.accessory, "accessory");
-  addLayer(equipped.pet, "pet");
 }
 
-/* ==============================
-   Sign Out
-============================== */
+/* =========================
+   Events
+========================= */
 
-signOutBtn?.addEventListener("click", async () => {
-  await signOut(auth);
-  sessionStorage.clear();
-  window.location.href = "index.html";
+renderDots(4);
+
+onAuthStateChanged(auth, (user) => {
+  uid = user?.uid || null;
 });
+
+gradeSel.addEventListener("change", async () => {
+  pin = "";
+  selectedStudentId = "";
+  rosterCache = [];
+  renderDots(4);
+  setLoginEnabled();
+  clearStatus();
+
+  const grade = gradeSel.value;
+
+  roomSel.disabled = true;
+  roomSel.innerHTML = `<option value="">Choose grade first…</option>`;
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  if (!grade) return;
+  await populateHomeroomsFromFirestore(grade);
+});
+
+roomSel.addEventListener("change", async () => {
+  pin = "";
+  selectedStudentId = "";
+  rosterCache = [];
+  renderDots(4);
+  setLoginEnabled();
+  clearStatus();
+
+  const grade = gradeSel.value;
+  const homeroomId = roomSel.value;
+
+  studentSel.disabled = true;
+  studentSel.innerHTML = `<option value="">Choose homeroom first…</option>`;
+
+  if (!grade || !homeroomId) return;
+  await populateStudents(grade, homeroomId);
+});
+
+studentSel.addEventListener("change", () => {
+  selectedStudentId = studentSel.value || "";
+  setLoginEnabled();
+});
+
+keypad.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+  const k = btn.dataset.k;
+
+  if (k === "clr") pin = "";
+  else if (k === "bk") pin = pin.slice(0, -1);
+  else if (/^\d$/.test(k)) {
+    if (pin.length < 6) pin += k;
+  }
+
+  renderDots(4);
+  setLoginEnabled();
+});
+
+// Prevent any form submit refresh issues
+loginBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  doLogin();
+});
+
+resetBtn.addEventListener("click", resetAll);
+
+resetAll();
