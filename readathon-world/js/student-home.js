@@ -1,4 +1,4 @@
-import { auth, db } from "/readathon-world/js/firebase.js";
+import { auth, db } from "./firebase.js";
 import {
   onAuthStateChanged,
   signOut
@@ -8,134 +8,96 @@ import {
   doc,
   getDoc,
   collection,
-  query,
-  where,
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const el = (id) => document.getElementById(id);
+/* ==============================
+   UI References
+============================== */
 
-const signOutBtn = el("signOutBtn");
-const noteEl = el("statusNote");
+const nameEl = document.getElementById("studentName");
+const approvedEl = document.getElementById("approvedMinutes");
+const pendingEl = document.getElementById("pendingMinutes");
+const rubiesEl = document.getElementById("rubies");
+const roomEl = document.getElementById("roomLayers");
+const signOutBtn = document.getElementById("signOutBtn");
 
-function showNote(msg) {
-  if (!noteEl) return;
-  noteEl.style.display = "block";
-  noteEl.textContent = msg;
-}
-
-function setText(id, value) {
-  const node = el(id);
-  if (node) node.textContent = value;
-}
-
-async function loadSession(uid) {
-  // Your submit page relies on this existing
-  const snap = await getDoc(doc(db, "users", uid));
-  return snap.exists() ? snap.data() : null;
-}
-
-async function loadPendingMinutes(uid) {
-  // Student can read their own submissions by your rules
-  const q = query(
-    collection(db, "minuteSubmissions"),
-    where("studentUid", "==", uid),
-    where("status", "==", "pending")
-  );
-
-  const snap = await getDocs(q);
-  let total = 0;
-  snap.forEach((d) => {
-    const m = Number(d.data().minutes || 0);
-    if (Number.isFinite(m)) total += m;
-  });
-  return total;
-}
-
-/**
- * SAFE totals strategy:
- * 1) Try publicStudents/{studentId} first (recommended long-term)
- * 2) If that doesn't exist or isn't readable, try students/{studentId}
- *    (may fail if your rules keep students admin-only, which is ok).
- */
-async function loadTotals(studentId) {
-  // Preferred: safe public totals doc
-  try {
-    const pubSnap = await getDoc(doc(db, "publicStudents", studentId));
-    if (pubSnap.exists()) return pubSnap.data();
-  } catch (e) {
-    // ignore; try fallback
-  }
-
-  // Fallback: direct students doc (may be blocked by rules)
-  const studentSnap = await getDoc(doc(db, "students", studentId));
-  return studentSnap.exists() ? studentSnap.data() : null;
-}
-
-function wireAvatar() {
-  const avatar = el("avatar");
-  if (!avatar) return;
-
-  avatar.addEventListener("click", () => {
-    avatar.style.transform = "translateX(-50%) scale(1.15)";
-    setTimeout(() => {
-      avatar.style.transform = "translateX(-50%) scale(1)";
-    }, 180);
-  });
-}
-
-signOutBtn?.addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "./index.html";
-});
-
-wireAvatar();
+/* ==============================
+   Auth Guard
+============================== */
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
-    window.location.href = "./student-login.html";
+    window.location.href = "student-login.html";
     return;
   }
 
-  // 1) Verified session
-  const session = await loadSession(user.uid);
-  if (!session?.studentId) {
-    showNote("Hmm… I can’t find your login pass. Please sign in again.");
-    window.location.href = "./student-login.html";
+  const studentPath = sessionStorage.getItem("studentPath");
+  if (!studentPath) {
+    window.location.href = "student-login.html";
     return;
   }
 
-  setText("studentName", session.studentName || "Reader");
-  setText("teacherName", session.teacherName || session.teacherId || "Homeroom");
-  setText("grade", session.grade || "?");
+  await loadStudent(studentPath);
+});
 
-  // 2) Pending minutes (always should work)
-  try {
-    const pending = await loadPendingMinutes(user.uid);
-    setText("pendingMinutes", String(pending));
-  } catch (e) {
-    console.warn("Pending minutes failed:", e);
-    setText("pendingMinutes", "—");
+/* ==============================
+   Load Student Data
+============================== */
+
+async function loadStudent(studentPath) {
+  const studentRef = doc(db, studentPath);
+  const snap = await getDoc(studentRef);
+
+  if (!snap.exists()) return;
+
+  const student = snap.data();
+
+  nameEl.textContent = student.displayName || "Reader";
+  approvedEl.textContent = student.approvedMinutes || 0;
+  pendingEl.textContent = student.pendingMinutes || 0;
+  rubiesEl.textContent = student.rubiesBalance || 0;
+
+  await renderRoom(student.equipped || {});
+}
+
+/* ==============================
+   Render Jungle Room
+============================== */
+
+async function renderRoom(equipped) {
+  roomEl.innerHTML = "";
+
+  const storeSnap = await getDocs(collection(db, "storeItems"));
+  const storeMap = new Map();
+  storeSnap.forEach(d => storeMap.set(d.id, d.data()));
+
+  function addLayer(itemId, className) {
+    if (!itemId) return;
+
+    const item = storeMap.get(itemId);
+    if (!item || !item.imageURL) return;
+
+    const img = document.createElement("img");
+    img.src = item.imageURL;
+    img.className = `room-layer ${className}`;
+    roomEl.appendChild(img);
   }
 
-  // 3) Approved minutes + rubies (depends on totals doc visibility)
-  try {
-    const totals = await loadTotals(session.studentId);
+  addLayer(equipped.background, "bg");
+  addLayer(equipped.decor, "decor");
+  addLayer(equipped.body, "body");
+  addLayer(equipped.outfit, "outfit");
+  addLayer(equipped.accessory, "accessory");
+  addLayer(equipped.pet, "pet");
+}
 
-    const approved = Number(totals?.totalApprovedMinutes ?? 0);
-    const rubies = Number(totals?.rubiesBalance ?? 0);
+/* ==============================
+   Sign Out
+============================== */
 
-    setText("approvedMinutes", String(approved));
-    setText("rubies", String(rubies));
-
-    // If we had to fall back / or no totals exist yet:
-    if (!totals) {
-      showNote("Approved minutes & rubies will appear after Mrs. A approves and converts minutes.");
-    }
-  } catch (e) {
-    console.warn("Totals read blocked or missing:", e);
-    setText("approvedMinutes", "—");
-    setText("rubies", "—");
-    showNote("✅ Pending minutes work. Approved minutes & rubies will show after we enable safe totals access.");
-  }
+signOutBtn?.addEventListener("click", async () => {
+  await signOut(auth);
+  sessionStorage.clear();
+  window.location.href = "index.html";
 });
