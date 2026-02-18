@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Staff Home • Read-a-thon World</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+
+<body>
+  <div class="bg-canopy"></div>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" style="text-decoration:none; color:inherit;">
+      <div class="brand-mark" aria-hidden="true">🦁</div>
+      <div class="brand-text">
+        <div class="brand-title">Read-a-thon World</div>
+        <div class="brand-subtitle">Staff Home</div>
+      </div>
+    </a>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a class="btn btn-primary" href="admin-approve.html">✅ Approvals</a>
+      <button id="signOutBtn" class="btn btn-ghost" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Welcome -->
+    <section class="card">
+      <h1 style="margin:0;">Welcome, <span id="staffName">Staff</span>!</h1>
+      <p class="muted" style="margin:6px 0 0;">
+        Submit minutes for yourself or for students in your group.
+      </p>
+
+      <div class="chips" style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
+        <div class="chip">🏫 Group: <span id="groupLabel">—</span></div>
+        <div class="chip">⭐ Grade: <span id="gradeLabel">—</span></div>
+      </div>
+
+      <div id="statusNote" class="note" style="margin-top:12px; display:none;"></div>
+    </section>
+
+    <!-- Submit Minutes -->
+    <section class="card">
+      <div class="room-title-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin:0;">📚 Submit Minutes</h2>
+        <span class="pill">Staff can submit for students</span>
+      </div>
+
+      <form id="staffMinuteForm" style="margin-top:12px;">
+        <div class="choices" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px;">
+          <label class="choice" style="cursor:auto;">
+            <div class="choice-emoji">👤</div>
+            <div class="choice-label">
+              Submit for<br/>
+              <select id="targetSel" class="input" style="margin-top:8px; width:100%;">
+                <option value="self">Me (Staff)</option>
+              </select>
+            </div>
+          </label>
+
+          <label class="choice" style="cursor:auto;">
+            <div class="choice-emoji">⏱️</div>
+            <div class="choice-label">
+              Minutes<br/>
+              <input id="minutes" class="input" type="number" min="1" max="600" placeholder="e.g., 20" style="margin-top:8px; width:100%;" />
+            </div>
+          </label>
+
+          <label class="choice" style="cursor:auto;">
+            <div class="choice-emoji">📅</div>
+            <div class="choice-label">
+              Reading date<br/>
+              <input id="readingDate" class="input" type="date" style="margin-top:8px; width:100%;" />
+            </div>
+          </label>
+
+          <label class="choice" style="cursor:auto;">
+            <div class="choice-emoji">📝</div>
+            <div class="choice-label">
+              Note (optional)<br/>
+              <input id="note" class="input" type="text" placeholder="Book title, quick note…" style="margin-top:8px; width:100%;" />
+            </div>
+          </label>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+          <button id="submitBtn" class="btn btn-primary" type="submit">✅ Submit Minutes</button>
+          <div id="msg" class="muted"></div>
+        </div>
+      </form>
+    </section>
+
+    <!-- My Students -->
+    <section class="card">
+      <div class="room-title-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin:0;">🧒 My Students</h2>
+        <button id="refreshBtn" class="btn btn-secondary" type="button">↻ Refresh</button>
+      </div>
+
+      <div id="studentList" style="margin-top:12px;"></div>
+    </section>
+
+    <!-- Pending for My Group -->
+    <section class="card">
+      <div class="room-title-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
+        <h2 style="margin:0;">⏳ Pending for My Group</h2>
+        <a class="btn btn-secondary" href="admin-approve.html" style="text-decoration:none;">Open approvals</a>
+      </div>
+
+      <div id="pendingList" style="margin-top:12px;"></div>
+    </section>
+
+  </main>
+
+  <script type="module" src="js/staff-home.js"></script>
+</body>
+</html>
