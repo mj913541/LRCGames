@@ -131,7 +131,7 @@ async function loadDashboard(studentUid, studentPath) {
   try {
     const pendingQ = query(
       collection(db, "minuteSubmissions"),
-      where("studentUid", "==", studentUid),
+      where("studentId", "==", studentId),
       where("status", "==", "pending")
     );
 
