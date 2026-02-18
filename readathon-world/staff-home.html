@@ -5,6 +5,114 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Staff Home • Read-a-thon World</title>
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Keep same look as student-home.html (room + chips + stats) */
+    .room {
+      position: relative;
+      height: 300px;
+      border-radius: 18px;
+      overflow: hidden;
+      background: linear-gradient(#c9f0d6, #8fd3a8);
+      border: 3px solid rgba(0,0,0,0.12);
+      margin-top: 12px;
+    }
+    .room-wall {
+      position: absolute;
+      inset: 0 0 42% 0;
+      background: linear-gradient(#dff7ea, #b7e4cc);
+    }
+    .room-floor {
+      position: absolute;
+      bottom: 0;
+      height: 42%;
+      width: 100%;
+      background: linear-gradient(#7fbf7f, #5aa05a);
+    }
+    .room-title-row {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .avatar {
+      position: absolute;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 72px;
+      z-index: 2;
+      cursor: pointer;
+      user-select: none;
+      transition: transform .18s ease;
+      filter: drop-shadow(0 8px 8px rgba(0,0,0,.18));
+    }
+    .avatar:hover { transform: translateX(-50%) scale(1.07); }
+    .chips { display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    .chip {
+      background: rgba(0,0,0,0.06);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 800;
+    }
+    .stat-strong { font-size: 22px; }
+
+    /* Staff roster submit UI */
+    .roster-tools { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .roster-box {
+      margin-top: 12px;
+      border: 2px solid rgba(0,0,0,0.10);
+      border-radius: 14px;
+      padding: 10px;
+      background: rgba(255,255,255,0.65);
+    }
+    .roster-grid {
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 12px;
+      margin-top: 10px;
+    }
+    @media (max-width: 720px) {
+      .roster-grid { grid-template-columns: 1fr; }
+    }
+    .roster-item {
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding: 8px 10px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.04);
+    }
+    .roster-item input { transform: translateY(2px); }
+    .roster-name { font-weight: 900; }
+    .roster-sub { font-size: 12px; opacity: .75; margin-top: 2px; }
+    .inline-form {
+      display:grid;
+      grid-template-columns: 160px 1fr;
+      gap: 10px;
+      align-items:center;
+      margin-top: 12px;
+    }
+    @media (max-width: 720px) {
+      .inline-form { grid-template-columns: 1fr; }
+    }
+    .field { display:flex; flex-direction:column; gap:6px; }
+    .field label { font-weight: 900; }
+    .field input, .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 2px solid rgba(0,0,0,0.15);
+      font: inherit;
+      background: rgba(255,255,255,0.9);
+    }
+    .msg {
+      margin-top: 10px;
+      font-weight: 900;
+      opacity: 0;
+      transition: opacity .15s ease;
+    }
+  </style>
 </head>
 
 <body>
@@ -15,12 +123,11 @@
       <div class="brand-mark" aria-hidden="true">🦁</div>
       <div class="brand-text">
         <div class="brand-title">Read-a-thon World</div>
-        <div class="brand-subtitle">Staff Home</div>
+        <div class="brand-subtitle">Staff Jungle Home</div>
       </div>
     </a>
 
     <div style="display:flex; gap:10px; align-items:center;">
-      <a class="btn btn-primary" href="admin-approve.html">✅ Approvals</a>
       <button id="signOutBtn" class="btn btn-ghost" type="button">Sign out</button>
     </div>
   </header>
@@ -31,86 +138,116 @@
     <section class="card">
       <h1 style="margin:0;">Welcome, <span id="staffName">Staff</span>!</h1>
       <p class="muted" style="margin:6px 0 0;">
-        Submit minutes for yourself or for students in your group.
+        You can submit minutes for students — Mrs. A approves them just like student submissions.
       </p>
 
-      <div class="chips" style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
-        <div class="chip">🏫 Group: <span id="groupLabel">—</span></div>
-        <div class="chip">⭐ Grade: <span id="gradeLabel">—</span></div>
+      <div class="chips">
+        <div class="chip">🏫 <span id="teacherName">Homeroom</span></div>
+        <div class="chip">⭐ Grade <span id="grade">?</span></div>
       </div>
 
       <div id="statusNote" class="note" style="margin-top:12px; display:none;"></div>
     </section>
 
-    <!-- Submit Minutes -->
+    <!-- Staff Quick Stats (optional: for your own account if you also track it) -->
     <section class="card">
-      <div class="room-title-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-        <h2 style="margin:0;">📚 Submit Minutes</h2>
-        <span class="pill">Staff can submit for students</span>
+      <div class="room-title-row">
+        <h2 style="margin:0;">📊 Quick View</h2>
+        <span class="pill">Staff dashboard</span>
       </div>
 
-      <form id="staffMinuteForm" style="margin-top:12px;">
-        <div class="choices" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap:12px;">
-          <label class="choice" style="cursor:auto;">
-            <div class="choice-emoji">👤</div>
-            <div class="choice-label">
-              Submit for<br/>
-              <select id="targetSel" class="input" style="margin-top:8px; width:100%;">
-                <option value="self">Me (Staff)</option>
-              </select>
-            </div>
-          </label>
-
-          <label class="choice" style="cursor:auto;">
-            <div class="choice-emoji">⏱️</div>
-            <div class="choice-label">
-              Minutes<br/>
-              <input id="minutes" class="input" type="number" min="1" max="600" placeholder="e.g., 20" style="margin-top:8px; width:100%;" />
-            </div>
-          </label>
-
-          <label class="choice" style="cursor:auto;">
-            <div class="choice-emoji">📅</div>
-            <div class="choice-label">
-              Reading date<br/>
-              <input id="readingDate" class="input" type="date" style="margin-top:8px; width:100%;" />
-            </div>
-          </label>
-
-          <label class="choice" style="cursor:auto;">
-            <div class="choice-emoji">📝</div>
-            <div class="choice-label">
-              Note (optional)<br/>
-              <input id="note" class="input" type="text" placeholder="Book title, quick note…" style="margin-top:8px; width:100%;" />
-            </div>
-          </label>
+      <div class="choices" style="grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top:12px;">
+        <div class="choice">
+          <div class="choice-emoji">✅</div>
+          <div class="choice-label">
+            Your Approved<br />
+            <strong class="stat-strong" id="approvedMinutes">—</strong>
+          </div>
         </div>
 
-        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-          <button id="submitBtn" class="btn btn-primary" type="submit">✅ Submit Minutes</button>
-          <div id="msg" class="muted"></div>
+        <div class="choice">
+          <div class="choice-emoji">⏳</div>
+          <div class="choice-label">
+            Your Pending<br />
+            <strong class="stat-strong" id="pendingMinutes">0</strong>
+          </div>
         </div>
-      </form>
-    </section>
 
-    <!-- My Students -->
-    <section class="card">
-      <div class="room-title-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-        <h2 style="margin:0;">🧒 My Students</h2>
-        <button id="refreshBtn" class="btn btn-secondary" type="button">↻ Refresh</button>
+        <div class="choice">
+          <div class="choice-emoji">💎</div>
+          <div class="choice-label">
+            Your Rubies<br />
+            <strong class="stat-strong" id="rubies">—</strong>
+          </div>
+        </div>
       </div>
 
-      <div id="studentList" style="margin-top:12px;"></div>
+      <div class="tiny muted" style="margin-top:10px;">
+        If you don’t track staff totals, these can remain “—” and still work fine.
+      </div>
     </section>
 
-    <!-- Pending for My Group -->
+    <!-- NEW: Bulk submit for roster -->
     <section class="card">
-      <div class="room-title-row" style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap;">
-        <h2 style="margin:0;">⏳ Pending for My Group</h2>
-        <a class="btn btn-secondary" href="admin-approve.html" style="text-decoration:none;">Open approvals</a>
+      <div class="room-title-row">
+        <h2 style="margin:0;">📚 Submit Minutes for Students</h2>
+        <span class="pill">Sends to Mrs. A for approval</span>
       </div>
 
-      <div id="pendingList" style="margin-top:12px;"></div>
+      <div class="inline-form">
+        <div class="field">
+          <label for="minutes">Minutes</label>
+          <input id="minutes" type="number" min="1" max="600" placeholder="15" />
+        </div>
+
+        <div class="field">
+          <label for="readingDate">Reading date</label>
+          <input id="readingDate" type="date" />
+        </div>
+
+        <div class="field" style="grid-column: 1 / -1;">
+          <label for="note">Note (optional)</label>
+          <textarea id="note" rows="2" placeholder="Example: Independent reading after lunch."></textarea>
+        </div>
+      </div>
+
+      <div class="roster-box">
+        <div class="roster-tools">
+          <strong>Roster</strong>
+          <span class="tiny muted" id="rosterMeta">Loading…</span>
+          <div style="flex:1;"></div>
+          <button id="selectAllBtn" class="btn btn-secondary" type="button">Select all</button>
+          <button id="selectNoneBtn" class="btn btn-secondary" type="button">Select none</button>
+        </div>
+
+        <div id="rosterGrid" class="roster-grid" aria-label="Student roster list"></div>
+
+        <div class="tiny muted" style="margin-top:10px;">
+          Tip: Uncheck students who are absent — everyone else will get the same minutes.
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; align-items:center; margin-top:12px; flex-wrap:wrap;">
+        <button id="submitRosterBtn" class="btn btn-primary" type="button">✅ Send selected to Mrs. A</button>
+        <div class="tiny muted">Creates one <code>minuteSubmissions</code> doc per selected student.</div>
+      </div>
+
+      <div id="msg" class="msg"></div>
+    </section>
+
+    <!-- Avatar Room (kept identical style) -->
+    <section class="card">
+      <div class="room-title-row">
+        <h2 style="margin:0;">🌿 Staff Jungle Room</h2>
+        <span class="pill">Coming soon: staff avatar!</span>
+      </div>
+
+      <div class="room" aria-label="Staff room">
+        <div class="room-wall"></div>
+        <div class="room-floor"></div>
+        <div class="avatar" id="avatar" title="Hello!">🧭</div>
+        <div id="roomLayers"></div>
+      </div>
     </section>
 
   </main>
