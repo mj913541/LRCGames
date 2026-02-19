@@ -210,6 +210,117 @@ exports.verifyStudentPinHttp = functions.https.onRequest((req, res) => {
     }
   });
 });
+/* =========================
+   verifyStaffPin (callable)
+   - Staff signs in anonymously first
+   - Client calls this with teacherId + pin
+   - Function verifies hash in staffSecrets/{teacherId}
+   - On success, writes users/{uid} session profile
+========================= */
+exports.verifyStaffPin = functions.https.onCall(async (data, context) => {
+  console.log("verifyStaffPin auth:", context.auth);
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+  }
+
+  const uid = context.auth.uid;
+  const teacherId = safeString(data?.teacherId).trim().toLowerCase();
+  const pin = safeString(data?.pin).trim();
+
+  if (!teacherId || !pin) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing teacherId or pin.");
+  }
+
+  // Read hashed PIN from staffSecrets/{teacherId}
+  const secretSnap = await db.doc(`staffSecrets/${teacherId}`).get();
+  if (!secretSnap.exists) return { ok: false, reason: "no-secret" };
+
+  const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
+  if (!storedHash) return { ok: false, reason: "no-hash" };
+
+  const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
+  if (enteredHash !== storedHash) return { ok: false, reason: "bad-pin" };
+
+  // Load staff profile
+  const staffSnap = await db.doc(`staff/${teacherId}`).get();
+  if (!staffSnap.exists) throw new functions.https.HttpsError("not-found", "Staff profile not found.");
+
+  const staffProfile = staffSnap.data() || {};
+  const displayName = safeString(staffProfile.displayName || staffProfile.name || teacherId);
+  const homeroomPath = safeString(staffProfile.homeroomPath || "").trim() || null;
+
+  // Write session profile keyed by UID (client reads users/{uid})
+  await db.doc(`users/${uid}`).set(
+    {
+      role: "staff",
+      grade: 6, // numeric
+      teacherId,
+      displayName,
+      homeroomPath,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  return { ok: true, profile: { teacherId, displayName, grade: 6, homeroomPath } };
+});
+
+
+/* =========================
+   verifyStaffPinHttp (HTTP) - OPTIONAL
+   Mirrors verifyStudentPinHttp, if you want an HTTP endpoint too.
+========================= */
+exports.verifyStaffPinHttp = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
+
+      const authHeader = req.get("Authorization") || "";
+      const match = authHeader.match(/^Bearer (.+)$/);
+      if (!match) return res.status(401).json({ ok: false, error: "MISSING_TOKEN" });
+
+      const decoded = await admin.auth().verifyIdToken(match[1]);
+      const uid = decoded.uid;
+
+      const teacherId = safeString(req.body?.teacherId).trim().toLowerCase();
+      const pin = safeString(req.body?.pin).trim();
+      if (!teacherId || !pin) return res.status(400).json({ ok: false, error: "MISSING_ARGS" });
+
+      const secretSnap = await db.doc(`staffSecrets/${teacherId}`).get();
+      if (!secretSnap.exists) return res.json({ ok: false, reason: "no-secret" });
+
+      const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
+      if (!storedHash) return res.json({ ok: false, reason: "no-hash" });
+
+      const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
+      if (enteredHash !== storedHash) return res.json({ ok: false, reason: "bad-pin" });
+
+      const staffSnap = await db.doc(`staff/${teacherId}`).get();
+      if (!staffSnap.exists) return res.status(404).json({ ok: false, error: "NO_PROFILE" });
+
+      const staffProfile = staffSnap.data() || {};
+      const displayName = safeString(staffProfile.displayName || staffProfile.name || teacherId);
+      const homeroomPath = safeString(staffProfile.homeroomPath || "").trim() || null;
+
+      await db.doc(`users/${uid}`).set(
+        {
+          role: "staff",
+          grade: 6,
+          teacherId,
+          displayName,
+          homeroomPath,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      return res.json({ ok: true, profile: { teacherId, displayName, grade: 6, homeroomPath } });
+    } catch (e) {
+      console.error(e);
+      return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+    }
+  });
+});
 
 /* =========================
    convertRubies (unchanged)

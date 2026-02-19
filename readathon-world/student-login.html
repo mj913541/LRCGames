@@ -8,6 +8,48 @@
   <style>
     .card { max-width: 980px; margin: 18px auto; padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.93); box-shadow: 0 12px 30px rgba(0,0,0,0.14); }
     .row { display:flex; gap:12px; flex-wrap:wrap; }
+    .role-grid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap:16px;
+  margin-top:18px;
+}
+
+.role-tile{
+  background:white;
+  border-radius:24px;
+  padding:16px 10px;
+  border:2px solid rgba(0,0,0,0.08);
+  cursor:pointer;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  font-weight:900;
+  font-size:1rem;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+
+.role-tile img{
+  width:100px;
+  height:100px;
+  object-fit:contain;
+}
+
+.role-tile:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 20px rgba(0,0,0,0.15);
+}
+
+.staff{
+  background:#eef6ff;
+}
+
+.admin{
+  background:#fff0f6;
+}
+
     .row > * { flex: 1; min-width: 220px; }
     .title { font-size: 1.6rem; margin: 0 0 8px; }
     .sub { opacity: 0.85; margin: 0 0 14px; }
@@ -23,6 +65,14 @@
     .dot { width: 16px; height: 16px; border-radius: 50%; background: rgba(0,0,0,0.12); }
     .dot.filled { background: #1f8f5f; }
     select { width:100%; padding: 12px; border-radius: 14px; border: 1px solid rgba(0,0,0,0.15); }
+    .role-tile{
+  background:linear-gradient(145deg,#ffffff,#f6f6f6);
+}
+
+.role-tile:active{
+  transform:scale(0.97);
+}
+
   </style>
 </head>
 <body>
@@ -30,20 +80,50 @@
     <h1 class="title">🌿 Welcome to Read-a-thon World!</h1>
     <p class="sub">Pick your class, then enter your PIN.</p>
 
-    <div class="row">
-      <div>
-        <label><strong>Grade</strong></label><br/>
-        <select id="gradeSel">
-          <option value="">Choose…</option>
-          <option value="K">K</option>
-          <option value="1">1</option>
-          <option value="2">2</option>
-          <option value="3">3</option>
-          <option value="4">4</option>
-          <option value="5">5</option>
-        </select>
-      </div>
+<!-- ROLE / GRADE GRID -->
+<div id="roleGrid" class="role-grid">
 
+  <button class="role-tile" data-role="prek">
+    <img src="./assets/houseGradePhotos/prek-k.png" alt="PreK & Kindergarten">
+    <span>PreK & K</span>
+  </button>
+
+  <button class="role-tile" data-role="1">
+    <img src="./assets/houseGradePhotos/grade1.png" alt="1st Grade">
+    <span>1st Grade</span>
+  </button>
+
+  <button class="role-tile" data-role="2">
+    <img src="./assets/houseGradePhotos/grade2.png" alt="2nd Grade">
+    <span>2nd Grade</span>
+  </button>
+
+  <button class="role-tile" data-role="3">
+    <img src="./assets/houseGradePhotos/grade3.png" alt="3rd Grade">
+    <span>3rd Grade</span>
+  </button>
+
+  <button class="role-tile" data-role="4">
+    <img src="./assets/houseGradePhotos/grade4.png" alt="4th Grade">
+    <span>4th Grade</span>
+  </button>
+
+  <button class="role-tile" data-role="5">
+    <img src="./assets/houseGradePhotos/grade5.png" alt="5th Grade">
+    <span>5th Grade</span>
+  </button>
+
+  <button class="role-tile staff" data-role="staff">
+    <img src="./assets/houseGradePhotos/staff.png" alt="Staff">
+    <span>Staff</span>
+  </button>
+
+  <button class="role-tile admin" data-role="admin">
+    <img src="./assets/houseGradePhotos/admin.png" alt="Admin">
+    <span>Admin</span>
+  </button>
+
+</div>
       <div>
         <label><strong>Homeroom</strong></label><br/>
         <select id="roomSel" disabled>
