@@ -1,4 +1,4 @@
-// js/staff-home.js
+// abc js/staff-home.js
 // Staff Home = student-home vibe + ability to submit minutes for roster (pending -> admin approval)
 
 import { auth, db } from "/readathon-world/js/firebase.js";
