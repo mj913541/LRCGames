@@ -100,7 +100,7 @@ if (readingDateEl) readingDateEl.value = todayLocalISO();
 ============================== */
 
 let currentUid = null;
-let staffProfile = null;      // users/{teacherId} data
+let staffProfile = null;      // staff/{teacherId} data
 let rosterStudents = [];      // [{studentId, displayName}]
 let rosterPath = null;        // schools/main/grades/4/homerooms/rosenthal_4/students
 let currentTeacherId = null;  // e.g. "rosenthal"
@@ -119,7 +119,7 @@ function getTeacherIdFromSession() {
 ============================== */
 
 async function loadStaffProfileByTeacherId(teacherId) {
-  const ref = doc(db, "users", teacherId); // IMPORTANT: doc id is teacherId
+  const ref = doc(db, "staff", teacherId); // IMPORTANT: doc id is teacherId
   const snap = await getDoc(ref);
   if (!snap.exists()) return null;
   return snap.data();
@@ -423,7 +423,7 @@ onAuthStateChanged(auth, async (user) => {
 
   staffProfile = await loadStaffProfileByTeacherId(currentTeacherId);
   if (!staffProfile) {
-    setMsg(`I can’t find your staff profile: users/${currentTeacherId}`);
+    setMsg(`I can’t find your staff profile: staff/${currentTeacherId}`);
     return;
   }
 
