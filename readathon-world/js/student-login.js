@@ -454,10 +454,12 @@ roleTiles.forEach((tile) => {
 
     const role = tile.dataset.role;
 
-    if (role === "staff") {
-      window.location.href = "/readathon-world/staff-home.html";
-      return;
-    }
+if (role === "staff") {
+  await ensureAnonAuth(); // make sure Firebase auth exists
+  window.location.href = "/readathon-world/staff-home.html";
+  return;
+}
+
 
     if (role === "admin") {
       window.location.href = "/readathon-world/admin.html";
