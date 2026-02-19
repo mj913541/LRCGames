@@ -456,6 +456,7 @@ roleTiles.forEach((tile) => {
 
 if (role === "staff") {
   await ensureAnonAuth(); // make sure Firebase auth exists
+  sessionStorage.setItem("teacherId", "staff"); // TEMP placeholder
   window.location.href = "/readathon-world/staff-home.html";
   return;
 }
