@@ -124,12 +124,18 @@
   </button>
 
 </div>
-      <div>
-        <label><strong>Homeroom</strong></label><br/>
-        <select id="roomSel" disabled>
-          <option value="">Choose grade first…</option>
-        </select>
-      </div>
+<div>
+  <label><strong>Homeroom</strong></label><br/>
+
+  <!-- Hidden select (still used by JS internally) -->
+  <select id="roomSel" style="display:none;" disabled>
+    <option value="">Choose grade first…</option>
+  </select>
+
+  <!-- NEW PNG Tile Grid -->
+  <div id="roomGrid" class="role-grid" style="margin-top:10px;"></div>
+</div>
+
 
       <div>
         <label><strong>Your Name</strong></label><br/>
