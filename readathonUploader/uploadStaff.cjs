@@ -57,7 +57,7 @@ fs.createReadStream(path.resolve(filePath))
           continue;
         }
 
-        const staffRef = db.collection("users").doc(teacherId);
+        const staffRef = db.collection("staff").doc(teacherId);
 
         await staffRef.set(
           {
