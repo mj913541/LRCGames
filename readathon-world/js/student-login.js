@@ -460,7 +460,7 @@ roleTiles.forEach((tile) => {
     }
 
     if (role === "admin") {
-      window.location.href = "/readathon-world/admin-dashboard.html";
+      window.location.href = "/readathon-world/admin.html";
       return;
     }
 
