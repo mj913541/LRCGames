@@ -55,20 +55,34 @@ function readPinFromProfile(profile) {
 
 async function verifyStaffLogin(username, pin) {
   const teacherId = normalize(username);
-  const ref = doc(db, "users", teacherId);
-  const snap = await getDoc(ref);
-  if (!snap.exists()) return { ok: false, reason: "username" };
 
-  const profile = snap.data();
-  const storedPin = normalizePin(String(readPinFromProfile(profile)));
+  // 1️⃣ Check staff profile exists
+  const staffRef = doc(db, "staff", teacherId);
+  const staffSnap = await getDoc(staffRef);
 
-  // Compare as strings (so "0123" works)
-  if (!storedPin || normalizePin(String(pin)) !== storedPin) {
+  if (!staffSnap.exists()) {
+    return { ok: false, reason: "username" };
+  }
+
+  // 2️⃣ Get stored PIN hash
+  const secretRef = doc(db, "staffSecrets", teacherId);
+  const secretSnap = await getDoc(secretRef);
+
+  if (!secretSnap.exists()) {
     return { ok: false, reason: "pin" };
   }
 
-  return { ok: true, teacherId, profile };
+  const storedHash = String(secretSnap.data()?.pinHash || "").trim();
+
+  // ⚠️ TEMPORARY: compare raw PIN to stored hash
+  // (We will upgrade this to real hashing next.)
+  if (String(pin).trim() !== storedHash) {
+    return { ok: false, reason: "pin" };
+  }
+
+  return { ok: true, teacherId, profile: staffSnap.data() };
 }
+
 
 /* ==============================
    Handlers
