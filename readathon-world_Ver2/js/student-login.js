@@ -290,8 +290,10 @@ function goPinStep() {
       const userId = state.student?.id;
       const schoolId = state.schoolId;
 
-      const res = await fnVerifyPin({ schoolId, userId, pin });
-      const customToken = res?.data?.customToken;
+const res = await fnVerifyPin({ schoolId, userId, pin });
+console.log("verifyPin raw response:", res);
+
+const customToken = res?.data?.customToken;
 
       if (!customToken) {
         throw new Error("Missing customToken from verifyPin.");
