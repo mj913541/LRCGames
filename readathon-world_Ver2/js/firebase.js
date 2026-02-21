@@ -48,7 +48,7 @@ export const functions = getFunctions(app, "us-central1");
 /**
  * Callable Cloud Functions
  */
-export const fnVerifyPin = httpsCallable(functions, "verifyStudentPin");
+export const fnVerifyPin = httpsCallable(functions, "verifyPin");
 export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");

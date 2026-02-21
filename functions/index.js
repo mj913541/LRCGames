@@ -63,7 +63,7 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
  * - compares secrets/{userId}.pinHash via bcrypt
  * - returns customToken with claims: {schoolId, userId, role}
  */
-exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
+exports.verifyPin = functions.https.onCall(async (data, context) => {
   const schoolId = (data?.schoolId || "").trim();
   const userId = (data?.userId || "").trim().toLowerCase();
   const pin = (data?.pin || "").trim();
