@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Home • Readathon World</title>
+
+  <link rel="stylesheet" href="/readathon-world_Ver2/css/student.css" />
+</head>
+
+<body class="page page--student-home">
+  <div class="bg bg--home" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="topbar__back" href="/readathon-world_Ver2/html/student-login.html" aria-label="Back to login">
+      ← Login
+    </a>
+
+    <div class="topbar__title">
+      <div class="pill">🧒 Student Home</div>
+    </div>
+
+    <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
+  </header>
+
+  <main class="wrap">
+    <section class="panel panel--hero" id="hdr">
+      <div class="heroRow">
+        <div>
+          <h1 class="h1" data-title>Readathon World</h1>
+          <p class="sub" data-subtitle></p>
+        </div>
+        <a class="btnBig btnBig--primary" href="/readathon-world_Ver2/html/student-minutes-submit.html">
+          ⏱️ Submit Minutes
+        </a>
+      </div>
+
+      <div class="gridCards">
+        <div class="cardStat">
+          <div class="cardStat__label">Minutes Read</div>
+          <div class="cardStat__value" id="minutesTotal">—</div>
+        </div>
+        <div class="cardStat">
+          <div class="cardStat__label">Pending Minutes</div>
+          <div class="cardStat__value" id="minutesPending">—</div>
+        </div>
+        <div class="cardStat">
+          <div class="cardStat__label">Rubies</div>
+          <div class="cardStat__value" id="rubiesBalance">—</div>
+          <div class="cardStat__sub" id="rubiesLifetime">—</div>
+        </div>
+        <div class="cardStat">
+          <div class="cardStat__label">Money Raised</div>
+          <div class="cardStat__value" id="moneyRaised">—</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="sectionHead">
+        <h2 class="h2">🧍 Avatar Space</h2>
+        <p class="sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
+      </div>
+
+      <div class="avatarArea">
+        <div class="avatarStage" aria-label="Avatar preview area">
+          <div class="avatarStage__bg" id="roomBgLabel">Room: (none)</div>
+          <div class="avatarStage__body">
+            <div class="avatarDoll" id="avatarDoll">
+              <div class="avatarTag" id="equipHead">Head: (none)</div>
+              <div class="avatarTag" id="equipBody">Body: (none)</div>
+              <div class="avatarTag" id="equipAcc">Accessory: (none)</div>
+              <div class="avatarTag" id="equipPet">Pet: (none)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inventoryBox">
+          <div class="inventoryHead">
+            <h3 class="h3">🎒 Your Items</h3>
+            <p class="tiny">Tap an item to “equip” (preview only).</p>
+          </div>
+          <div class="inventoryList" id="inventoryList" aria-label="Inventory list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="sectionHead">
+        <h2 class="h2">Quick Links</h2>
+      </div>
+
+      <div class="gridButtons">
+        <a class="btnBig" href="/readathon-world_Ver2/html/student-minutes-submit.html">⏱️ Submit Minutes</a>
+        <a class="btnBig" href="/readathon-world_Ver2/html/index.html">🏠 Home</a>
+      </div>
+    </section>
+
+    <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+      <div class="loadingCard">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loadingText" id="loadingText">Loading…</div>
+      </div>
+    </div>
+
+    <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
+  </main>
+
+  <script type="module" src="/readathon-world_Ver2/js/student-home.js"></script>
+</body>
+</html>

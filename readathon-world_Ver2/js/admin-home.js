@@ -1,0 +1,41 @@
+// /readathon-world_Ver2/js/admin-home.js
+import { auth, getSchoolId, DEFAULT_SCHOOL_ID } from "/readathon-world_Ver2/js/firebase.js";
+import {
+  ABS,
+  guardRoleOrRedirect,
+  setHeaderUser,
+  wireSignOut,
+  showLoading,
+  hideLoading,
+  normalizeError,
+} from "/readathon-world_Ver2/js/app.js";
+
+const els = {
+  btnSignOut: document.getElementById("btnSignOut"),
+  hdr: document.getElementById("hdr"),
+  loadingOverlay: document.getElementById("loadingOverlay"),
+  loadingText: document.getElementById("loadingText"),
+  errorBox: document.getElementById("errorBox"),
+};
+
+init().catch((e) => showError(normalizeError(e)));
+
+async function init() {
+  showLoading(els.loadingOverlay, els.loadingText, "Loading admin dashboard…");
+  const claims = await guardRoleOrRedirect(["admin"], ABS.adminLogin);
+  if (!claims) return;
+
+  wireSignOut(els.btnSignOut);
+
+  const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
+  const userId = claims.userId || auth.currentUser?.uid;
+
+  setHeaderUser(els.hdr, { title: "Readathon World", subtitle: `${schoolId} • ${userId}` });
+
+  hideLoading(els.loadingOverlay);
+}
+
+function showError(msg) {
+  els.errorBox.textContent = msg;
+  els.errorBox.classList.remove("isHidden");
+}
