@@ -1,7 +1,7 @@
 {
   "name": "readathonv2-functions",
   "private": true,
-  "engines": { "node": "18" },
+  "engines": { "node": "20" },
   "main": "index.js",
   "dependencies": {
     "firebase-admin": "^12.5.0",
