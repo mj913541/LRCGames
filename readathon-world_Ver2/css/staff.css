@@ -31,13 +31,13 @@ body{
   position:fixed; inset:0;
   background:
     linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.62)),
-    url("/readathon-world_Ver2/img/bg/staff-login.jpg") center / cover no-repeat;
+    url("/readathon-world_Ver2/img/bg/staff-login.png") center / cover no-repeat;
   z-index:-1;
 }
 .bg--home{
   background:
     linear-gradient(180deg, rgba(0,0,0,0.16), rgba(0,0,0,0.62)),
-    url("/readathon-world_Ver2/img/bg/staff-home.jpg") center / cover no-repeat;
+    url("/readathon-world_Ver2/img/bg/staff-home.png") center / cover no-repeat;
   z-index:-1;
 }
 
