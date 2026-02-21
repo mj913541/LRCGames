@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Staff Login • Read-a-thon World</title>
+
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    .card { max-width: 680px; margin: 18px auto; padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.93); box-shadow: 0 12px 30px rgba(0,0,0,0.14); }
+    .title { font-size: 1.6rem; margin: 0 0 6px; }
+    .sub { opacity: .85; margin: 0 0 14px; }
+    .field { margin: 12px 0; }
+    label { display:block; font-weight: 900; margin: 0 0 6px; }
+    input {
+      width:100%;
+      font-size: 1.15rem;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 2px solid rgba(0,0,0,0.12);
+      outline: none;
+    }
+    input:focus { border-color: rgba(31,143,95,.65); box-shadow: 0 0 0 4px rgba(31,143,95,.12); }
+    .row { display:flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .row > * { flex: 1; min-width: 180px; }
+    .btn { border:0; border-radius: 16px; padding: 12px 14px; font-weight: 900; cursor:pointer; }
+    .btn.primary { background:#1f8f5f; color:#fff; }
+    .btn.ghost { background:#eef7f2; color:#143424; }
+    .btn:disabled { opacity:.55; cursor:not-allowed; }
+    .status { margin-top:12px; padding: 12px; border-radius: 14px; background:#f6fbff; border:1px solid #d9ecff; }
+    .status.err { background:#fff4f4; border-color:#ffd2d2; }
+    .hint { font-size: .95rem; opacity: .8; margin-top: 10px; }
+  </style>
+</head>
+
+<body>
+  <main class="card">
+    <h1 class="title">Staff Login</h1>
+    <p class="sub">Enter your staff username and PIN.</p>
+
+    <div class="field">
+      <label for="username">Username</label>
+      <input id="username" autocomplete="username" placeholder="e.g., rosenthal" />
+    </div>
+
+    <div class="field">
+      <label for="pin">PIN</label>
+      <input id="pin" autocomplete="current-password" inputmode="numeric" placeholder="4 digits" />
+    </div>
+
+    <div class="row">
+      <button id="backBtn" class="btn ghost" type="button">Back</button>
+      <button id="loginBtn" class="btn primary" type="button">Log In</button>
+    </div>
+
+    <div id="msg" class="status" style="opacity:0;"></div>
+
+    <div class="hint">
+      (Admin note: Staff accounts live in <code>users/{teacherId}</code>.)
+    </div>
+  </main>
+
+  <script type="module" src="js/staff-login.js"></script>
+</body>
+</html>

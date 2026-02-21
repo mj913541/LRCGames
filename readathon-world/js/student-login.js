@@ -454,13 +454,13 @@ roleTiles.forEach((tile) => {
 
     const role = tile.dataset.role;
 
-    if (role === "staff") {
-      window.location.href = "/readathon-world/staff-home.html";
-      return;
-    }
+if (role === "staff") {
+  window.location.href = "/readathon-world/staff-login.html";
+  return;
+}
 
     if (role === "admin") {
-      window.location.href = "/readathon-world/admin-dashboard.html";
+      window.location.href = "/readathon-world/admin.html";
       return;
     }
 
