@@ -1,11 +1,13 @@
 {
   "name": "readathonv2-functions",
   "private": true,
-  "engines": { "node": "20" },
+  "engines": {
+    "node": "20"
+  },
   "main": "index.js",
   "dependencies": {
-    "firebase-admin": "^12.5.0",
-    "firebase-functions": "^5.1.1",
-    "bcryptjs": "^2.4.3"
+    "bcryptjs": "^2.4.3",
+    "firebase-admin": "^13.6.1",
+    "firebase-functions": "^7.0.5"
   }
 }
