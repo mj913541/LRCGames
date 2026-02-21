@@ -43,12 +43,12 @@ export const DEFAULT_SCHOOL_ID = "308_longbeach_elementary";
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const functions = getFunctions(app);
+export const functions = getFunctions(app, "us-central1");
 
 /**
  * Callable Cloud Functions
  */
-export const fnVerifyPin = httpsCallable(functions, "verifyPin");
+export const fnVerifyPin = httpsCallable(functions, "verifyStudentPin");
 export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
