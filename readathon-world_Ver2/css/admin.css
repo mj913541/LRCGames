@@ -258,3 +258,92 @@ body{
 @media (prefers-reduced-motion: reduce){
   .spinner{ animation:none; }
 }
+
+/* Approvals page additions */
+.approveBar{
+  display:flex;
+  gap: 10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+.approveBar__meta{
+  color: var(--muted);
+  font-weight: 1000;
+}
+
+.filterRow{
+  display:flex;
+  gap: 10px;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+.field--inline{ margin:0; }
+.input--small{
+  min-height: 44px;
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.list{
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+}
+
+.rowCard{
+  display:flex;
+  gap: 12px;
+  justify-content:space-between;
+  align-items:flex-start;
+  flex-wrap:wrap;
+  padding: 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+}
+.rowCard__left{ flex: 1 1 260px; }
+.rowCard__who{ font-weight: 1200; font-size: 16px; }
+.rowCard__meta{ margin-top: 4px; color: var(--muted); font-weight: 900; font-size: 12px; }
+.rowCard__note{ margin-top: 6px; color: var(--muted); font-weight: 900; font-size: 12px; }
+
+.rowCard__right{
+  flex: 0 0 auto;
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+  align-items:flex-end;
+}
+.rowCard__minutes{
+  font-weight: 1200;
+  font-size: 16px;
+}
+
+.btnApprove{
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,207,91,0.55);
+  background: rgba(255,207,91,0.20);
+  color: var(--text);
+  font-weight: 1300;
+  cursor:pointer;
+}
+.btnApprove:focus-visible{ outline:none; box-shadow: var(--ring); }
+.btnApprove:disabled{ opacity: 0.6; cursor:not-allowed; }
+
+.msg--ok{
+  border-color: rgba(255,207,91,0.55);
+  background: rgba(255,207,91,0.12);
+  color: var(--text);
+}
+
+.emptyNote{
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(0,0,0,0.20);
+  color: var(--muted);
+  font-weight: 1000;
+}

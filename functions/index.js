@@ -1,413 +1,466 @@
+/* functions/index.js (Node 18) */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const cors = require("cors")({ origin: ["https://www.lrcquest.org"] });
-const crypto = require("crypto");
+const bcrypt = require("bcryptjs");
 
 admin.initializeApp();
 const db = admin.firestore();
 
-/* =========================
-   Helpers
-========================= */
-
-async function requireAdmin(context) {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
-  }
-
-  const uid = context.auth.uid;
-
-  const adminDoc = await db.doc(`admins/${uid}`).get();
-  if (!adminDoc.exists) {
-    throw new functions.https.HttpsError("permission-denied", "Admin only.");
-  }
-
-  return uid;
+function schoolRoot(schoolId) {
+  return `readathonV2_schools/${schoolId}`;
 }
 
-function safeString(x) {
-  return x === undefined || x === null ? "" : String(x);
+function inferRole(userId, userDocRole) {
+  const fromDoc = (userDocRole || "").toString().toLowerCase();
+  if (["student", "staff", "admin"].includes(fromDoc)) return fromDoc;
+
+  const id = (userId || "").toLowerCase();
+  if (id.startsWith("student_")) return "student";
+  if (id.startsWith("staff_")) return "staff";
+  if (id.startsWith("admin_")) return "admin";
+  return "student";
 }
 
-/* =========================
-   getRoster (callable)
-========================= */
-exports.getRoster = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+function requireAuth(ctx) {
+  if (!ctx.auth) throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+  return ctx.auth;
+}
+
+function requireSchoolMatch(dataSchoolId, claims) {
+  if (!dataSchoolId || !claims?.schoolId) {
+    throw new functions.https.HttpsError("failed-precondition", "Missing schoolId.");
+  }
+  if (dataSchoolId !== claims.schoolId) {
+    throw new functions.https.HttpsError("permission-denied", "School mismatch.");
+  }
+}
+
+function todayDateKey() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+async function isLinkedStaffToStudent({ schoolId, staffId, studentId }) {
+  const linkId = `${staffId}_${studentId}`;
+  const ref = db.doc(`${schoolRoot(schoolId)}/staffStudentLinks/${linkId}`);
+  const snap = await ref.get();
+  return snap.exists && snap.data()?.active === true;
+}
+
+async function getCanAwardHomerooms({ schoolId, staffId }) {
+  const ref = db.doc(`${schoolRoot(schoolId)}/users/${staffId}`);
+  const snap = await ref.get();
+  if (!snap.exists) return null;
+  return snap.data()?.canAwardHomerooms ?? null;
+}
+
+/**
+ * Callable: verifyPin({schoolId, userId, pin})
+ * - checks users/{userId}.active
+ * - compares secrets/{userId}.pinHash via bcrypt
+ * - returns customToken with claims: {schoolId, userId, role}
+ */
+exports.verifyPin = functions.https.onCall(async (data, context) => {
+  const schoolId = (data?.schoolId || "").trim();
+  const userId = (data?.userId || "").trim().toLowerCase();
+  const pin = (data?.pin || "").trim();
+
+  if (!schoolId || !userId || !/^\d{4}$/.test(pin)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid schoolId/userId/pin.");
   }
 
-  const gradeId = safeString(data?.gradeId ?? data?.grade ?? data?.gradeNum);
-  const homeroomId = safeString(data?.homeroomId ?? data?.homeroom);
+  const userRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}`);
+  const userSnap = await userRef.get();
+  if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found.");
+  const userData = userSnap.data() || {};
+  if (userData.active !== true) throw new functions.https.HttpsError("failed-precondition", "User inactive.");
 
-  if (!gradeId || !homeroomId) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing gradeId or homeroomId.");
+  const secRef = db.doc(`${schoolRoot(schoolId)}/secrets/${userId}`);
+  const secSnap = await secRef.get();
+  if (!secSnap.exists) throw new functions.https.HttpsError("not-found", "PIN not set.");
+  const pinHash = secSnap.data()?.pinHash;
+  if (!pinHash) throw new functions.https.HttpsError("not-found", "PIN not set.");
+
+  const ok = await bcrypt.compare(pin, pinHash);
+  if (!ok) throw new functions.https.HttpsError("permission-denied", "Invalid PIN.");
+
+  const role = inferRole(userId, userData.role);
+
+  const customToken = await admin.auth().createCustomToken(userId, {
+    schoolId,
+    userId,
+    role,
+  });
+
+  return { customToken, role };
+});
+
+/**
+ * Callable: submitTransaction({
+ *   schoolId, targetUserId, actionType,
+ *   deltaMinutes, deltaRubies, deltaMoneyRaisedCents,
+ *   note, dateKey
+ * })
+ *
+ * Behavior:
+ * - Always writes a tx doc with source="app"
+ * - If actionType === MINUTES_SUBMIT_PENDING:
+ *     - increments summary.minutesPendingTotal
+ *     - tx.status="PENDING"
+ * - Otherwise:
+ *     - applies summary updates:
+ *        minutesTotal += deltaMinutes (for approved/admin direct minutes)
+ *        rubies rules:
+ *          RUBIES_AWARD (+) => balance +=, lifetimeEarned +=
+ *          RUBIES_SPEND (-) => balance +=, lifetimeSpent += abs()
+ *        moneyRaisedCents += deltaMoneyRaisedCents
+ *
+ * Permissions:
+ * - student: self only
+ * - staff: self OR linked students
+ * - admin: anyone
+ */
+exports.submitTransaction = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const schoolId = (data?.schoolId || "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const submittedByUserId = (claims.userId || auth.uid || "").toLowerCase();
+  const role = (claims.role || "").toLowerCase();
+
+  const targetUserId = (data?.targetUserId || "").trim().toLowerCase();
+  const actionType = (data?.actionType || "").trim();
+
+  const deltaMinutes = Number(data?.deltaMinutes || 0);
+  const deltaRubies = Number(data?.deltaRubies || 0);
+  const deltaMoneyRaisedCents = Number(data?.deltaMoneyRaisedCents || 0);
+
+  const note = (data?.note || "").toString().slice(0, 300);
+  const dateKey = (data?.dateKey || todayDateKey()).toString();
+
+  if (!targetUserId || !actionType) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing targetUserId/actionType.");
   }
 
-  const studentsRef = db
-    .collection("schools").doc("main")
-    .collection("grades").doc(gradeId)
-    .collection("homerooms").doc(homeroomId)
-    .collection("students");
+  // Permission checks
+  if (role === "student") {
+    if (targetUserId !== submittedByUserId) {
+      throw new functions.https.HttpsError("permission-denied", "Students can submit for self only.");
+    }
+  } else if (role === "staff") {
+    if (targetUserId !== submittedByUserId) {
+      const linked = await isLinkedStaffToStudent({ schoolId, staffId: submittedByUserId, studentId: targetUserId });
+      if (!linked) throw new functions.https.HttpsError("permission-denied", "Not linked to that student.");
+    }
+  } else if (role === "admin") {
+    // ok
+  } else {
+    throw new functions.https.HttpsError("permission-denied", "Unknown role.");
+  }
 
-  const snap = await studentsRef.get();
+  // Validate types
+  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies) || !Number.isFinite(deltaMoneyRaisedCents)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
+  }
 
-  const students = snap.docs
-    .map((d) => {
-      const s = d.data() || {};
-      return {
-        studentId: safeString(s.studentId || d.id),
-        displayName: safeString(s.displayName || s.studentName || s.name || "Student"),
-        active: s.active !== false,
+  const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+  const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+
+  const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
+
+  await db.runTransaction(async (t) => {
+    // Ensure user exists & active
+    const userRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}`);
+    const userSnap = await t.get(userRef);
+    if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "Target user not found.");
+    if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
+
+    const sumSnap = await t.get(summaryRef);
+    const sum = sumSnap.exists ? sumSnap.data() : {
+      minutesTotal: 0,
+      minutesPendingTotal: 0,
+      moneyRaisedCents: 0,
+      rubiesBalance: 0,
+      rubiesLifetimeEarned: 0,
+      rubiesLifetimeSpent: 0,
+    };
+
+    const txData = {
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      dateKey,
+      targetUserId,
+      submittedByUserId,
+      actionType,
+      deltaMinutes,
+      deltaRubies,
+      deltaMoneyRaisedCents,
+      note,
+      source: "app",
+    };
+
+    if (actionType === "MINUTES_SUBMIT_PENDING") {
+      txData.status = "PENDING";
+      sum.minutesPendingTotal = Number(sum.minutesPendingTotal || 0) + deltaMinutes;
+    } else {
+      txData.status = "POSTED";
+
+      // minutesTotal increments (for admin/staff direct approved minutes if you ever use it)
+      sum.minutesTotal = Number(sum.minutesTotal || 0) + deltaMinutes;
+
+      // rubies rules
+      if (actionType === "RUBIES_AWARD" && deltaRubies > 0) {
+        sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
+        sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + deltaRubies;
+      }
+      if (actionType === "RUBIES_SPEND" && deltaRubies < 0) {
+        sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
+        sum.rubiesLifetimeSpent = Number(sum.rubiesLifetimeSpent || 0) + Math.abs(deltaRubies);
+      }
+
+      // money
+      sum.moneyRaisedCents = Number(sum.moneyRaisedCents || 0) + deltaMoneyRaisedCents;
+    }
+
+    t.set(txRef, txData, { merge: true });
+    t.set(summaryRef, sum, { merge: true });
+  });
+
+  return { ok: true, txId };
+});
+
+/**
+ * Callable: approvePendingMinutes({ schoolId, txId })
+ * - Admin only
+ * - Finds pending tx (MINUTES_SUBMIT_PENDING, status=PENDING)
+ * - Updates tx status => APPROVED + approvedAt + approvedByUserId
+ * - Creates a NEW tx record for the approval (audit trail)
+ * - Moves summary:
+ *     minutesPendingTotal -= minutes
+ *     minutesTotal += minutes
+ *     rubiesBalance += minutes
+ *     rubiesLifetimeEarned += minutes
+ */
+exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const schoolId = (data?.schoolId || "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const role = (claims.role || "").toLowerCase();
+  if (role !== "admin") throw new functions.https.HttpsError("permission-denied", "Admin only.");
+
+  const txId = (data?.txId || "").trim();
+  if (!txId) throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
+
+  const pendingRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+
+  await db.runTransaction(async (t) => {
+    const pendingSnap = await t.get(pendingRef);
+    if (!pendingSnap.exists) throw new functions.https.HttpsError("not-found", "Pending tx not found.");
+
+    const pending = pendingSnap.data() || {};
+    if (pending.actionType !== "MINUTES_SUBMIT_PENDING") {
+      throw new functions.https.HttpsError("failed-precondition", "Not a pending minutes tx.");
+    }
+    if (pending.status !== "PENDING") {
+      throw new functions.https.HttpsError("failed-precondition", "Already processed.");
+    }
+
+    const targetUserId = pending.targetUserId;
+    const minutes = Number(pending.deltaMinutes || 0);
+    if (!targetUserId || minutes <= 0) {
+      throw new functions.https.HttpsError("failed-precondition", "Invalid pending tx data.");
+    }
+
+    const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
+    const sumSnap = await t.get(summaryRef);
+    const sum = sumSnap.exists ? sumSnap.data() : {
+      minutesTotal: 0,
+      minutesPendingTotal: 0,
+      moneyRaisedCents: 0,
+      rubiesBalance: 0,
+      rubiesLifetimeEarned: 0,
+      rubiesLifetimeSpent: 0,
+    };
+
+    // Update pending tx
+    t.set(pendingRef, {
+      status: "APPROVED",
+      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+      approvedByUserId: (claims.userId || auth.uid || "").toLowerCase(),
+    }, { merge: true });
+
+    // Create approval tx (audit trail)
+    const approvalTxId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+    const approvalRef = db.doc(`${schoolRoot(schoolId)}/transactions/${approvalTxId}`);
+
+    t.set(approvalRef, {
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      dateKey: pending.dateKey || todayDateKey(),
+      targetUserId,
+      submittedByUserId: (claims.userId || auth.uid || "").toLowerCase(),
+      actionType: "MINUTES_APPROVE",
+      deltaMinutes: minutes,
+      deltaRubies: minutes,               // rubies awarded 1:1
+      deltaMoneyRaisedCents: 0,
+      note: `Approved pending tx ${txId}${pending.note ? ` • ${pending.note}` : ""}`.slice(0, 300),
+      source: "approval",
+      status: "POSTED",
+      relatedTxId: txId,
+    }, { merge: true });
+
+    // Move summary totals
+    sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
+    sum.minutesTotal = Number(sum.minutesTotal || 0) + minutes;
+
+    sum.rubiesBalance = Number(sum.rubiesBalance || 0) + minutes;
+    sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + minutes;
+
+    t.set(summaryRef, sum, { merge: true });
+  });
+
+  return { ok: true };
+});
+
+/**
+ * Callable: awardHomeroom({
+ *   schoolId, homeroomId, actionType,
+ *   deltaMinutes, deltaRubies, deltaMoneyRaisedCents,
+ *   note, dateKey
+ * })
+ *
+ * - staff/admin only
+ * - staff must have homeroomId in canAwardHomerooms OR "ALL"
+ * - Finds active students in that homeroom via publicStudents (homeroomId match)
+ * - For each student:
+ *    - if deltaMinutes>0 => creates MINUTES_SUBMIT_PENDING + increments minutesPendingTotal
+ *    - if deltaRubies>0 => creates RUBIES_AWARD (POSTED) + updates rubies totals
+ *  (Writes are batched; summary updates are per-student transaction for safety.)
+ */
+exports.awardHomeroom = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const schoolId = (data?.schoolId || "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const role = (claims.role || "").toLowerCase();
+  if (!(role === "staff" || role === "admin")) {
+    throw new functions.https.HttpsError("permission-denied", "Staff/Admin only.");
+  }
+
+  const homeroomId = (data?.homeroomId || "").trim();
+  const deltaMinutes = Number(data?.deltaMinutes || 0);
+  const deltaRubies = Number(data?.deltaRubies || 0);
+  const note = (data?.note || "").toString().slice(0, 300);
+  const dateKey = (data?.dateKey || todayDateKey()).toString();
+
+  if (!homeroomId) throw new functions.https.HttpsError("invalid-argument", "Missing homeroomId.");
+  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
+  }
+  if (deltaMinutes <= 0 && deltaRubies <= 0) {
+    throw new functions.https.HttpsError("invalid-argument", "Provide minutes and/or rubies > 0.");
+  }
+
+  const actorId = (claims.userId || auth.uid || "").toLowerCase();
+
+  // Staff permission: canAwardHomerooms must contain homeroomId or be ALL
+  if (role === "staff") {
+    const can = await getCanAwardHomerooms({ schoolId, staffId: actorId });
+
+    let ok = false;
+    if (typeof can === "string" && can.toUpperCase() === "ALL") ok = true;
+    if (Array.isArray(can) && can.includes(homeroomId)) ok = true;
+
+    if (!ok) throw new functions.https.HttpsError("permission-denied", "Not allowed to award that homeroom.");
+  }
+
+  // Query active students in that homeroom
+  const pubCol = db.collection(`${schoolRoot(schoolId)}/publicStudents`);
+  const snap = await pubCol
+    .where("homeroomId", "==", homeroomId)
+    .where("active", "==", true)
+    .get();
+
+  const studentIds = snap.docs.map(d => d.id).filter(Boolean);
+
+  if (!studentIds.length) {
+    return { ok: true, affected: 0 };
+  }
+
+  // We’ll create transactions + update summaries per-student using batched writes in chunks
+  const chunks = chunkArray(studentIds, 200); // safe batch size
+  let affected = 0;
+
+  for (const chunk of chunks) {
+    const batch = db.batch();
+
+    for (const studentId of chunk) {
+      // Ensure user exists & active quickly (best effort): we won’t hard-fail the whole batch on one missing user
+      const userRef = db.doc(`${schoolRoot(schoolId)}/users/${studentId}`);
+      const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${studentId}/readathon/summary`);
+
+      const baseTx = {
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        dateKey,
+        targetUserId: studentId,
+        submittedByUserId: actorId,
+        note,
+        source: "homeroom",
       };
-    })
-    .filter((s) => s.active)
-    .sort((a, b) => a.displayName.localeCompare(b.displayName, undefined, { sensitivity: "base" }))
-    .map(({ studentId, displayName }) => ({ studentId, displayName }));
 
-  return { ok: true, students };
-});
+      if (deltaMinutes > 0) {
+        const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+        const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+        batch.set(txRef, {
+          ...baseTx,
+          actionType: "MINUTES_SUBMIT_PENDING",
+          deltaMinutes,
+          deltaRubies: 0,
+          deltaMoneyRaisedCents: 0,
+          status: "PENDING",
+          homeroomId,
+        }, { merge: true });
 
-/* =========================
-   verifyStudentPin (callable) - kept for now
-========================= */
-exports.verifyStudentPin = functions.https.onCall(async (data, context) => {
-  console.log("verifyStudentPin auth:", context.auth);
-  if (!context.auth) return { ok: false, debug: "NO_AUTH_CONTEXT" };
-
-  const uid = context.auth.uid;
-  const studentId = safeString(data?.studentId).trim();
-  const pin = safeString(data?.pin).trim();
-  const gradeId = safeString(data?.gradeId ?? data?.grade).trim();
-  const homeroomId = safeString(data?.homeroomId ?? data?.homeroom).trim();
-
-  if (!studentId || !pin) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing studentId or pin.");
-  }
-
-  const secretSnap = await db.doc(`studentSecrets/${studentId}`).get();
-  if (!secretSnap.exists) return { ok: false, reason: "no-secret" };
-
-  const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
-  if (!storedHash) return { ok: false, reason: "no-hash" };
-
-  const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
-  if (enteredHash !== storedHash) return { ok: false, reason: "bad-pin" };
-
-  // profile load
-  let studentProfile = null;
-  if (gradeId && homeroomId) {
-    const rosterSnap = await db
-      .collection("schools").doc("main")
-      .collection("grades").doc(gradeId)
-      .collection("homerooms").doc(homeroomId)
-      .collection("students").doc(studentId)
-      .get();
-    if (rosterSnap.exists) studentProfile = rosterSnap.data() || {};
-  }
-  if (!studentProfile) {
-    const fallbackSnap = await db.doc(`students/${studentId}`).get();
-    if (fallbackSnap.exists) studentProfile = fallbackSnap.data() || {};
-  }
-  if (!studentProfile) throw new functions.https.HttpsError("not-found", "Student profile not found.");
-
-  const resolvedGrade = safeString(studentProfile.grade ?? studentProfile.gradeId ?? gradeId);
-  const resolvedTeacherId = safeString(
-    studentProfile.teacherId ?? studentProfile.homeroomId ?? homeroomId ?? studentProfile.homeroom ?? ""
-  );
-  const studentName = safeString(studentProfile.displayName ?? studentProfile.studentName ?? studentProfile.name ?? "");
-  const teacherName = safeString(studentProfile.teacherName ?? studentProfile.homeroomDisplayName ?? "");
-
-  await db.doc(`users/${uid}`).set(
-    {
-      studentId,
-      grade: resolvedGrade,
-      teacherId: resolvedTeacherId,
-      studentName,
-      teacherName,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
-
-  return { ok: true, profile: { displayName: studentName, grade: resolvedGrade, teacherId: resolvedTeacherId } };
-});
-
-/* =========================
-   verifyStudentPinHttp (HTTP) - USED BY WEBSITE
-========================= */
-exports.verifyStudentPinHttp = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
-
-      const authHeader = req.get("Authorization") || "";
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) return res.status(401).json({ ok: false, error: "MISSING_TOKEN" });
-
-      const decoded = await admin.auth().verifyIdToken(match[1]);
-      const uid = decoded.uid;
-
-      const studentId = safeString(req.body?.studentId).trim();
-      const pin = safeString(req.body?.pin).trim();
-      const gradeId = safeString(req.body?.gradeId ?? req.body?.grade).trim();
-      const homeroomId = safeString(req.body?.homeroomId ?? req.body?.homeroom).trim();
-
-      if (!studentId || !pin) return res.status(400).json({ ok: false, error: "MISSING_ARGS" });
-
-      const secretSnap = await db.doc(`studentSecrets/${studentId}`).get();
-      if (!secretSnap.exists) return res.json({ ok: false, reason: "no-secret" });
-
-      const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
-      if (!storedHash) return res.json({ ok: false, reason: "no-hash" });
-
-      const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
-      if (enteredHash !== storedHash) return res.json({ ok: false, reason: "bad-pin" });
-
-      let studentProfile = null;
-
-      if (gradeId && homeroomId) {
-        const rosterSnap = await db
-          .collection("schools").doc("main")
-          .collection("grades").doc(gradeId)
-          .collection("homerooms").doc(homeroomId)
-          .collection("students").doc(studentId)
-          .get();
-        if (rosterSnap.exists) studentProfile = rosterSnap.data() || {};
+        batch.set(summaryRef, {
+          minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes),
+        }, { merge: true });
       }
 
-      if (!studentProfile) {
-        const fallbackSnap = await db.doc(`students/${studentId}`).get();
-        if (fallbackSnap.exists) studentProfile = fallbackSnap.data() || {};
+      if (deltaRubies > 0) {
+        const txId2 = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+        const txRef2 = db.doc(`${schoolRoot(schoolId)}/transactions/${txId2}`);
+        batch.set(txRef2, {
+          ...baseTx,
+          actionType: "RUBIES_AWARD",
+          deltaMinutes: 0,
+          deltaRubies,
+          deltaMoneyRaisedCents: 0,
+          status: "POSTED",
+          homeroomId,
+        }, { merge: true });
+
+        batch.set(summaryRef, {
+          rubiesBalance: admin.firestore.FieldValue.increment(deltaRubies),
+          rubiesLifetimeEarned: admin.firestore.FieldValue.increment(deltaRubies),
+        }, { merge: true });
       }
 
-      if (!studentProfile) return res.status(404).json({ ok: false, error: "NO_PROFILE" });
-
-      const resolvedGrade = safeString(studentProfile.grade ?? studentProfile.gradeId ?? gradeId);
-      const resolvedTeacherId = safeString(
-        studentProfile.teacherId ?? studentProfile.homeroomId ?? homeroomId ?? studentProfile.homeroom ?? ""
-      );
-      const studentName = safeString(studentProfile.displayName ?? studentProfile.studentName ?? studentProfile.name ?? "");
-
-      await db.doc(`users/${uid}`).set(
-        {
-          studentId,
-          grade: resolvedGrade,
-          teacherId: resolvedTeacherId,
-          studentName,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      return res.json({
-        ok: true,
-        profile: { displayName: studentName, grade: resolvedGrade, teacherId: resolvedTeacherId },
-      });
-    } catch (e) {
-      console.error(e);
-      return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
+      affected += 1;
     }
-  });
-});
-/* =========================
-   verifyStaffPin (callable)
-   - Staff signs in anonymously first
-   - Client calls this with teacherId + pin
-   - Function verifies hash in staffSecrets/{teacherId}
-   - On success, writes users/{uid} session profile
-========================= */
-exports.verifyStaffPin = functions.https.onCall(async (data, context) => {
-  console.log("verifyStaffPin auth:", context.auth);
-  if (!context.auth) {
-    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+
+    await batch.commit();
   }
 
-  const uid = context.auth.uid;
-  const teacherId = safeString(data?.teacherId).trim().toLowerCase();
-  const pin = safeString(data?.pin).trim();
-
-  if (!teacherId || !pin) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing teacherId or pin.");
-  }
-
-  // Read hashed PIN from staffSecrets/{teacherId}
-  const secretSnap = await db.doc(`staffSecrets/${teacherId}`).get();
-  if (!secretSnap.exists) return { ok: false, reason: "no-secret" };
-
-  const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
-  if (!storedHash) return { ok: false, reason: "no-hash" };
-
-  const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
-  if (enteredHash !== storedHash) return { ok: false, reason: "bad-pin" };
-
-  // Load staff profile
-  const staffSnap = await db.doc(`staff/${teacherId}`).get();
-  if (!staffSnap.exists) throw new functions.https.HttpsError("not-found", "Staff profile not found.");
-
-  const staffProfile = staffSnap.data() || {};
-  const displayName = safeString(staffProfile.displayName || staffProfile.name || teacherId);
-  const homeroomPath = safeString(staffProfile.homeroomPath || "").trim() || null;
-
-  // Write session profile keyed by UID (client reads users/{uid})
-  await db.doc(`users/${uid}`).set(
-    {
-      role: "staff",
-      grade: 6, // numeric
-      teacherId,
-      displayName,
-      homeroomPath,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    },
-    { merge: true }
-  );
-
-  return { ok: true, profile: { teacherId, displayName, grade: 6, homeroomPath } };
+  return { ok: true, affected };
 });
 
-
-/* =========================
-   verifyStaffPinHttp (HTTP) - OPTIONAL
-   Mirrors verifyStudentPinHttp, if you want an HTTP endpoint too.
-========================= */
-exports.verifyStaffPinHttp = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
-
-      const authHeader = req.get("Authorization") || "";
-      const match = authHeader.match(/^Bearer (.+)$/);
-      if (!match) return res.status(401).json({ ok: false, error: "MISSING_TOKEN" });
-
-      const decoded = await admin.auth().verifyIdToken(match[1]);
-      const uid = decoded.uid;
-
-      const teacherId = safeString(req.body?.teacherId).trim().toLowerCase();
-      const pin = safeString(req.body?.pin).trim();
-      if (!teacherId || !pin) return res.status(400).json({ ok: false, error: "MISSING_ARGS" });
-
-      const secretSnap = await db.doc(`staffSecrets/${teacherId}`).get();
-      if (!secretSnap.exists) return res.json({ ok: false, reason: "no-secret" });
-
-      const storedHash = safeString(secretSnap.data()?.pinHash).toLowerCase().trim();
-      if (!storedHash) return res.json({ ok: false, reason: "no-hash" });
-
-      const enteredHash = crypto.createHash("sha256").update(pin, "utf8").digest("hex").toLowerCase();
-      if (enteredHash !== storedHash) return res.json({ ok: false, reason: "bad-pin" });
-
-      const staffSnap = await db.doc(`staff/${teacherId}`).get();
-      if (!staffSnap.exists) return res.status(404).json({ ok: false, error: "NO_PROFILE" });
-
-      const staffProfile = staffSnap.data() || {};
-      const displayName = safeString(staffProfile.displayName || staffProfile.name || teacherId);
-      const homeroomPath = safeString(staffProfile.homeroomPath || "").trim() || null;
-
-      await db.doc(`users/${uid}`).set(
-        {
-          role: "staff",
-          grade: 6,
-          teacherId,
-          displayName,
-          homeroomPath,
-          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      return res.json({ ok: true, profile: { teacherId, displayName, grade: 6, homeroomPath } });
-    } catch (e) {
-      console.error(e);
-      return res.status(500).json({ ok: false, error: "SERVER_ERROR" });
-    }
-  });
-});
-
-/* =========================
-   convertRubies (unchanged)
-========================= */
-exports.convertRubies = functions.https.onCall(async (data, context) => {
-  await requireAdmin(context);
-
-  const teacherId = (data && data.teacherId) ? String(data.teacherId) : null;
-  const dryRun = !!(data && data.dryRun);
-
-  const rulesSnap = await db.doc("config/rules").get();
-  const minutesPerRuby =
-    rulesSnap.exists && rulesSnap.data().minutesPerRuby
-      ? Number(rulesSnap.data().minutesPerRuby)
-      : 10;
-
-  if (!Number.isFinite(minutesPerRuby) || minutesPerRuby <= 0) {
-    throw new functions.https.HttpsError("failed-precondition", "Invalid minutesPerRuby.");
-  }
-
-  let q = db.collection("students");
-  if (teacherId) q = q.where("teacherId", "==", teacherId);
-  q = q.limit(400);
-
-  const snap = await q.get();
-
-  let scanned = 0;
-  let updated = 0;
-  let totalRubiesAdded = 0;
-  let totalMinutesConsumed = 0;
-
-  const batch = db.batch();
-
-  snap.forEach((docSnap) => {
-    scanned++;
-    const s = docSnap.data() || {};
-
-    const approved = Number(s.totalApprovedMinutes || 0);
-    const converted = Number(s.convertedApprovedMinutes || 0);
-    const balance = Number(s.rubiesBalance || 0);
-
-    const newMinutes = approved - converted;
-    if (!Number.isFinite(newMinutes) || newMinutes < minutesPerRuby) return;
-
-    const newRubies = Math.floor(newMinutes / minutesPerRuby);
-    const minutesConsumed = newRubies * minutesPerRuby;
-    if (newRubies <= 0) return;
-
-    updated++;
-    totalRubiesAdded += newRubies;
-    totalMinutesConsumed += minutesConsumed;
-
-    if (!dryRun) {
-      batch.set(
-        docSnap.ref,
-        {
-          rubiesBalance: balance + newRubies,
-          convertedApprovedMinutes: converted + minutesConsumed,
-          rubiesLastConvertedAt: admin.firestore.FieldValue.serverTimestamp(),
-        },
-        { merge: true }
-      );
-
-      const logRef = db.collection("conversionLogs").doc();
-      batch.set(logRef, {
-        studentId: docSnap.id,
-        teacherId: s.teacherId || null,
-        approvedBefore: approved,
-        convertedBefore: converted,
-        rubiesAdded: newRubies,
-        minutesConsumed,
-        minutesPerRuby,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-  });
-
-  if (!dryRun) await batch.commit();
-
-  return {
-    ok: true,
-    dryRun,
-    teacherId: teacherId || null,
-    minutesPerRuby,
-    scanned,
-    studentsUpdated: updated,
-    totalRubiesAdded,
-    totalMinutesConsumed,
-  };
-});
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}

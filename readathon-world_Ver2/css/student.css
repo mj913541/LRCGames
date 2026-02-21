@@ -548,3 +548,23 @@ body{
   .gradeBtn:hover, .gradeBtn:active{ transform:none; }
   .spinner{ animation:none; }
 }
+
+/* Minutes Submit additions */
+.formBlock{ display:flex; flex-direction:column; gap: 12px; }
+.hint{ display:block; margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 850; }
+
+.twoCol{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.msg--ok{
+  border-color: rgba(103,255,122,0.55);
+  background: rgba(103,255,122,0.12);
+  color: var(--text);
+}
+
+@media (min-width: 860px){
+  .twoCol{ grid-template-columns: 1fr 1fr; }
+}

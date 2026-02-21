@@ -53,6 +53,7 @@ export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction")
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
 
+
 /**
  * Convenience: read schoolId from localStorage (fallback to default)
  */
