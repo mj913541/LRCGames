@@ -1,10 +1,10 @@
-// /readathon-world_Ver2/js/admin-minutes-approve.js
+// aaa /readathon-world_Ver2/js/admin-minutes-approve.js
+
 import {
   auth,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
-  fnApprovePendingMinutes,
-  db,
+  waitForAuthReady,
 } from "/readathon-world_Ver2/js/firebase.js";
 
 import {
@@ -15,7 +15,6 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-  fmtInt,
 } from "/readathon-world_Ver2/js/app.js";
 
 import {
@@ -23,206 +22,210 @@ import {
   query,
   where,
   orderBy,
-  limit as qLimit,
+  limit,
   getDocs,
-  getDoc,
-  doc,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import { db } from "/readathon-world_Ver2/js/firebase.js";
+
+console.log("✅ LOADED admin-minutes-approve.js (HTTP)");
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
 
+  list: document.getElementById("pendingList"),
   btnRefresh: document.getElementById("btnRefresh"),
-  countLabel: document.getElementById("countLabel"),
-  limitSelect: document.getElementById("limitSelect"),
-  searchInput: document.getElementById("searchInput"),
 
-  pendingList: document.getElementById("pendingList"),
-  emptyNote: document.getElementById("emptyNote"),
+  errorBox: document.getElementById("errorBox"),
+  okBox: document.getElementById("okBox"),
 
   loadingOverlay: document.getElementById("loadingOverlay"),
   loadingText: document.getElementById("loadingText"),
-  errorBox: document.getElementById("errorBox"),
-  okBox: document.getElementById("okBox"),
 };
 
-let ctx = { schoolId: null };
+let ctx = { schoolId: null, adminId: null };
 
 init().catch((e) => showError(normalizeError(e)));
 
+async function ensureAuthedOrBounce() {
+  const user = await waitForAuthReady();
+  if (!user) {
+    window.location.href = ABS.adminLogin;
+    return null;
+  }
+  await user.getIdToken(true);
+  return user;
+}
+
 async function init() {
-  showLoading(els.loadingOverlay, els.loadingText, "Loading approval page…");
+  showLoading(els.loadingOverlay, els.loadingText, "Loading…");
+
   const claims = await guardRoleOrRedirect(["admin"], ABS.adminLogin);
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
+  const adminId =
+    auth.currentUser?.uid ||
+    claims.userId ||
+    localStorage.getItem("readathonV2_userId") ||
+    "";
+
   ctx.schoolId = schoolId;
+  ctx.adminId = adminId;
 
-  const userId = claims.userId || auth.currentUser?.uid;
-  setHeaderUser(els.hdr, { title: "Pending Minutes", subtitle: `${schoolId} • ${userId}` });
+  setHeaderUser(els.hdr, { title: "Approve Minutes", subtitle: `${schoolId} • ${adminId}` });
 
-  els.btnRefresh.addEventListener("click", () => loadPending());
-  els.limitSelect.addEventListener("change", () => loadPending());
-  els.searchInput.addEventListener("input", debounce(() => renderSearchFilter(), 200));
+  if (els.btnRefresh) els.btnRefresh.addEventListener("click", refreshPending);
 
-  await loadPending();
+  await refreshPending();
+
   hideLoading(els.loadingOverlay);
 }
 
-let pendingCache = [];
-
-async function loadPending() {
+async function refreshPending() {
   hideMsgs();
-  showLoading(els.loadingOverlay, els.loadingText, "Loading pending requests…");
-
-  const schoolId = ctx.schoolId;
-  const lim = parseInt(els.limitSelect.value, 10) || 50;
+  showLoading(els.loadingOverlay, els.loadingText, "Loading pending minutes…");
 
   try {
-    // We store pending requests as transactions:
-    // actionType = "MINUTES_SUBMIT_PENDING"
-    // status = "PENDING"
+    const schoolId = ctx.schoolId;
+
+    // Pull pending tx's
     const txCol = collection(db, `readathonV2_schools/${schoolId}/transactions`);
     const qRef = query(
       txCol,
       where("actionType", "==", "MINUTES_SUBMIT_PENDING"),
       where("status", "==", "PENDING"),
-      orderBy("timestamp", "desc"),
-      qLimit(lim)
+      orderBy("dateKey", "desc"),
+      limit(200)
     );
 
     const snap = await getDocs(qRef);
-    const rows = snap.docs.map(d => ({ txId: d.id, ...d.data() }));
+    const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
-    // enrich with displayName from publicStudents if it’s a student_####
-    const enriched = [];
-    for (const r of rows) {
-      const displayName = await lookupDisplayName(schoolId, r.targetUserId);
-      enriched.push({ ...r, displayName });
+    renderPending(rows);
+
+    hideLoading(els.loadingOverlay);
+  } catch (err) {
+    hideLoading(els.loadingOverlay);
+    showError(normalizeError(err));
+  }
+}
+
+function renderPending(rows) {
+  if (!els.list) return;
+
+  els.list.innerHTML = "";
+
+  if (!rows.length) {
+    els.list.innerHTML = `<div class="panel">No pending minutes 🎉</div>`;
+    return;
+  }
+
+  for (const tx of rows) {
+    const div = document.createElement("div");
+    div.className = "panel";
+
+    const who = safeText(tx.targetUserId);
+    const mins = Number(tx.deltaMinutes || 0);
+    const note = safeText(tx.note || "");
+    const dateKey = safeText(tx.dateKey || "");
+
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+        <div>
+          <div style="font-weight:800;">${who} • ${mins} min</div>
+          <div style="opacity:0.85;font-size:0.95em;">${dateKey}${note ? ` • ${escapeHtml(note)}` : ""}</div>
+        </div>
+        <button class="btn" data-approve="${tx.id}">Approve ✅</button>
+      </div>
+    `;
+
+    div.querySelector(`[data-approve="${tx.id}"]`).addEventListener("click", () => approveTx(tx.id));
+
+    els.list.appendChild(div);
+  }
+}
+
+async function approveTx(txId) {
+  hideMsgs();
+  showLoading(els.loadingOverlay, els.loadingText, "Approving…");
+
+  try {
+    const user = await ensureAuthedOrBounce();
+    if (!user) return;
+
+    const token = await user.getIdToken(true);
+
+    const resp = await fetch(
+      "https://us-central1-lrcquest-3039e.cloudfunctions.net/approvePendingMinutesHttp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          schoolId: ctx.schoolId,
+          txId,
+        }),
+      }
+    );
+
+    if (!resp.ok) {
+      let msg = `HTTP ${resp.status}`;
+      try {
+        const j = await resp.json();
+        if (j?.error) msg = j.error;
+      } catch {}
+      throw new Error(msg);
     }
 
-    pendingCache = enriched;
-    renderSearchFilter();
     hideLoading(els.loadingOverlay);
+    showOk("Approved! ✅");
+
+    // refresh list
+    await refreshPending();
   } catch (err) {
     hideLoading(els.loadingOverlay);
     showError(normalizeError(err));
   }
 }
 
-function renderSearchFilter() {
-  const q = (els.searchInput.value || "").trim().toLowerCase();
-  const list = q ? pendingCache.filter(x => String(x.targetUserId || "").toLowerCase().includes(q)) : pendingCache;
-  renderList(list);
+function safeText(s) {
+  return (s ?? "").toString();
 }
 
-function renderList(list) {
-  els.pendingList.innerHTML = "";
-  els.emptyNote.classList.toggle("isHidden", list.length !== 0);
-
-  els.countLabel.textContent = `${fmtInt(list.length)} pending`;
-
-  for (const r of list) {
-    const card = document.createElement("div");
-    card.className = "rowCard";
-
-    const left = document.createElement("div");
-    left.className = "rowCard__left";
-
-    const who = document.createElement("div");
-    who.className = "rowCard__who";
-    who.textContent = r.displayName ? `${r.displayName} (${r.targetUserId})` : r.targetUserId;
-
-    const meta = document.createElement("div");
-    meta.className = "rowCard__meta";
-    meta.textContent = `${r.dateKey || "—"} • Submitted by ${r.submittedByUserId || "—"}`;
-
-    const note = document.createElement("div");
-    note.className = "rowCard__note";
-    note.textContent = r.note ? `Note: ${r.note}` : "Note: —";
-
-    left.appendChild(who);
-    left.appendChild(meta);
-    left.appendChild(note);
-
-    const right = document.createElement("div");
-    right.className = "rowCard__right";
-
-    const minutes = document.createElement("div");
-    minutes.className = "rowCard__minutes";
-    minutes.textContent = `⏱️ ${fmtInt(r.deltaMinutes || 0)} min`;
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "btnApprove";
-    btn.textContent = "Approve ✅";
-    btn.addEventListener("click", () => approveOne(r.txId, btn));
-
-    right.appendChild(minutes);
-    right.appendChild(btn);
-
-    card.appendChild(left);
-    card.appendChild(right);
-
-    els.pendingList.appendChild(card);
-  }
-}
-
-async function approveOne(txId, btnEl) {
-  hideMsgs();
-  btnEl.disabled = true;
-
-  try {
-    showLoading(els.loadingOverlay, els.loadingText, "Approving…");
-
-    await fnApprovePendingMinutes({
-      schoolId: ctx.schoolId,
-      txId,
-    });
-
-    showOk("Approved! Minutes added + rubies awarded 1:1 ✅");
-    await loadPending();
-  } catch (err) {
-    showError(normalizeError(err));
-  } finally {
-    hideLoading(els.loadingOverlay);
-    btnEl.disabled = false;
-  }
-}
-
-async function lookupDisplayName(schoolId, userId) {
-  if (!userId || !String(userId).startsWith("student_")) return "";
-  try {
-    const ref = doc(db, `readathonV2_schools/${schoolId}/publicStudents/${userId}`);
-    const snap = await getDoc(ref);
-    return snap.exists() ? (snap.data().displayName || "") : "";
-  } catch {
-    return "";
-  }
+function escapeHtml(s) {
+  return safeText(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function hideMsgs() {
-  els.errorBox.classList.add("isHidden");
-  els.errorBox.textContent = "";
-  els.okBox.classList.add("isHidden");
-  els.okBox.textContent = "";
+  if (els.errorBox) {
+    els.errorBox.classList.add("isHidden");
+    els.errorBox.textContent = "";
+  }
+  if (els.okBox) {
+    els.okBox.classList.add("isHidden");
+    els.okBox.textContent = "";
+  }
 }
+
 function showError(msg) {
+  if (!els.errorBox) return;
   els.errorBox.textContent = msg;
   els.errorBox.classList.remove("isHidden");
 }
+
 function showOk(msg) {
+  if (!els.okBox) return;
   els.okBox.textContent = msg;
   els.okBox.classList.remove("isHidden");
-}
-
-function debounce(fn, ms) {
-  let t = null;
-  return (...args) => {
-    clearTimeout(t);
-    t = setTimeout(() => fn(...args), ms);
-  };
 }

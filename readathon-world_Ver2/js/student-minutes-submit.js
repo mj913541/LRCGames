@@ -1,4 +1,5 @@
 // /readathon-world_Ver2/js/student-minutes-submit.js
+
 import {
   auth,
   getSchoolId,
@@ -16,6 +17,8 @@ import {
   normalizeError,
 } from "/readathon-world_Ver2/js/app.js";
 
+console.log("✅ LOADED student-minutes-submit.js (HTTP)");
+
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
@@ -32,66 +35,109 @@ const els = {
   loadingText: document.getElementById("loadingText"),
 };
 
+let current = { schoolId: null, userId: null };
+
 init().catch((e) => showError(normalizeError(e)));
+
+async function ensureAuthedOrBounce() {
+  const user = await waitForAuthReady();
+  if (!user) {
+    window.location.href = ABS.studentLogin;
+    return null;
+  }
+  await user.getIdToken(true); // refresh token/claims
+  return user;
+}
 
 async function init() {
   showLoading(els.loadingOverlay, els.loadingText, "Loading…");
+
   const claims = await guardRoleOrRedirect(["student"], ABS.studentLogin);
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
-  const userId = claims.userId || auth.currentUser?.uid;
+  const userId =
+    auth.currentUser?.uid ||
+    claims.userId ||
+    localStorage.getItem("readathonV2_userId") ||
+    "";
+
+  current.schoolId = schoolId;
+  current.userId = userId;
 
   setHeaderUser(els.hdr, {
-    title: "Submit your reading minutes",
+    title: "Submit Minutes",
     subtitle: `${schoolId} • ${userId}`,
   });
 
-  els.minutesInput.focus();
+  wireMinutesForm();
 
+  hideLoading(els.loadingOverlay);
+}
+
+function wireMinutesForm() {
   els.minutesForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    hideMessages();
+    hideMsgs();
 
-    const minutes = parseInt((els.minutesInput.value || "").trim(), 10);
+    const schoolId = current.schoolId;
+    const userId = current.userId;
+
+    const minutes = parseInt((els.minutesInput.value || "0").trim(), 10) || 0;
     const note = (els.noteInput.value || "").trim();
+    const dateKey = todayDateKey();
 
-    if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 1000) {
-      showError("Please enter a valid number of minutes (1–1000).");
-      els.minutesInput.focus();
+    if (minutes <= 0) {
+      showError("Please enter minutes greater than 0.");
       return;
     }
 
     try {
       els.btnSubmit.disabled = true;
-      showLoading(els.loadingOverlay, els.loadingText, "Submitting pending minutes…");
+      showLoading(els.loadingOverlay, els.loadingText, "Submitting…");
 
-      const dateKey = todayDateKey();
+      const user = await ensureAuthedOrBounce();
+      if (!user) return;
 
-      // Action type choice for pending minutes:
-      // We will implement this in Cloud Functions as:
-      // actionType = "MINUTES_SUBMIT_PENDING"
-      // deltaMinutes = minutes (pending, NOT added to minutesTotal yet)
-      const res = await fnSubmitTransaction({
-        schoolId,
-        targetUserId: userId,
-        actionType: "MINUTES_SUBMIT_PENDING",
-        deltaMinutes: minutes,
-        deltaRubies: 0,
-        deltaMoneyRaisedCents: 0,
-        note,
-        dateKey,
-      });
+      const token = await user.getIdToken(true);
+
+      const resp = await fetch(
+        "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            schoolId,
+            targetUserId: userId,
+            actionType: "MINUTES_SUBMIT_PENDING",
+            deltaMinutes: minutes,
+            deltaRubies: 0,
+            deltaMoneyRaisedCents: 0,
+            note,
+            dateKey,
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        let msg = `HTTP ${resp.status}`;
+        try {
+          const j = await resp.json();
+          if (j?.error) msg = j.error;
+        } catch {}
+        throw new Error(msg);
+      }
 
       hideLoading(els.loadingOverlay);
-      showOk(`Submitted! ✅ ${minutes} minutes are now pending approval.`);
-      els.minutesInput.value = "";
-      els.noteInput.value = "";
-      els.minutesInput.focus();
+      showOk("Submitted! ✅ Waiting for approval.");
 
-      return res;
+      els.minutesInput.value = "0";
+      els.noteInput.value = "";
     } catch (err) {
       hideLoading(els.loadingOverlay);
       showError(normalizeError(err));
@@ -99,8 +145,6 @@ async function init() {
       els.btnSubmit.disabled = false;
     }
   });
-
-  hideLoading(els.loadingOverlay);
 }
 
 function todayDateKey() {
@@ -111,18 +155,25 @@ function todayDateKey() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-function hideMessages() {
-  els.errorBox.classList.add("isHidden");
-  els.errorBox.textContent = "";
-  els.okBox.classList.add("isHidden");
-  els.okBox.textContent = "";
+function hideMsgs() {
+  if (els.errorBox) {
+    els.errorBox.classList.add("isHidden");
+    els.errorBox.textContent = "";
+  }
+  if (els.okBox) {
+    els.okBox.classList.add("isHidden");
+    els.okBox.textContent = "";
+  }
 }
 
 function showError(msg) {
+  if (!els.errorBox) return;
   els.errorBox.textContent = msg;
   els.errorBox.classList.remove("isHidden");
 }
+
 function showOk(msg) {
+  if (!els.okBox) return;
   els.okBox.textContent = msg;
   els.okBox.classList.remove("isHidden");
 }
