@@ -1,4 +1,4 @@
-// bbb/readathon-world_Ver2/js/staff-minutes-submit.js
+// ccc /readathon-world_Ver2/js/staff-minutes-submit.js
 import {
   auth,
   getSchoolId,
@@ -138,7 +138,7 @@ function wireAwardForm() {
       const user = await ensureAuthedOrBounce();
       if (!user) return;
 
-      // ✅ Use HTTP endpoint (Bearer token) — NOT the callable submitTransaction
+      // ✅ HTTP endpoint (Bearer token) — NOT callable
       const token = await user.getIdToken(true);
 
       const resp = await fetch(
@@ -174,7 +174,6 @@ function wireAwardForm() {
       hideLoading(els.loadingOverlay);
       showOk("Submitted! ✅");
 
-      // Reset numeric inputs
       els.minutesInput.value = "0";
       els.rubiesInput.value = "0";
       els.moneyDollarsInput.value = "0.00";
@@ -216,38 +215,38 @@ function wireHomeroomForm() {
       const user = await ensureAuthedOrBounce();
       if (!user) return;
 
-      // ✅ Use HTTP endpoint (Bearer token) — NOT the callable awardHomeroom
-const token = await auth.currentUser.getIdToken(true);
+      // ✅ HTTP endpoint (Bearer token) — NOT callable
+      const token = await user.getIdToken(true);
 
-const resp = await fetch(
-  "https://us-central1-lrcquest-3039e.cloudfunctions.net/awardHomeroomHttp",
-  {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      schoolId,
-      homeroomId,
-      actionType: "HOMEROOM_AWARD",
-      deltaMinutes: minutes,
-      deltaRubies: rubies,
-      deltaMoneyRaisedCents: 0,
-      note,
-      dateKey,
-    }),
-  }
-);
+      const resp = await fetch(
+        "https://us-central1-lrcquest-3039e.cloudfunctions.net/awardHomeroomHttp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            schoolId,
+            homeroomId,
+            actionType: "HOMEROOM_AWARD",
+            deltaMinutes: minutes,
+            deltaRubies: rubies,
+            deltaMoneyRaisedCents: 0,
+            note,
+            dateKey,
+          }),
+        }
+      );
 
-if (!resp.ok) {
-  let msg = `HTTP ${resp.status}`;
-  try {
-    const j = await resp.json();
-    if (j?.error) msg = j.error;
-  } catch {}
-  throw new Error(msg);
-}
+      if (!resp.ok) {
+        let msg = `HTTP ${resp.status}`;
+        try {
+          const j = await resp.json();
+          if (j?.error) msg = j.error;
+        } catch {}
+        throw new Error(msg);
+      }
 
       hideLoading(els.loadingOverlay);
       showHrOk("Homeroom award submitted! ✅");
@@ -294,6 +293,7 @@ function showOk(msg) {
   els.okBox.classList.remove("isHidden");
 }
 
+// ✅ YOU WERE MISSING THIS IN YOUR PASTE
 function hideHrMsgs() {
   els.hrErrorBox.classList.add("isHidden");
   els.hrErrorBox.textContent = "";
