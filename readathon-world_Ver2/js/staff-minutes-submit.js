@@ -137,9 +137,9 @@ function wireAwardForm() {
 
       await fnSubmitTransaction({
         schoolId,
-        targetUserId,
+         targetUserId,
         actionType,
-        deltaMinutes: minutes,
+         deltaMinutes: minutes,
         deltaRubies: rubies,
         deltaMoneyRaisedCents: moneyCents,
         note,

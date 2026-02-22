@@ -3,7 +3,7 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const bcrypt = require("bcryptjs");
 
-// ✅ NEW (you installed this): CORS helper for upcoming HTTP endpoints
+// ✅ CORS for HTTP endpoints (does NOT affect onCall functions)
 const cors = require("cors")({ origin: true });
 
 admin.initializeApp();
@@ -61,10 +61,159 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
 }
 
 /**
+ * ✅ NEW helper: verify Firebase ID token from Authorization: Bearer <token>
+ */
+async function verifyBearerToken(req) {
+  const h = req.headers.authorization || "";
+  const m = h.match(/^Bearer (.+)$/);
+  if (!m) throw new functions.https.HttpsError("unauthenticated", "Missing Bearer token.");
+  const decoded = await admin.auth().verifyIdToken(m[1], true);
+  return decoded; // contains your custom claims too
+}
+
+/**
+ * ✅ NEW helper: shared submitTransaction core
+ * Used by BOTH the callable and the new HTTP endpoint.
+ */
+async function submitTransactionCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId ?? "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const submittedByUserId = String(claims.userId || authUid || "").toLowerCase();
+  const role = String(claims.role || "").toLowerCase();
+
+  const targetUserId = String(data?.targetUserId ?? "").trim().toLowerCase();
+  const actionType = String(data?.actionType ?? "").trim();
+
+  const deltaMinutes = Number(data?.deltaMinutes || 0);
+  const deltaRubies = Number(data?.deltaRubies || 0);
+  const deltaMoneyRaisedCents = Number(data?.deltaMoneyRaisedCents || 0);
+
+  const note = (data?.note || "").toString().slice(0, 300);
+  const dateKey = (data?.dateKey || todayDateKey()).toString();
+
+  if (!targetUserId || !actionType) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing targetUserId/actionType.");
+  }
+
+  // Permission checks
+  if (role === "student") {
+    if (targetUserId !== submittedByUserId) {
+      throw new functions.https.HttpsError("permission-denied", "Students can submit for self only.");
+    }
+  } else if (role === "staff") {
+    if (targetUserId !== submittedByUserId) {
+      const linked = await isLinkedStaffToStudent({
+        schoolId,
+        staffId: submittedByUserId,
+        studentId: targetUserId,
+      });
+      if (!linked) throw new functions.https.HttpsError("permission-denied", "Not linked to that student.");
+    }
+  } else if (role === "admin") {
+    // ok
+  } else {
+    throw new functions.https.HttpsError("permission-denied", "Unknown role.");
+  }
+
+  // Validate types
+  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies) || !Number.isFinite(deltaMoneyRaisedCents)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
+  }
+
+  const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+  const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+  const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
+
+  await db.runTransaction(async (t) => {
+    // Ensure user exists & active
+    const userRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}`);
+    const userSnap = await t.get(userRef);
+    if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "Target user not found.");
+    if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
+
+    const sumSnap = await t.get(summaryRef);
+    const sum = sumSnap.exists
+      ? sumSnap.data()
+      : {
+          minutesTotal: 0,
+          minutesPendingTotal: 0,
+          moneyRaisedCents: 0,
+          rubiesBalance: 0,
+          rubiesLifetimeEarned: 0,
+          rubiesLifetimeSpent: 0,
+        };
+
+    const txData = {
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      dateKey,
+      targetUserId,
+      submittedByUserId,
+      actionType,
+      deltaMinutes,
+      deltaRubies,
+      deltaMoneyRaisedCents,
+      note,
+      source: "app",
+    };
+
+    if (actionType === "MINUTES_SUBMIT_PENDING") {
+      txData.status = "PENDING";
+      sum.minutesPendingTotal = Number(sum.minutesPendingTotal || 0) + deltaMinutes;
+    } else {
+      txData.status = "POSTED";
+
+      sum.minutesTotal = Number(sum.minutesTotal || 0) + deltaMinutes;
+
+      if (actionType === "RUBIES_AWARD" && deltaRubies > 0) {
+        sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
+        sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + deltaRubies;
+      }
+      if (actionType === "RUBIES_SPEND" && deltaRubies < 0) {
+        sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
+        sum.rubiesLifetimeSpent = Number(sum.rubiesLifetimeSpent || 0) + Math.abs(deltaRubies);
+      }
+
+      sum.moneyRaisedCents = Number(sum.moneyRaisedCents || 0) + deltaMoneyRaisedCents;
+    }
+
+    t.set(txRef, txData, { merge: true });
+    t.set(summaryRef, sum, { merge: true });
+  });
+
+  return { ok: true, txId };
+}
+
+/**
+ * ✅ NEW: HTTP endpoint (stable auth via Bearer token)
+ * POST /submitTransactionHttp
+ */
+exports.submitTransactionHttp = functions.https.onRequest(async (req, res) => {
+  return cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") return res.status(405).send("POST only");
+
+      const claims = await verifyBearerToken(req);
+
+      // quick log so we can confirm auth is arriving
+      console.log("submitTransactionHttp HIT", {
+        uid: claims.user_id || claims.sub,
+        role: claims.role,
+        schoolId: claims.schoolId,
+      });
+
+      const result = await submitTransactionCore(req.body || {}, claims, claims.user_id || claims.sub);
+      return res.status(200).json(result);
+    } catch (err) {
+      console.error("submitTransactionHttp error:", err);
+      // Keep this simple for now
+      return res.status(401).json({ error: err?.message || "Unauthorized" });
+    }
+  });
+});
+
+/**
  * Callable: verifyPin({schoolId, userId, pin})
- * - checks users/{userId}.active
- * - compares secrets/{userId}.pinHash via bcrypt
- * - returns customToken with claims: {schoolId, userId, role}
  */
 exports.verifyPin = functions.https.onCall(async (data, context) => {
   try {
@@ -148,130 +297,20 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Callable: submitTransaction({...})
+ * Callable: submitTransaction({...})  (kept as-is)
  */
 exports.submitTransaction = functions.https.onCall(async (data, context) => {
-console.log("submitTransaction HIT", {
-  hasAuth: !!context.auth,
-  uid: context.auth?.uid,
-  hasRawReq: !!context.rawRequest,
-  hasAuthHeader: !!context.rawRequest?.headers?.authorization,
-  hasAppCheckHeader: !!context.rawRequest?.headers?.["x-firebase-appcheck"],
-  origin: context.rawRequest?.headers?.origin,
-});
+  console.log("submitTransaction HIT", { hasAuth: !!context.auth, uid: context.auth?.uid });
+
   const auth = requireAuth(context);
   const claims = auth.token || {};
-  const schoolId = String(data?.schoolId ?? "").trim();
-  requireSchoolMatch(schoolId, claims);
-
-  const submittedByUserId = String(claims.userId || auth.uid || "").toLowerCase();
-  const role = String(claims.role || "").toLowerCase();
-
-  const targetUserId = String(data?.targetUserId ?? "").trim().toLowerCase();
-  const actionType = String(data?.actionType ?? "").trim();
-
-  const deltaMinutes = Number(data?.deltaMinutes || 0);
-  const deltaRubies = Number(data?.deltaRubies || 0);
-  const deltaMoneyRaisedCents = Number(data?.deltaMoneyRaisedCents || 0);
-
-  const note = (data?.note || "").toString().slice(0, 300);
-  const dateKey = (data?.dateKey || todayDateKey()).toString();
-
-  if (!targetUserId || !actionType) {
-    throw new functions.https.HttpsError("invalid-argument", "Missing targetUserId/actionType.");
-  }
-
-  // Permission checks
-  if (role === "student") {
-    if (targetUserId !== submittedByUserId) {
-      throw new functions.https.HttpsError("permission-denied", "Students can submit for self only.");
-    }
-  } else if (role === "staff") {
-    if (targetUserId !== submittedByUserId) {
-      const linked = await isLinkedStaffToStudent({
-        schoolId,
-        staffId: submittedByUserId,
-        studentId: targetUserId,
-      });
-      if (!linked) throw new functions.https.HttpsError("permission-denied", "Not linked to that student.");
-    }
-  } else if (role === "admin") {
-    // ok
-  } else {
-    throw new functions.https.HttpsError("permission-denied", "Unknown role.");
-  }
-
-  // Validate types
-  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies) || !Number.isFinite(deltaMoneyRaisedCents)) {
-    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
-  }
-
-  const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
-  const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
-
-  const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
-
-  await db.runTransaction(async (t) => {
-    // Ensure user exists & active
-    const userRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}`);
-    const userSnap = await t.get(userRef);
-    if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "Target user not found.");
-    if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
-
-    const sumSnap = await t.get(summaryRef);
-    const sum = sumSnap.exists
-      ? sumSnap.data()
-      : {
-          minutesTotal: 0,
-          minutesPendingTotal: 0,
-          moneyRaisedCents: 0,
-          rubiesBalance: 0,
-          rubiesLifetimeEarned: 0,
-          rubiesLifetimeSpent: 0,
-        };
-
-    const txData = {
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      dateKey,
-      targetUserId,
-      submittedByUserId,
-      actionType,
-      deltaMinutes,
-      deltaRubies,
-      deltaMoneyRaisedCents,
-      note,
-      source: "app",
-    };
-
-    if (actionType === "MINUTES_SUBMIT_PENDING") {
-      txData.status = "PENDING";
-      sum.minutesPendingTotal = Number(sum.minutesPendingTotal || 0) + deltaMinutes;
-    } else {
-      txData.status = "POSTED";
-
-      sum.minutesTotal = Number(sum.minutesTotal || 0) + deltaMinutes;
-
-      if (actionType === "RUBIES_AWARD" && deltaRubies > 0) {
-        sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
-        sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + deltaRubies;
-      }
-      if (actionType === "RUBIES_SPEND" && deltaRubies < 0) {
-        sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
-        sum.rubiesLifetimeSpent = Number(sum.rubiesLifetimeSpent || 0) + Math.abs(deltaRubies);
-      }
-
-      sum.moneyRaisedCents = Number(sum.moneyRaisedCents || 0) + deltaMoneyRaisedCents;
-    }
-
-    t.set(txRef, txData, { merge: true });
-    t.set(summaryRef, sum, { merge: true });
-  });
-
-  return { ok: true, txId };
+  const result = await submitTransactionCore(data, claims, auth.uid);
+  return result;
 });
 
 /**
  * Callable: approvePendingMinutes({ schoolId, txId })
+ * (unchanged from your version)
  */
 exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
@@ -364,6 +403,7 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
 
 /**
  * Callable: awardHomeroom({...})
+ * (unchanged from your version)
  */
 exports.awardHomeroom = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
