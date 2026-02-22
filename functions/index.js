@@ -170,6 +170,7 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
  * - admin: anyone
  */
 exports.submitTransaction = functions.https.onCall(async (data, context) => {
+  console.log("submitTransaction HIT", { hasAuth: !!context.auth, uid: context.auth?.uid });
   const auth = requireAuth(context);
   const claims = auth.token || {};
   const schoolId = String(data?.schoolId ?? "").trim();
