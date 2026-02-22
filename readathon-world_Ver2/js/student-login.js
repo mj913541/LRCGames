@@ -1,4 +1,4 @@
-// /readathon-world_Ver2/js/student-login.js
+// aaa /readathon-world_Ver2/js/student-login.js
 import {
   DEFAULT_SCHOOL_ID,
   getSchoolId,
