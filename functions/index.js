@@ -63,87 +63,48 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
  * - compares secrets/{userId}.pinHash via bcrypt
  * - returns customToken with claims: {schoolId, userId, role}
  */
-exports.verifyPin = functions
-  .region("us-central1")
-  .runWith({ serviceAccount: "lrcquest-3039e@appspot.gserviceaccount.com" })
-  .https.onCall(async (data, context) => {
-    try {
-      const payload =
-        data && typeof data === "object" && data.data && typeof data.data === "object"
-          ? data.data
-          : data;
+exports.verifyPin = functions.https.onCall(async (data, context) => {
+  // Force all inputs to string BEFORE trim/regex checks.
+  // This prevents subtle cases where pin/userId arrive as non-strings (number/undefined/null).
+  const schoolId = String(data?.schoolId ?? "").trim();
+  const userId = String(data?.userId ?? "").trim().toLowerCase();
+  const pin = String(data?.pin ?? "").trim();
 
-      const schoolId = String(payload?.schoolId ?? "").trim();
-      const userId = String(payload?.userId ?? "").trim().toLowerCase();
-      const pin = String(payload?.pin ?? "").trim();
+  if (!schoolId || !userId || !/^\d{4}$/.test(pin)) {
+    // Safe debug: lengths only (does not expose PIN)
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      `Invalid schoolId/userId/pin. schoolIdLen=${schoolId.length} userIdLen=${userId.length} pinLen=${pin.length}`
+    );
+  }
 
-      console.log("verifyPin (safe) inputs:", {
-        schoolId,
-        userId,
-        pinLen: pin.length,
-        hasAuth: !!context?.auth,
-      });
+  const userRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}`);
+  const userSnap = await userRef.get();
+  if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found.");
 
-      if (!schoolId || !userId || !/^\d{4}$/.test(pin)) {
-        throw new functions.https.HttpsError(
-          "invalid-argument",
-          `Invalid schoolId/userId/pin. schoolIdLen=${schoolId.length} userIdLen=${userId.length} pinLen=${pin.length}`
-        );
-      }
+  const userData = userSnap.data() || {};
+  if (userData.active !== true) throw new functions.https.HttpsError("failed-precondition", "User inactive.");
 
-      const userRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}`);
-      const userSnap = await userRef.get();
-      console.log("verifyPin userSnap.exists:", userSnap.exists);
+  const secRef = db.doc(`${schoolRoot(schoolId)}/secrets/${userId}`);
+  const secSnap = await secRef.get();
+  if (!secSnap.exists) throw new functions.https.HttpsError("not-found", "PIN not set.");
 
-      if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found.");
-      const userData = userSnap.data() || {};
-      console.log("verifyPin userData.active:", userData.active);
+  const pinHash = secSnap.data()?.pinHash;
+  if (!pinHash) throw new functions.https.HttpsError("not-found", "PIN not set.");
 
-      if (userData.active !== true) {
-        throw new functions.https.HttpsError("failed-precondition", "User inactive.");
-      }
+  const ok = await bcrypt.compare(pin, pinHash);
+  if (!ok) throw new functions.https.HttpsError("permission-denied", "Invalid PIN.");
 
-      const secRef = db.doc(`${schoolRoot(schoolId)}/secrets/${userId}`);
-      const secSnap = await secRef.get();
-      console.log("verifyPin secSnap.exists:", secSnap.exists);
+  const role = inferRole(userId, userData.role);
 
-      if (!secSnap.exists) throw new functions.https.HttpsError("not-found", "PIN not set.");
-
-      const pinHash = secSnap.data()?.pinHash;
-      console.log("verifyPin pinHash type/len:", {
-        type: typeof pinHash,
-        len: typeof pinHash === "string" ? pinHash.length : null,
-      });
-
-      if (typeof pinHash !== "string" || pinHash.length < 10) {
-        throw new functions.https.HttpsError("failed-precondition", "PIN hash invalid (reset PIN).");
-      }
-
-      const ok = await bcrypt.compare(pin, pinHash);
-      console.log("verifyPin bcrypt ok:", ok);
-
-      if (!ok) throw new functions.https.HttpsError("permission-denied", "Invalid PIN.");
-
-      const role = inferRole(userId, userData.role);
-
-      const customToken = await admin.auth().createCustomToken(userId, {
-        schoolId,
-        userId,
-        role,
-      });
-
-      console.log("verifyPin token created. role:", role);
-      return { customToken, role };
-    } catch (err) {
-      if (err instanceof functions.https.HttpsError) throw err;
-
-      console.error("verifyPin INTERNAL crash:", err);
-      throw new functions.https.HttpsError(
-        "internal",
-        err?.message ? `verifyPin crashed: ${err.message}` : "verifyPin crashed (internal error)."
-      );
-    }
+  const customToken = await admin.auth().createCustomToken(userId, {
+    schoolId,
+    userId,
+    role,
   });
+
+  return { customToken, role };
+});
 
 /**
  * Callable: submitTransaction({
