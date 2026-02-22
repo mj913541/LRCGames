@@ -222,6 +222,19 @@ body{
   border-color: rgba(38,214,255,0.40);
 }
 
+.click-zone {
+  position: absolute;
+  cursor: pointer;
+  border: black 2px;
+}
+
+#studentLogin {
+    top: 758px;
+    left: 77px;
+    width: 149px;
+    height: 96px;
+}
+
 @media (min-width: 860px){
   .hero__actions{ grid-template-columns: 1fr 1fr 1fr; }
 }
