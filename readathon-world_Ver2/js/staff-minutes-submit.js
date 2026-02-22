@@ -1,4 +1,4 @@
-// /readathon-world_Ver2/js/staff-minutes-submit.js
+// aaa/readathon-world_Ver2/js/staff-minutes-submit.js
 import {
   auth,
   getSchoolId,
