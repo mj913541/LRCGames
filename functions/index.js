@@ -9,6 +9,10 @@ const cors = require("cors")({ origin: true });
 admin.initializeApp();
 const db = admin.firestore();
 
+/* --------------------------------------------------
+   Paths + Helpers
+-------------------------------------------------- */
+
 function schoolRoot(schoolId) {
   return `readathonV2_schools/${schoolId}`;
 }
@@ -61,18 +65,18 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
 }
 
 /**
- * ✅ NEW helper: verify Firebase ID token from Authorization: Bearer <token>
+ * ✅ Verify Firebase ID token from Authorization: Bearer <token>
  */
 async function verifyBearerToken(req) {
   const h = req.headers.authorization || "";
   const m = h.match(/^Bearer (.+)$/);
   if (!m) throw new functions.https.HttpsError("unauthenticated", "Missing Bearer token.");
   const decoded = await admin.auth().verifyIdToken(m[1], true);
-  return decoded; // contains your custom claims too
+  return decoded; // includes custom claims too
 }
 
 /**
- * ✅ Small helper: convert HttpsError to a reasonable HTTP code
+ * ✅ Convert HttpsError to a reasonable HTTP status
  */
 function httpsErrorToStatus(err) {
   const code = err?.code;
@@ -84,9 +88,10 @@ function httpsErrorToStatus(err) {
   return 500;
 }
 
-/**
- * ✅ Shared submitTransaction core (callable + HTTP)
- */
+/* --------------------------------------------------
+   Shared Core: submitTransaction
+-------------------------------------------------- */
+
 async function submitTransactionCore(data, claims, authUid) {
   const schoolId = String(data?.schoolId ?? "").trim();
   requireSchoolMatch(schoolId, claims);
@@ -129,7 +134,11 @@ async function submitTransactionCore(data, claims, authUid) {
   }
 
   // Validate types
-  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies) || !Number.isFinite(deltaMoneyRaisedCents)) {
+  if (
+    !Number.isFinite(deltaMinutes) ||
+    !Number.isFinite(deltaRubies) ||
+    !Number.isFinite(deltaMoneyRaisedCents)
+  ) {
     throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
   }
 
@@ -142,7 +151,8 @@ async function submitTransactionCore(data, claims, authUid) {
     const userRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}`);
     const userSnap = await t.get(userRef);
     if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "Target user not found.");
-    if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
+    if (userSnap.data()?.active !== true)
+      throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
 
     const sumSnap = await t.get(summaryRef);
     const sum = sumSnap.exists
@@ -196,9 +206,10 @@ async function submitTransactionCore(data, claims, authUid) {
   return { ok: true, txId };
 }
 
-/**
- * ✅ NEW shared awardHomeroom core (callable + HTTP)
- */
+/* --------------------------------------------------
+   Shared Core: awardHomeroom
+-------------------------------------------------- */
+
 async function awardHomeroomCore(data, claims, authUid) {
   const schoolId = String(data?.schoolId ?? "").trim();
   requireSchoolMatch(schoolId, claims);
@@ -245,7 +256,7 @@ async function awardHomeroomCore(data, claims, authUid) {
     return { ok: true, affected: 0 };
   }
 
-  const chunks = chunkArray(studentIds, 200); // safe batch size
+  const chunks = chunkArray(studentIds, 200);
   let affected = 0;
 
   for (const chunk of chunks) {
@@ -266,6 +277,7 @@ async function awardHomeroomCore(data, claims, authUid) {
       if (deltaMinutes > 0) {
         const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
         const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+
         batch.set(
           txRef,
           {
@@ -282,9 +294,7 @@ async function awardHomeroomCore(data, claims, authUid) {
 
         batch.set(
           summaryRef,
-          {
-            minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes),
-          },
+          { minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes) },
           { merge: true }
         );
       }
@@ -292,6 +302,7 @@ async function awardHomeroomCore(data, claims, authUid) {
       if (deltaRubies > 0) {
         const txId2 = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
         const txRef2 = db.doc(`${schoolRoot(schoolId)}/transactions/${txId2}`);
+
         batch.set(
           txRef2,
           {
@@ -325,10 +336,107 @@ async function awardHomeroomCore(data, claims, authUid) {
   return { ok: true, affected };
 }
 
-/**
- * ✅ HTTP endpoint (stable auth via Bearer token)
- * POST /submitTransactionHttp
- */
+/* --------------------------------------------------
+   Shared Core: approvePendingMinutes
+-------------------------------------------------- */
+
+async function approvePendingMinutesCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId ?? "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const role = String(claims.role || "").toLowerCase();
+  if (role !== "admin") throw new functions.https.HttpsError("permission-denied", "Admin only.");
+
+  const txId = String(data?.txId ?? "").trim();
+  if (!txId) throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
+
+  const pendingRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+  const approvedByUserId = String(claims.userId || authUid || "").toLowerCase();
+
+  let approvalTxId = null;
+
+  await db.runTransaction(async (t) => {
+    const pendingSnap = await t.get(pendingRef);
+    if (!pendingSnap.exists) throw new functions.https.HttpsError("not-found", "Pending tx not found.");
+
+    const pending = pendingSnap.data() || {};
+    if (pending.actionType !== "MINUTES_SUBMIT_PENDING") {
+      throw new functions.https.HttpsError("failed-precondition", "Not a pending minutes tx.");
+    }
+    if (pending.status !== "PENDING") {
+      throw new functions.https.HttpsError("failed-precondition", "Already processed.");
+    }
+
+    const targetUserId = String(pending.targetUserId || "").toLowerCase();
+    const minutes = Number(pending.deltaMinutes || 0);
+    if (!targetUserId || minutes <= 0) {
+      throw new functions.https.HttpsError("failed-precondition", "Invalid pending tx data.");
+    }
+
+    const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
+    const sumSnap = await t.get(summaryRef);
+    const sum = sumSnap.exists
+      ? sumSnap.data()
+      : {
+          minutesTotal: 0,
+          minutesPendingTotal: 0,
+          moneyRaisedCents: 0,
+          rubiesBalance: 0,
+          rubiesLifetimeEarned: 0,
+          rubiesLifetimeSpent: 0,
+        };
+
+    // Update pending tx => APPROVED
+    t.set(
+      pendingRef,
+      {
+        status: "APPROVED",
+        approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+        approvedByUserId,
+      },
+      { merge: true }
+    );
+
+    // Create approval tx record (audit trail)
+    approvalTxId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+    const approvalRef = db.doc(`${schoolRoot(schoolId)}/transactions/${approvalTxId}`);
+
+    t.set(
+      approvalRef,
+      {
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        dateKey: pending.dateKey || todayDateKey(),
+        targetUserId,
+        submittedByUserId: approvedByUserId,
+        actionType: "MINUTES_APPROVE",
+        deltaMinutes: minutes,
+        deltaRubies: minutes, // rubies awarded 1:1
+        deltaMoneyRaisedCents: 0,
+        note: `Approved pending tx ${txId}${pending.note ? ` • ${pending.note}` : ""}`.slice(0, 300),
+        source: "approval",
+        status: "POSTED",
+        relatedTxId: txId,
+      },
+      { merge: true }
+    );
+
+    // Move summary totals
+    sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
+    sum.minutesTotal = Number(sum.minutesTotal || 0) + minutes;
+
+    sum.rubiesBalance = Number(sum.rubiesBalance || 0) + minutes;
+    sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + minutes;
+
+    t.set(summaryRef, sum, { merge: true });
+  });
+
+  return { ok: true, approvalTxId };
+}
+
+/* --------------------------------------------------
+   HTTP Endpoints (Bearer token + CORS)
+-------------------------------------------------- */
+
 exports.submitTransactionHttp = functions.https.onRequest(async (req, res) => {
   return cors(req, res, async () => {
     try {
@@ -352,10 +460,6 @@ exports.submitTransactionHttp = functions.https.onRequest(async (req, res) => {
   });
 });
 
-/**
- * ✅ NEW: HTTP endpoint for homeroom awards
- * POST /awardHomeroomHttp
- */
 exports.awardHomeroomHttp = functions.https.onRequest(async (req, res) => {
   return cors(req, res, async () => {
     try {
@@ -379,8 +483,38 @@ exports.awardHomeroomHttp = functions.https.onRequest(async (req, res) => {
   });
 });
 
+exports.approvePendingMinutesHttp = functions.https.onRequest(async (req, res) => {
+  return cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") return res.status(405).send("POST only");
+
+      const claims = await verifyBearerToken(req);
+
+      console.log("approvePendingMinutesHttp HIT", {
+        uid: claims.user_id || claims.sub,
+        role: claims.role,
+        schoolId: claims.schoolId,
+      });
+
+      const result = await approvePendingMinutesCore(req.body || {}, claims, claims.user_id || claims.sub);
+      return res.status(200).json(result);
+    } catch (err) {
+      console.error("approvePendingMinutesHttp error:", err);
+      const status = err instanceof functions.https.HttpsError ? httpsErrorToStatus(err) : 500;
+      return res.status(status).json({ error: err?.message || "Error" });
+    }
+  });
+});
+
+/* --------------------------------------------------
+   Callable Functions (kept)
+-------------------------------------------------- */
+
 /**
  * Callable: verifyPin({schoolId, userId, pin})
+ * - checks users/{userId}.active
+ * - compares secrets/{userId}.pinHash via bcrypt
+ * - returns customToken with claims: {schoolId, userId, role}
  */
 exports.verifyPin = functions.https.onCall(async (data, context) => {
   try {
@@ -409,36 +543,23 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
 
     const userRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}`);
     const userSnap = await userRef.get();
-
-    console.log("verifyPin userSnap.exists:", userSnap.exists);
-
     if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found.");
+
     const userData = userSnap.data() || {};
-
-    console.log("verifyPin userData.active:", userData.active);
-
     if (userData.active !== true) throw new functions.https.HttpsError("failed-precondition", "User inactive.");
 
+    // ✅ PIN hashes stored here:
+    // readathonV2_schools/{schoolId}/secrets/{userId}
     const secRef = db.doc(`${schoolRoot(schoolId)}/secrets/${userId}`);
     const secSnap = await secRef.get();
-
-    console.log("verifyPin secSnap.exists:", secSnap.exists);
-
     if (!secSnap.exists) throw new functions.https.HttpsError("not-found", "PIN not set.");
+
     const pinHash = secSnap.data()?.pinHash;
-
-    console.log("verifyPin pinHash type/len:", {
-      type: typeof pinHash,
-      len: typeof pinHash === "string" ? pinHash.length : null,
-    });
-
     if (typeof pinHash !== "string" || pinHash.length < 10) {
       throw new functions.https.HttpsError("failed-precondition", "PIN hash invalid (reset PIN).");
     }
 
     const ok = await bcrypt.compare(pin, pinHash);
-    console.log("verifyPin bcrypt ok:", ok);
-
     if (!ok) throw new functions.https.HttpsError("permission-denied", "Invalid PIN.");
 
     const role = inferRole(userId, userData.role);
@@ -448,8 +569,6 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
       userId,
       role,
     });
-
-    console.log("verifyPin token created. role:", role);
 
     return { customToken, role };
   } catch (err) {
@@ -464,117 +583,36 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Callable: submitTransaction({...}) (kept)
+ * Callable: submitTransaction({...})
  */
 exports.submitTransaction = functions.https.onCall(async (data, context) => {
   console.log("submitTransaction HIT", { hasAuth: !!context.auth, uid: context.auth?.uid });
-
   const auth = requireAuth(context);
   const claims = auth.token || {};
-  const result = await submitTransactionCore(data, claims, auth.uid);
-  return result;
+  return submitTransactionCore(data, claims, auth.uid);
 });
 
 /**
- * Callable: approvePendingMinutes({ schoolId, txId }) (unchanged)
- */
-exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
-  const auth = requireAuth(context);
-  const claims = auth.token || {};
-  const schoolId = String(data?.schoolId ?? "").trim();
-  requireSchoolMatch(schoolId, claims);
-
-  const role = String(claims.role || "").toLowerCase();
-  if (role !== "admin") throw new functions.https.HttpsError("permission-denied", "Admin only.");
-
-  const txId = String(data?.txId ?? "").trim();
-  if (!txId) throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
-
-  const pendingRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
-
-  await db.runTransaction(async (t) => {
-    const pendingSnap = await t.get(pendingRef);
-    if (!pendingSnap.exists) throw new functions.https.HttpsError("not-found", "Pending tx not found.");
-
-    const pending = pendingSnap.data() || {};
-    if (pending.actionType !== "MINUTES_SUBMIT_PENDING") {
-      throw new functions.https.HttpsError("failed-precondition", "Not a pending minutes tx.");
-    }
-    if (pending.status !== "PENDING") {
-      throw new functions.https.HttpsError("failed-precondition", "Already processed.");
-    }
-
-    const targetUserId = pending.targetUserId;
-    const minutes = Number(pending.deltaMinutes || 0);
-    if (!targetUserId || minutes <= 0) {
-      throw new functions.https.HttpsError("failed-precondition", "Invalid pending tx data.");
-    }
-
-    const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
-    const sumSnap = await t.get(summaryRef);
-    const sum = sumSnap.exists
-      ? sumSnap.data()
-      : {
-          minutesTotal: 0,
-          minutesPendingTotal: 0,
-          moneyRaisedCents: 0,
-          rubiesBalance: 0,
-          rubiesLifetimeEarned: 0,
-          rubiesLifetimeSpent: 0,
-        };
-
-    t.set(
-      pendingRef,
-      {
-        status: "APPROVED",
-        approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-        approvedByUserId: String(claims.userId || auth.uid || "").toLowerCase(),
-      },
-      { merge: true }
-    );
-
-    const approvalTxId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
-    const approvalRef = db.doc(`${schoolRoot(schoolId)}/transactions/${approvalTxId}`);
-
-    t.set(
-      approvalRef,
-      {
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        dateKey: pending.dateKey || todayDateKey(),
-        targetUserId,
-        submittedByUserId: String(claims.userId || auth.uid || "").toLowerCase(),
-        actionType: "MINUTES_APPROVE",
-        deltaMinutes: minutes,
-        deltaRubies: minutes,
-        deltaMoneyRaisedCents: 0,
-        note: `Approved pending tx ${txId}${pending.note ? ` • ${pending.note}` : ""}`.slice(0, 300),
-        source: "approval",
-        status: "POSTED",
-        relatedTxId: txId,
-      },
-      { merge: true }
-    );
-
-    sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
-    sum.minutesTotal = Number(sum.minutesTotal || 0) + minutes;
-
-    sum.rubiesBalance = Number(sum.rubiesBalance || 0) + minutes;
-    sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + minutes;
-
-    t.set(summaryRef, sum, { merge: true });
-  });
-
-  return { ok: true };
-});
-
-/**
- * Callable: awardHomeroom({...}) (now uses the shared core)
+ * Callable: awardHomeroom({...})
  */
 exports.awardHomeroom = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
   const claims = auth.token || {};
   return awardHomeroomCore(data, claims, auth.uid);
 });
+
+/**
+ * Callable: approvePendingMinutes({ schoolId, txId })
+ */
+exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  return approvePendingMinutesCore(data, claims, auth.uid);
+});
+
+/* --------------------------------------------------
+   Utility
+-------------------------------------------------- */
 
 function chunkArray(arr, size) {
   const out = [];
