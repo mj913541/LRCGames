@@ -27,6 +27,7 @@ import {
 import {
   getFunctions,
   httpsCallable,
+  httpsCallableFromURL,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
 console.log("✅ LOADED firebase.js: V2 /readathon-world_Ver2/js/firebase.js");
@@ -67,7 +68,10 @@ export const functions = getFunctions(app, "us-central1");
 -------------------------------------------------- */
 
 export const fnVerifyPin = httpsCallable(functions, "verifyPin");
-export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
+export const fnSubmitTransaction = httpsCallableFromURL(
+  functions,
+  "https://submittransaction-65vmpbcjmq-uc.a.run.app"
+);
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
 
