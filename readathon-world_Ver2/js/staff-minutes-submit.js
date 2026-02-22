@@ -5,6 +5,7 @@ import {
   DEFAULT_SCHOOL_ID,
   fnSubmitTransaction,
   fnAwardHomeroom,
+  waitForAuthReady, // ✅ NEW (must exist in firebase.js)
 } from "/readathon-world_Ver2/js/firebase.js";
 
 import {
@@ -49,15 +50,31 @@ let current = { schoolId: null, staffId: null };
 
 init().catch((e) => showError(normalizeError(e)));
 
+// ✅ NEW: before any Cloud Function call, ensure auth is ready and token is fresh
+async function ensureAuthedOrBounce() {
+  const user = await waitForAuthReady();
+  if (!user) {
+    // Signed out (or auth not available)
+    window.location.href = ABS.staffLogin;
+    return null;
+  }
+  // Force-refresh token so callable requests definitely include auth/claims
+  await user.getIdToken(true);
+  return user;
+}
+
 async function init() {
   showLoading(els.loadingOverlay, els.loadingText, "Loading…");
+
   const claims = await guardRoleOrRedirect(["staff", "admin"], ABS.staffLogin);
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
-  const userId = claims.userId || auth.currentUser?.uid;
+
+  // Prefer Firebase UID if available (most reliable for auth)
+  const userId = auth.currentUser?.uid || claims.userId || localStorage.getItem("readathonV2_userId") || "";
 
   current.schoolId = schoolId;
   current.staffId = userId;
@@ -114,6 +131,10 @@ function wireAwardForm() {
       els.btnSubmit.disabled = true;
       showLoading(els.loadingOverlay, els.loadingText, "Submitting…");
 
+      // ✅ Ensure auth/token ready right before calling Cloud Function
+      const user = await ensureAuthedOrBounce();
+      if (!user) return;
+
       await fnSubmitTransaction({
         schoolId,
         targetUserId,
@@ -167,11 +188,10 @@ function wireHomeroomForm() {
       els.btnHomeroomSubmit.disabled = true;
       showLoading(els.loadingOverlay, els.loadingText, "Awarding homeroom…");
 
-      // For homeroom awards, simplest:
-      // - minutes go in as pending minutes submissions for each student (same approval pipeline)
-      // - rubies award can be immediate (or also pending if you prefer later)
-      // We'll implement in function:
-      // actionType passed in; we’ll use RUBIES_AWARD and/or MINUTES_SUBMIT_PENDING inside.
+      // ✅ Ensure auth/token ready right before calling Cloud Function
+      const user = await ensureAuthedOrBounce();
+      if (!user) return;
+
       await fnAwardHomeroom({
         schoolId,
         homeroomId,

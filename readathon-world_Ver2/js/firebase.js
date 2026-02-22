@@ -31,7 +31,10 @@ import {
 
 console.log("✅ LOADED firebase.js: V2 /readathon-world_Ver2/js/firebase.js");
 
-// Your web app's Firebase configuration
+/* --------------------------------------------------
+   Firebase Config
+-------------------------------------------------- */
+
 const firebaseConfig = {
   apiKey: "AIzaSyDpXoneclJAl5kFr7doJmSlgqoN6teGWzI",
   authDomain: "lrcquest-3039e.web.app",
@@ -44,11 +47,14 @@ const firebaseConfig = {
 
 export const DEFAULT_SCHOOL_ID = "308_longbeach_elementary";
 
-// Initialize
+/* --------------------------------------------------
+   Initialize Firebase
+-------------------------------------------------- */
+
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 
-// ✅ Make login persist across page loads (prevents "home -> back to login" loops)
+// ✅ Make login persist across page loads
 setPersistence(auth, browserLocalPersistence).catch((err) => {
   console.warn("⚠️ setPersistence failed:", err);
 });
@@ -56,31 +62,35 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
 export const db = getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
 
-/**
- * Callable Cloud Functions
- */
+/* --------------------------------------------------
+   Callable Cloud Functions
+-------------------------------------------------- */
+
 export const fnVerifyPin = httpsCallable(functions, "verifyPin");
 export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
 
-/**
- * Convenience: read schoolId from localStorage (fallback to default)
- */
+/* --------------------------------------------------
+   School ID Helpers
+-------------------------------------------------- */
+
 export function getSchoolId() {
   return localStorage.getItem("readathonV2_schoolId") || DEFAULT_SCHOOL_ID;
 }
+
 export function setSchoolId(schoolId) {
   localStorage.setItem("readathonV2_schoolId", schoolId);
 }
 
-/**
- * Convenience: sign in with custom token returned from verifyPin
- * IMPORTANT: force-refresh token so custom claims (role, schoolId, userId) are available immediately.
- */
+/* --------------------------------------------------
+   Auth Helpers
+-------------------------------------------------- */
+
+// Sign in with custom token + force-refresh claims
 export async function signInWithToken(customToken) {
   const cred = await signInWithCustomToken(auth, customToken);
-  await cred.user.getIdToken(true); // ✅ refresh claims immediately
+  await cred.user.getIdToken(true); // Ensure claims are immediately available
   return cred;
 }
 
@@ -88,9 +98,17 @@ export async function signOutUser() {
   await signOut(auth);
 }
 
-/**
- * Claims helpers
- */
+// Wait until Firebase finishes loading the signed-in user
+export function waitForAuthReady() {
+  return new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      unsub();
+      resolve(user);
+    });
+  });
+}
+
+// Get ID token claims
 export async function getIdTokenClaims(forceRefresh = false) {
   const u = auth.currentUser;
   if (!u) return null;
@@ -102,11 +120,13 @@ export function watchAuth(callback) {
   return onAuthStateChanged(auth, callback);
 }
 
-/**
- * Guards (NOTE: app.js currently uses its own guardRoleOrRedirect)
- * These are kept for convenience elsewhere.
- */
-export async function requireSignedIn({ redirectTo = "/readathon-world_Ver2/html/index.html" } = {}) {
+/* --------------------------------------------------
+   Basic Guards (app.js uses its own stronger guard)
+-------------------------------------------------- */
+
+export async function requireSignedIn({
+  redirectTo = "/readathon-world_Ver2/html/index.html",
+} = {}) {
   if (!auth.currentUser) {
     window.location.href = redirectTo;
     return false;
@@ -114,11 +134,13 @@ export async function requireSignedIn({ redirectTo = "/readathon-world_Ver2/html
   return true;
 }
 
-export async function requireRole(allowedRoles = [], { redirectTo = "/readathon-world_Ver2/html/index.html" } = {}) {
+export async function requireRole(
+  allowedRoles = [],
+  { redirectTo = "/readathon-world_Ver2/html/index.html" } = {}
+) {
   const ok = await requireSignedIn({ redirectTo });
   if (!ok) return false;
 
-  // Try without refresh, then refresh once if missing
   let claims = await getIdTokenClaims(false);
   if (!claims?.role) claims = await getIdTokenClaims(true);
 
@@ -126,12 +148,14 @@ export async function requireRole(allowedRoles = [], { redirectTo = "/readathon-
     window.location.href = redirectTo;
     return false;
   }
+
   return true;
 }
 
-/**
- * Firestore path helpers
- */
+/* --------------------------------------------------
+   Firestore Path Helpers
+-------------------------------------------------- */
+
 export function schoolRoot(schoolId) {
   return `readathonV2_schools/${schoolId}`;
 }
@@ -156,10 +180,14 @@ export function transactionsCol(schoolId) {
   return collection(db, `${schoolRoot(schoolId)}/transactions`);
 }
 
-/**
- * Read helpers (used for login pickers, dashboards, etc.)
- */
-export async function fetchActivePublicStudentsByGrade(schoolId, gradeNum) {
+/* --------------------------------------------------
+   Read Helpers
+-------------------------------------------------- */
+
+export async function fetchActivePublicStudentsByGrade(
+  schoolId,
+  gradeNum
+) {
   const qRef = query(
     publicStudentsCol(schoolId),
     where("active", "==", true),
@@ -168,11 +196,15 @@ export async function fetchActivePublicStudentsByGrade(schoolId, gradeNum) {
     orderBy("displayName"),
     limit(5000)
   );
+
   const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function fetchActiveHomeroomsByGrade(schoolId, gradeNum) {
+export async function fetchActiveHomeroomsByGrade(
+  schoolId,
+  gradeNum
+) {
   const qRef = query(
     homeroomsCol(schoolId),
     where("active", "==", true),
@@ -180,6 +212,7 @@ export async function fetchActiveHomeroomsByGrade(schoolId, gradeNum) {
     orderBy("homeroomId"),
     limit(500)
   );
+
   const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
