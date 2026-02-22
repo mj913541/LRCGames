@@ -63,8 +63,8 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
  * - compares secrets/{userId}.pinHash via bcrypt
  * - returns customToken with claims: {schoolId, userId, role}
  */
-
 exports.verifyPin = functions
+  .region("us-central1")
   .runWith({ serviceAccount: "lrcquest-3039e@appspot.gserviceaccount.com" })
   .https.onCall(async (data, context) => {
     try {
