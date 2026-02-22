@@ -72,20 +72,49 @@ export function wireSignOut(btnEl) {
   });
 }
 
-export async function guardRoleOrRedirect(allowedRoles = [], redirectToLogin) {
-  // must be signed in
-  const u = auth.currentUser;
-  if (!u) {
-    window.location.href = redirectToLogin || ABS.index;
-    return null;
-  }
-  const claims = await getIdTokenClaims(true);
-  if (!claims?.role || !allowedRoles.includes(claims.role)) {
-    window.location.href = redirectToLogin || ABS.index;
-    return null;
-  }
-  return claims; // includes schoolId/userId/role from custom claims
+// PATCH FOR /readathon-world_Ver2/js/app.js
+// Replace your existing guardRoleOrRedirect with this version.
+// It waits for auth to be ready AND forces a one-time token refresh if claims aren't present yet.
+
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { auth } from "/readathon-world_Ver2/js/firebase.js";
+
+function waitForAuthReady() {
+  return new Promise((resolve) => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      unsub();
+      resolve(user);
+    });
+  });
 }
+
+export async function guardRoleOrRedirect(allowedRoles = [], loginUrl) {
+  const user = await waitForAuthReady();
+
+  if (!user) {
+    window.location.replace(loginUrl);
+    return null;
+  }
+
+  // 1st check (no force refresh)
+  let tok = await user.getIdTokenResult(false);
+  let claims = tok?.claims || {};
+
+  // If claims are not set yet (common right after custom-token sign-in), refresh ONCE
+  if (!claims?.role) {
+    await user.getIdToken(true);
+    tok = await user.getIdTokenResult(false);
+    claims = tok?.claims || {};
+  }
+
+  if (!claims?.role || !allowedRoles.includes(claims.role)) {
+    window.location.replace(loginUrl);
+    return null;
+  }
+
+  return claims;
+}
+
 
 export async function loadSummary({ schoolId, userId }) {
   const ref = userSummaryRef(schoolId, userId);

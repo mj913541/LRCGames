@@ -1,14 +1,17 @@
 // /readathon-world_Ver2/js/firebase.js
 // Firebase v9+ (modular) via CDN. Vanilla JS module exports.
-// IMPORTANT: Replace firebaseConfig placeholders with your real config.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 import {
   getAuth,
   onAuthStateChanged,
   signInWithCustomToken,
   signOut,
+  setPersistence,
+  browserLocalPersistence,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 import {
   getFirestore,
   doc,
@@ -20,13 +23,15 @@ import {
   orderBy,
   limit,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
 import {
   getFunctions,
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
+
 console.log("✅ LOADED firebase.js: V2 /readathon-world_Ver2/js/firebase.js");
+
 // Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDpXoneclJAl5kFr7doJmSlgqoN6teGWzI",
   authDomain: "lrcquest-3039e.web.app",
@@ -34,7 +39,7 @@ const firebaseConfig = {
   storageBucket: "lrcquest-3039e.firebasestorage.app",
   messagingSenderId: "72063656342",
   appId: "1:72063656342:web:e355f9119293b3d953bdb7",
-  measurementId: "G-VRKVK0QWY2"
+  measurementId: "G-VRKVK0QWY2",
 };
 
 export const DEFAULT_SCHOOL_ID = "308_longbeach_elementary";
@@ -42,6 +47,12 @@ export const DEFAULT_SCHOOL_ID = "308_longbeach_elementary";
 // Initialize
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
+
+// ✅ Make login persist across page loads (prevents "home -> back to login" loops)
+setPersistence(auth, browserLocalPersistence).catch((err) => {
+  console.warn("⚠️ setPersistence failed:", err);
+});
+
 export const db = getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
 
@@ -52,7 +63,6 @@ export const fnVerifyPin = httpsCallable(functions, "verifyPin");
 export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
-
 
 /**
  * Convenience: read schoolId from localStorage (fallback to default)
@@ -66,9 +76,11 @@ export function setSchoolId(schoolId) {
 
 /**
  * Convenience: sign in with custom token returned from verifyPin
+ * IMPORTANT: force-refresh token so custom claims (role, schoolId, userId) are available immediately.
  */
 export async function signInWithToken(customToken) {
   const cred = await signInWithCustomToken(auth, customToken);
+  await cred.user.getIdToken(true); // ✅ refresh claims immediately
   return cred;
 }
 
@@ -91,7 +103,8 @@ export function watchAuth(callback) {
 }
 
 /**
- * Guards
+ * Guards (NOTE: app.js currently uses its own guardRoleOrRedirect)
+ * These are kept for convenience elsewhere.
  */
 export async function requireSignedIn({ redirectTo = "/readathon-world_Ver2/html/index.html" } = {}) {
   if (!auth.currentUser) {
@@ -104,7 +117,11 @@ export async function requireSignedIn({ redirectTo = "/readathon-world_Ver2/html
 export async function requireRole(allowedRoles = [], { redirectTo = "/readathon-world_Ver2/html/index.html" } = {}) {
   const ok = await requireSignedIn({ redirectTo });
   if (!ok) return false;
-  const claims = await getIdTokenClaims();
+
+  // Try without refresh, then refresh once if missing
+  let claims = await getIdTokenClaims(false);
+  if (!claims?.role) claims = await getIdTokenClaims(true);
+
   if (!claims?.role || !allowedRoles.includes(claims.role)) {
     window.location.href = redirectTo;
     return false;
