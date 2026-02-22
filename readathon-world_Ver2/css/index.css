@@ -225,7 +225,7 @@ body{
 .click-zone {
   position: absolute;
   cursor: pointer;
-  border: black 2px;
+  border: black 15px;
 }
 
 #studentLogin {
