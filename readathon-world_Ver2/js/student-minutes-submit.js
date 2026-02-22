@@ -1,5 +1,11 @@
 // /readathon-world_Ver2/js/student-minutes-submit.js
-import { auth, getSchoolId, DEFAULT_SCHOOL_ID, fnSubmitTransaction } from "/readathon-world_Ver2/js/firebase.js";
+import {
+  auth,
+  getSchoolId,
+  DEFAULT_SCHOOL_ID,
+  waitForAuthReady,
+} from "/readathon-world_Ver2/js/firebase.js";
+
 import {
   ABS,
   guardRoleOrRedirect,

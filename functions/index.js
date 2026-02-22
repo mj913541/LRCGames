@@ -72,8 +72,20 @@ async function verifyBearerToken(req) {
 }
 
 /**
- * ✅ NEW helper: shared submitTransaction core
- * Used by BOTH the callable and the new HTTP endpoint.
+ * ✅ Small helper: convert HttpsError to a reasonable HTTP code
+ */
+function httpsErrorToStatus(err) {
+  const code = err?.code;
+  if (code === "unauthenticated") return 401;
+  if (code === "permission-denied") return 403;
+  if (code === "not-found") return 404;
+  if (code === "invalid-argument") return 400;
+  if (code === "failed-precondition") return 412;
+  return 500;
+}
+
+/**
+ * ✅ Shared submitTransaction core (callable + HTTP)
  */
 async function submitTransactionCore(data, claims, authUid) {
   const schoolId = String(data?.schoolId ?? "").trim();
@@ -185,7 +197,136 @@ async function submitTransactionCore(data, claims, authUid) {
 }
 
 /**
- * ✅ NEW: HTTP endpoint (stable auth via Bearer token)
+ * ✅ NEW shared awardHomeroom core (callable + HTTP)
+ */
+async function awardHomeroomCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId ?? "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const role = String(claims.role || "").toLowerCase();
+  if (!(role === "staff" || role === "admin")) {
+    throw new functions.https.HttpsError("permission-denied", "Staff/Admin only.");
+  }
+
+  const homeroomId = String(data?.homeroomId ?? "").trim();
+  const deltaMinutes = Number(data?.deltaMinutes || 0);
+  const deltaRubies = Number(data?.deltaRubies || 0);
+  const note = (data?.note || "").toString().slice(0, 300);
+  const dateKey = (data?.dateKey || todayDateKey()).toString();
+
+  if (!homeroomId) throw new functions.https.HttpsError("invalid-argument", "Missing homeroomId.");
+  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies)) {
+    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
+  }
+  if (deltaMinutes <= 0 && deltaRubies <= 0) {
+    throw new functions.https.HttpsError("invalid-argument", "Provide minutes and/or rubies > 0.");
+  }
+
+  const actorId = String(claims.userId || authUid || "").toLowerCase();
+
+  // Staff permission: canAwardHomerooms must contain homeroomId or be ALL
+  if (role === "staff") {
+    const can = await getCanAwardHomerooms({ schoolId, staffId: actorId });
+
+    let ok = false;
+    if (typeof can === "string" && can.toUpperCase() === "ALL") ok = true;
+    if (Array.isArray(can) && can.includes(homeroomId)) ok = true;
+
+    if (!ok) throw new functions.https.HttpsError("permission-denied", "Not allowed to award that homeroom.");
+  }
+
+  // Query active students in that homeroom
+  const pubCol = db.collection(`${schoolRoot(schoolId)}/publicStudents`);
+  const snap = await pubCol.where("homeroomId", "==", homeroomId).where("active", "==", true).get();
+
+  const studentIds = snap.docs.map((d) => d.id).filter(Boolean);
+
+  if (!studentIds.length) {
+    return { ok: true, affected: 0 };
+  }
+
+  const chunks = chunkArray(studentIds, 200); // safe batch size
+  let affected = 0;
+
+  for (const chunk of chunks) {
+    const batch = db.batch();
+
+    for (const studentId of chunk) {
+      const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${studentId}/readathon/summary`);
+
+      const baseTx = {
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        dateKey,
+        targetUserId: studentId,
+        submittedByUserId: actorId,
+        note,
+        source: "homeroom",
+      };
+
+      if (deltaMinutes > 0) {
+        const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+        const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+        batch.set(
+          txRef,
+          {
+            ...baseTx,
+            actionType: "MINUTES_SUBMIT_PENDING",
+            deltaMinutes,
+            deltaRubies: 0,
+            deltaMoneyRaisedCents: 0,
+            status: "PENDING",
+            homeroomId,
+          },
+          { merge: true }
+        );
+
+        batch.set(
+          summaryRef,
+          {
+            minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes),
+          },
+          { merge: true }
+        );
+      }
+
+      if (deltaRubies > 0) {
+        const txId2 = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
+        const txRef2 = db.doc(`${schoolRoot(schoolId)}/transactions/${txId2}`);
+        batch.set(
+          txRef2,
+          {
+            ...baseTx,
+            actionType: "RUBIES_AWARD",
+            deltaMinutes: 0,
+            deltaRubies,
+            deltaMoneyRaisedCents: 0,
+            status: "POSTED",
+            homeroomId,
+          },
+          { merge: true }
+        );
+
+        batch.set(
+          summaryRef,
+          {
+            rubiesBalance: admin.firestore.FieldValue.increment(deltaRubies),
+            rubiesLifetimeEarned: admin.firestore.FieldValue.increment(deltaRubies),
+          },
+          { merge: true }
+        );
+      }
+
+      affected += 1;
+    }
+
+    await batch.commit();
+  }
+
+  return { ok: true, affected };
+}
+
+/**
+ * ✅ HTTP endpoint (stable auth via Bearer token)
  * POST /submitTransactionHttp
  */
 exports.submitTransactionHttp = functions.https.onRequest(async (req, res) => {
@@ -195,7 +336,6 @@ exports.submitTransactionHttp = functions.https.onRequest(async (req, res) => {
 
       const claims = await verifyBearerToken(req);
 
-      // quick log so we can confirm auth is arriving
       console.log("submitTransactionHttp HIT", {
         uid: claims.user_id || claims.sub,
         role: claims.role,
@@ -206,8 +346,35 @@ exports.submitTransactionHttp = functions.https.onRequest(async (req, res) => {
       return res.status(200).json(result);
     } catch (err) {
       console.error("submitTransactionHttp error:", err);
-      // Keep this simple for now
-      return res.status(401).json({ error: err?.message || "Unauthorized" });
+      const status = err instanceof functions.https.HttpsError ? httpsErrorToStatus(err) : 500;
+      return res.status(status).json({ error: err?.message || "Error" });
+    }
+  });
+});
+
+/**
+ * ✅ NEW: HTTP endpoint for homeroom awards
+ * POST /awardHomeroomHttp
+ */
+exports.awardHomeroomHttp = functions.https.onRequest(async (req, res) => {
+  return cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") return res.status(405).send("POST only");
+
+      const claims = await verifyBearerToken(req);
+
+      console.log("awardHomeroomHttp HIT", {
+        uid: claims.user_id || claims.sub,
+        role: claims.role,
+        schoolId: claims.schoolId,
+      });
+
+      const result = await awardHomeroomCore(req.body || {}, claims, claims.user_id || claims.sub);
+      return res.status(200).json(result);
+    } catch (err) {
+      console.error("awardHomeroomHttp error:", err);
+      const status = err instanceof functions.https.HttpsError ? httpsErrorToStatus(err) : 500;
+      return res.status(status).json({ error: err?.message || "Error" });
     }
   });
 });
@@ -297,7 +464,7 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Callable: submitTransaction({...})  (kept as-is)
+ * Callable: submitTransaction({...}) (kept)
  */
 exports.submitTransaction = functions.https.onCall(async (data, context) => {
   console.log("submitTransaction HIT", { hasAuth: !!context.auth, uid: context.auth?.uid });
@@ -309,8 +476,7 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Callable: approvePendingMinutes({ schoolId, txId })
- * (unchanged from your version)
+ * Callable: approvePendingMinutes({ schoolId, txId }) (unchanged)
  */
 exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
@@ -402,133 +568,12 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
 });
 
 /**
- * Callable: awardHomeroom({...})
- * (unchanged from your version)
+ * Callable: awardHomeroom({...}) (now uses the shared core)
  */
 exports.awardHomeroom = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
   const claims = auth.token || {};
-  const schoolId = String(data?.schoolId ?? "").trim();
-  requireSchoolMatch(schoolId, claims);
-
-  const role = String(claims.role || "").toLowerCase();
-  if (!(role === "staff" || role === "admin")) {
-    throw new functions.https.HttpsError("permission-denied", "Staff/Admin only.");
-  }
-
-  const homeroomId = String(data?.homeroomId ?? "").trim();
-  const deltaMinutes = Number(data?.deltaMinutes || 0);
-  const deltaRubies = Number(data?.deltaRubies || 0);
-  const note = (data?.note || "").toString().slice(0, 300);
-  const dateKey = (data?.dateKey || todayDateKey()).toString();
-
-  if (!homeroomId) throw new functions.https.HttpsError("invalid-argument", "Missing homeroomId.");
-  if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies)) {
-    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
-  }
-  if (deltaMinutes <= 0 && deltaRubies <= 0) {
-    throw new functions.https.HttpsError("invalid-argument", "Provide minutes and/or rubies > 0.");
-  }
-
-  const actorId = String(claims.userId || auth.uid || "").toLowerCase();
-
-  if (role === "staff") {
-    const can = await getCanAwardHomerooms({ schoolId, staffId: actorId });
-
-    let ok = false;
-    if (typeof can === "string" && can.toUpperCase() === "ALL") ok = true;
-    if (Array.isArray(can) && can.includes(homeroomId)) ok = true;
-
-    if (!ok) throw new functions.https.HttpsError("permission-denied", "Not allowed to award that homeroom.");
-  }
-
-  const pubCol = db.collection(`${schoolRoot(schoolId)}/publicStudents`);
-  const snap = await pubCol.where("homeroomId", "==", homeroomId).where("active", "==", true).get();
-
-  const studentIds = snap.docs.map((d) => d.id).filter(Boolean);
-
-  if (!studentIds.length) {
-    return { ok: true, affected: 0 };
-  }
-
-  const chunks = chunkArray(studentIds, 200);
-  let affected = 0;
-
-  for (const chunk of chunks) {
-    const batch = db.batch();
-
-    for (const studentId of chunk) {
-      const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${studentId}/readathon/summary`);
-
-      const baseTx = {
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        dateKey,
-        targetUserId: studentId,
-        submittedByUserId: actorId,
-        note,
-        source: "homeroom",
-      };
-
-      if (deltaMinutes > 0) {
-        const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
-        const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
-        batch.set(
-          txRef,
-          {
-            ...baseTx,
-            actionType: "MINUTES_SUBMIT_PENDING",
-            deltaMinutes,
-            deltaRubies: 0,
-            deltaMoneyRaisedCents: 0,
-            status: "PENDING",
-            homeroomId,
-          },
-          { merge: true }
-        );
-
-        batch.set(
-          summaryRef,
-          {
-            minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes),
-          },
-          { merge: true }
-        );
-      }
-
-      if (deltaRubies > 0) {
-        const txId2 = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
-        const txRef2 = db.doc(`${schoolRoot(schoolId)}/transactions/${txId2}`);
-        batch.set(
-          txRef2,
-          {
-            ...baseTx,
-            actionType: "RUBIES_AWARD",
-            deltaMinutes: 0,
-            deltaRubies,
-            deltaMoneyRaisedCents: 0,
-            status: "POSTED",
-            homeroomId,
-          },
-          { merge: true }
-        );
-
-        batch.set(
-          summaryRef,
-          {
-            rubiesBalance: admin.firestore.FieldValue.increment(deltaRubies),
-            rubiesLifetimeEarned: admin.firestore.FieldValue.increment(deltaRubies),
-          },
-          { merge: true }
-        );
-      }
-
-      affected += 1;
-    }
-
-    await batch.commit();
-  }
-
-  return { ok: true, affected };
+  return awardHomeroomCore(data, claims, auth.uid);
 });
 
 function chunkArray(arr, size) {

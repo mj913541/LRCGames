@@ -16,8 +16,6 @@ import {
   normalizeError,
 } from "/readathon-world_Ver2/js/app.js";
 
-console.log("✅ LOADED staff-minutes-submit.js vHTTP");
-
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
