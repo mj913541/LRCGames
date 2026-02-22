@@ -275,45 +275,53 @@ function goPinStep() {
   };
 
   els.pinForm.onsubmit = async (e) => {
-    e.preventDefault();
-    hideError();
+  e.preventDefault();
+  hideError();
 
-    const pin = (els.pinInput.value || "").trim();
-    if (!/^\d{4}$/.test(pin)) {
-      showError("Please enter a 4-digit PIN.");
-      els.pinInput.focus();
-      return;
+  const pin = (els.pinInput.value || "").trim();
+  if (!/^\d{4}$/.test(pin)) {
+    showError("Please enter a 4-digit PIN.");
+    els.pinInput.focus();
+    return;
+  }
+
+  // FORCE safe strings
+  const userId = String(state.student?.id || "").trim().toLowerCase();
+  const schoolId = String(state.schoolId || DEFAULT_SCHOOL_ID).trim();
+
+  console.log("verifyPin payload check:", { schoolId, userId, pin, pinLen: pin.length });
+
+  // Extra guard so you get a friendly UI error instead of a 400
+  if (!schoolId || !userId) {
+    showError("Missing school or student. Please go back and select your name again.");
+    return;
+  }
+
+  try {
+    showLoading("Checking PIN…");
+
+    const res = await fnVerifyPin({ schoolId, userId, pin });
+    const customToken = res?.data?.customToken;
+
+    if (!customToken) {
+      throw new Error("Missing customToken from verifyPin.");
     }
 
-    try {
-      showLoading("Checking PIN…");
-      const userId = state.student?.id;
-      const schoolId = state.schoolId;
+    showLoading("Signing you in…");
+    await signInWithToken(customToken);
 
-const res = await fnVerifyPin({ schoolId, userId, pin });
-console.log("verifyPin raw response:", res);
+    // Save some session hints
+    localStorage.setItem("readathonV2_schoolId", schoolId);
+    localStorage.setItem("readathonV2_userId", userId);
+    localStorage.setItem("readathonV2_role", "student");
 
-const customToken = res?.data?.customToken;
-
-      if (!customToken) {
-        throw new Error("Missing customToken from verifyPin.");
-      }
-
-      showLoading("Signing you in…");
-      await signInWithToken(customToken);
-
-      // Save some session hints
-      localStorage.setItem("readathonV2_schoolId", schoolId);
-      localStorage.setItem("readathonV2_userId", userId);
-      localStorage.setItem("readathonV2_role", "student");
-
-      hideLoading();
-      window.location.href = ABS.studentHome;
-    } catch (err) {
-      hideLoading();
-      showFriendlyError(err);
-    }
-  };
+    hideLoading();
+    window.location.href = ABS.studentHome;
+  } catch (err) {
+    hideLoading();
+    showFriendlyError(err);
+  }
+};
 }
 
 function showStep(which) {
