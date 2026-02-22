@@ -3,9 +3,8 @@ import {
   auth,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
-  fnSubmitTransaction,
   fnAwardHomeroom,
-  waitForAuthReady, // ✅ NEW (must exist in firebase.js)
+  waitForAuthReady, // ✅ must exist in firebase.js
 } from "/readathon-world_Ver2/js/firebase.js";
 
 import {
@@ -17,6 +16,8 @@ import {
   hideLoading,
   normalizeError,
 } from "/readathon-world_Ver2/js/app.js";
+
+console.log("✅ LOADED staff-minutes-submit.js vHTTP");
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
@@ -50,16 +51,14 @@ let current = { schoolId: null, staffId: null };
 
 init().catch((e) => showError(normalizeError(e)));
 
-// ✅ NEW: before any Cloud Function call, ensure auth is ready and token is fresh
+// ✅ before any backend call, ensure auth is ready and token is fresh
 async function ensureAuthedOrBounce() {
   const user = await waitForAuthReady();
   if (!user) {
-    // Signed out (or auth not available)
     window.location.href = ABS.staffLogin;
     return null;
   }
-  // Force-refresh token so callable requests definitely include auth/claims
-  await user.getIdToken(true);
+  await user.getIdToken(true); // refresh token/claims
   return user;
 }
 
@@ -73,13 +72,20 @@ async function init() {
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
 
-  // Prefer Firebase UID if available (most reliable for auth)
-  const userId = auth.currentUser?.uid || claims.userId || localStorage.getItem("readathonV2_userId") || "";
+  // Prefer Firebase UID if available (most reliable)
+  const userId =
+    auth.currentUser?.uid ||
+    claims.userId ||
+    localStorage.getItem("readathonV2_userId") ||
+    "";
 
   current.schoolId = schoolId;
   current.staffId = userId;
 
-  setHeaderUser(els.hdr, { title: "Submit / Award", subtitle: `${schoolId} • ${userId}` });
+  setHeaderUser(els.hdr, {
+    title: "Submit / Award",
+    subtitle: `${schoolId} • ${userId}`,
+  });
 
   // Default target = self for convenience
   els.targetUserIdInput.value = userId;
@@ -105,7 +111,6 @@ function wireAwardForm() {
     const note = (els.noteInput.value || "").trim();
     const dateKey = todayDateKey();
 
-    // Basic validation per action
     if (!targetUserId) {
       showError("Please enter a target userId.");
       return;
@@ -131,20 +136,41 @@ function wireAwardForm() {
       els.btnSubmit.disabled = true;
       showLoading(els.loadingOverlay, els.loadingText, "Submitting…");
 
-      // ✅ Ensure auth/token ready right before calling Cloud Function
       const user = await ensureAuthedOrBounce();
       if (!user) return;
 
-      await fnSubmitTransaction({
-        schoolId,
-         targetUserId,
-        actionType,
-         deltaMinutes: minutes,
-        deltaRubies: rubies,
-        deltaMoneyRaisedCents: moneyCents,
-        note,
-        dateKey,
-      });
+      // ✅ Use HTTP endpoint (Bearer token) — NOT the callable submitTransaction
+      const token = await user.getIdToken(true);
+
+      const resp = await fetch(
+        "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            schoolId,
+            targetUserId,
+            actionType,
+            deltaMinutes: minutes,
+            deltaRubies: rubies,
+            deltaMoneyRaisedCents: moneyCents,
+            note,
+            dateKey,
+          }),
+        }
+      );
+
+      if (!resp.ok) {
+        let msg = `HTTP ${resp.status}`;
+        try {
+          const j = await resp.json();
+          if (j?.error) msg = j.error;
+        } catch {}
+        throw new Error(msg);
+      }
 
       hideLoading(els.loadingOverlay);
       showOk("Submitted! ✅");
@@ -188,7 +214,6 @@ function wireHomeroomForm() {
       els.btnHomeroomSubmit.disabled = true;
       showLoading(els.loadingOverlay, els.loadingText, "Awarding homeroom…");
 
-      // ✅ Ensure auth/token ready right before calling Cloud Function
       const user = await ensureAuthedOrBounce();
       if (!user) return;
 
