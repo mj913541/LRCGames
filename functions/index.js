@@ -64,14 +64,18 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
  * - returns customToken with claims: {schoolId, userId, role}
  */
 exports.verifyPin = functions.https.onCall(async (data, context) => {
-  // Force all inputs to string BEFORE trim/regex checks.
-  // This prevents subtle cases where pin/userId arrive as non-strings (number/undefined/null).
-  const schoolId = String(data?.schoolId ?? "").trim();
-  const userId = String(data?.userId ?? "").trim().toLowerCase();
-  const pin = String(data?.pin ?? "").trim();
+  // Callable requests arrive as { data: { ...payload } }
+  // Some environments/tooling may pass payload directly.
+  const payload =
+    data && typeof data === "object" && data.data && typeof data.data === "object"
+      ? data.data
+      : data;
+
+  const schoolId = String(payload?.schoolId ?? "").trim();
+  const userId = String(payload?.userId ?? "").trim().toLowerCase();
+  const pin = String(payload?.pin ?? "").trim();
 
   if (!schoolId || !userId || !/^\d{4}$/.test(pin)) {
-    // Safe debug: lengths only (does not expose PIN)
     throw new functions.https.HttpsError(
       "invalid-argument",
       `Invalid schoolId/userId/pin. schoolIdLen=${schoolId.length} userIdLen=${userId.length} pinLen=${pin.length}`

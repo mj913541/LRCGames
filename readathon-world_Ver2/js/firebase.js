@@ -24,7 +24,7 @@ import {
   getFunctions,
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
-
+console.log("✅ LOADED firebase.js: V2 /readathon-world_Ver2/js/firebase.js");
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
