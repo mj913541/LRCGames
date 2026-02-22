@@ -3,6 +3,9 @@ const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const bcrypt = require("bcryptjs");
 
+// ✅ NEW (you installed this): CORS helper for upcoming HTTP endpoints
+const cors = require("cors")({ origin: true });
+
 admin.initializeApp();
 const db = admin.firestore();
 
@@ -145,32 +148,11 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
 });
 
 /**
- * Callable: submitTransaction({
- *   schoolId, targetUserId, actionType,
- *   deltaMinutes, deltaRubies, deltaMoneyRaisedCents,
- *   note, dateKey
- * })
- *
- * Behavior:
- * - Always writes a tx doc with source="app"
- * - If actionType === MINUTES_SUBMIT_PENDING:
- *     - increments summary.minutesPendingTotal
- *     - tx.status="PENDING"
- * - Otherwise:
- *     - applies summary updates:
- *        minutesTotal += deltaMinutes (for approved/admin direct minutes)
- *        rubies rules:
- *          RUBIES_AWARD (+) => balance +=, lifetimeEarned +=
- *          RUBIES_SPEND (-) => balance +=, lifetimeSpent += abs()
- *        moneyRaisedCents += deltaMoneyRaisedCents
- *
- * Permissions:
- * - student: self only
- * - staff: self OR linked students
- * - admin: anyone
+ * Callable: submitTransaction({...})
  */
 exports.submitTransaction = functions.https.onCall(async (data, context) => {
   console.log("submitTransaction HIT", { hasAuth: !!context.auth, uid: context.auth?.uid });
+
   const auth = requireAuth(context);
   const claims = auth.token || {};
   const schoolId = String(data?.schoolId ?? "").trim();
@@ -261,10 +243,8 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
     } else {
       txData.status = "POSTED";
 
-      // minutesTotal increments (for admin/staff direct approved minutes if you ever use it)
       sum.minutesTotal = Number(sum.minutesTotal || 0) + deltaMinutes;
 
-      // rubies rules
       if (actionType === "RUBIES_AWARD" && deltaRubies > 0) {
         sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
         sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + deltaRubies;
@@ -274,7 +254,6 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
         sum.rubiesLifetimeSpent = Number(sum.rubiesLifetimeSpent || 0) + Math.abs(deltaRubies);
       }
 
-      // money
       sum.moneyRaisedCents = Number(sum.moneyRaisedCents || 0) + deltaMoneyRaisedCents;
     }
 
@@ -287,15 +266,6 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
 
 /**
  * Callable: approvePendingMinutes({ schoolId, txId })
- * - Admin only
- * - Finds pending tx (MINUTES_SUBMIT_PENDING, status=PENDING)
- * - Updates tx status => APPROVED + approvedAt + approvedByUserId
- * - Creates a NEW tx record for the approval (audit trail)
- * - Moves summary:
- *     minutesPendingTotal -= minutes
- *     minutesTotal += minutes
- *     rubiesBalance += minutes
- *     rubiesLifetimeEarned += minutes
  */
 exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
@@ -342,7 +312,6 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
           rubiesLifetimeSpent: 0,
         };
 
-    // Update pending tx
     t.set(
       pendingRef,
       {
@@ -353,7 +322,6 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
       { merge: true }
     );
 
-    // Create approval tx (audit trail)
     const approvalTxId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
     const approvalRef = db.doc(`${schoolRoot(schoolId)}/transactions/${approvalTxId}`);
 
@@ -366,7 +334,7 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
         submittedByUserId: String(claims.userId || auth.uid || "").toLowerCase(),
         actionType: "MINUTES_APPROVE",
         deltaMinutes: minutes,
-        deltaRubies: minutes, // rubies awarded 1:1
+        deltaRubies: minutes,
         deltaMoneyRaisedCents: 0,
         note: `Approved pending tx ${txId}${pending.note ? ` • ${pending.note}` : ""}`.slice(0, 300),
         source: "approval",
@@ -376,7 +344,6 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
       { merge: true }
     );
 
-    // Move summary totals
     sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
     sum.minutesTotal = Number(sum.minutesTotal || 0) + minutes;
 
@@ -390,19 +357,7 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
 });
 
 /**
- * Callable: awardHomeroom({
- *   schoolId, homeroomId, actionType,
- *   deltaMinutes, deltaRubies, deltaMoneyRaisedCents,
- *   note, dateKey
- * })
- *
- * - staff/admin only
- * - staff must have homeroomId in canAwardHomerooms OR "ALL"
- * - Finds active students in that homeroom via publicStudents (homeroomId match)
- * - For each student:
- *    - if deltaMinutes>0 => creates MINUTES_SUBMIT_PENDING + increments minutesPendingTotal
- *    - if deltaRubies>0 => creates RUBIES_AWARD (POSTED) + updates rubies totals
- *  (Writes are batched; summary updates are per-student transaction for safety.)
+ * Callable: awardHomeroom({...})
  */
 exports.awardHomeroom = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
@@ -431,7 +386,6 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
 
   const actorId = String(claims.userId || auth.uid || "").toLowerCase();
 
-  // Staff permission: canAwardHomerooms must contain homeroomId or be ALL
   if (role === "staff") {
     const can = await getCanAwardHomerooms({ schoolId, staffId: actorId });
 
@@ -442,7 +396,6 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
     if (!ok) throw new functions.https.HttpsError("permission-denied", "Not allowed to award that homeroom.");
   }
 
-  // Query active students in that homeroom
   const pubCol = db.collection(`${schoolRoot(schoolId)}/publicStudents`);
   const snap = await pubCol.where("homeroomId", "==", homeroomId).where("active", "==", true).get();
 
@@ -452,8 +405,7 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
     return { ok: true, affected: 0 };
   }
 
-  // We’ll create transactions + update summaries per-student using batched writes in chunks
-  const chunks = chunkArray(studentIds, 200); // safe batch size
+  const chunks = chunkArray(studentIds, 200);
   let affected = 0;
 
   for (const chunk of chunks) {
