@@ -1,10 +1,9 @@
-// aaa/readathon-world_Ver2/js/staff-minutes-submit.js
+// bbb/readathon-world_Ver2/js/staff-minutes-submit.js
 import {
   auth,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
-  fnAwardHomeroom,
-  waitForAuthReady, // ✅ must exist in firebase.js
+  waitForAuthReady,
 } from "/readathon-world_Ver2/js/firebase.js";
 
 import {
@@ -217,16 +216,38 @@ function wireHomeroomForm() {
       const user = await ensureAuthedOrBounce();
       if (!user) return;
 
-      await fnAwardHomeroom({
-        schoolId,
-        homeroomId,
-        actionType: "HOMEROOM_AWARD",
-        deltaMinutes: minutes,
-        deltaRubies: rubies,
-        deltaMoneyRaisedCents: 0,
-        note,
-        dateKey,
-      });
+      // ✅ Use HTTP endpoint (Bearer token) — NOT the callable awardHomeroom
+const token = await auth.currentUser.getIdToken(true);
+
+const resp = await fetch(
+  "https://us-central1-lrcquest-3039e.cloudfunctions.net/awardHomeroomHttp",
+  {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      schoolId,
+      homeroomId,
+      actionType: "HOMEROOM_AWARD",
+      deltaMinutes: minutes,
+      deltaRubies: rubies,
+      deltaMoneyRaisedCents: 0,
+      note,
+      dateKey,
+    }),
+  }
+);
+
+if (!resp.ok) {
+  let msg = `HTTP ${resp.status}`;
+  try {
+    const j = await resp.json();
+    if (j?.error) msg = j.error;
+  } catch {}
+  throw new Error(msg);
+}
 
       hideLoading(els.loadingOverlay);
       showHrOk("Homeroom award submitted! ✅");
