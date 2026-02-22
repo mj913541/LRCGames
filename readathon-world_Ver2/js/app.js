@@ -1,4 +1,5 @@
 // /readathon-world_Ver2/js/app.js
+
 import {
   getSchoolId,
   DEFAULT_SCHOOL_ID,
@@ -19,6 +20,10 @@ import {
   orderBy,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+import {
+  onAuthStateChanged,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 export const ABS = {
   index: "/readathon-world_Ver2/html/index.html",
 
@@ -35,9 +40,16 @@ export const ABS = {
   adminMinutesApprove: "/readathon-world_Ver2/html/admin-minutes-approve.html",
 };
 
+/* --------------------------------------------------
+   Formatting Helpers
+-------------------------------------------------- */
+
 export function fmtMoneyCents(cents) {
   const n = Number(cents || 0);
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(n / 100);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(n / 100);
 }
 
 export function fmtInt(n) {
@@ -48,17 +60,29 @@ export function safeText(s) {
   return (s ?? "").toString();
 }
 
+/* --------------------------------------------------
+   Header + Signout
+-------------------------------------------------- */
+
 export function setHeaderUser(el, { title, subtitle }) {
   if (!el) return;
+
   const schoolId = getSchoolId() || DEFAULT_SCHOOL_ID;
-  const userId = auth.currentUser?.uid || localStorage.getItem("readathonV2_userId") || "";
-  el.querySelector("[data-title]").textContent = title || "Readathon World";
+  const userId =
+    auth.currentUser?.uid ||
+    localStorage.getItem("readathonV2_userId") ||
+    "";
+
+  el.querySelector("[data-title]").textContent =
+    title || "Readathon World";
+
   el.querySelector("[data-subtitle]").textContent =
     subtitle || `${schoolId} • ${userId}`;
 }
 
 export function wireSignOut(btnEl) {
   if (!btnEl) return;
+
   btnEl.addEventListener("click", async () => {
     try {
       btnEl.disabled = true;
@@ -66,18 +90,14 @@ export function wireSignOut(btnEl) {
     } finally {
       localStorage.removeItem("readathonV2_role");
       localStorage.removeItem("readathonV2_userId");
-      // keep schoolId for convenience
       window.location.href = ABS.index;
     }
   });
 }
 
-// PATCH FOR /readathon-world_Ver2/js/app.js
-// Replace your existing guardRoleOrRedirect with this version.
-// It waits for auth to be ready AND forces a one-time token refresh if claims aren't present yet.
-
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { auth } from "/readathon-world_Ver2/js/firebase.js";
+/* --------------------------------------------------
+   AUTH GUARD (FIXED — prevents login bounce)
+-------------------------------------------------- */
 
 function waitForAuthReady() {
   return new Promise((resolve) => {
@@ -88,7 +108,10 @@ function waitForAuthReady() {
   });
 }
 
-export async function guardRoleOrRedirect(allowedRoles = [], loginUrl) {
+export async function guardRoleOrRedirect(
+  allowedRoles = [],
+  loginUrl
+) {
   const user = await waitForAuthReady();
 
   if (!user) {
@@ -96,11 +119,11 @@ export async function guardRoleOrRedirect(allowedRoles = [], loginUrl) {
     return null;
   }
 
-  // 1st check (no force refresh)
+  // First attempt (no refresh)
   let tok = await user.getIdTokenResult(false);
   let claims = tok?.claims || {};
 
-  // If claims are not set yet (common right after custom-token sign-in), refresh ONCE
+  // If role not present yet (common after custom token login), refresh ONCE
   if (!claims?.role) {
     await user.getIdToken(true);
     tok = await user.getIdTokenResult(false);
@@ -115,6 +138,9 @@ export async function guardRoleOrRedirect(allowedRoles = [], loginUrl) {
   return claims;
 }
 
+/* --------------------------------------------------
+   Firestore Loaders
+-------------------------------------------------- */
 
 export async function loadSummary({ schoolId, userId }) {
   const ref = userSummaryRef(schoolId, userId);
@@ -122,51 +148,75 @@ export async function loadSummary({ schoolId, userId }) {
   return snap.exists() ? snap.data() : null;
 }
 
-export async function loadInventory({ schoolId, userId, maxItems = 60 }) {
-  const invCol = collection(db, `readathonV2_schools/${schoolId}/users/${userId}/readathon/inventory`);
+export async function loadInventory({
+  schoolId,
+  userId,
+  maxItems = 60,
+}) {
+  const invCol = collection(
+    db,
+    `readathonV2_schools/${schoolId}/users/${userId}/readathon/inventory`
+  );
+
   const qRef = query(invCol, orderBy("__name__"), limit(maxItems));
   const snap = await getDocs(qRef);
-  return snap.docs.map(d => ({ itemId: d.id, ...d.data() }));
+
+  return snap.docs.map((d) => ({
+    itemId: d.id,
+    ...d.data(),
+  }));
 }
 
-/**
- * Avatar “equipped preview”
- * We store equipped item IDs locally for now (no new collections invented).
- * Later, we can persist equipped state in the existing user doc or readathon subdoc
- * once you tell me your preferred schema.
- */
-const equipKey = (schoolId, userId) => `readathonV2_equipped_${schoolId}_${userId}`;
+/* --------------------------------------------------
+   Avatar Equipped (Local Only)
+-------------------------------------------------- */
+
+const equipKey = (schoolId, userId) =>
+  `readathonV2_equipped_${schoolId}_${userId}`;
 
 export function getEquippedLocal({ schoolId, userId }) {
   try {
     const raw = localStorage.getItem(equipKey(schoolId, userId));
-    return raw ? JSON.parse(raw) : { head: null, body: null, accessory: null, pet: null, room: null };
+    return raw
+      ? JSON.parse(raw)
+      : { head: null, body: null, accessory: null, pet: null, room: null };
   } catch {
     return { head: null, body: null, accessory: null, pet: null, room: null };
   }
 }
 
-export function setEquippedLocal({ schoolId, userId }, equippedObj) {
-  localStorage.setItem(equipKey(schoolId, userId), JSON.stringify(equippedObj));
+export function setEquippedLocal(
+  { schoolId, userId },
+  equippedObj
+) {
+  localStorage.setItem(
+    equipKey(schoolId, userId),
+    JSON.stringify(equippedObj)
+  );
 }
 
 export function pickSlotForItem(itemId) {
-  // Simple heuristic you can refine later:
-  // item_head_*, item_body_*, item_pet_*, item_room_*, item_acc_*
   const id = (itemId || "").toLowerCase();
+
   if (id.includes("head")) return "head";
-  if (id.includes("body") || id.includes("shirt") || id.includes("outfit")) return "body";
+  if (id.includes("body") || id.includes("shirt") || id.includes("outfit"))
+    return "body";
   if (id.includes("pet")) return "pet";
   if (id.includes("room") || id.includes("bg")) return "room";
+
   return "accessory";
 }
 
+/* --------------------------------------------------
+   Utility
+-------------------------------------------------- */
+
 export function normalizeError(err) {
-  const raw =
+  return (
     err?.message ||
     err?.toString?.() ||
-    "Something went wrong. Please try again.";
-  return raw;
+    "Something went wrong. Please try again."
+  );
 }
 
 export function showLoading(overlayEl, textEl, text) {

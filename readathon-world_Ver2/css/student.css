@@ -41,7 +41,7 @@ body{
 .bg--home{
   background:
     linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.62)),
-    url("/readathon-world_Ver2/img/bg/student-home.png") center / cover no-repeat;
+    url("/readathon-world_Ver2/img/bg/student-login.png") center / cover no-repeat;
   z-index:-1;
 }
 
