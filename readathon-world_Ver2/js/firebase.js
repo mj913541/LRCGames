@@ -27,7 +27,6 @@ import {
 import {
   getFunctions,
   httpsCallable,
-  httpsCallableFromURL,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
 console.log("✅ LOADED firebase.js: V2 /readathon-world_Ver2/js/firebase.js");
@@ -64,14 +63,12 @@ export const db = getFirestore(app);
 export const functions = getFunctions(app, "us-central1");
 
 /* --------------------------------------------------
-   Callable Cloud Functions
+   Callable Cloud Functions (onCall)
+   IMPORTANT: use httpsCallable(...) (NOT the .a.run.app URL)
 -------------------------------------------------- */
 
 export const fnVerifyPin = httpsCallable(functions, "verifyPin");
-export const fnSubmitTransaction = httpsCallableFromURL(
-  functions,
-  "https://submittransaction-65vmpbcjmq-uc.a.run.app"
-);
+export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
 
@@ -188,10 +185,7 @@ export function transactionsCol(schoolId) {
    Read Helpers
 -------------------------------------------------- */
 
-export async function fetchActivePublicStudentsByGrade(
-  schoolId,
-  gradeNum
-) {
+export async function fetchActivePublicStudentsByGrade(schoolId, gradeNum) {
   const qRef = query(
     publicStudentsCol(schoolId),
     where("active", "==", true),
@@ -205,10 +199,7 @@ export async function fetchActivePublicStudentsByGrade(
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
 
-export async function fetchActiveHomeroomsByGrade(
-  schoolId,
-  gradeNum
-) {
+export async function fetchActiveHomeroomsByGrade(schoolId, gradeNum) {
   const qRef = query(
     homeroomsCol(schoolId),
     where("active", "==", true),
