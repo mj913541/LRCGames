@@ -1,4 +1,4 @@
-/* functions/index.js (Node 18) */
+/* functions/index.js (Node 20) */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const bcrypt = require("bcryptjs");
@@ -64,23 +64,31 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
  * - returns customToken with claims: {schoolId, userId, role}
  */
 exports.verifyPin = functions.https.onCall(async (data, context) => {
-  const schoolId = (data?.schoolId || "").trim();
-  const userId = (data?.userId || "").trim().toLowerCase();
-  const pin = (data?.pin || "").trim();
+  // Force all inputs to string BEFORE trim/regex checks.
+  // This prevents subtle cases where pin/userId arrive as non-strings (number/undefined/null).
+  const schoolId = String(data?.schoolId ?? "").trim();
+  const userId = String(data?.userId ?? "").trim().toLowerCase();
+  const pin = String(data?.pin ?? "").trim();
 
   if (!schoolId || !userId || !/^\d{4}$/.test(pin)) {
-    throw new functions.https.HttpsError("invalid-argument", "Invalid schoolId/userId/pin.");
+    // Safe debug: lengths only (does not expose PIN)
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      `Invalid schoolId/userId/pin. schoolIdLen=${schoolId.length} userIdLen=${userId.length} pinLen=${pin.length}`
+    );
   }
 
   const userRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}`);
   const userSnap = await userRef.get();
   if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found.");
+
   const userData = userSnap.data() || {};
   if (userData.active !== true) throw new functions.https.HttpsError("failed-precondition", "User inactive.");
 
   const secRef = db.doc(`${schoolRoot(schoolId)}/secrets/${userId}`);
   const secSnap = await secRef.get();
   if (!secSnap.exists) throw new functions.https.HttpsError("not-found", "PIN not set.");
+
   const pinHash = secSnap.data()?.pinHash;
   if (!pinHash) throw new functions.https.HttpsError("not-found", "PIN not set.");
 
@@ -126,14 +134,14 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
 exports.submitTransaction = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
   const claims = auth.token || {};
-  const schoolId = (data?.schoolId || "").trim();
+  const schoolId = String(data?.schoolId ?? "").trim();
   requireSchoolMatch(schoolId, claims);
 
-  const submittedByUserId = (claims.userId || auth.uid || "").toLowerCase();
-  const role = (claims.role || "").toLowerCase();
+  const submittedByUserId = String(claims.userId || auth.uid || "").toLowerCase();
+  const role = String(claims.role || "").toLowerCase();
 
-  const targetUserId = (data?.targetUserId || "").trim().toLowerCase();
-  const actionType = (data?.actionType || "").trim();
+  const targetUserId = String(data?.targetUserId ?? "").trim().toLowerCase();
+  const actionType = String(data?.actionType ?? "").trim();
 
   const deltaMinutes = Number(data?.deltaMinutes || 0);
   const deltaRubies = Number(data?.deltaRubies || 0);
@@ -153,7 +161,11 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
     }
   } else if (role === "staff") {
     if (targetUserId !== submittedByUserId) {
-      const linked = await isLinkedStaffToStudent({ schoolId, staffId: submittedByUserId, studentId: targetUserId });
+      const linked = await isLinkedStaffToStudent({
+        schoolId,
+        staffId: submittedByUserId,
+        studentId: targetUserId,
+      });
       if (!linked) throw new functions.https.HttpsError("permission-denied", "Not linked to that student.");
     }
   } else if (role === "admin") {
@@ -180,14 +192,16 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
     if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
 
     const sumSnap = await t.get(summaryRef);
-    const sum = sumSnap.exists ? sumSnap.data() : {
-      minutesTotal: 0,
-      minutesPendingTotal: 0,
-      moneyRaisedCents: 0,
-      rubiesBalance: 0,
-      rubiesLifetimeEarned: 0,
-      rubiesLifetimeSpent: 0,
-    };
+    const sum = sumSnap.exists
+      ? sumSnap.data()
+      : {
+          minutesTotal: 0,
+          minutesPendingTotal: 0,
+          moneyRaisedCents: 0,
+          rubiesBalance: 0,
+          rubiesLifetimeEarned: 0,
+          rubiesLifetimeSpent: 0,
+        };
 
     const txData = {
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -247,13 +261,13 @@ exports.submitTransaction = functions.https.onCall(async (data, context) => {
 exports.approvePendingMinutes = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
   const claims = auth.token || {};
-  const schoolId = (data?.schoolId || "").trim();
+  const schoolId = String(data?.schoolId ?? "").trim();
   requireSchoolMatch(schoolId, claims);
 
-  const role = (claims.role || "").toLowerCase();
+  const role = String(claims.role || "").toLowerCase();
   if (role !== "admin") throw new functions.https.HttpsError("permission-denied", "Admin only.");
 
-  const txId = (data?.txId || "").trim();
+  const txId = String(data?.txId ?? "").trim();
   if (!txId) throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
 
   const pendingRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
@@ -278,40 +292,50 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
 
     const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
     const sumSnap = await t.get(summaryRef);
-    const sum = sumSnap.exists ? sumSnap.data() : {
-      minutesTotal: 0,
-      minutesPendingTotal: 0,
-      moneyRaisedCents: 0,
-      rubiesBalance: 0,
-      rubiesLifetimeEarned: 0,
-      rubiesLifetimeSpent: 0,
-    };
+    const sum = sumSnap.exists
+      ? sumSnap.data()
+      : {
+          minutesTotal: 0,
+          minutesPendingTotal: 0,
+          moneyRaisedCents: 0,
+          rubiesBalance: 0,
+          rubiesLifetimeEarned: 0,
+          rubiesLifetimeSpent: 0,
+        };
 
     // Update pending tx
-    t.set(pendingRef, {
-      status: "APPROVED",
-      approvedAt: admin.firestore.FieldValue.serverTimestamp(),
-      approvedByUserId: (claims.userId || auth.uid || "").toLowerCase(),
-    }, { merge: true });
+    t.set(
+      pendingRef,
+      {
+        status: "APPROVED",
+        approvedAt: admin.firestore.FieldValue.serverTimestamp(),
+        approvedByUserId: String(claims.userId || auth.uid || "").toLowerCase(),
+      },
+      { merge: true }
+    );
 
     // Create approval tx (audit trail)
     const approvalTxId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
     const approvalRef = db.doc(`${schoolRoot(schoolId)}/transactions/${approvalTxId}`);
 
-    t.set(approvalRef, {
-      timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      dateKey: pending.dateKey || todayDateKey(),
-      targetUserId,
-      submittedByUserId: (claims.userId || auth.uid || "").toLowerCase(),
-      actionType: "MINUTES_APPROVE",
-      deltaMinutes: minutes,
-      deltaRubies: minutes,               // rubies awarded 1:1
-      deltaMoneyRaisedCents: 0,
-      note: `Approved pending tx ${txId}${pending.note ? ` • ${pending.note}` : ""}`.slice(0, 300),
-      source: "approval",
-      status: "POSTED",
-      relatedTxId: txId,
-    }, { merge: true });
+    t.set(
+      approvalRef,
+      {
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        dateKey: pending.dateKey || todayDateKey(),
+        targetUserId,
+        submittedByUserId: String(claims.userId || auth.uid || "").toLowerCase(),
+        actionType: "MINUTES_APPROVE",
+        deltaMinutes: minutes,
+        deltaRubies: minutes, // rubies awarded 1:1
+        deltaMoneyRaisedCents: 0,
+        note: `Approved pending tx ${txId}${pending.note ? ` • ${pending.note}` : ""}`.slice(0, 300),
+        source: "approval",
+        status: "POSTED",
+        relatedTxId: txId,
+      },
+      { merge: true }
+    );
 
     // Move summary totals
     sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
@@ -344,15 +368,15 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
 exports.awardHomeroom = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
   const claims = auth.token || {};
-  const schoolId = (data?.schoolId || "").trim();
+  const schoolId = String(data?.schoolId ?? "").trim();
   requireSchoolMatch(schoolId, claims);
 
-  const role = (claims.role || "").toLowerCase();
+  const role = String(claims.role || "").toLowerCase();
   if (!(role === "staff" || role === "admin")) {
     throw new functions.https.HttpsError("permission-denied", "Staff/Admin only.");
   }
 
-  const homeroomId = (data?.homeroomId || "").trim();
+  const homeroomId = String(data?.homeroomId ?? "").trim();
   const deltaMinutes = Number(data?.deltaMinutes || 0);
   const deltaRubies = Number(data?.deltaRubies || 0);
   const note = (data?.note || "").toString().slice(0, 300);
@@ -366,7 +390,7 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "Provide minutes and/or rubies > 0.");
   }
 
-  const actorId = (claims.userId || auth.uid || "").toLowerCase();
+  const actorId = String(claims.userId || auth.uid || "").toLowerCase();
 
   // Staff permission: canAwardHomerooms must contain homeroomId or be ALL
   if (role === "staff") {
@@ -381,12 +405,9 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
 
   // Query active students in that homeroom
   const pubCol = db.collection(`${schoolRoot(schoolId)}/publicStudents`);
-  const snap = await pubCol
-    .where("homeroomId", "==", homeroomId)
-    .where("active", "==", true)
-    .get();
+  const snap = await pubCol.where("homeroomId", "==", homeroomId).where("active", "==", true).get();
 
-  const studentIds = snap.docs.map(d => d.id).filter(Boolean);
+  const studentIds = snap.docs.map((d) => d.id).filter(Boolean);
 
   if (!studentIds.length) {
     return { ok: true, affected: 0 };
@@ -400,8 +421,6 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
     const batch = db.batch();
 
     for (const studentId of chunk) {
-      // Ensure user exists & active quickly (best effort): we won’t hard-fail the whole batch on one missing user
-      const userRef = db.doc(`${schoolRoot(schoolId)}/users/${studentId}`);
       const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${studentId}/readathon/summary`);
 
       const baseTx = {
@@ -416,38 +435,54 @@ exports.awardHomeroom = functions.https.onCall(async (data, context) => {
       if (deltaMinutes > 0) {
         const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
         const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
-        batch.set(txRef, {
-          ...baseTx,
-          actionType: "MINUTES_SUBMIT_PENDING",
-          deltaMinutes,
-          deltaRubies: 0,
-          deltaMoneyRaisedCents: 0,
-          status: "PENDING",
-          homeroomId,
-        }, { merge: true });
+        batch.set(
+          txRef,
+          {
+            ...baseTx,
+            actionType: "MINUTES_SUBMIT_PENDING",
+            deltaMinutes,
+            deltaRubies: 0,
+            deltaMoneyRaisedCents: 0,
+            status: "PENDING",
+            homeroomId,
+          },
+          { merge: true }
+        );
 
-        batch.set(summaryRef, {
-          minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes),
-        }, { merge: true });
+        batch.set(
+          summaryRef,
+          {
+            minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes),
+          },
+          { merge: true }
+        );
       }
 
       if (deltaRubies > 0) {
         const txId2 = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
         const txRef2 = db.doc(`${schoolRoot(schoolId)}/transactions/${txId2}`);
-        batch.set(txRef2, {
-          ...baseTx,
-          actionType: "RUBIES_AWARD",
-          deltaMinutes: 0,
-          deltaRubies,
-          deltaMoneyRaisedCents: 0,
-          status: "POSTED",
-          homeroomId,
-        }, { merge: true });
+        batch.set(
+          txRef2,
+          {
+            ...baseTx,
+            actionType: "RUBIES_AWARD",
+            deltaMinutes: 0,
+            deltaRubies,
+            deltaMoneyRaisedCents: 0,
+            status: "POSTED",
+            homeroomId,
+          },
+          { merge: true }
+        );
 
-        batch.set(summaryRef, {
-          rubiesBalance: admin.firestore.FieldValue.increment(deltaRubies),
-          rubiesLifetimeEarned: admin.firestore.FieldValue.increment(deltaRubies),
-        }, { merge: true });
+        batch.set(
+          summaryRef,
+          {
+            rubiesBalance: admin.firestore.FieldValue.increment(deltaRubies),
+            rubiesLifetimeEarned: admin.firestore.FieldValue.increment(deltaRubies),
+          },
+          { merge: true }
+        );
       }
 
       affected += 1;
