@@ -12,8 +12,8 @@
   --ring: 0 0 0 4px rgba(255,255,255,0.16);
 
   /* Put your real image ratio here */
-  --img-w: 1024;
-  --img-h: 576;   /* example: 16:9-ish */
+  --img-w: 1536;
+  --img-h: 1024;   /* example: 16:9-ish */
 
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
