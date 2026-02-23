@@ -1,8 +1,4 @@
 /* /readathon-world_Ver2/css/index.css */
-
-
-
-
 :root{
   --bg: #0b1020;
   --panel: rgba(10, 18, 40, 0.72);
@@ -19,45 +15,131 @@
   --student: #26d6ff;
   --staff: #67ff7a;
   --admin: #ffcf5b;
-
+  /* Put your real image ratio here */
+  --img-w: 1536;
+  --img-h: 1024;   /* example: 16:9-ish */
   --tap: 56px;
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 
+/* ===== Hotspot placement (percentages relative to the STAGE image box) =====
+     Tweak these until the click areas sit perfectly on your sign artwork.
+  */
+  --zone-student-left: 12%;
+  --zone-student-top: 70%;
+  --zone-student-w: 24%;
+  --zone-student-h: 14%;
 
+  --zone-staff-left: 38%;
+  --zone-staff-top: 70%;
+  --zone-staff-w: 24%;
+  --zone-staff-h: 14%;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  --zone-admin-left: 64%;
+  --zone-admin-top: 70%;
+  --zone-admin-w: 24%;
+  --zone-admin-h: 14%;
 }
 
 *{ box-sizing:border-box; }
-@@ -29,217 +45,106 @@ body{
+html,body{ height:100%; }
+body{
+  margin:0;
+  font-family: var(--font);
+  color: var(--text);
   background: var(--bg);
 }
 
-.page{ position:relative; min-height:100%; overflow-x:hidden; }
-.bg{
-  position:fixed; inset:0;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)),
-    url("/readathon-world_Ver2/img/bg/index.png") center / cover no-repeat;
-  /* placeholder path ↑ swap later */
-  filter:saturate(1.1);
-  z-index:-1;
+.page{
+  min-height:100%;
+  overflow:hidden;
+  isolation: isolate;
 }
 
+.stage{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+/* Dark overlay for readability / mood (optional) */
+.stage::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65));
+  pointer-events:none;
+}
+/* Image scales with viewport while preserving aspect ratio */
+.stage__img{
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display:block;
+  filter: saturate(1.1);
+  z-index: 1;
+}
+
+/* 2) Frame scales to fit viewport while preserving that ratio */
+.frame{
+  position: relative;
+  aspect-ratio: calc(var(--img-w) / var(--img-h));
+  width: min(100vw, calc(100vh * (var(--img-w) / var(--img-h))));
+  height: min(100vh, calc(100vw * (var(--img-h) / var(--img-w))));
+}
+
+/* Image fills the frame exactly */
+.frame__img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit: contain; /* safe */
+  display:block;
+  filter:saturate(1.1);
+}
+
+/* Click zones are now relative to the FRAME (image box) */
+.click-zone{
+  position:absolute;
+  z-index: 10;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 18px;
+  cursor: pointer;
+
+  /* invisible by default */
+  background: white;
+  outline: red;
+}
+
+/* Position each zone via CSS variables */
+#zoneStudent{
+  left: var(--zone-student-left);
+  top: var(--zone-student-top);
+  width: var(--zone-student-w);
+  height: var(--zone-student-h);
+}
+#zoneStaff{
+  left: var(--zone-staff-left);
+  top: var(--zone-staff-top);
+  width: var(--zone-staff-w);
+  height: var(--zone-staff-h);
+}
+#zoneAdmin{
+  left: var(--zone-admin-left);
+  top: var(--zone-admin-top);
+  width: var(--zone-admin-w);
+  height: var(--zone-admin-h);
+}
+
+/* Keyboard focus visibility */
+.click-zone:focus-visible{
+  box-shadow: var(--ring);
+}
 .wrap{
   width:min(980px, 94vw);
   margin: 0 auto;
@@ -129,41 +211,6 @@
   box-shadow: 0 12px 26px rgba(0,0,0,0.28);
   transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
   outline: none;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }
 .btn:focus-visible{ box-shadow: var(--shadow), var(--ring); }
 .btn:hover{ transform: translateY(-1px); }
