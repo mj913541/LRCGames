@@ -31,7 +31,7 @@ body{
   position:fixed; inset:0;
   background:
     linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.62)),
-    url("/readathon-world_Ver2/img/bg/staff-login.png") center / cover no-repeat;
+    url("../img/bg/staff-login.png") center / cover no-repeat;
   z-index:-1;
 }
 .bg--home{
@@ -84,7 +84,7 @@ body{
 }
 
 .wrap{
-  width:min(1100px, 96vw);
+  width:min(510px, 96vw);
   margin: 10px auto 26px;
   display:flex;
   flex-direction:column;

@@ -1,23 +1,39 @@
 /* /readathon-world_Ver2/css/index.css */
+
+/* =========================
+   Theme tokens
+========================= */
 :root{
   --bg: #0b1020;
-  --panel: rgba(10, 18, 40, 0.72);
-  --panel-strong: rgba(10, 18, 40, 0.86);
   --text: #f6f7ff;
   --muted: rgba(246,247,255,0.82);
 
   --shadow: 0 18px 50px rgba(0,0,0,0.35);
   --ring: 0 0 0 4px rgba(255,255,255,0.16);
 
-  --radius: 26px;
-  --radius2: 18px;
+  /* Put your real image ratio here */
+  --img-w: 1024;
+  --img-h: 576;   /* example: 16:9-ish */
 
-  --student: #26d6ff;
-  --staff: #67ff7a;
-  --admin: #ffcf5b;
-
-  --tap: 56px;
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+
+  /* ===== Hotspot placement (percentages relative to the STAGE image box) =====
+     Tweak these until the click areas sit perfectly on your sign artwork.
+  */
+  --zone-student-left: 12%;
+  --zone-student-top: 70%;
+  --zone-student-w: 24%;
+  --zone-student-h: 14%;
+
+  --zone-staff-left: 38%;
+  --zone-staff-top: 70%;
+  --zone-staff-w: 24%;
+  --zone-staff-h: 14%;
+
+  --zone-admin-left: 64%;
+  --zone-admin-top: 70%;
+  --zone-admin-w: 24%;
+  --zone-admin-h: 14%;
 }
 
 *{ box-sizing:border-box; }
@@ -29,217 +45,106 @@ body{
   background: var(--bg);
 }
 
-.page{ position:relative; min-height:100%; overflow-x:hidden; }
-.bg{
-  position:fixed; inset:0;
-  background:
-    linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65)),
-    url("/readathon-world_Ver2/img/bg/index.png") center / cover no-repeat;
-  /* placeholder path ↑ swap later */
-  filter:saturate(1.1);
-  z-index:-1;
+.page{
+  min-height:100%;
+  overflow:hidden;
+  isolation: isolate;
 }
 
-.wrap{
-  width:min(980px, 94vw);
-  margin: 0 auto;
-  padding: 18px 0 26px;
-  display:flex;
-  flex-direction:column;
-  gap: 18px;
+.stage{
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
 }
 
-.panel{
-  background: var(--panel);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  border: 1px solid rgba(255,255,255,0.14);
-  backdrop-filter: blur(10px);
+/* Dark overlay for readability / mood (optional) */
+.stage::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.25), rgba(0,0,0,0.65));
+  pointer-events:none;
 }
 
-.hero{
-  padding: 18px;
+/* Image scales with viewport while preserving aspect ratio */
+.stage__img{
+  max-width: 100vw;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  display:block;
+  filter: saturate(1.1);
+  z-index: 1;
 }
 
-.hero__top{
-  display:flex;
-  gap: 14px;
-  align-items:center;
-  margin-bottom: 14px;
+/* =========================
+   Accessibility helper
+========================= */
+.sr-only{
+  position:absolute;
+  width:1px; height:1px;
+  padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0);
+  white-space:nowrap; border:0;
 }
 
-.badge{
-  width:64px; height:64px;
-  display:grid; place-items:center;
-  border-radius: 20px;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.16);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.25);
-  font-size: 30px;
+/* 2) Frame scales to fit viewport while preserving that ratio */
+.frame{
+  position: relative;
+  aspect-ratio: calc(var(--img-w) / var(--img-h));
+  width: min(100vw, calc(100vh * (var(--img-w) / var(--img-h))));
+  height: min(100vh, calc(100vw * (var(--img-h) / var(--img-w))));
 }
 
-.h1{
-  margin: 0;
-  font-size: clamp(28px, 4vw, 44px);
-  line-height: 1.05;
-  letter-spacing: 0.2px;
-}
-.sub{
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 16px;
-}
-
-.hero__actions{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-  margin-top: 12px;
-}
-
-.btn{
-  min-height: var(--tap);
-  padding: 14px 16px;
-  border-radius: 22px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: var(--panel-strong);
-  color: var(--text);
-  text-decoration:none;
-  display:flex;
-  align-items:center;
-  gap: 14px;
-  box-shadow: 0 12px 26px rgba(0,0,0,0.28);
-  transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
-  outline: none;
-}
-.btn:focus-visible{ box-shadow: var(--shadow), var(--ring); }
-.btn:hover{ transform: translateY(-1px); }
-.btn:active{ transform: translateY(1px) scale(0.99); }
-
-.btn__icon{
-  width:56px; height:56px;
-  display:grid; place-items:center;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.12);
-  border: 1px solid rgba(255,255,255,0.18);
-  font-size: 28px;
-  flex: 0 0 auto;
-}
-.btn__text strong{ display:block; font-size: 18px; }
-.btn__text em{ display:block; font-style:normal; color: var(--muted); font-size: 14px; margin-top: 2px; }
-
-.btn--student{ border-color: rgba(38,214,255,0.40); }
-.btn--staff{ border-color: rgba(103,255,122,0.40); }
-.btn--admin{ border-color: rgba(255,207,91,0.42); }
-
-.mini{
-  margin-top: 12px;
-  display:flex;
-  gap: 10px;
-  align-items:center;
-  flex-wrap:wrap;
-}
-.mini__btn{
-  min-height: 44px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.10);
-  color: var(--text);
-  cursor:pointer;
-  font-weight: 700;
-}
-.mini__btn:focus-visible{ box-shadow: var(--ring); outline:none; }
-.mini__value{
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.footer{
-  text-align:center;
-  padding-bottom: 6px;
-}
-.footer__chip{
-  display:inline-block;
-  padding: 10px 14px;
-  border-radius: 999px;
-  background: rgba(0,0,0,0.25);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.dialog::backdrop{
-  background: rgba(0,0,0,0.62);
-}
-.dialog{
-  border:none;
-  padding: 0;
-  background: transparent;
-}
-.dialog__panel{
-  width: min(520px, 92vw);
-  margin: auto;
-  padding: 16px;
-  border-radius: 22px;
-  background: rgba(15, 20, 45, 0.92);
-  border: 1px solid rgba(255,255,255,0.16);
-  box-shadow: var(--shadow);
-  color: var(--text);
-}
-.h2{ margin:0 0 8px; font-size: 22px; }
-.p{ margin:0 0 12px; color: var(--muted); }
-.field{ display:block; margin: 12px 0; }
-.field__label{ display:block; font-weight:800; margin-bottom: 6px; }
-.input{
+/* Image fills the frame exactly */
+.frame__img{
+  position:absolute;
+  inset:0;
   width:100%;
-  padding: 12px 12px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.10);
-  color: var(--text);
-  font-size: 16px;
+  height:100%;
+  object-fit: contain; /* safe */
+  display:block;
+  filter:saturate(1.1);
 }
-.input:focus{ outline:none; box-shadow: var(--ring); }
-.row{
-  display:flex;
-  justify-content:flex-end;
-  gap: 10px;
-  margin-top: 10px;
-}
-.btnSmall{
+
+/* Click zones are now relative to the FRAME (image box) */
+.click-zone{
+  position:absolute;
+  z-index: 10;
+  min-width: 44px;
   min-height: 44px;
-  padding: 10px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.08);
-  color: var(--text);
-  cursor:pointer;
-  font-weight:800;
-}
-.btnSmall--primary{
-  background: rgba(38,214,255,0.18);
-  border-color: rgba(38,214,255,0.40);
-}
-
-.click-zone {
-  position: absolute;
+  border-radius: 18px;
   cursor: pointer;
-  border: black 15px;
+
+  /* invisible by default */
+  background: white;
+  outline: red;
 }
 
-#studentLogin {
-    top: 758px;
-    left: 77px;
-    width: 149px;
-    height: 96px;
+/* Position each zone via CSS variables */
+#zoneStudent{
+  left: var(--zone-student-left);
+  top: var(--zone-student-top);
+  width: var(--zone-student-w);
+  height: var(--zone-student-h);
+}
+#zoneStaff{
+  left: var(--zone-staff-left);
+  top: var(--zone-staff-top);
+  width: var(--zone-staff-w);
+  height: var(--zone-staff-h);
+}
+#zoneAdmin{
+  left: var(--zone-admin-left);
+  top: var(--zone-admin-top);
+  width: var(--zone-admin-w);
+  height: var(--zone-admin-h);
 }
 
-@media (min-width: 860px){
-  .hero__actions{ grid-template-columns: 1fr 1fr 1fr; }
-}
-
-@media (prefers-reduced-motion: reduce){
-  .btn{ transition:none; }
-  .btn:hover, .btn:active{ transform:none; }
+/* Keyboard focus visibility */
+.click-zone:focus-visible{
+  box-shadow: var(--ring);
 }
