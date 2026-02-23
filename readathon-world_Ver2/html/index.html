@@ -4,27 +4,76 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Readathon World V2</title>
+
   <link rel="stylesheet" href="/readathon-world_Ver2/css/index.css" />
 </head>
 
 <body class="page page--index">
-<div class="stage" aria-label="Readathon World login screen">
-  <div class="frame">
-    <img class="frame__img" src="/readathon-world_Ver2/img/bg/index.png" alt="" aria-hidden="true" />
+  <!-- Background image placeholder (swap this file path later) -->
+  <div class="bg" aria-hidden="true"></div>
 
-    <a id="zoneStudent" class="click-zone" href="/readathon-world_Ver2/html/student-login.html" aria-label="Student Login">
-      <span class="sr-only">Student Login</span>
-    </a>
+  <main class="wrap">
+    <header class="hero panel">
+      <div class="hero__top">
+            <a id="studentLogin" class="click-zone" href="/readathon-world_Ver2/html/student-login.html" title="Click for Works of Choice!"></a>
+      </div>
 
-    <a id="zoneStaff" class="click-zone" href="/readathon-world_Ver2/html/staff-login.html" aria-label="Staff Login">
-      <span class="sr-only">Staff Login</span>
-    </a>
+      <div class="hero__actions">
+        <a class="btn btn--student" href="/readathon-world_Ver2/html/student-login.html">
+          <span class="btn__icon" aria-hidden="true">🧒</span>
+          <span class="btn__text">
+            <strong>Student Login</strong>
+            <em>Log minutes • Earn rubies</em>
+          </span>
+        </a>
 
-    <a id="zoneAdmin" class="click-zone" href="/readathon-world_Ver2/html/admin-login.html" aria-label="Admin Login">
-      <span class="sr-only">Admin Login</span>
-    </a>
-  </div>
-</div>
+        <a class="btn btn--staff" href="/readathon-world_Ver2/html/staff-login.html">
+          <span class="btn__icon" aria-hidden="true">🧑‍🏫</span>
+          <span class="btn__text">
+            <strong>Staff Login</strong>
+            <em>Award classes • Approve help</em>
+          </span>
+        </a>
+
+        <a class="btn btn--admin" href="/readathon-world_Ver2/html/admin-login.html">
+          <span class="btn__icon" aria-hidden="true">🛠️</span>
+          <span class="btn__text">
+            <strong>Admin Login</strong>
+            <em>Approve minutes • Manage all</em>
+          </span>
+        </a>
+      </div>
+
+      <div class="mini">
+        <button class="mini__btn" id="btnSetSchool" type="button">
+          <span aria-hidden="true">🏫</span> Set School ID
+        </button>
+        <span class="mini__value" id="schoolIdLabel" aria-live="polite"></span>
+      </div>
+    </header>
+
+    <footer class="footer">
+      <div class="footer__chip">Tip: Tap big buttons • Enter your 4-digit PIN</div>
+    </footer>
+  </main>
+
+  <dialog class="dialog" id="schoolDialog" aria-labelledby="schoolDialogTitle">
+    <form method="dialog" class="dialog__panel">
+      <h2 class="h2" id="schoolDialogTitle">Set School ID</h2>
+      <p class="p">Default is <strong>308_longbeach_elementary</strong>. Only change if you’re testing another school.</p>
+
+      <label class="field">
+        <span class="field__label">School ID</span>
+        <input class="input" id="schoolIdInput" autocomplete="off" spellcheck="false"
+               placeholder="308_longbeach_elementary" />
+      </label>
+
+      <div class="row">
+        <button class="btnSmall" value="cancel" type="submit">Cancel</button>
+        <button class="btnSmall btnSmall--primary" id="btnSaveSchool" value="ok" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
 
   <script type="module" src="/readathon-world_Ver2/js/index.js"></script>
 </body>
