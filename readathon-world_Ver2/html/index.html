@@ -10,10 +10,7 @@
 
 <body class="page page--index">
   <main class="wrap">
-    <header class="hidden hero panel">
-      <div class="hero__top">
-            <a id="studentLogin" class="click-zone" href="/readathon-world_Ver2/html/student-login.html" title="Click for Works of Choice!"></a>
-      </div>
+    <header class="hidden hero panel"><div class="hero__top"><a id="studentLogin" class="click-zone" href="/readathon-world_Ver2/html/student-login.html" title="Click for Works of Choice!"></a></div>
 
       <div class="hidden hero__actions">
         <a class="btn btn--student" href="/readathon-world_Ver2/html/student-login.html">
@@ -24,7 +21,7 @@
           </span>
         </a>
 
-        <a class="btn btn--staff" href="/readathon-world_Ver2/html/staff-login.html">
+        <a class="hidden btn btn--staff" href="/readathon-world_Ver2/html/staff-login.html">
           <span class="btn__icon" aria-hidden="true">🧑‍🏫</span>
           <span class="btn__text">
             <strong>Staff Login</strong>
@@ -32,7 +29,7 @@
           </span>
         </a>
 
-        <a class="btn btn--admin" href="/readathon-world_Ver2/html/admin-login.html">
+        <a class="hidden btn btn--admin" href="/readathon-world_Ver2/html/admin-login.html">
           <span class="btn__icon" aria-hidden="true">🛠️</span>
           <span class="btn__text">
             <strong>Admin Login</strong>
@@ -48,26 +45,22 @@
         <span class="mini__value" id="schoolIdLabel" aria-live="polite"></span>
       </div>
     </header>
+
+    
 <div class="stage" aria-label="Readathon World login screen">
   <div class="frame">
     <img class="frame__img" src="/readathon-world_Ver2/img/bg/index.png" alt="" aria-hidden="true" />
 
     <a id="zoneStudent" class="click-zone" href="/readathon-world_Ver2/html/student-login.html" aria-label="Student Login">
-      <span class="sr-only">Student Login</span>
     </a>
 
     <a id="zoneStaff" class="click-zone" href="/readathon-world_Ver2/html/staff-login.html" aria-label="Staff Login">
-      <span class="sr-only">Staff Login</span>
     </a>
 
     <a id="zoneAdmin" class="click-zone" href="/readathon-world_Ver2/html/admin-login.html" aria-label="Admin Login">
-      <span class="sr-only">Admin Login</span>
     </a>
   </div>
 </div>
-    <footer class="hidden footer">
-      <div class="footer__chip">Tip: Tap big buttons • Enter your 4-digit PIN</div>
-    </footer>
   </main>
 
   <dialog class="dialog" id="schoolDialog" aria-labelledby="schoolDialogTitle">
