@@ -27,17 +27,17 @@
   --zone-student-left: 12%;
   --zone-student-top: 70%;
   --zone-student-w: 24%;
-  --zone-student-h: 14%;
+  --zone-student-h: 11%;
 
   --zone-staff-left: 38%;
   --zone-staff-top: 70%;
   --zone-staff-w: 24%;
-  --zone-staff-h: 14%;
+  --zone-staff-h: 10%;
 
   --zone-admin-left: 64%;
   --zone-admin-top: 70%;
   --zone-admin-w: 24%;
-  --zone-admin-h: 14%;
+  --zone-admin-h: 12%;
 }
 
 *{ box-sizing:border-box; }
