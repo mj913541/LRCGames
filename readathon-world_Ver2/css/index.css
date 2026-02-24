@@ -24,12 +24,12 @@
 /* ===== Hotspot placement (percentages relative to the STAGE image box) =====
      Tweak these until the click areas sit perfectly on your sign artwork.
   */
-  --zone-student-left: 7%;
+  --zone-student-left: 6%;
   --zone-student-top: 30%;
-  --zone-student-w: 40%;
+  --zone-student-w: 38%;
   --zone-student-h: 50%;
 
-  --zone-staff-left: 45%;
+  --zone-staff-left: 47%;
   --zone-staff-top: 50%;
   --zone-staff-w: 50%;
   --zone-staff-h: 20%;
