@@ -25,14 +25,14 @@
      Tweak these until the click areas sit perfectly on your sign artwork.
   */
   --zone-student-left: 12%;
-  --zone-student-top: 10%;
+  --zone-student-top: 30%;
   --zone-student-w: 24%;
   --zone-student-h: 50%;
 
-  --zone-staff-left: 45%;
+  --zone-staff-left: 55%;
   --zone-staff-top: 70%;
-  --zone-staff-w: 24%;
-  --zone-staff-h: 10%;
+  --zone-staff-w: 30%;
+  --zone-staff-h: 25%;
 }
 
 *{ box-sizing:border-box; }
