@@ -16,7 +16,7 @@
       ← Home
     </a>
     <div class="topbar__title">
-      <div class="pill">🧑‍🏫 Staff Login</div>
+      <div class="pill">Staff Login</div>
     </div>
     <div class="topbar__right" aria-hidden="true"></div>
   </header>
@@ -26,10 +26,10 @@
       <h1 class="h1">Welcome, Staff!</h1>
       <p class="sub">Enter your staff userId (example: <strong>staff_peterson</strong>) and your 4-digit PIN.</p>
 
-      <div class="schoolBar" role="group" aria-label="School ID">
-        <div class="schoolBar__label">School:</div>
-        <div class="schoolBar__value" id="schoolIdLabel"></div>
-        <button class="chipBtn" id="btnChangeSchool" type="button">Change</button>
+      <div class="hidden schoolBar" role="group" aria-label="School ID">
+        <div class="hidden schoolBar__label">School:</div>
+        <div class="hidden schoolBar__value" id="schoolIdLabel"></div>
+        <button class="hidden chipBtn" id="btnChangeSchool" type="button">Change</button>
       </div>
 
       <form class="form" id="loginForm">
@@ -81,18 +81,18 @@
     </footer>
   </main>
 
-  <dialog class="dialog" id="schoolDialog" aria-labelledby="schoolDialogTitle">
+  <dialog class="hidden dialog" id="schoolDialog" aria-labelledby="schoolDialogTitle">
     <form method="dialog" class="dialog__panel">
       <h2 class="h2" id="schoolDialogTitle">Change School ID</h2>
       <p class="sub">Use the default unless you’re testing another school.</p>
 
-      <label class="field">
+      <label class="hidden field">
         <span class="field__label">School ID</span>
         <input class="input" id="schoolIdInput" autocomplete="off" spellcheck="false"
                placeholder="308_longbeach_elementary" />
       </label>
 
-      <div class="row">
+      <div class="hidden row">
         <button class="btnSmall" value="cancel" type="submit">Cancel</button>
         <button class="btnSmall btnSmall--primary" value="ok" type="submit">Save</button>
       </div>
