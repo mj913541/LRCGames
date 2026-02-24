@@ -86,7 +86,7 @@ body{
   border: 1px solid rgba(38,214,255,0.40);
   font-weight: 950;
 }
-
+.hidden {display: none;}
 .wrap{
   width:min(1100px, 96vw);
   margin: 10px auto 26px;
