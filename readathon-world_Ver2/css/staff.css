@@ -84,7 +84,7 @@ body{
 }
 
 .wrap{
-  width:min(1100px, 96vw);
+  width:min(800px, 96vw);
   margin: 10px auto 26px;
   display:flex;
   flex-direction:column;

@@ -107,8 +107,8 @@ body{
   cursor: pointer;
 
   /* invisible by default */
-  background: white;
-  outline: red;
+  background: transparent;
+  outline: none;
 }
 
 /* Position each zone via CSS variables */
