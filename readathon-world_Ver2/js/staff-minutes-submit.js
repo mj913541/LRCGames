@@ -12,8 +12,6 @@ import {
   guardRoleOrRedirect,
   setHeaderUser,
   wireSignOut,
-  showLoading,
-  hideLoading,
   normalizeError,
 } from "/readathon-world_Ver2/js/app.js";
 
@@ -69,9 +67,17 @@ const els = {
   loadingText: document.getElementById("loadingText"),
 };
 
+function safeShowLoading(msg) {
+  if (els.loadingOverlay) els.loadingOverlay.classList.remove("isHidden");
+  if (els.loadingText) els.loadingText.textContent = msg || "Loading…";
+}
+
+function safeHideLoading() {
+  if (els.loadingOverlay) els.loadingOverlay.classList.add("isHidden");
+}
+
 let current = { schoolId: null, staffId: null };
 
-// Quick submit state
 let quickState = {
   gradeNum: null,
   homeroomId: null,
@@ -81,18 +87,17 @@ let quickState = {
 };
 
 init().catch((e) => {
-  console.error("staff-minutes-submit init error:", e);
-  // Best-effort display if boxes exist
+  console.error(e);
   const msg = normalizeError(e);
-  if (els?.errorBox) {
+  if (els.errorBox) {
     els.errorBox.textContent = msg;
     els.errorBox.classList.remove("isHidden");
   } else {
     alert(msg);
   }
+  safeHideLoading();
 });
 
-// Ensure auth and fresh token
 async function ensureAuthedOrBounce() {
   const user = await waitForAuthReady();
   if (!user) {
@@ -104,7 +109,7 @@ async function ensureAuthedOrBounce() {
 }
 
 async function init() {
-  showLoading(els.loadingOverlay, els.loadingText, "Loading…");
+  safeShowLoading("Loading…");
 
   const claims = await guardRoleOrRedirect(["staff", "admin"], ABS.staffLogin);
   if (!claims) return;
@@ -127,22 +132,18 @@ async function init() {
     subtitle: `${schoolId} • ${userId}`,
   });
 
-  // Default target = self for convenience
   if (els.targetUserIdInput) els.targetUserIdInput.value = userId;
 
   wireQuickClassSubmit();
   wireAwardForm();
   wireHomeroomForm();
 
-  hideLoading(els.loadingOverlay);
+  safeHideLoading();
 }
 
-/* =========================================================
-   ✅ Quick Class Submit
-========================================================= */
+/* ===================== Quick Submit ===================== */
 
 function wireQuickClassSubmit() {
-  // Render grade buttons (K-5)
   const gradeDefs = [
     { label: "K", value: 0 },
     { label: "1", value: 1 },
@@ -153,10 +154,7 @@ function wireQuickClassSubmit() {
   ];
 
   els.quick.gradeButtons.innerHTML = gradeDefs
-    .map(
-      (g) =>
-        `<button type="button" class="chip" data-grade="${g.value}">Grade ${g.label}</button>`
-    )
+    .map((g) => `<button type="button" class="chip" data-grade="${g.value}">Grade ${g.label}</button>`)
     .join("");
 
   els.quick.gradeButtons.addEventListener("click", async (e) => {
@@ -194,7 +192,6 @@ function wireQuickClassSubmit() {
     updateRosterMeta();
   });
 
-  // checkbox change handler (delegated)
   els.quick.rosterList.addEventListener("change", (e) => {
     const cb = e.target;
     if (!cb || cb.tagName !== "INPUT" || cb.type !== "checkbox") return;
@@ -222,7 +219,7 @@ function wireQuickClassSubmit() {
 
     try {
       els.quick.btnSubmit.disabled = true;
-      showLoading(els.loadingOverlay, els.loadingText, "Submitting minutes…");
+      safeShowLoading("Submitting minutes…");
 
       const user = await ensureAuthedOrBounce();
       if (!user) return;
@@ -232,7 +229,6 @@ function wireQuickClassSubmit() {
       const dateKey = todayDateKey();
       const actionType = "MINUTES_SUBMIT_PENDING";
 
-      // Concurrency-limited pool
       const results = await runPool(
         selected.map((studentId) => async () => {
           await postSubmitTransaction(token, {
@@ -250,14 +246,13 @@ function wireQuickClassSubmit() {
         10
       );
 
-      hideLoading(els.loadingOverlay);
+      safeHideLoading();
       showQuickOk(`Submitted ${minutes} minutes for ${results.length} student(s)! ✅`);
 
-      // keep checkboxes; clear inputs
       els.quick.minutesInput.value = "0";
       els.quick.noteInput.value = "";
     } catch (err) {
-      hideLoading(els.loadingOverlay);
+      safeHideLoading();
       showQuickError(normalizeError(err));
     } finally {
       els.quick.btnSubmit.disabled = false;
@@ -278,13 +273,12 @@ async function loadGradeRoster(gradeNum) {
   els.quick.rosterMeta.textContent = "Loading roster…";
 
   try {
-    showLoading(els.loadingOverlay, els.loadingText, "Loading roster…");
+    safeShowLoading("Loading roster…");
 
     const schoolId = current.schoolId;
     const students = await fetchActivePublicStudentsByGrade(schoolId, gradeNum);
     quickState.rosterAllForGrade = Array.isArray(students) ? students : [];
 
-    // homeroom -> count
     const counts = new Map();
     for (const s of quickState.rosterAllForGrade) {
       if (!s?.homeroomId) continue;
@@ -309,7 +303,7 @@ async function loadGradeRoster(gradeNum) {
     showQuickError(normalizeError(err));
     els.quick.rosterMeta.textContent = "Couldn’t load roster.";
   } finally {
-    hideLoading(els.loadingOverlay);
+    safeHideLoading();
   }
 }
 
@@ -322,7 +316,6 @@ function loadHomeroomRoster(homeroomId) {
 
   quickState.rosterForHomeroom = roster;
 
-  // Default: all selected (present)
   quickState.selectedIds.clear();
   roster.forEach((s) => quickState.selectedIds.add(s.id));
 
@@ -377,9 +370,7 @@ function setActiveChip(container, activeBtn) {
   activeBtn.classList.add("isActive");
 }
 
-/* =========================================================
-   Individual submit/award
-========================================================= */
+/* ================= Individual Submit/Award ================= */
 
 function wireAwardForm() {
   els.awardForm.addEventListener("submit", async (e) => {
@@ -397,7 +388,6 @@ function wireAwardForm() {
     const dateKey = todayDateKey();
 
     if (!targetUserId) return showError("Please enter a target userId.");
-
     if (actionType === "RUBIES_SPEND" && rubies > 0) rubies = -rubies;
 
     if (actionType === "MINUTES_SUBMIT_PENDING" && minutes <= 0)
@@ -409,7 +399,7 @@ function wireAwardForm() {
 
     try {
       els.btnSubmit.disabled = true;
-      showLoading(els.loadingOverlay, els.loadingText, "Submitting…");
+      safeShowLoading("Submitting…");
 
       const user = await ensureAuthedOrBounce();
       if (!user) return;
@@ -427,7 +417,7 @@ function wireAwardForm() {
         dateKey,
       });
 
-      hideLoading(els.loadingOverlay);
+      safeHideLoading();
       showOk("Submitted! ✅");
 
       els.minutesInput.value = "0";
@@ -435,7 +425,7 @@ function wireAwardForm() {
       els.moneyDollarsInput.value = "0.00";
       els.noteInput.value = "";
     } catch (err) {
-      hideLoading(els.loadingOverlay);
+      safeHideLoading();
       showError(normalizeError(err));
     } finally {
       els.btnSubmit.disabled = false;
@@ -443,9 +433,7 @@ function wireAwardForm() {
   });
 }
 
-/* =========================================================
-   Homeroom award
-========================================================= */
+/* ================= Homeroom Award ================= */
 
 function wireHomeroomForm() {
   els.homeroomForm.addEventListener("submit", async (e) => {
@@ -464,7 +452,7 @@ function wireHomeroomForm() {
 
     try {
       els.btnHomeroomSubmit.disabled = true;
-      showLoading(els.loadingOverlay, els.loadingText, "Awarding homeroom…");
+      safeShowLoading("Awarding homeroom…");
 
       const user = await ensureAuthedOrBounce();
       if (!user) return;
@@ -482,14 +470,14 @@ function wireHomeroomForm() {
         dateKey,
       });
 
-      hideLoading(els.loadingOverlay);
+      safeHideLoading();
       showHrOk("Homeroom award submitted! ✅");
 
       els.hrRubiesInput.value = "0";
       els.hrMinutesInput.value = "0";
       els.hrNoteInput.value = "";
     } catch (err) {
-      hideLoading(els.loadingOverlay);
+      safeHideLoading();
       showHrError(normalizeError(err));
     } finally {
       els.btnHomeroomSubmit.disabled = false;
@@ -497,9 +485,7 @@ function wireHomeroomForm() {
   });
 }
 
-/* =========================================================
-   HTTP helpers + utilities
-========================================================= */
+/* ================= HTTP helpers + utils ================= */
 
 async function postSubmitTransaction(token, payload) {
   const resp = await fetch(ENDPOINTS.submitTransactionHttp, {
@@ -567,9 +553,7 @@ function todayDateKey() {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/* =========================================================
-   Messages
-========================================================= */
+/* ================= Messages ================= */
 
 function hideMsgs() {
   els.errorBox.classList.add("isHidden");
@@ -616,9 +600,7 @@ function showQuickOk(msg) {
   els.quick.okBox.classList.remove("isHidden");
 }
 
-/* =========================================================
-   Tiny safe HTML helpers
-========================================================= */
+/* ================= Safe HTML helpers ================= */
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -628,7 +610,6 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
-
 function escapeAttr(s) {
   return escapeHtml(s).replaceAll("`", "&#096;");
 }
