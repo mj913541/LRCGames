@@ -9,55 +9,61 @@
   </head>
 
   <body class="page page--staff">
+    <div class="bg bg--home" aria-hidden="true"></div>
+
     <header class="topbar">
       <div id="hdr" class="hdr"></div>
-      <button id="btnSignOut" class="btn btn--ghost" type="button">Sign out</button>
+      <button id="btnSignOut" class="topbar__btn" type="button">Sign out</button>
     </header>
 
     <main class="wrap">
       <!-- ✅ NEW: Quick Class Submit -->
       <section class="panel quickSubmit">
-        <h2 class="panel__title">Quick Class Submit</h2>
-        <p class="muted">
+        <h2 class="h2">Quick Class Submit</h2>
+        <p class="sub">
           Pick a grade and homeroom, then check who is present. Enter minutes once and submit to
           selected students.
         </p>
 
-        <div class="stack">
+        <div class="formBlock">
           <div>
-            <div class="label">1) Pick Grade</div>
+            <div class="field__label">1) Pick Grade</div>
             <div id="gradeButtons" class="chipRow"></div>
           </div>
 
           <div>
-            <div class="label">2) Pick Homeroom</div>
+            <div class="field__label">2) Pick Homeroom</div>
             <div id="homeroomButtons" class="chipRow"></div>
           </div>
 
           <div class="rosterTop">
-            <div id="rosterMeta" class="muted">Pick a grade to load rosters.</div>
+            <div id="rosterMeta" class="sub" style="margin:0;">Pick a grade to load rosters.</div>
             <div class="rosterBtns">
-              <button id="btnSelectAll" type="button" class="btn btn--small">Select all</button>
-              <button id="btnClearAll" type="button" class="btn btn--small btn--ghost">
-                Clear all
-              </button>
+              <button id="btnSelectAll" type="button" class="btnSmall btnSmall--primary">Select all</button>
+              <button id="btnClearAll" type="button" class="btnSmall">Clear all</button>
             </div>
           </div>
 
           <div id="rosterList" class="rosterList"></div>
 
-          <div class="grid2">
-            <div>
-              <label class="label" for="quickMinutesInput">Minutes (applies to selected)</label>
-              <input id="quickMinutesInput" type="number" min="0" step="1" value="0" />
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="quickMinutesInput">Minutes (applies to selected)</label>
+              <input id="quickMinutesInput" class="input" type="number" min="0" step="1" value="0" />
             </div>
-            <div>
-              <label class="label" for="quickNoteInput">Note (optional)</label>
-              <input id="quickNoteInput" type="text" placeholder="e.g., LRC specials block" />
+
+            <div class="field">
+              <label class="field__label" for="quickNoteInput">Note (optional)</label>
+              <input
+                id="quickNoteInput"
+                class="input"
+                type="text"
+                placeholder="e.g., LRC specials block"
+              />
             </div>
           </div>
 
-          <button id="btnQuickSubmit" class="btn btn--primary" type="button">
+          <button id="btnQuickSubmit" class="btnPrimary" type="button">
             Submit minutes to selected ✅
           </button>
 
@@ -68,18 +74,19 @@
 
       <!-- Existing: Individual Submit/Award -->
       <section class="panel">
-        <h2 class="panel__title">Manual Submit / Award (Individual)</h2>
+        <h2 class="h2">Manual Submit / Award (Individual)</h2>
 
-        <form id="awardForm" class="stack">
-          <div class="grid2">
-            <div>
-              <label class="label" for="targetUserIdInput">Target userId</label>
-              <input id="targetUserIdInput" type="text" placeholder="student_123" />
+        <form id="awardForm" class="formBlock">
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="targetUserIdInput">Target userId</label>
+              <input id="targetUserIdInput" class="input" type="text" placeholder="student_123" />
+              <span class="hint">Tip: you can still use Quick Class Submit above.</span>
             </div>
 
-            <div>
-              <label class="label" for="actionTypeSelect">Action</label>
-              <select id="actionTypeSelect">
+            <div class="field">
+              <label class="field__label" for="actionTypeSelect">Action</label>
+              <select id="actionTypeSelect" class="input">
                 <option value="MINUTES_SUBMIT_PENDING">Submit Minutes (Pending)</option>
                 <option value="RUBIES_AWARD">Award Rubies</option>
                 <option value="RUBIES_SPEND">Spend Rubies</option>
@@ -88,27 +95,28 @@
             </div>
           </div>
 
-          <div class="grid3">
-            <div>
-              <label class="label" for="minutesInput">Minutes</label>
-              <input id="minutesInput" type="number" min="0" step="1" value="0" />
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="minutesInput">Minutes</label>
+              <input id="minutesInput" class="input" type="number" min="0" step="1" value="0" />
             </div>
-            <div>
-              <label class="label" for="rubiesInput">Rubies</label>
-              <input id="rubiesInput" type="number" step="1" value="0" />
-            </div>
-            <div>
-              <label class="label" for="moneyDollarsInput">Money ($)</label>
-              <input id="moneyDollarsInput" type="text" value="0.00" />
+            <div class="field">
+              <label class="field__label" for="rubiesInput">Rubies</label>
+              <input id="rubiesInput" class="input" type="number" step="1" value="0" />
             </div>
           </div>
 
-          <div>
-            <label class="label" for="noteInput">Note (optional)</label>
-            <input id="noteInput" type="text" />
+          <div class="field">
+            <label class="field__label" for="moneyDollarsInput">Money ($)</label>
+            <input id="moneyDollarsInput" class="input" type="text" value="0.00" />
           </div>
 
-          <button id="btnSubmit" class="btn btn--primary" type="submit">Submit</button>
+          <div class="field">
+            <label class="field__label" for="noteInput">Note (optional)</label>
+            <input id="noteInput" class="input" type="text" />
+          </div>
+
+          <button id="btnSubmit" class="btnPrimary" type="submit">Submit</button>
 
           <div id="errorBox" class="msg msg--error isHidden"></div>
           <div id="okBox" class="msg msg--ok isHidden"></div>
@@ -117,32 +125,34 @@
 
       <!-- Existing: Homeroom award -->
       <section class="panel">
-        <h2 class="panel__title">Award Homeroom</h2>
+        <h2 class="h2">Award Homeroom</h2>
 
-        <form id="homeroomForm" class="stack">
-          <div class="grid2">
-            <div>
-              <label class="label" for="homeroomIdInput">Homeroom ID</label>
-              <input id="homeroomIdInput" type="text" placeholder="hr_peterson" />
+        <form id="homeroomForm" class="formBlock">
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="homeroomIdInput">Homeroom ID</label>
+              <input id="homeroomIdInput" class="input" type="text" placeholder="hr_peterson" />
             </div>
-            <div>
-              <label class="label" for="hrMinutesInput">Minutes</label>
-              <input id="hrMinutesInput" type="number" min="0" step="1" value="0" />
+
+            <div class="field">
+              <label class="field__label" for="hrMinutesInput">Minutes</label>
+              <input id="hrMinutesInput" class="input" type="number" min="0" step="1" value="0" />
             </div>
           </div>
 
-          <div class="grid2">
-            <div>
-              <label class="label" for="hrRubiesInput">Rubies</label>
-              <input id="hrRubiesInput" type="number" min="0" step="1" value="0" />
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="hrRubiesInput">Rubies</label>
+              <input id="hrRubiesInput" class="input" type="number" min="0" step="1" value="0" />
             </div>
-            <div>
-              <label class="label" for="hrNoteInput">Note (optional)</label>
-              <input id="hrNoteInput" type="text" />
+
+            <div class="field">
+              <label class="field__label" for="hrNoteInput">Note (optional)</label>
+              <input id="hrNoteInput" class="input" type="text" />
             </div>
           </div>
 
-          <button id="btnHomeroomSubmit" class="btn btn--primary" type="submit">
+          <button id="btnHomeroomSubmit" class="btnPrimary" type="submit">
             Submit homeroom award ✅
           </button>
 
@@ -152,11 +162,11 @@
       </section>
     </main>
 
-    <!-- Loading overlay -->
-    <div id="loadingOverlay" class="loading isHidden" aria-hidden="true">
-      <div class="loading__card">
+    <!-- ✅ Loading overlay (matches your existing staff.css) -->
+    <div id="loadingOverlay" class="loadingOverlay isHidden" aria-hidden="true">
+      <div class="loadingCard">
         <div class="spinner" aria-hidden="true"></div>
-        <div id="loadingText">Loading…</div>
+        <div id="loadingText" class="loadingText">Loading…</div>
       </div>
     </div>
 
