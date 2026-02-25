@@ -10,26 +10,23 @@
   <body class="page page--staff">
     <div class="bg bg--home" aria-hidden="true"></div>
 
-<header class="topbar">
-  <div id="hdr" class="hdr">
-    <div class="pill">
-      <div data-title>Submit / Award</div>
-      <div data-subtitle>Loading…</div>
-    </div>
-  </div>
+    <header class="topbar">
+      <div id="hdr" class="hdr">
+        <div class="pill">
+          <div data-title>Submit Minutes</div>
+          <div data-subtitle>Loading…</div>
+        </div>
+      </div>
 
-  <button id="btnSignOut" class="topbar__btn" type="button">
-    Sign out
-  </button>
-</header>
+      <button id="btnSignOut" class="topbar__btn" type="button">Sign out</button>
+    </header>
 
     <main class="wrap">
-      <!-- ✅ NEW: Quick Class Submit -->
+      <!-- Quick roster submit -->
       <section class="panel quickSubmit">
-        <h2 class="h2">Quick Class Submit</h2>
+        <h2 class="h2">Class Minutes</h2>
         <p class="sub">
-          Pick a grade and homeroom, then check who is present. Enter minutes once and submit to
-          selected students.
+          Pick a grade and homeroom, check who is present, enter minutes once, submit to selected students.
         </p>
 
         <div class="formBlock">
@@ -55,23 +52,19 @@
 
           <div class="twoCol">
             <div class="field">
-              <label class="field__label" for="quickMinutesInput">Minutes (applies to selected)</label>
+              <label class="field__label" for="quickMinutesInput">Minutes</label>
               <input id="quickMinutesInput" class="input" type="number" min="0" step="1" value="0" />
+              <span class="hint">Pending minutes only.</span>
             </div>
 
             <div class="field">
               <label class="field__label" for="quickNoteInput">Note (optional)</label>
-              <input
-                id="quickNoteInput"
-                class="input"
-                type="text"
-                placeholder="e.g., LRC specials block"
-              />
+              <input id="quickNoteInput" class="input" type="text" placeholder="e.g., LRC specials block" />
             </div>
           </div>
 
           <button id="btnQuickSubmit" class="btnPrimary" type="button">
-            Submit minutes to selected ✅
+            Submit pending minutes to selected ✅
           </button>
 
           <div id="quickErrorBox" class="msg msg--error isHidden"></div>
@@ -79,97 +72,35 @@
         </div>
       </section>
 
-      <!-- Existing: Individual Submit/Award -->
+      <!-- Self submit -->
       <section class="panel">
-        <h2 class="h2">Manual Submit / Award (Individual)</h2>
+        <h2 class="h2">My Minutes</h2>
+        <p class="sub">Submit pending minutes for yourself (<span id="selfIdLabel"></span>).</p>
 
-        <form id="awardForm" class="formBlock">
+        <div class="formBlock">
           <div class="twoCol">
             <div class="field">
-              <label class="field__label" for="targetUserIdInput">Target userId</label>
-              <input id="targetUserIdInput" class="input" type="text" placeholder="student_123" />
-              <span class="hint">Tip: you can still use Quick Class Submit above.</span>
+              <label class="field__label" for="selfMinutesInput">Minutes</label>
+              <input id="selfMinutesInput" class="input" type="number" min="0" step="1" value="0" />
             </div>
 
             <div class="field">
-              <label class="field__label" for="actionTypeSelect">Action</label>
-              <select id="actionTypeSelect" class="input">
-                <option value="MINUTES_SUBMIT_PENDING">Submit Minutes (Pending)</option>
-                <option value="RUBIES_AWARD">Award Rubies</option>
-                <option value="RUBIES_SPEND">Spend Rubies</option>
-                <option value="MONEY_RAISED_ADD">Add Money Raised</option>
-              </select>
+              <label class="field__label" for="selfNoteInput">Note (optional)</label>
+              <input id="selfNoteInput" class="input" type="text" placeholder="e.g., Staff reading time" />
             </div>
           </div>
 
-          <div class="twoCol">
-            <div class="field">
-              <label class="field__label" for="minutesInput">Minutes</label>
-              <input id="minutesInput" class="input" type="number" min="0" step="1" value="0" />
-            </div>
-            <div class="field">
-              <label class="field__label" for="rubiesInput">Rubies</label>
-              <input id="rubiesInput" class="input" type="number" step="1" value="0" />
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="moneyDollarsInput">Money ($)</label>
-            <input id="moneyDollarsInput" class="input" type="text" value="0.00" />
-          </div>
-
-          <div class="field">
-            <label class="field__label" for="noteInput">Note (optional)</label>
-            <input id="noteInput" class="input" type="text" />
-          </div>
-
-          <button id="btnSubmit" class="btnPrimary" type="submit">Submit</button>
-
-          <div id="errorBox" class="msg msg--error isHidden"></div>
-          <div id="okBox" class="msg msg--ok isHidden"></div>
-        </form>
-      </section>
-
-      <!-- Existing: Homeroom award -->
-      <section class="panel">
-        <h2 class="h2">Award Homeroom</h2>
-
-        <form id="homeroomForm" class="formBlock">
-          <div class="twoCol">
-            <div class="field">
-              <label class="field__label" for="homeroomIdInput">Homeroom ID</label>
-              <input id="homeroomIdInput" class="input" type="text" placeholder="hr_peterson" />
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="hrMinutesInput">Minutes</label>
-              <input id="hrMinutesInput" class="input" type="number" min="0" step="1" value="0" />
-            </div>
-          </div>
-
-          <div class="twoCol">
-            <div class="field">
-              <label class="field__label" for="hrRubiesInput">Rubies</label>
-              <input id="hrRubiesInput" class="input" type="number" min="0" step="1" value="0" />
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="hrNoteInput">Note (optional)</label>
-              <input id="hrNoteInput" class="input" type="text" />
-            </div>
-          </div>
-
-          <button id="btnHomeroomSubmit" class="btnPrimary" type="submit">
-            Submit homeroom award ✅
+          <button id="btnSelfSubmit" class="btnPrimary" type="button">
+            Submit my pending minutes ✅
           </button>
 
-          <div id="hrErrorBox" class="msg msg--error isHidden"></div>
-          <div id="hrOkBox" class="msg msg--ok isHidden"></div>
-        </form>
+          <div id="selfErrorBox" class="msg msg--error isHidden"></div>
+          <div id="selfOkBox" class="msg msg--ok isHidden"></div>
+        </div>
       </section>
     </main>
 
-    <!-- ✅ Loading overlay (matches your existing staff.css) -->
+    <!-- Loading overlay -->
     <div id="loadingOverlay" class="loadingOverlay isHidden" aria-hidden="true">
       <div class="loadingCard">
         <div class="spinner" aria-hidden="true"></div>

@@ -12,21 +12,22 @@ import {
   guardRoleOrRedirect,
   setHeaderUser,
   wireSignOut,
+  showLoading,
+  hideLoading,
   normalizeError,
 } from "/readathon-world_Ver2/js/app.js";
 
 const ENDPOINTS = {
+  // keep using your existing HTTP endpoint, but we'll enforce minutes-only on the server
   submitTransactionHttp:
     "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
-  awardHomeroomHttp:
-    "https://us-central1-lrcquest-3039e.cloudfunctions.net/awardHomeroomHttp",
 };
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
 
-  // ✅ Quick Class Submit
+  // Quick roster submit
   quick: {
     gradeButtons: document.getElementById("gradeButtons"),
     homeroomButtons: document.getElementById("homeroomButtons"),
@@ -41,40 +42,17 @@ const els = {
     okBox: document.getElementById("quickOkBox"),
   },
 
-  // Individual award/submit
-  awardForm: document.getElementById("awardForm"),
-  targetUserIdInput: document.getElementById("targetUserIdInput"),
-  actionTypeSelect: document.getElementById("actionTypeSelect"),
-  minutesInput: document.getElementById("minutesInput"),
-  rubiesInput: document.getElementById("rubiesInput"),
-  moneyDollarsInput: document.getElementById("moneyDollarsInput"),
-  noteInput: document.getElementById("noteInput"),
-  btnSubmit: document.getElementById("btnSubmit"),
-  errorBox: document.getElementById("errorBox"),
-  okBox: document.getElementById("okBox"),
-
-  // Homeroom award
-  homeroomForm: document.getElementById("homeroomForm"),
-  homeroomIdInput: document.getElementById("homeroomIdInput"),
-  hrRubiesInput: document.getElementById("hrRubiesInput"),
-  hrMinutesInput: document.getElementById("hrMinutesInput"),
-  hrNoteInput: document.getElementById("hrNoteInput"),
-  btnHomeroomSubmit: document.getElementById("btnHomeroomSubmit"),
-  hrErrorBox: document.getElementById("hrErrorBox"),
-  hrOkBox: document.getElementById("hrOkBox"),
+  // Self submit
+  selfIdLabel: document.getElementById("selfIdLabel"),
+  selfMinutesInput: document.getElementById("selfMinutesInput"),
+  selfNoteInput: document.getElementById("selfNoteInput"),
+  btnSelfSubmit: document.getElementById("btnSelfSubmit"),
+  selfErrorBox: document.getElementById("selfErrorBox"),
+  selfOkBox: document.getElementById("selfOkBox"),
 
   loadingOverlay: document.getElementById("loadingOverlay"),
   loadingText: document.getElementById("loadingText"),
 };
-
-function safeShowLoading(msg) {
-  if (els.loadingOverlay) els.loadingOverlay.classList.remove("isHidden");
-  if (els.loadingText) els.loadingText.textContent = msg || "Loading…";
-}
-
-function safeHideLoading() {
-  if (els.loadingOverlay) els.loadingOverlay.classList.add("isHidden");
-}
 
 let current = { schoolId: null, staffId: null };
 
@@ -88,14 +66,8 @@ let quickState = {
 
 init().catch((e) => {
   console.error(e);
-  const msg = normalizeError(e);
-  if (els.errorBox) {
-    els.errorBox.textContent = msg;
-    els.errorBox.classList.remove("isHidden");
-  } else {
-    alert(msg);
-  }
-  safeHideLoading();
+  hideLoading(els.loadingOverlay);
+  showSelfError(normalizeError(e));
 });
 
 async function ensureAuthedOrBounce() {
@@ -109,41 +81,83 @@ async function ensureAuthedOrBounce() {
 }
 
 async function init() {
-  safeShowLoading("Loading…");
+  showLoading(els.loadingOverlay, els.loadingText, "Loading…");
 
   const claims = await guardRoleOrRedirect(["staff", "admin"], ABS.staffLogin);
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
 
-  const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
+  current.schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
 
-  const userId =
-    auth.currentUser?.uid ||
-    claims.userId ||
-    localStorage.getItem("readathonV2_userId") ||
-    "";
-
-  current.schoolId = schoolId;
-  current.staffId = userId;
+  // IMPORTANT: prefer your own “staff_lastname” userId claim
+  current.staffId =
+    (claims.userId ||
+      localStorage.getItem("readathonV2_userId") ||
+      auth.currentUser?.uid ||
+      "").trim().toLowerCase();
 
   setHeaderUser(els.hdr, {
-    title: "Submit / Award",
-    subtitle: `${schoolId} • ${userId}`,
+    title: "Submit Minutes",
+    subtitle: `${current.schoolId} • ${current.staffId}`,
   });
 
-  if (els.targetUserIdInput) els.targetUserIdInput.value = userId;
+  els.selfIdLabel.textContent = current.staffId;
 
-  wireQuickClassSubmit();
-  wireAwardForm();
-  wireHomeroomForm();
+  wireQuick();
+  wireSelf();
 
-  safeHideLoading();
+  hideLoading(els.loadingOverlay);
 }
 
-/* ===================== Quick Submit ===================== */
+/* =========================
+   Self submit
+========================= */
 
-function wireQuickClassSubmit() {
+function wireSelf() {
+  els.btnSelfSubmit.addEventListener("click", async () => {
+    hideSelfMsgs();
+
+    const minutes = parseInt((els.selfMinutesInput.value || "0").trim(), 10) || 0;
+    const note = (els.selfNoteInput.value || "").trim();
+
+    if (minutes <= 0) return showSelfError("Enter minutes greater than 0.");
+
+    try {
+      els.btnSelfSubmit.disabled = true;
+      showLoading(els.loadingOverlay, els.loadingText, "Submitting…");
+
+      const user = await ensureAuthedOrBounce();
+      if (!user) return;
+
+      const token = await user.getIdToken(true);
+
+      await postSubmitMinutes(token, {
+        schoolId: current.schoolId,
+        targetUserId: current.staffId,
+        deltaMinutes: minutes,
+        note,
+        dateKey: todayDateKey(),
+      });
+
+      hideLoading(els.loadingOverlay);
+      showSelfOk(`Submitted ${minutes} pending minute(s) for you ✅`);
+      els.selfMinutesInput.value = "0";
+      els.selfNoteInput.value = "";
+    } catch (err) {
+      hideLoading(els.loadingOverlay);
+      showSelfError(normalizeError(err));
+    } finally {
+      els.btnSelfSubmit.disabled = false;
+    }
+  });
+}
+
+/* =========================
+   Quick roster submit
+========================= */
+
+function wireQuick() {
   const gradeDefs = [
     { label: "K", value: 0 },
     { label: "1", value: 1 },
@@ -160,7 +174,6 @@ function wireQuickClassSubmit() {
   els.quick.gradeButtons.addEventListener("click", async (e) => {
     const btn = e.target?.closest?.("button[data-grade]");
     if (!btn) return;
-
     const gradeNum = parseInt(btn.getAttribute("data-grade"), 10);
     await loadGradeRoster(gradeNum);
     setActiveChip(els.quick.gradeButtons, btn);
@@ -169,10 +182,8 @@ function wireQuickClassSubmit() {
   els.quick.homeroomButtons.addEventListener("click", (e) => {
     const btn = e.target?.closest?.("button[data-hr]");
     if (!btn) return;
-
     const hr = btn.getAttribute("data-hr");
     if (!hr) return;
-
     loadHomeroomRoster(hr);
     setActiveChip(els.quick.homeroomButtons, btn);
   });
@@ -182,14 +193,12 @@ function wireQuickClassSubmit() {
     quickState.selectedIds.clear();
     quickState.rosterForHomeroom.forEach((s) => quickState.selectedIds.add(s.id));
     renderRosterList();
-    updateRosterMeta();
   });
 
   els.quick.btnClearAll.addEventListener("click", () => {
     hideQuickMsgs();
     quickState.selectedIds.clear();
     renderRosterList();
-    updateRosterMeta();
   });
 
   els.quick.rosterList.addEventListener("change", (e) => {
@@ -197,10 +206,7 @@ function wireQuickClassSubmit() {
     if (!cb || cb.tagName !== "INPUT" || cb.type !== "checkbox") return;
     const id = cb.getAttribute("data-id");
     if (!id) return;
-
-    if (cb.checked) quickState.selectedIds.add(id);
-    else quickState.selectedIds.delete(id);
-
+    cb.checked ? quickState.selectedIds.add(id) : quickState.selectedIds.delete(id);
     updateRosterMeta();
   });
 
@@ -219,40 +225,33 @@ function wireQuickClassSubmit() {
 
     try {
       els.quick.btnSubmit.disabled = true;
-      safeShowLoading("Submitting minutes…");
+      showLoading(els.loadingOverlay, els.loadingText, "Submitting to selected students…");
 
       const user = await ensureAuthedOrBounce();
       if (!user) return;
-
       const token = await user.getIdToken(true);
-      const schoolId = current.schoolId;
-      const dateKey = todayDateKey();
-      const actionType = "MINUTES_SUBMIT_PENDING";
 
+      // run small pool to avoid hammering functions
       const results = await runPool(
         selected.map((studentId) => async () => {
-          await postSubmitTransaction(token, {
-            schoolId,
+          await postSubmitMinutes(token, {
+            schoolId: current.schoolId,
             targetUserId: studentId,
-            actionType,
             deltaMinutes: minutes,
-            deltaRubies: 0,
-            deltaMoneyRaisedCents: 0,
             note,
-            dateKey,
+            dateKey: todayDateKey(),
           });
           return studentId;
         }),
         10
       );
 
-      safeHideLoading();
-      showQuickOk(`Submitted ${minutes} minutes for ${results.length} student(s)! ✅`);
-
+      hideLoading(els.loadingOverlay);
+      showQuickOk(`Submitted ${minutes} pending minute(s) for ${results.length} student(s) ✅`);
       els.quick.minutesInput.value = "0";
       els.quick.noteInput.value = "";
     } catch (err) {
-      safeHideLoading();
+      hideLoading(els.loadingOverlay);
       showQuickError(normalizeError(err));
     } finally {
       els.quick.btnSubmit.disabled = false;
@@ -262,7 +261,6 @@ function wireQuickClassSubmit() {
 
 async function loadGradeRoster(gradeNum) {
   hideQuickMsgs();
-
   quickState.gradeNum = gradeNum;
   quickState.homeroomId = null;
   quickState.rosterForHomeroom = [];
@@ -273,10 +271,8 @@ async function loadGradeRoster(gradeNum) {
   els.quick.rosterMeta.textContent = "Loading roster…";
 
   try {
-    safeShowLoading("Loading roster…");
-
-    const schoolId = current.schoolId;
-    const students = await fetchActivePublicStudentsByGrade(schoolId, gradeNum);
+    showLoading(els.loadingOverlay, els.loadingText, "Loading roster…");
+    const students = await fetchActivePublicStudentsByGrade(current.schoolId, gradeNum);
     quickState.rosterAllForGrade = Array.isArray(students) ? students : [];
 
     const counts = new Map();
@@ -286,7 +282,6 @@ async function loadGradeRoster(gradeNum) {
     }
 
     const homerooms = Array.from(counts.keys());
-
     els.quick.homeroomButtons.innerHTML =
       homerooms.length === 0
         ? `<div class="sub" style="margin:0;">No homerooms found for this grade.</div>`
@@ -303,7 +298,7 @@ async function loadGradeRoster(gradeNum) {
     showQuickError(normalizeError(err));
     els.quick.rosterMeta.textContent = "Couldn’t load roster.";
   } finally {
-    safeHideLoading();
+    hideLoading(els.loadingOverlay);
   }
 }
 
@@ -315,12 +310,10 @@ function loadHomeroomRoster(homeroomId) {
   roster.sort((a, b) => String(a.displayName || "").localeCompare(String(b.displayName || "")));
 
   quickState.rosterForHomeroom = roster;
-
   quickState.selectedIds.clear();
   roster.forEach((s) => quickState.selectedIds.add(s.id));
 
   renderRosterList();
-  updateRosterMeta();
 }
 
 function renderRosterList() {
@@ -328,6 +321,7 @@ function renderRosterList() {
 
   if (!roster || roster.length === 0) {
     els.quick.rosterList.innerHTML = `<div class="sub" style="margin:0;">No students found for this homeroom.</div>`;
+    updateRosterMeta();
     return;
   }
 
@@ -343,18 +337,17 @@ function renderRosterList() {
       `;
     })
     .join("");
+
+  updateRosterMeta();
 }
 
 function updateRosterMeta() {
   const g = quickState.gradeNum;
   const hr = quickState.homeroomId;
-
   const gradeLabel = g === null ? "—" : g === 0 ? "K" : String(g);
   const hrLabel = hr ? prettifyHomeroom(hr) : "—";
-
   const total = quickState.rosterForHomeroom.length || 0;
   const selected = quickState.selectedIds.size || 0;
-
   els.quick.rosterMeta.textContent = `Grade ${gradeLabel} • ${hrLabel} • Selected: ${selected}/${total}`;
 }
 
@@ -370,124 +363,22 @@ function setActiveChip(container, activeBtn) {
   activeBtn.classList.add("isActive");
 }
 
-/* ================= Individual Submit/Award ================= */
+/* =========================
+   Backend call: MINUTES ONLY
+========================= */
 
-function wireAwardForm() {
-  els.awardForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    hideMsgs();
+async function postSubmitMinutes(token, { schoolId, targetUserId, deltaMinutes, note, dateKey }) {
+  const payload = {
+    schoolId,
+    targetUserId,
+    actionType: "MINUTES_SUBMIT_PENDING",
+    deltaMinutes,
+    deltaRubies: 0,
+    deltaMoneyRaisedCents: 0,
+    note,
+    dateKey,
+  };
 
-    const schoolId = current.schoolId;
-    const targetUserId = (els.targetUserIdInput.value || "").trim().toLowerCase();
-    const actionType = els.actionTypeSelect.value;
-
-    const minutes = parseInt((els.minutesInput.value || "0").trim(), 10) || 0;
-    let rubies = parseInt((els.rubiesInput.value || "0").trim(), 10) || 0;
-    const moneyCents = dollarsToCents((els.moneyDollarsInput.value || "").trim());
-    const note = (els.noteInput.value || "").trim();
-    const dateKey = todayDateKey();
-
-    if (!targetUserId) return showError("Please enter a target userId.");
-    if (actionType === "RUBIES_SPEND" && rubies > 0) rubies = -rubies;
-
-    if (actionType === "MINUTES_SUBMIT_PENDING" && minutes <= 0)
-      return showError("Enter minutes greater than 0 for pending minutes.");
-    if ((actionType === "RUBIES_AWARD" || actionType === "RUBIES_SPEND") && rubies === 0)
-      return showError("Enter rubies (non-zero) for a rubies action.");
-    if (actionType === "MONEY_RAISED_ADD" && moneyCents <= 0)
-      return showError("Enter dollars greater than 0 to add money raised.");
-
-    try {
-      els.btnSubmit.disabled = true;
-      safeShowLoading("Submitting…");
-
-      const user = await ensureAuthedOrBounce();
-      if (!user) return;
-
-      const token = await user.getIdToken(true);
-
-      await postSubmitTransaction(token, {
-        schoolId,
-        targetUserId,
-        actionType,
-        deltaMinutes: minutes,
-        deltaRubies: rubies,
-        deltaMoneyRaisedCents: moneyCents,
-        note,
-        dateKey,
-      });
-
-      safeHideLoading();
-      showOk("Submitted! ✅");
-
-      els.minutesInput.value = "0";
-      els.rubiesInput.value = "0";
-      els.moneyDollarsInput.value = "0.00";
-      els.noteInput.value = "";
-    } catch (err) {
-      safeHideLoading();
-      showError(normalizeError(err));
-    } finally {
-      els.btnSubmit.disabled = false;
-    }
-  });
-}
-
-/* ================= Homeroom Award ================= */
-
-function wireHomeroomForm() {
-  els.homeroomForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    hideHrMsgs();
-
-    const schoolId = current.schoolId;
-    const homeroomId = (els.homeroomIdInput.value || "").trim();
-    const rubies = parseInt((els.hrRubiesInput.value || "0").trim(), 10) || 0;
-    const minutes = parseInt((els.hrMinutesInput.value || "0").trim(), 10) || 0;
-    const note = (els.hrNoteInput.value || "").trim();
-    const dateKey = todayDateKey();
-
-    if (!homeroomId) return showHrError("Please enter a homeroomId like hr_peterson.");
-    if (rubies <= 0 && minutes <= 0) return showHrError("Enter rubies and/or minutes greater than 0.");
-
-    try {
-      els.btnHomeroomSubmit.disabled = true;
-      safeShowLoading("Awarding homeroom…");
-
-      const user = await ensureAuthedOrBounce();
-      if (!user) return;
-
-      const token = await user.getIdToken(true);
-
-      await postAwardHomeroom(token, {
-        schoolId,
-        homeroomId,
-        actionType: "HOMEROOM_AWARD",
-        deltaMinutes: minutes,
-        deltaRubies: rubies,
-        deltaMoneyRaisedCents: 0,
-        note,
-        dateKey,
-      });
-
-      safeHideLoading();
-      showHrOk("Homeroom award submitted! ✅");
-
-      els.hrRubiesInput.value = "0";
-      els.hrMinutesInput.value = "0";
-      els.hrNoteInput.value = "";
-    } catch (err) {
-      safeHideLoading();
-      showHrError(normalizeError(err));
-    } finally {
-      els.btnHomeroomSubmit.disabled = false;
-    }
-  });
-}
-
-/* ================= HTTP helpers + utils ================= */
-
-async function postSubmitTransaction(token, payload) {
   const resp = await fetch(ENDPOINTS.submitTransactionHttp, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -504,22 +395,43 @@ async function postSubmitTransaction(token, payload) {
   }
 }
 
-async function postAwardHomeroom(token, payload) {
-  const resp = await fetch(ENDPOINTS.awardHomeroomHttp, {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-    body: JSON.stringify(payload),
-  });
+/* =========================
+   Messages
+========================= */
 
-  if (!resp.ok) {
-    let msg = `HTTP ${resp.status}`;
-    try {
-      const j = await resp.json();
-      if (j?.error) msg = j.error;
-    } catch {}
-    throw new Error(msg);
-  }
+function hideQuickMsgs() {
+  els.quick.errorBox.classList.add("isHidden");
+  els.quick.errorBox.textContent = "";
+  els.quick.okBox.classList.add("isHidden");
+  els.quick.okBox.textContent = "";
 }
+function showQuickError(msg) {
+  els.quick.errorBox.textContent = msg;
+  els.quick.errorBox.classList.remove("isHidden");
+}
+function showQuickOk(msg) {
+  els.quick.okBox.textContent = msg;
+  els.quick.okBox.classList.remove("isHidden");
+}
+
+function hideSelfMsgs() {
+  els.selfErrorBox.classList.add("isHidden");
+  els.selfErrorBox.textContent = "";
+  els.selfOkBox.classList.add("isHidden");
+  els.selfOkBox.textContent = "";
+}
+function showSelfError(msg) {
+  els.selfErrorBox.textContent = msg;
+  els.selfErrorBox.classList.remove("isHidden");
+}
+function showSelfOk(msg) {
+  els.selfOkBox.textContent = msg;
+  els.selfOkBox.classList.remove("isHidden");
+}
+
+/* =========================
+   Utils
+========================= */
 
 async function runPool(tasks, concurrency = 8) {
   const results = [];
@@ -538,13 +450,6 @@ async function runPool(tasks, concurrency = 8) {
   return results;
 }
 
-function dollarsToCents(v) {
-  if (!v) return 0;
-  const n = Number(v);
-  if (!Number.isFinite(n)) return 0;
-  return Math.round(n * 100);
-}
-
 function todayDateKey() {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -552,55 +457,6 @@ function todayDateKey() {
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}-${mm}-${dd}`;
 }
-
-/* ================= Messages ================= */
-
-function hideMsgs() {
-  els.errorBox.classList.add("isHidden");
-  els.errorBox.textContent = "";
-  els.okBox.classList.add("isHidden");
-  els.okBox.textContent = "";
-}
-function showError(msg) {
-  els.errorBox.textContent = msg;
-  els.errorBox.classList.remove("isHidden");
-}
-function showOk(msg) {
-  els.okBox.textContent = msg;
-  els.okBox.classList.remove("isHidden");
-}
-
-function hideHrMsgs() {
-  els.hrErrorBox.classList.add("isHidden");
-  els.hrErrorBox.textContent = "";
-  els.hrOkBox.classList.add("isHidden");
-  els.hrOkBox.textContent = "";
-}
-function showHrError(msg) {
-  els.hrErrorBox.textContent = msg;
-  els.hrErrorBox.classList.remove("isHidden");
-}
-function showHrOk(msg) {
-  els.hrOkBox.textContent = msg;
-  els.hrOkBox.classList.remove("isHidden");
-}
-
-function hideQuickMsgs() {
-  els.quick.errorBox.classList.add("isHidden");
-  els.quick.errorBox.textContent = "";
-  els.quick.okBox.classList.add("isHidden");
-  els.quick.okBox.textContent = "";
-}
-function showQuickError(msg) {
-  els.quick.errorBox.textContent = msg;
-  els.quick.errorBox.classList.remove("isHidden");
-}
-function showQuickOk(msg) {
-  els.quick.okBox.textContent = msg;
-  els.quick.okBox.classList.remove("isHidden");
-}
-
-/* ================= Safe HTML helpers ================= */
 
 function escapeHtml(s) {
   return String(s ?? "")
