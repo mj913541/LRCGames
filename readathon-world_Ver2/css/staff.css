@@ -27,6 +27,7 @@ body{
 }
 
 .page{ position:relative; min-height:100%; overflow-x:hidden; }
+
 .bg{
   position:fixed; inset:0;
   background:
@@ -82,7 +83,9 @@ body{
   border: 1px solid rgba(103,255,122,0.45);
   font-weight: 1000;
 }
+
 .hidden{display: none;}
+
 .wrap{
   width:min(600px, 96vw);
   margin: 10px auto 26px;
@@ -191,6 +194,7 @@ body{
 }
 .btnGhost:focus-visible{ outline:none; box-shadow: var(--ring); }
 
+/* Messages (single source of truth) */
 .msg{
   margin-top: 6px;
   padding: 12px 12px;
@@ -203,7 +207,13 @@ body{
   background: rgba(255,95,135,0.12);
   color: var(--text);
 }
+.msg--ok{
+  border-color: rgba(103,255,122,0.55);
+  background: rgba(103,255,122,0.12);
+  color: var(--text);
+}
 
+/* Loading overlay (single source of truth) */
 .loadingOverlay{
   position:absolute;
   inset:0;
@@ -320,6 +330,8 @@ body{
 .sectionHead{ display:flex; flex-direction:column; gap: 2px; margin-bottom: 10px; }
 
 .chips{ display:flex; flex-wrap:wrap; gap: 10px; }
+
+/* Global chip style (single source of truth) */
 .chip{
   min-height: 46px;
   padding: 10px 14px;
@@ -327,6 +339,7 @@ body{
   border: 1px solid rgba(255,255,255,0.16);
   background: rgba(255,255,255,0.10);
   font-weight: 1000;
+  color: var(--text);
 }
 .chip--static{ cursor: default; }
 
@@ -346,7 +359,6 @@ body{
   .spinner{ animation:none; }
 }
 
-
 /* Submit/Award additions */
 .formBlock{ display:flex; flex-direction:column; gap: 12px; }
 .hint{ display:block; margin-top: 6px; color: var(--muted); font-size: 12px; font-weight: 850; }
@@ -357,205 +369,92 @@ body{
   gap: 12px;
 }
 
-.msg--ok{
-  border-color: rgba(103,255,122,0.55);
-  background: rgba(103,255,122,0.12);
-  color: var(--text);
-}
-
 @media (min-width: 860px){
   .twoCol{ grid-template-columns: 1fr 1fr; }
 }
 
-
 /* =========================================
-   Quick Class Submit UI (Grade/Homeroom/Roster)
-   Paste into /readathon-world_Ver2/css/staff.css
+   ✅ Quick Class Submit UI (scoped + no conflicts)
+   Add class "quickSubmit" on that panel:
+   <section class="panel quickSubmit">
 ========================================= */
 
-.chipRow{
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 8px;
+.quickSubmit .chipRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:8px;
 }
 
-.chip{
-  appearance: none;
-  border: 2px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.06);
-  color: inherit;
-  padding: 10px 14px;
-  border-radius: 999px;
-  cursor: pointer;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-  transition: transform 120ms ease, background 120ms ease, border-color 120ms ease;
-}
-
-.chip:hover{
-  transform: translateY(-1px);
-  background: rgba(255,255,255,0.10);
-  border-color: rgba(255,255,255,0.28);
-}
-
-.chip.isActive{
+/* Active state for chips only inside quick submit */
+.quickSubmit .chip.isActive{
   border-color: rgba(255,255,255,0.55);
   background: rgba(255,255,255,0.16);
   box-shadow: 0 10px 26px rgba(0,0,0,0.28);
 }
 
-.rosterTop{
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 6px;
+.quickSubmit .rosterTop{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:6px;
 }
 
-.rosterBtns{
-  display: flex;
-  gap: 10px;
-  align-items: center;
+.quickSubmit .rosterBtns{
+  display:flex;
+  gap:10px;
+  align-items:center;
 }
 
-.rosterList{
-  margin-top: 10px;
+.quickSubmit .rosterList{
+  margin-top:10px;
   border: 1px solid rgba(255,255,255,0.14);
   background: rgba(0,0,0,0.14);
-  border-radius: 14px;
-  padding: 10px;
-  max-height: 340px;
-  overflow: auto;
-}
-
-.rosterRow{
-  display: grid;
-  grid-template-columns: 22px 1fr auto;
-  gap: 10px;
-  align-items: center;
-  padding: 10px 10px;
-  border-radius: 12px;
-  cursor: pointer;
-}
-
-.rosterRow:hover{
-  background: rgba(255,255,255,0.06);
-}
-
-.rosterRow input[type="checkbox"]{
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-}
-
-.rosterName{
-  font-weight: 700;
-}
-
-.rosterId{
-  font-size: 12px;
-  opacity: 0.75;
-}
-
-/* small utility grids used in the HTML */
-.grid2{
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.grid3{
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
-}
-
-/* stack container */
-.stack{
-  display: grid;
-  gap: 12px;
-}
-
-/* Labels + muted helper */
-.label{
-  display: block;
-  margin-bottom: 6px;
-  font-weight: 800;
-  opacity: 0.92;
-}
-
-.muted{
-  opacity: 0.78;
-}
-
-/* Messages */
-.msg{
-  padding: 12px 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.06);
-}
-
-.msg--error{
-  border-color: rgba(255,80,80,0.45);
-  background: rgba(255,80,80,0.12);
-}
-
-.msg--ok{
-  border-color: rgba(80,255,160,0.40);
-  background: rgba(80,255,160,0.10);
-}
-
-.isHidden{
-  display: none !important;
-}
-
-/* Loading overlay (basic, in case you don't already have it) */
-.loading{
-  position: fixed;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(0,0,0,0.55);
-  z-index: 9999;
-}
-
-.loading__card{
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(20,24,40,0.92);
   border-radius: 18px;
-  padding: 18px 18px;
-  min-width: 260px;
-  box-shadow: 0 18px 50px rgba(0,0,0,0.35);
-  display: grid;
-  gap: 10px;
-  justify-items: center;
-  text-align: center;
+  padding:10px;
+  max-height:340px;
+  overflow:auto;
 }
 
-.spinner{
-  width: 34px;
-  height: 34px;
-  border-radius: 999px;
-  border: 4px solid rgba(255,255,255,0.18);
-  border-top-color: rgba(255,255,255,0.9);
-  animation: spin 900ms linear infinite;
+.quickSubmit .rosterRow{
+  display:grid;
+  grid-template-columns: 22px 1fr auto;
+  gap:10px;
+  align-items:center;
+  padding:10px 10px;
+  border-radius: 16px;
+  cursor:pointer;
 }
 
-@keyframes spin{
-  to { transform: rotate(360deg); }
+.quickSubmit .rosterRow:hover{
+  background: rgba(255,255,255,0.06);
 }
 
-/* Responsive: stack grids on small screens */
-@media (max-width: 720px){
-  .grid2, .grid3{
-    grid-template-columns: 1fr;
+.quickSubmit .rosterRow input[type="checkbox"]{
+  width:18px;
+  height:18px;
+  cursor:pointer;
+}
+
+.quickSubmit .rosterName{ font-weight: 1000; }
+.quickSubmit .rosterId{ font-size:12px; color: var(--muted); }
+
+.quickSubmit .grid2{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+}
+
+@media (min-width: 860px){
+  .quickSubmit .grid2{
+    grid-template-columns: 1fr 1fr;
   }
-  .rosterRow{
+}
+
+@media (max-width: 720px){
+  .quickSubmit .rosterRow{
     grid-template-columns: 22px 1fr;
   }
-  .rosterId{
-    display: none;
-  }
+  .quickSubmit .rosterId{ display:none; }
 }
