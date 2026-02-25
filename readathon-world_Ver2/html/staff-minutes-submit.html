@@ -1,135 +1,165 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Submit / Award • Staff • Readathon World</title>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Staff • Submit Minutes</title>
 
-  <link rel="stylesheet" href="/readathon-world_Ver2/css/staff.css" />
-</head>
+    <link rel="stylesheet" href="/readathon-world_Ver2/css/staff.css" />
+  </head>
 
-<body class="page page--staff-minutes">
-  <div class="bg bg--home" aria-hidden="true"></div>
+  <body class="page page--staff">
+    <header class="topbar">
+      <div id="hdr" class="hdr"></div>
+      <button id="btnSignOut" class="btn btn--ghost" type="button">Sign out</button>
+    </header>
 
-  <header class="topbar">
-    <a class="topbar__back" href="/readathon-world_Ver2/html/staff-home.html" aria-label="Back to staff home">
-      ← Home
-    </a>
+    <main class="wrap">
+      <!-- ✅ NEW: Quick Class Submit -->
+      <section class="panel">
+        <h2 class="panel__title">Quick Class Submit</h2>
+        <p class="muted">
+          Pick a grade and homeroom, then check who is present. Enter minutes once and submit to
+          selected students.
+        </p>
 
-    <div class="topbar__title">
-      <div class="pill">🎁 Submit / Award</div>
-    </div>
+        <div class="stack">
+          <div>
+            <div class="label">1) Pick Grade</div>
+            <div id="gradeButtons" class="chipRow"></div>
+          </div>
 
-    <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
-  </header>
+          <div>
+            <div class="label">2) Pick Homeroom</div>
+            <div id="homeroomButtons" class="chipRow"></div>
+          </div>
 
-  <main class="wrap">
-    <section class="panel" id="hdr">
-      <h1 class="h1" data-title>Submit / Award</h1>
-      <p class="sub" data-subtitle></p>
-      <div class="gridButtons">
-        <a class="btnBig" href="/readathon-world_Ver2/html/staff-home.html">Back to Dashboard</a>
-      </div>
-    </section>
+          <div class="rosterTop">
+            <div id="rosterMeta" class="muted">Pick a grade to load rosters.</div>
+            <div class="rosterBtns">
+              <button id="btnSelectAll" type="button" class="btn btn--small">Select all</button>
+              <button id="btnClearAll" type="button" class="btn btn--small btn--ghost">
+                Clear all
+              </button>
+            </div>
+          </div>
 
-    <section class="panel">
-      <div class="sectionHead">
-        <h2 class="h2">Award a Student (or Yourself)</h2>
-        <p class="sub">You can submit minutes or rubies to a target userId you are allowed to manage.</p>
-      </div>
+          <div id="rosterList" class="rosterList"></div>
 
-      <form id="awardForm" class="formBlock">
-        <label class="field">
-          <span class="field__label">Target User ID</span>
-          <input class="input" id="targetUserIdInput" placeholder="student_10293 (or your own staff_id)" />
-          <span class="hint">Example student: <strong>student_10293</strong></span>
-        </label>
+          <div class="grid2">
+            <div>
+              <label class="label" for="quickMinutesInput">Minutes (applies to selected)</label>
+              <input id="quickMinutesInput" type="number" min="0" step="1" value="0" />
+            </div>
+            <div>
+              <label class="label" for="quickNoteInput">Note (optional)</label>
+              <input id="quickNoteInput" type="text" placeholder="e.g., LRC specials block" />
+            </div>
+          </div>
 
-        <label class="field">
-          <span class="field__label">Action Type</span>
-          <select class="input" id="actionTypeSelect">
-            <option value="MINUTES_SUBMIT_PENDING">Submit Minutes (Pending)</option>
-            <option value="RUBIES_AWARD">Award Rubies (+)</option>
-            <option value="RUBIES_SPEND">Spend Rubies (-)</option>
-            <option value="MONEY_RAISED_ADD">Add Money Raised</option>
-          </select>
-          <span class="hint">Minutes are pending until admin approves.</span>
-        </label>
+          <button id="btnQuickSubmit" class="btn btn--primary" type="button">
+            Submit minutes to selected ✅
+          </button>
 
-        <div class="twoCol">
-          <label class="field">
-            <span class="field__label">Minutes</span>
-            <input class="input" id="minutesInput" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
-          </label>
-
-          <label class="field">
-            <span class="field__label">Rubies</span>
-            <input class="input" id="rubiesInput" inputmode="numeric" pattern="-?[0-9]*" placeholder="0" />
-          </label>
+          <div id="quickErrorBox" class="msg msg--error isHidden"></div>
+          <div id="quickOkBox" class="msg msg--ok isHidden"></div>
         </div>
+      </section>
 
-        <label class="field">
-          <span class="field__label">Money Raised (dollars)</span>
-          <input class="input" id="moneyDollarsInput" inputmode="decimal" placeholder="0.00" />
-          <span class="hint">We store cents in Firestore.</span>
-        </label>
+      <!-- Existing: Individual Submit/Award -->
+      <section class="panel">
+        <h2 class="panel__title">Manual Submit / Award (Individual)</h2>
 
-        <label class="field">
-          <span class="field__label">Note (optional)</span>
-          <input class="input" id="noteInput" placeholder="Reason / note" />
-        </label>
+        <form id="awardForm" class="stack">
+          <div class="grid2">
+            <div>
+              <label class="label" for="targetUserIdInput">Target userId</label>
+              <input id="targetUserIdInput" type="text" placeholder="student_123" />
+            </div>
 
-        <button class="btnPrimary" id="btnSubmit" type="submit">Submit</button>
+            <div>
+              <label class="label" for="actionTypeSelect">Action</label>
+              <select id="actionTypeSelect">
+                <option value="MINUTES_SUBMIT_PENDING">Submit Minutes (Pending)</option>
+                <option value="RUBIES_AWARD">Award Rubies</option>
+                <option value="RUBIES_SPEND">Spend Rubies</option>
+                <option value="MONEY_RAISED_ADD">Add Money Raised</option>
+              </select>
+            </div>
+          </div>
 
-        <div class="msg msg--error isHidden" id="errorBox" role="alert"></div>
-        <div class="msg msg--ok isHidden" id="okBox" role="status"></div>
-      </form>
-    </section>
+          <div class="grid3">
+            <div>
+              <label class="label" for="minutesInput">Minutes</label>
+              <input id="minutesInput" type="number" min="0" step="1" value="0" />
+            </div>
+            <div>
+              <label class="label" for="rubiesInput">Rubies</label>
+              <input id="rubiesInput" type="number" step="1" value="0" />
+            </div>
+            <div>
+              <label class="label" for="moneyDollarsInput">Money ($)</label>
+              <input id="moneyDollarsInput" type="text" value="0.00" />
+            </div>
+          </div>
 
-    <section class="panel">
-      <div class="sectionHead">
-        <h2 class="h2">Award a Homeroom (Option B)</h2>
-        <p class="sub">This will call <code>awardHomeroom()</code> once functions are deployed.</p>
-      </div>
+          <div>
+            <label class="label" for="noteInput">Note (optional)</label>
+            <input id="noteInput" type="text" />
+          </div>
 
-      <form id="homeroomForm" class="formBlock">
-        <label class="field">
-          <span class="field__label">Homeroom ID</span>
-          <input class="input" id="homeroomIdInput" placeholder="hr_peterson" />
-        </label>
+          <button id="btnSubmit" class="btn btn--primary" type="submit">Submit</button>
 
-        <div class="twoCol">
-          <label class="field">
-            <span class="field__label">Rubies to Award</span>
-            <input class="input" id="hrRubiesInput" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
-          </label>
+          <div id="errorBox" class="msg msg--error isHidden"></div>
+          <div id="okBox" class="msg msg--ok isHidden"></div>
+        </form>
+      </section>
 
-          <label class="field">
-            <span class="field__label">Minutes (Pending)</span>
-            <input class="input" id="hrMinutesInput" inputmode="numeric" pattern="[0-9]*" placeholder="0" />
-          </label>
-        </div>
+      <!-- Existing: Homeroom award -->
+      <section class="panel">
+        <h2 class="panel__title">Award Homeroom</h2>
 
-        <label class="field">
-          <span class="field__label">Note (optional)</span>
-          <input class="input" id="hrNoteInput" placeholder="Class award note" />
-        </label>
+        <form id="homeroomForm" class="stack">
+          <div class="grid2">
+            <div>
+              <label class="label" for="homeroomIdInput">Homeroom ID</label>
+              <input id="homeroomIdInput" type="text" placeholder="hr_peterson" />
+            </div>
+            <div>
+              <label class="label" for="hrMinutesInput">Minutes</label>
+              <input id="hrMinutesInput" type="number" min="0" step="1" value="0" />
+            </div>
+          </div>
 
-        <button class="btnPrimary" id="btnHomeroomSubmit" type="submit">Award Homeroom</button>
+          <div class="grid2">
+            <div>
+              <label class="label" for="hrRubiesInput">Rubies</label>
+              <input id="hrRubiesInput" type="number" min="0" step="1" value="0" />
+            </div>
+            <div>
+              <label class="label" for="hrNoteInput">Note (optional)</label>
+              <input id="hrNoteInput" type="text" />
+            </div>
+          </div>
 
-        <div class="msg msg--error isHidden" id="hrErrorBox" role="alert"></div>
-        <div class="msg msg--ok isHidden" id="hrOkBox" role="status"></div>
-      </form>
-    </section>
+          <button id="btnHomeroomSubmit" class="btn btn--primary" type="submit">
+            Submit homeroom award ✅
+          </button>
 
-    <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
-      <div class="loadingCard">
+          <div id="hrErrorBox" class="msg msg--error isHidden"></div>
+          <div id="hrOkBox" class="msg msg--ok isHidden"></div>
+        </form>
+      </section>
+    </main>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading isHidden" aria-hidden="true">
+      <div class="loading__card">
         <div class="spinner" aria-hidden="true"></div>
-        <div class="loadingText" id="loadingText">Loading…</div>
+        <div id="loadingText">Loading…</div>
       </div>
     </div>
-  </main>
 
-  <script type="module" src="/readathon-world_Ver2/js/staff-minutes-submit.js"></script>
-</body>
+    <script type="module" src="/readathon-world_Ver2/js/staff-minutes-submit.js"></script>
+  </body>
 </html>
