@@ -28,7 +28,7 @@ const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
 
-  // ✅ NEW: Quick Class Submit
+  // ✅ Quick Class Submit
   quick: {
     gradeButtons: document.getElementById("gradeButtons"),
     homeroomButtons: document.getElementById("homeroomButtons"),
@@ -43,7 +43,7 @@ const els = {
     okBox: document.getElementById("quickOkBox"),
   },
 
-  // Existing: Individual award/submit
+  // Individual award/submit
   awardForm: document.getElementById("awardForm"),
   targetUserIdInput: document.getElementById("targetUserIdInput"),
   actionTypeSelect: document.getElementById("actionTypeSelect"),
@@ -55,7 +55,7 @@ const els = {
   errorBox: document.getElementById("errorBox"),
   okBox: document.getElementById("okBox"),
 
-  // Existing: Homeroom award
+  // Homeroom award
   homeroomForm: document.getElementById("homeroomForm"),
   homeroomIdInput: document.getElementById("homeroomIdInput"),
   hrRubiesInput: document.getElementById("hrRubiesInput"),
@@ -80,16 +80,26 @@ let quickState = {
   selectedIds: new Set(),
 };
 
-init().catch((e) => showError(normalizeError(e)));
+init().catch((e) => {
+  console.error("staff-minutes-submit init error:", e);
+  // Best-effort display if boxes exist
+  const msg = normalizeError(e);
+  if (els?.errorBox) {
+    els.errorBox.textContent = msg;
+    els.errorBox.classList.remove("isHidden");
+  } else {
+    alert(msg);
+  }
+});
 
-// ✅ before any backend call, ensure auth is ready and token is fresh
+// Ensure auth and fresh token
 async function ensureAuthedOrBounce() {
   const user = await waitForAuthReady();
   if (!user) {
     window.location.href = ABS.staffLogin;
     return null;
   }
-  await user.getIdToken(true); // refresh token/claims
+  await user.getIdToken(true);
   return user;
 }
 
@@ -103,7 +113,6 @@ async function init() {
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
 
-  // Prefer Firebase UID if available (most reliable)
   const userId =
     auth.currentUser?.uid ||
     claims.userId ||
@@ -119,7 +128,7 @@ async function init() {
   });
 
   // Default target = self for convenience
-  els.targetUserIdInput.value = userId;
+  if (els.targetUserIdInput) els.targetUserIdInput.value = userId;
 
   wireQuickClassSubmit();
   wireAwardForm();
@@ -129,7 +138,7 @@ async function init() {
 }
 
 /* =========================================================
-   ✅ NEW: Quick Class Submit (Grade -> Homeroom -> Roster)
+   ✅ Quick Class Submit
 ========================================================= */
 
 function wireQuickClassSubmit() {
@@ -164,24 +173,31 @@ function wireQuickClassSubmit() {
     if (!btn) return;
 
     const hr = btn.getAttribute("data-hr");
+    if (!hr) return;
+
     loadHomeroomRoster(hr);
     setActiveChip(els.quick.homeroomButtons, btn);
   });
 
   els.quick.btnSelectAll.addEventListener("click", () => {
+    hideQuickMsgs();
     quickState.selectedIds.clear();
     quickState.rosterForHomeroom.forEach((s) => quickState.selectedIds.add(s.id));
     renderRosterList();
+    updateRosterMeta();
   });
 
   els.quick.btnClearAll.addEventListener("click", () => {
+    hideQuickMsgs();
     quickState.selectedIds.clear();
     renderRosterList();
+    updateRosterMeta();
   });
 
+  // checkbox change handler (delegated)
   els.quick.rosterList.addEventListener("change", (e) => {
     const cb = e.target;
-    if (!cb || cb.tagName !== "INPUT") return;
+    if (!cb || cb.tagName !== "INPUT" || cb.type !== "checkbox") return;
     const id = cb.getAttribute("data-id");
     if (!id) return;
 
@@ -197,39 +213,26 @@ function wireQuickClassSubmit() {
     const minutes = parseInt((els.quick.minutesInput.value || "0").trim(), 10) || 0;
     const note = (els.quick.noteInput.value || "").trim();
 
-    if (quickState.gradeNum === null) {
-      showQuickError("Pick a grade first.");
-      return;
-    }
-    if (!quickState.homeroomId) {
-      showQuickError("Pick a homeroom.");
-      return;
-    }
-    if (minutes <= 0) {
-      showQuickError("Enter minutes greater than 0.");
-      return;
-    }
+    if (quickState.gradeNum === null) return showQuickError("Pick a grade first.");
+    if (!quickState.homeroomId) return showQuickError("Pick a homeroom.");
+    if (minutes <= 0) return showQuickError("Enter minutes greater than 0.");
+
     const selected = Array.from(quickState.selectedIds);
-    if (selected.length === 0) {
-      showQuickError("Select at least one student.");
-      return;
-    }
+    if (selected.length === 0) return showQuickError("Select at least one student.");
 
     try {
       els.quick.btnSubmit.disabled = true;
-      showLoading(els.loadingOverlay, els.loadingText, "Submitting minutes to selected students…");
+      showLoading(els.loadingOverlay, els.loadingText, "Submitting minutes…");
 
       const user = await ensureAuthedOrBounce();
       if (!user) return;
-      const token = await user.getIdToken(true);
 
+      const token = await user.getIdToken(true);
       const schoolId = current.schoolId;
       const dateKey = todayDateKey();
-
-      // Use your existing actionType for minutes workflow
       const actionType = "MINUTES_SUBMIT_PENDING";
 
-      // Concurrency-limited pool so we don't hammer functions too hard
+      // Concurrency-limited pool
       const results = await runPool(
         selected.map((studentId) => async () => {
           await postSubmitTransaction(token, {
@@ -250,7 +253,7 @@ function wireQuickClassSubmit() {
       hideLoading(els.loadingOverlay);
       showQuickOk(`Submitted ${minutes} minutes for ${results.length} student(s)! ✅`);
 
-      // convenience: keep roster selections as-is; just clear minutes/note
+      // keep checkboxes; clear inputs
       els.quick.minutesInput.value = "0";
       els.quick.noteInput.value = "";
     } catch (err) {
@@ -264,6 +267,7 @@ function wireQuickClassSubmit() {
 
 async function loadGradeRoster(gradeNum) {
   hideQuickMsgs();
+
   quickState.gradeNum = gradeNum;
   quickState.homeroomId = null;
   quickState.rosterForHomeroom = [];
@@ -278,22 +282,25 @@ async function loadGradeRoster(gradeNum) {
 
     const schoolId = current.schoolId;
     const students = await fetchActivePublicStudentsByGrade(schoolId, gradeNum);
-
     quickState.rosterAllForGrade = Array.isArray(students) ? students : [];
 
-    // Build unique homerooms
-    const homerooms = Array.from(
-      new Set(quickState.rosterAllForGrade.map((s) => s.homeroomId).filter(Boolean))
-    );
+    // homeroom -> count
+    const counts = new Map();
+    for (const s of quickState.rosterAllForGrade) {
+      if (!s?.homeroomId) continue;
+      counts.set(s.homeroomId, (counts.get(s.homeroomId) || 0) + 1);
+    }
 
-    // Render homeroom chips
+    const homerooms = Array.from(counts.keys());
+
     els.quick.homeroomButtons.innerHTML =
       homerooms.length === 0
-        ? `<div class="muted">No homerooms found for this grade.</div>`
+        ? `<div class="sub" style="margin:0;">No homerooms found for this grade.</div>`
         : homerooms
             .map((hr) => {
               const pretty = prettifyHomeroom(hr);
-              return `<button type="button" class="chip" data-hr="${escapeAttr(hr)}">${pretty}</button>`;
+              const n = counts.get(hr) || 0;
+              return `<button type="button" class="chip" data-hr="${escapeAttr(hr)}">${escapeHtml(pretty)} (${n})</button>`;
             })
             .join("");
 
@@ -311,8 +318,6 @@ function loadHomeroomRoster(homeroomId) {
   quickState.homeroomId = homeroomId;
 
   const roster = quickState.rosterAllForGrade.filter((s) => s.homeroomId === homeroomId);
-
-  // Sort by displayName if not already sorted
   roster.sort((a, b) => String(a.displayName || "").localeCompare(String(b.displayName || "")));
 
   quickState.rosterForHomeroom = roster;
@@ -322,14 +327,14 @@ function loadHomeroomRoster(homeroomId) {
   roster.forEach((s) => quickState.selectedIds.add(s.id));
 
   renderRosterList();
+  updateRosterMeta();
 }
 
 function renderRosterList() {
   const roster = quickState.rosterForHomeroom;
 
   if (!roster || roster.length === 0) {
-    els.quick.rosterList.innerHTML = `<div class="muted">No students found for this homeroom.</div>`;
-    updateRosterMeta();
+    els.quick.rosterList.innerHTML = `<div class="sub" style="margin:0;">No students found for this homeroom.</div>`;
     return;
   }
 
@@ -340,13 +345,11 @@ function renderRosterList() {
         <label class="rosterRow">
           <input type="checkbox" ${checked} data-id="${escapeAttr(s.id)}" />
           <span class="rosterName">${escapeHtml(s.displayName || s.id)}</span>
-          <span class="rosterId muted">${escapeHtml(s.id)}</span>
+          <span class="rosterId">${escapeHtml(s.id)}</span>
         </label>
       `;
     })
     .join("");
-
-  updateRosterMeta();
 }
 
 function updateRosterMeta() {
@@ -363,7 +366,6 @@ function updateRosterMeta() {
 }
 
 function prettifyHomeroom(h) {
-  // hr_peterson -> Peterson
   let x = String(h || "");
   if (x.startsWith("hr_")) x = x.slice(3);
   x = x.replace(/[_-]+/g, " ").trim();
@@ -371,14 +373,12 @@ function prettifyHomeroom(h) {
 }
 
 function setActiveChip(container, activeBtn) {
-  Array.from(container.querySelectorAll(".chip")).forEach((b) =>
-    b.classList.remove("isActive")
-  );
+  Array.from(container.querySelectorAll(".chip")).forEach((b) => b.classList.remove("isActive"));
   activeBtn.classList.add("isActive");
 }
 
 /* =========================================================
-   Existing: Individual submit/award form
+   Individual submit/award
 ========================================================= */
 
 function wireAwardForm() {
@@ -396,26 +396,16 @@ function wireAwardForm() {
     const note = (els.noteInput.value || "").trim();
     const dateKey = todayDateKey();
 
-    if (!targetUserId) {
-      showError("Please enter a target userId.");
-      return;
-    }
+    if (!targetUserId) return showError("Please enter a target userId.");
 
-    // Normalize rubies sign for SPEND
     if (actionType === "RUBIES_SPEND" && rubies > 0) rubies = -rubies;
 
-    if (actionType === "MINUTES_SUBMIT_PENDING" && minutes <= 0) {
-      showError("Enter minutes greater than 0 for pending minutes.");
-      return;
-    }
-    if ((actionType === "RUBIES_AWARD" || actionType === "RUBIES_SPEND") && rubies === 0) {
-      showError("Enter rubies (non-zero) for a rubies action.");
-      return;
-    }
-    if (actionType === "MONEY_RAISED_ADD" && moneyCents <= 0) {
-      showError("Enter dollars greater than 0 to add money raised.");
-      return;
-    }
+    if (actionType === "MINUTES_SUBMIT_PENDING" && minutes <= 0)
+      return showError("Enter minutes greater than 0 for pending minutes.");
+    if ((actionType === "RUBIES_AWARD" || actionType === "RUBIES_SPEND") && rubies === 0)
+      return showError("Enter rubies (non-zero) for a rubies action.");
+    if (actionType === "MONEY_RAISED_ADD" && moneyCents <= 0)
+      return showError("Enter dollars greater than 0 to add money raised.");
 
     try {
       els.btnSubmit.disabled = true;
@@ -454,7 +444,7 @@ function wireAwardForm() {
 }
 
 /* =========================================================
-   Existing: Homeroom award form
+   Homeroom award
 ========================================================= */
 
 function wireHomeroomForm() {
@@ -469,14 +459,8 @@ function wireHomeroomForm() {
     const note = (els.hrNoteInput.value || "").trim();
     const dateKey = todayDateKey();
 
-    if (!homeroomId) {
-      showHrError("Please enter a homeroomId like hr_peterson.");
-      return;
-    }
-    if (rubies <= 0 && minutes <= 0) {
-      showHrError("Enter rubies and/or minutes greater than 0.");
-      return;
-    }
+    if (!homeroomId) return showHrError("Please enter a homeroomId like hr_peterson.");
+    if (rubies <= 0 && minutes <= 0) return showHrError("Enter rubies and/or minutes greater than 0.");
 
     try {
       els.btnHomeroomSubmit.disabled = true;
@@ -520,10 +504,7 @@ function wireHomeroomForm() {
 async function postSubmitTransaction(token, payload) {
   const resp = await fetch(ENDPOINTS.submitTransactionHttp, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 
@@ -540,10 +521,7 @@ async function postSubmitTransaction(token, payload) {
 async function postAwardHomeroom(token, payload) {
   const resp = await fetch(ENDPOINTS.awardHomeroomHttp, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify(payload),
   });
 
@@ -590,7 +568,7 @@ function todayDateKey() {
 }
 
 /* =========================================================
-   Messages (existing + quick)
+   Messages
 ========================================================= */
 
 function hideMsgs() {
@@ -623,7 +601,6 @@ function showHrOk(msg) {
   els.hrOkBox.classList.remove("isHidden");
 }
 
-// Quick messages
 function hideQuickMsgs() {
   els.quick.errorBox.classList.add("isHidden");
   els.quick.errorBox.textContent = "";
@@ -651,6 +628,7 @@ function escapeHtml(s) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
 function escapeAttr(s) {
   return escapeHtml(s).replaceAll("`", "&#096;");
 }
