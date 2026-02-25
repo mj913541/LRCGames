@@ -113,34 +113,49 @@ async function submitTransactionCore(data, claims, authUid) {
     throw new functions.https.HttpsError("invalid-argument", "Missing targetUserId/actionType.");
   }
 
-  // Permission checks
-  if (role === "student") {
-    if (targetUserId !== submittedByUserId) {
-      throw new functions.https.HttpsError("permission-denied", "Students can submit for self only.");
-    }
-  } else if (role === "staff") {
-    if (targetUserId !== submittedByUserId) {
-      const linked = await isLinkedStaffToStudent({
-        schoolId,
-        staffId: submittedByUserId,
-        studentId: targetUserId,
-      });
-      if (!linked) throw new functions.https.HttpsError("permission-denied", "Not linked to that student.");
-    }
-  } else if (role === "admin") {
-    // ok
-  } else {
-    throw new functions.https.HttpsError("permission-denied", "Unknown role.");
+// Permission checks
+if (role === "student") {
+  if (targetUserId !== submittedByUserId) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Students can submit for self only."
+    );
   }
 
-  // Validate types
-  if (
-    !Number.isFinite(deltaMinutes) ||
-    !Number.isFinite(deltaRubies) ||
-    !Number.isFinite(deltaMoneyRaisedCents)
-  ) {
-    throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
+} else if (role === "staff") {
+  // ✅ NEW STAFF RULES:
+  // Staff can submit pending minutes for themselves OR any student.
+  // Staff cannot submit rubies or money, and cannot use other action types.
+
+  if (actionType !== "MINUTES_SUBMIT_PENDING") {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Staff can only submit pending minutes."
+    );
   }
+
+  // Disallow any rubies/money deltas for staff
+  if (Number(deltaRubies) !== 0 || Number(deltaMoneyRaisedCents) !== 0) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      "Staff cannot submit rubies or money."
+    );
+  }
+
+  // Require positive, reasonable minutes
+  if (!Number.isFinite(deltaMinutes) || deltaMinutes <= 0 || deltaMinutes > 600) {
+    throw new functions.https.HttpsError(
+      "invalid-argument",
+      "Minutes must be between 1 and 600."
+    );
+  }
+
+} else if (role === "admin") {
+  // ok
+
+} else {
+  throw new functions.https.HttpsError("permission-denied", "Unknown role.");
+}
 
   const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
   const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
