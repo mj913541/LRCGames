@@ -175,8 +175,13 @@ function wireQuick() {
   els.quick.gradeButtons.addEventListener("click", async (e) => {
     const btn = e.target?.closest?.("button[data-grade]");
     if (!btn) return;
-    const gradeNum = parseInt(btn.getAttribute("data-grade"), 10);
-    await loadGradeRoster(gradeNum);
+const gradeVal = btn.getAttribute("data-grade");
+if (gradeVal === "houses") {
+  await loadHouseRoster(); // we will create this next step
+} else {
+  const gradeNum = parseInt(gradeVal, 10);
+  await loadGradeRoster(gradeNum);
+}
     setActiveChip(els.quick.gradeButtons, btn);
   });
 
