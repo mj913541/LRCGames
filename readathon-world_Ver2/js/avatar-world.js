@@ -168,7 +168,14 @@ function roomStateRef(schoolId, userId) {
 }
 
 function catalogColRef(schoolId) {
-  return collection(db, "readathonV2_schools", schoolId, "avatarCatalog", "items");
+  return collection(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "avatarCatalog",
+    "catalog",     // 👈 NEW
+    "items"
+  );
 }
 
 /* ----------------------------
