@@ -59,10 +59,10 @@ async function init() {
   const summary = await loadSummary({ schoolId, userId });
   renderSummary(summary);
 
-  // Load inventory
-export async function loadInventory({ schoolId, userId }) {
-  renderInventory({ schoolId, userId, inv });
-
+// Load inventory
+const inv = await loadInventory({ schoolId, userId });
+renderInventory({ schoolId, userId, inv });
+  
   // Equipped preview
   renderEquipped({ schoolId, userId });
 
