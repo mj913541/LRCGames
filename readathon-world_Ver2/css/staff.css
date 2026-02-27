@@ -369,8 +369,16 @@ body{
   gap: 12px;
 }
 
-@media (min-width: 860px){
-  .twoCol{ grid-template-columns: 1fr 1fr; }
+@media (min-width: 1000px){
+  .wrap{
+    grid-template-columns: 1fr 1fr;
+    align-items:start;
+  }
+
+  /* Make Class Minutes slightly wider if desired */
+  .wrap > .quickSubmit{
+    grid-column: span 1;
+  }
 }
 
 /* =========================================
