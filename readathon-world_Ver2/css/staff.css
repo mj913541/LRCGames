@@ -549,3 +549,20 @@ body{
   color: var(--muted);
   font-weight: 900;
 }
+
+/* ===== Staff Submit Minutes: 2-column layout on wide screens ===== */
+.page--staff main.wrap{
+  width: min(1100px, 96vw);
+  margin: 10px auto 26px;
+  display: grid;
+  grid-template-columns: 1fr;   /* default = stacked */
+  gap: 16px;
+}
+
+/* when wide enough, put the 2 panels side-by-side */
+@media (min-width: 860px){
+  .page--staff main.wrap{
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+}
