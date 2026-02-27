@@ -159,17 +159,17 @@ function wireSelf() {
 
 function wireQuick() {
   const gradeDefs = [
-    { label: "K", value: 0 },
-    { label: "1", value: 1 },
-    { label: "2", value: 2 },
-    { label: "3", value: 3 },
-    { label: "4", value: 4 },
-    { label: "5", value: 5 },
+    { label: "EC & K", value: 0 },
+    { label: "1st", value: 1 },
+    { label: "2nd", value: 2 },
+    { label: "3rd", value: 3 },
+    { label: "4th", value: 4 },
+    { label: "5th", value: 5 },
     { label: "Houses", value: "houses" },
   ];
 
   els.quick.gradeButtons.innerHTML = gradeDefs
-    .map((g) => `<button type="button" class="chip" data-grade="${g.value}">Grade ${g.label}</button>`)
+    .map((g) => `<button type="button" class="chip" data-grade="${g.value}"> ${g.label}</button>`)
     .join("");
 
   els.quick.gradeButtons.addEventListener("click", async (e) => {
