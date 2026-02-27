@@ -58,6 +58,19 @@ const gradeLabels = {
   5: "5th Grade",
 };
 
+// ==============================
+// Homeroom Teacher Photo Mapping
+// Looks for image named exactly like homeroomId
+// Example: hr_peterson.png
+// ==============================
+
+function homeroomPhotoPath(homeroomId) {
+  return `/readathon-world_Ver2/img/${homeroomId}.png`;
+}
+
+// Fallback image if one is missing
+const DEFAULT_TEACHER_PHOTO = "/readathon-world_Ver2/img/default.png";
+
 let state = {
   schoolId: getSchoolId(),
   grade: null,
@@ -181,19 +194,40 @@ function renderHomerooms(homeroomIds) {
     els.homeroomChips.appendChild(empty);
     return;
   }
+for (const hr of homeroomIds) {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = "chip chip--teacher";
+  chip.dataset.homeroomId = hr;
 
-  for (const hr of homeroomIds) {
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "chip";
-    chip.textContent = prettyHomeroom(hr);
+  // Teacher Photo
+  const img = document.createElement("img");
+  img.className = "chipPhoto";
+  img.alt = `${prettyHomeroom(hr)} teacher photo`;
+  img.loading = "lazy";
+  img.src = homeroomPhotoPath(hr);
 
-    chip.addEventListener("click", () => {
-      selectHomeroom(hr);
-    });
+  // Fallback if image missing
+  img.onerror = () => {
+    img.onerror = null;
+    img.src = DEFAULT_TEACHER_PHOTO;
+  };
 
-    els.homeroomChips.appendChild(chip);
-  }
+  // Label
+  const label = document.createElement("span");
+  label.className = "chipLabel";
+  label.textContent = prettyHomeroom(hr);
+
+  chip.appendChild(img);
+  chip.appendChild(label);
+
+  chip.addEventListener("click", () => {
+    selectHomeroom(hr);
+  });
+
+  els.homeroomChips.appendChild(chip);
+}
+
 
   els.btnBackToGrade.onclick = () => {
     state.homeroomId = null;
@@ -207,9 +241,9 @@ function selectHomeroom(homeroomId) {
   state.student = null;
 
   // Highlight active chip
-  for (const node of els.homeroomChips.querySelectorAll(".chip")) {
-    node.classList.toggle("chip--active", node.textContent === prettyHomeroom(homeroomId));
-  }
+for (const node of els.homeroomChips.querySelectorAll(".chip")) {
+  node.classList.toggle("chip--active", node.dataset.homeroomId === homeroomId);
+}
 
   const list = state.studentsByGrade
     .filter((s) => s.homeroomId === homeroomId)
