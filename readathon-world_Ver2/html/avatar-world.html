@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Avatar World Room</title>
+
+  <link rel="stylesheet" href="/readathon-world_Ver2/css/avatar-world.css" />
+</head>
+
+<body class="aw">
+  <header class="awTop">
+    <button id="btnBack" class="btn btnGhost" type="button">← Back</button>
+
+    <div class="awTitle">
+      <div class="awTitleBig">Avatar World</div>
+      <div class="awTitleSmall" id="awSubtitle">Loading…</div>
+    </div>
+
+    <div class="awTopRight">
+      <div class="balPill" aria-live="polite">
+        💎 <span id="rubiesBalance">—</span>
+      </div>
+
+      <button id="btnShop" class="btn btnPrimary" type="button">🛍 Shop</button>
+      <button id="btnInv" class="btn btnSecondary" type="button" aria-expanded="false" aria-controls="invDrawer">🎒 Inventory</button>
+      <button id="btnDebug" class="btn btnGhost" type="button" aria-pressed="false">🧰 Debug</button>
+    </div>
+  </header>
+
+  <main class="awMain" id="main">
+    <section class="room" aria-label="Avatar room">
+      <div class="roomBg" aria-hidden="true"></div>
+
+      <!-- Zones -->
+      <div id="zone-wall-1" class="zone zoneWall"><div class="zoneItem" data-slot="wall1"></div></div>
+      <div id="zone-wall-2" class="zone zoneWall"><div class="zoneItem" data-slot="wall2"></div></div>
+      <div id="zone-floor-1" class="zone zoneFloor"><div class="zoneItem" data-slot="floor1"></div></div>
+      <div id="zone-floor-2" class="zone zoneFloor"><div class="zoneItem" data-slot="floor2"></div></div>
+      <div id="zone-pet" class="zone zonePet"><div class="zoneItem" data-slot="pet"></div></div>
+
+      <div id="zone-avatar" class="zone zoneAvatar" aria-label="Avatar">
+        <div class="avatarStack" aria-label="Avatar layers">
+          <img id="avatarBase" class="layer" alt="Avatar base" src="/readathon-world_Ver2/assets/avatar/base/avatar_base.png" />
+          <img id="avatarBody" class="layer" alt="Avatar outfit" src="" />
+          <img id="avatarHead" class="layer" alt="Avatar headgear" src="" />
+          <img id="avatarAcc" class="layer" alt="Avatar accessory" src="" />
+        </div>
+      </div>
+
+      <div id="toast" class="toast" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <!-- Inventory Drawer -->
+  <aside id="invDrawer" class="drawer" aria-hidden="true" aria-label="Inventory">
+    <div class="drawerHdr">
+      <div class="drawerTitle">🎒 Inventory</div>
+      <button id="btnInvClose" class="btn btnGhost" type="button">✖</button>
+    </div>
+
+    <div class="drawerTabs" role="tablist">
+      <button class="tab" data-tab="wear" role="tab" aria-selected="true">Wear</button>
+      <button class="tab" data-tab="pets" role="tab" aria-selected="false">Pets</button>
+      <button class="tab" data-tab="wall" role="tab" aria-selected="false">Wall</button>
+      <button class="tab" data-tab="floor" role="tab" aria-selected="false">Floor</button>
+    </div>
+
+    <div class="drawerBody">
+      <div id="panelWear" class="panel" data-panel="wear"></div>
+      <div id="panelPets" class="panel isHidden" data-panel="pets"></div>
+      <div id="panelWall" class="panel isHidden" data-panel="wall"></div>
+      <div id="panelFloor" class="panel isHidden" data-panel="floor"></div>
+    </div>
+  </aside>
+
+  <!-- Shop Modal (simple placeholder for now) -->
+  <div id="shopModal" class="modal" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Shop">
+    <div class="modalCard">
+      <div class="modalHdr">
+        <div class="modalTitle">🛍 Jungle Shop</div>
+        <button id="btnShopClose" class="btn btnGhost" type="button">✖</button>
+      </div>
+      <div id="shopGrid" class="shopGrid"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/readathon-world_Ver2/js/avatar-world.js"></script>
+</body>
+</html>
