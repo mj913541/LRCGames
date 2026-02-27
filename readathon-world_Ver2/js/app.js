@@ -5,7 +5,6 @@ import {
   DEFAULT_SCHOOL_ID,
   auth,
   signOutUser,
-  getIdTokenClaims,
   userSummaryRef,
   db,
 } from "/readathon-world_Ver2/js/firebase.js";
@@ -15,14 +14,11 @@ import {
   getDoc,
   collection,
   getDocs,
-  limit,
   query,
   orderBy,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import {
-  onAuthStateChanged,
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 export const ABS = {
   index: "/readathon-world_Ver2/html/index.html",
@@ -69,13 +65,9 @@ export function setHeaderUser(el, { title, subtitle }) {
 
   const schoolId = getSchoolId() || DEFAULT_SCHOOL_ID;
   const userId =
-    auth.currentUser?.uid ||
-    localStorage.getItem("readathonV2_userId") ||
-    "";
+    auth.currentUser?.uid || localStorage.getItem("readathonV2_userId") || "";
 
-  el.querySelector("[data-title]").textContent =
-    title || "Readathon World";
-
+  el.querySelector("[data-title]").textContent = title || "Readathon World";
   el.querySelector("[data-subtitle]").textContent =
     subtitle || `${schoolId} • ${userId}`;
 }
@@ -108,10 +100,7 @@ function waitForAuthReady() {
   });
 }
 
-export async function guardRoleOrRedirect(
-  allowedRoles = [],
-  loginUrl
-) {
+export async function guardRoleOrRedirect(allowedRoles = [], loginUrl) {
   const user = await waitForAuthReady();
 
   if (!user) {
@@ -148,22 +137,22 @@ export async function loadSummary({ schoolId, userId }) {
   return snap.exists() ? snap.data() : null;
 }
 
-export async function loadInventory({
-  schoolId,
-  userId,
-}) {
-const invCol = collection(
-  db,
-  "readathonV2_schools",
-  schoolId,
-  "users",
-  userId,
-  "readathon",
-  "summary",
-  "inventory"
-);
+export async function loadInventory({ schoolId, userId }) {
+  // Inventory lives here:
+  // readathonV2_schools/{schoolId}/users/{userId}/readathon/summary/inventory/{itemId}
+  const invCol = collection(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "users",
+    userId,
+    "readathon",
+    "summary",
+    "inventory"
+  );
 
-  const qRef = query(invCol, orderBy("__name__"), limit(maxItems));
+  // No limit — returns all items ordered by doc id
+  const qRef = query(invCol, orderBy("__name__"));
   const snap = await getDocs(qRef);
 
   return snap.docs.map((d) => ({
@@ -176,8 +165,7 @@ const invCol = collection(
    Avatar Equipped (Local Only)
 -------------------------------------------------- */
 
-const equipKey = (schoolId, userId) =>
-  `readathonV2_equipped_${schoolId}_${userId}`;
+const equipKey = (schoolId, userId) => `readathonV2_equipped_${schoolId}_${userId}`;
 
 export function getEquippedLocal({ schoolId, userId }) {
   try {
@@ -190,14 +178,8 @@ export function getEquippedLocal({ schoolId, userId }) {
   }
 }
 
-export function setEquippedLocal(
-  { schoolId, userId },
-  equippedObj
-) {
-  localStorage.setItem(
-    equipKey(schoolId, userId),
-    JSON.stringify(equippedObj)
-  );
+export function setEquippedLocal({ schoolId, userId }, equippedObj) {
+  localStorage.setItem(equipKey(schoolId, userId), JSON.stringify(equippedObj));
 }
 
 export function pickSlotForItem(itemId) {
@@ -217,11 +199,7 @@ export function pickSlotForItem(itemId) {
 -------------------------------------------------- */
 
 export function normalizeError(err) {
-  return (
-    err?.message ||
-    err?.toString?.() ||
-    "Something went wrong. Please try again."
-  );
+  return err?.message || err?.toString?.() || "Something went wrong. Please try again.";
 }
 
 export function showLoading(overlayEl, textEl, text) {
