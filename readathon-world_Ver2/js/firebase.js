@@ -166,7 +166,15 @@ export function userDocRef(schoolId, userId) {
 }
 
 export function userSummaryRef(schoolId, userId) {
-  return doc(db, `${schoolRoot(schoolId)}/users/${userId}/readathon/summary`);
+  return doc(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "users",
+    userId,
+    "readathon",
+    "summary"
+  );
 }
 
 export function publicStudentsCol(schoolId) {
