@@ -1,5 +1,7 @@
 // /readathon-world_Ver2/js/firebase.js
 // Firebase v9+ (modular) via CDN. Vanilla JS module exports.
+// NOTE: This keeps your existing Firebase initialization (single initializeApp).
+// It also fixes fnBuyAvatarItem to use the SAME regional Functions instance.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 
@@ -48,7 +50,7 @@ const firebaseConfig = {
 export const DEFAULT_SCHOOL_ID = "308_longbeach_elementary";
 
 /* --------------------------------------------------
-   Initialize Firebase
+   Initialize Firebase (SINGLE initialization)
 -------------------------------------------------- */
 
 export const app = initializeApp(firebaseConfig);
@@ -60,17 +62,22 @@ setPersistence(auth, browserLocalPersistence).catch((err) => {
 });
 
 export const db = getFirestore(app);
+
+// ✅ Keep a SINGLE Functions instance with explicit region
 export const functions = getFunctions(app, "us-central1");
 
 /* --------------------------------------------------
    Callable Cloud Functions (onCall)
-   IMPORTANT: use httpsCallable(...) (NOT the .a.run.app URL)
+   IMPORTANT: use httpsCallable(functions, "...") (NOT the .a.run.app URL)
 -------------------------------------------------- */
 
 export const fnVerifyPin = httpsCallable(functions, "verifyPin");
 export const fnSubmitTransaction = httpsCallable(functions, "submitTransaction");
 export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
+
+// Avatar World (Option 1 rules: function-owned summary + inventory)
+export const fnBuyAvatarItem = httpsCallable(functions, "buyAvatarItem");
 
 /* --------------------------------------------------
    School ID Helpers
@@ -165,6 +172,8 @@ export function userDocRef(schoolId, userId) {
   return doc(db, `${schoolRoot(schoolId)}/users/${userId}`);
 }
 
+// CONFIRMED summary path:
+// readathonV2_schools/{schoolId}/users/{userId}/readathon/summary
 export function userSummaryRef(schoolId, userId) {
   return doc(
     db,
@@ -180,11 +189,6 @@ export function userSummaryRef(schoolId, userId) {
 export function publicStudentsCol(schoolId) {
   return collection(db, `${schoolRoot(schoolId)}/publicStudents`);
 }
-export const fnBuyAvatarItem = async ({ itemId }) => {
-  const fn = httpsCallable(getFunctions(), "buyAvatarItem");
-  const res = await fn({ itemId });
-  return res.data;
-};
 
 export function homeroomsCol(schoolId) {
   return collection(db, `${schoolRoot(schoolId)}/homerooms`);
