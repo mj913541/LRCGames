@@ -459,7 +459,7 @@ body{
   .quickSubmit .rosterId{ display:none; }
 }
 
-
+.sectionHead{ display:flex; flex-direction:column; gap: 2px; margin-bottom: 10px; }
 .avatarArea{
   display:grid;
   grid-template-columns: 1fr;
