@@ -544,34 +544,23 @@ function renderShop() {
   }
 }
 
+import { fnBuyAvatarItem } from "/readathon-world_Ver2/js/firebase.js"; 
+// If you don't already export it, see Step C below.
+
 async function buyItem(item) {
   const itemId = item.itemId;
-  const price = Number(item.price || 0);
+  await fnBuyAvatarItem({ itemId }); // callable function
 
-  const invRef = inventoryItemRef(ctx.schoolId, ctx.userId, itemId);
-  const sumRef = userSummaryRef(ctx.schoolId, ctx.userId);
+  // Refresh using existing loaders
+  summaryCache = await loadSummary({ schoolId: ctx.schoolId, userId: ctx.userId });
+  invCache = await loadInventory({ schoolId: ctx.schoolId, userId: ctx.userId });
 
-  await runTransaction(db, async (tx) => {
-    const [invSnap, sumSnap] = await Promise.all([tx.get(invRef), tx.get(sumRef)]);
-    const s = sumSnap.data() || {};
-    const bal = Number(s.rubiesBalance || 0);
+  renderSummaryIntoTopbar(summaryCache);
+  renderInventoryPanels();
+  renderRoom();
 
-    if (bal < price) throw new Error("Not enough rubies.");
-
-    const currentQty = invSnap.exists() ? Number(invSnap.data()?.qty || 0) : 0;
-    const nextQty = currentQty + 1;
-
-    tx.set(invRef, { qty: nextQty }, { merge: true });
-
-    tx.set(
-      sumRef,
-      {
-        rubiesBalance: bal - price,
-        rubiesLifetimeSpent: Number(s.rubiesLifetimeSpent || 0) + price,
-      },
-      { merge: true }
-    );
-  });
+  toast(`Bought: ${item.name || prettyItemId(itemId)} ✅`);
+}
 
   // Refresh summary + inventory from your existing loaders
   summaryCache = await loadSummary({ schoolId: ctx.schoolId, userId: ctx.userId });
