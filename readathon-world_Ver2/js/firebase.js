@@ -180,6 +180,11 @@ export function userSummaryRef(schoolId, userId) {
 export function publicStudentsCol(schoolId) {
   return collection(db, `${schoolRoot(schoolId)}/publicStudents`);
 }
+export const fnBuyAvatarItem = async ({ itemId }) => {
+  const fn = httpsCallable(getFunctions(), "buyAvatarItem");
+  const res = await fn({ itemId });
+  return res.data;
+};
 
 export function homeroomsCol(schoolId) {
   return collection(db, `${schoolRoot(schoolId)}/homerooms`);
