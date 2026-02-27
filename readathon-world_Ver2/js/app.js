@@ -151,12 +151,17 @@ export async function loadSummary({ schoolId, userId }) {
 export async function loadInventory({
   schoolId,
   userId,
-  maxItems = 60,
 }) {
-  const invCol = collection(
-    db,
-    `readathonV2_schools/${schoolId}/users/${userId}/readathon/inventory`
-  );
+const invCol = collection(
+  db,
+  "readathonV2_schools",
+  schoolId,
+  "users",
+  userId,
+  "readathon",
+  "summary",
+  "inventory"
+);
 
   const qRef = query(invCol, orderBy("__name__"), limit(maxItems));
   const snap = await getDocs(qRef);
