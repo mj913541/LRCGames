@@ -228,7 +228,17 @@ export async function fetchActiveHomeroomsByGrade(schoolId, gradeNum) {
   const snap = await getDocs(qRef);
   return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 }
+export async function fetchActivePublicStudentsByHouse(schoolId, houseId) {
+  const pub = collection(db, `readathonV2_schools/${schoolId}/publicStudents`);
+  const qy = query(
+    pub,
+    where("active", "==", true),
+    where("houseId", "==", String(houseId || "").trim())
+  );
 
+  const snap = await getDocs(qy);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+}
 export async function fetchUserSummary(schoolId, userId) {
   const ref = userSummaryRef(schoolId, userId);
   const snap = await getDoc(ref);
