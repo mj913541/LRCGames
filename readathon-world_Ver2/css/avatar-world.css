@@ -153,7 +153,7 @@ body.aw{
   inset:0;
   background:
     radial-gradient(500px 300px at 50% 20%, rgba(255,255,255,0.12), transparent),
-    url("/readathon-world_Ver2/assets/avatar/room/room_bg_1024.png");
+    url("/readathon-world_Ver2/img/bg/student-login.png");
   background-size: cover;
   background-position:center;
   filter: saturate(1.05);
