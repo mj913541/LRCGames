@@ -60,7 +60,7 @@ async function init() {
   renderSummary(summary);
 
   // Load inventory
-  const inv = await loadInventory({ schoolId, userId, maxItems: 80 });
+export async function loadInventory({ schoolId, userId }) {
   renderInventory({ schoolId, userId, inv });
 
   // Equipped preview
