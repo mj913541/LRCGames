@@ -165,6 +165,7 @@ function wireQuick() {
     { label: "3", value: 3 },
     { label: "4", value: 4 },
     { label: "5", value: 5 },
+    { label: "Houses", value: "houses" },
   ];
 
   els.quick.gradeButtons.innerHTML = gradeDefs
