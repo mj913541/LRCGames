@@ -1,6 +1,19 @@
 // /readathon-world_Ver2/js/avatar-world.js
+// Fully fixed + Option 1 compliant (function-owned summary + inventory):
+// - Uses callable fnBuyAvatarItem (NO client runTransaction for purchases)
+// - Removes broken duplicate / stray code
+// - Moves all imports to the top (ESM requirement)
+// - Keeps your room state client-writable (per rules)
+// - Catalog load + optional seeding (staff/admin) still works
 
-import { auth, getSchoolId, DEFAULT_SCHOOL_ID, db, userSummaryRef } from "/readathon-world_Ver2/js/firebase.js";
+import {
+  auth,
+  getSchoolId,
+  DEFAULT_SCHOOL_ID,
+  db,
+  fnBuyAvatarItem,
+} from "/readathon-world_Ver2/js/firebase.js";
+
 import {
   ABS,
   guardRoleOrRedirect,
@@ -19,7 +32,6 @@ import {
   getDocs,
   query,
   orderBy,
-  runTransaction,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* ----------------------------
@@ -66,14 +78,9 @@ const zoneEls = {
 };
 
 /* ----------------------------
-  Local state in memory
+  Local state
 ---------------------------- */
-let ctx = {
-  schoolId: "",
-  userId: "",
-  role: "",
-};
-
+let ctx = { schoolId: "", userId: "", role: "" };
 let summaryCache = null;
 let invCache = [];
 let roomState = null;
@@ -82,7 +89,7 @@ let catalogList = [];
 let catalogById = new Map(); // itemId -> itemDoc
 
 /* ----------------------------
-  Small UI helpers
+  UI helpers
 ---------------------------- */
 function toast(msg) {
   els.toast.textContent = msg;
@@ -108,7 +115,9 @@ function closeShop() {
 }
 
 function setTab(tabName) {
-  tabs.forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === tabName)));
+  tabs.forEach((t) =>
+    t.setAttribute("aria-selected", String(t.dataset.tab === tabName))
+  );
   const panels = [els.panelWear, els.panelPets, els.panelWall, els.panelFloor];
   for (const p of panels) {
     p.classList.toggle("isHidden", p.dataset.panel !== tabName);
@@ -136,31 +145,30 @@ function isOwned(itemId) {
   return invQty(itemId) > 0;
 }
 
+function prettyItemId(itemId) {
+  return String(itemId || "")
+    .replace(/^item_/, "")
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
 /* ----------------------------
-  Firestore refs / paths
+  Firestore refs
 ---------------------------- */
 function roomStateRef(schoolId, userId) {
-  return doc(db, "readathonV2_schools", schoolId, "users", userId, "avatarRoom", "state");
-}
-
-function catalogColRef(schoolId) {
-  return collection(db, "readathonV2_schools", schoolId, "avatarCatalog", "items");
-}
-
-// IMPORTANT: must match your existing loadInventory path:
-// readathonV2_schools/{schoolId}/users/{userId}/readathon/summary/inventory/{itemId}
-function inventoryItemRef(schoolId, userId, itemId) {
   return doc(
     db,
     "readathonV2_schools",
     schoolId,
     "users",
     userId,
-    "readathon",
-    "summary",
-    "inventory",
-    itemId
+    "avatarRoom",
+    "state"
   );
+}
+
+function catalogColRef(schoolId) {
+  return collection(db, "readathonV2_schools", schoolId, "avatarCatalog", "items");
 }
 
 /* ----------------------------
@@ -182,8 +190,20 @@ async function loadOrCreateRoomState() {
 
   const d = snap.data() || {};
   return {
-    equipped: { head: null, body: null, accessory: null, pet: null, ...(d.equipped || {}) },
-    placed: { wall1: null, wall2: null, floor1: null, floor2: null, ...(d.placed || {}) },
+    equipped: {
+      head: null,
+      body: null,
+      accessory: null,
+      pet: null,
+      ...(d.equipped || {}),
+    },
+    placed: {
+      wall1: null,
+      wall2: null,
+      floor1: null,
+      floor2: null,
+      ...(d.placed || {}),
+    },
   };
 }
 
@@ -215,6 +235,8 @@ async function loadCatalog() {
   Rendering: Room
 ---------------------------- */
 function applyAvatarLayer(imgEl, itemId) {
+  if (!imgEl) return;
+
   if (!itemId) {
     imgEl.src = "";
     imgEl.style.opacity = "0";
@@ -244,13 +266,13 @@ function renderZone(slotKey, label, itemId) {
 
   const it = catalogById.get(itemId);
   if (!it?.imagePath) {
-    holder.appendChild(placeholder(`${label}\n${itemId}`));
+    holder.appendChild(placeholder(`${label}\n${prettyItemId(itemId)}`));
     return;
   }
 
   const img = document.createElement("img");
   img.className = "placedImg";
-  img.alt = it.name || itemId;
+  img.alt = it.name || prettyItemId(itemId);
   img.loading = "lazy";
   img.src = it.imagePath;
   img.onerror = () => {
@@ -263,12 +285,10 @@ function renderZone(slotKey, label, itemId) {
 function renderRoom() {
   if (!roomState) return;
 
-  // avatar layers
   applyAvatarLayer(els.avatarHead, roomState.equipped.head);
   applyAvatarLayer(els.avatarBody, roomState.equipped.body);
   applyAvatarLayer(els.avatarAcc, roomState.equipped.accessory);
 
-  // zones
   renderZone("pet", "Pet", roomState.equipped.pet);
   renderZone("wall1", "Wall 1", roomState.placed.wall1);
   renderZone("wall2", "Wall 2", roomState.placed.wall2);
@@ -283,7 +303,6 @@ function typeForItemId(itemId) {
   const it = catalogById.get(itemId);
   if (it?.type) return it.type;
 
-  // fallback by naming convention
   const id = String(itemId || "").toLowerCase();
   if (id.includes("head")) return "head";
   if (id.includes("body") || id.includes("shirt") || id.includes("outfit")) return "body";
@@ -300,17 +319,9 @@ function panelForType(type) {
   return "wear";
 }
 
-function prettyItemId(itemId) {
-  return String(itemId || "")
-    .replace(/^item_/, "")
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (m) => m.toUpperCase());
-}
-
 function renderInventoryPanels() {
   const owned = invCache.filter((x) => Number(x.qty || 0) > 0);
 
-  // Clear panels
   els.panelWear.innerHTML = "";
   els.panelPets.innerHTML = "";
   els.panelWall.innerHTML = "";
@@ -321,7 +332,6 @@ function renderInventoryPanels() {
     return;
   }
 
-  // Build cards grouped
   for (const row of owned) {
     const itemId = row.itemId;
     const qty = Number(row.qty || 0);
@@ -363,9 +373,7 @@ function renderInventoryPanels() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "action actionGo";
-
-    if (type === "wall" || type === "floor") btn.textContent = "Place";
-    else btn.textContent = "Equip";
+    btn.textContent = (type === "wall" || type === "floor") ? "Place" : "Equip";
 
     btn.addEventListener("click", async () => {
       try {
@@ -398,7 +406,6 @@ function renderInventoryPanels() {
 async function onUseItem({ itemId, type }) {
   if (!roomState) return;
 
-  // Safety: must own it
   if (!isOwned(itemId)) {
     toast("You don’t own that item yet.");
     return;
@@ -437,12 +444,12 @@ async function onUseItem({ itemId, type }) {
   }
 
   if (type === "wall") {
-    const s = !roomState.placed.wall1 ? "wall1" : (!roomState.placed.wall2 ? "wall2" : null);
-    if (!s) {
+    const slot = !roomState.placed.wall1 ? "wall1" : (!roomState.placed.wall2 ? "wall2" : null);
+    if (!slot) {
       toast("Wall slots are full. Tap a wall slot to remove it first.");
       return;
     }
-    roomState.placed[s] = itemId;
+    roomState.placed[slot] = itemId;
     await saveRoomState();
     renderRoom();
     toast("Placed on the wall!");
@@ -450,12 +457,12 @@ async function onUseItem({ itemId, type }) {
   }
 
   if (type === "floor") {
-    const s = !roomState.placed.floor1 ? "floor1" : (!roomState.placed.floor2 ? "floor2" : null);
-    if (!s) {
+    const slot = !roomState.placed.floor1 ? "floor1" : (!roomState.placed.floor2 ? "floor2" : null);
+    if (!slot) {
       toast("Floor slots are full. Tap a floor slot to remove it first.");
       return;
     }
-    roomState.placed[s] = itemId;
+    roomState.placed[slot] = itemId;
     await saveRoomState();
     renderRoom();
     toast("Placed on the floor!");
@@ -522,14 +529,16 @@ function renderShop() {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "action actionGo";
-    btn.disabled = false;
     btn.textContent = owned ? "Buy (+1)" : "Buy";
 
     btn.addEventListener("click", async () => {
       try {
+        btn.disabled = true;
         await buyItem(it);
       } catch (e) {
         toast(normalizeError(e));
+      } finally {
+        btn.disabled = false;
       }
     });
 
@@ -544,14 +553,16 @@ function renderShop() {
   }
 }
 
-import { fnBuyAvatarItem } from "/readathon-world_Ver2/js/firebase.js"; 
-// If you don't already export it, see Step C below.
-
 async function buyItem(item) {
   const itemId = item.itemId;
-  await fnBuyAvatarItem({ itemId }); // callable function
 
-  // Refresh using existing loaders
+  // ✅ Option 1 rules: must buy via Cloud Function
+  const res = await fnBuyAvatarItem({ itemId });
+  // res is a callable result object: { data: ... }
+  // We don't strictly need it, but it can be useful for debugging:
+  // console.log("buyAvatarItem:", res.data);
+
+  // Refresh using your existing loaders
   summaryCache = await loadSummary({ schoolId: ctx.schoolId, userId: ctx.userId });
   invCache = await loadInventory({ schoolId: ctx.schoolId, userId: ctx.userId });
 
@@ -562,20 +573,9 @@ async function buyItem(item) {
   toast(`Bought: ${item.name || prettyItemId(itemId)} ✅`);
 }
 
-  // Refresh summary + inventory from your existing loaders
-  summaryCache = await loadSummary({ schoolId: ctx.schoolId, userId: ctx.userId });
-  invCache = await loadInventory({ schoolId: ctx.schoolId, userId: ctx.userId });
-
-  renderSummaryIntoTopbar(summaryCache);
-  renderInventoryPanels();
-  renderRoom(); // if they bought something currently equipped/placed, it may now become owned
-
-  toast(`Bought: ${item.name || prettyItemId(itemId)} ✅`);
-}
-
 /* ----------------------------
-  Optional: seed catalog from client
-  (only staff/admin; writes to avatarCatalog/items)
+  Optional: seed catalog from client (staff/admin)
+  NOTE: This requires your rules allow staff/admin writes to avatarCatalog.
 ---------------------------- */
 async function seedCatalogIfAllowed() {
   if (!(ctx.role === "staff" || ctx.role === "admin")) {
@@ -583,7 +583,6 @@ async function seedCatalogIfAllowed() {
     return;
   }
 
-  // Minimal seed list (you can expand later)
   const seed = [
     { itemId: "item_head_explorer_hat", name: "Explorer Hat", type: "head", price: 50, imagePath: "/readathon-world_Ver2/assets/avatar/wearables/head/explorer_hat.png", enabled: true },
     { itemId: "item_body_jungle_vest", name: "Jungle Vest", type: "body", price: 80, imagePath: "/readathon-world_Ver2/assets/avatar/wearables/body/jungle_vest.png", enabled: true },
@@ -598,6 +597,7 @@ async function seedCatalogIfAllowed() {
     const ref = doc(db, "readathonV2_schools", ctx.schoolId, "avatarCatalog", "items", it.itemId);
     await setDoc(ref, { ...it, createdAt: serverTimestamp() }, { merge: true });
   }
+
   await loadCatalog();
   renderShop();
   toast("Shop seeded ✅");
@@ -618,7 +618,7 @@ function wireUI() {
 
   els.btnShop.addEventListener("click", () => {
     openShop();
-    renderShop(); // refresh view each open
+    renderShop();
   });
   els.btnShopClose.addEventListener("click", closeShop);
 
@@ -634,13 +634,12 @@ function wireUI() {
     toast(on ? "Debug ON (zone outlines)" : "Debug OFF");
   });
 
-  // Tap zones to remove contents
-  // (kid-friendly: tap again to clear)
-  zoneEls.pet?.addEventListener("click", () => roomState?.equipped?.pet ? removeSlot("pet") : null);
-  zoneEls.wall1?.addEventListener("click", () => roomState?.placed?.wall1 ? removeSlot("wall1") : null);
-  zoneEls.wall2?.addEventListener("click", () => roomState?.placed?.wall2 ? removeSlot("wall2") : null);
-  zoneEls.floor1?.addEventListener("click", () => roomState?.placed?.floor1 ? removeSlot("floor1") : null);
-  zoneEls.floor2?.addEventListener("click", () => roomState?.placed?.floor2 ? removeSlot("floor2") : null);
+  // Tap filled zones to remove
+  zoneEls.pet?.addEventListener("click", () => (roomState?.equipped?.pet ? removeSlot("pet") : null));
+  zoneEls.wall1?.addEventListener("click", () => (roomState?.placed?.wall1 ? removeSlot("wall1") : null));
+  zoneEls.wall2?.addEventListener("click", () => (roomState?.placed?.wall2 ? removeSlot("wall2") : null));
+  zoneEls.floor1?.addEventListener("click", () => (roomState?.placed?.floor1 ? removeSlot("floor1") : null));
+  zoneEls.floor2?.addEventListener("click", () => (roomState?.placed?.floor2 ? removeSlot("floor2") : null));
 
   window.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
@@ -651,12 +650,11 @@ function wireUI() {
 }
 
 /* ----------------------------
-  Main init
+  Init
 ---------------------------- */
 async function init() {
   wireUI();
 
-  // Allow any signed-in role (student/staff/admin)
   const claims = await guardRoleOrRedirect(["student", "staff", "admin"], ABS.index);
   if (!claims) return;
 
@@ -666,32 +664,29 @@ async function init() {
 
   els.awSubtitle.textContent = `${ctx.schoolId} • ${ctx.userId}`;
 
-  // Load everything
   summaryCache = await loadSummary({ schoolId: ctx.schoolId, userId: ctx.userId });
   renderSummaryIntoTopbar(summaryCache);
 
   invCache = await loadInventory({ schoolId: ctx.schoolId, userId: ctx.userId });
 
-  // Catalog (needed for images + types)
   await loadCatalog();
 
-  // Room state in Firestore
   roomState = await loadOrCreateRoomState();
 
-  // Render UI
   renderInventoryPanels();
   renderRoom();
 
-  // Optional: staff/admin can seed if the shop is empty
+  // Staff/Admin seed shortcut
   if ((ctx.role === "staff" || ctx.role === "admin") && catalogList.length === 0) {
-    // Don’t auto-seed silently; just tell them.
-    toast("Shop is empty. Staff/Admin: open Shop and press Shift+S to seed.");
+    toast("Shop is empty. Staff/Admin: press Shift+S to seed.");
   }
-
-  // Secret shortcut for staff/admin to seed: Shift+S
   window.addEventListener("keydown", async (e) => {
     if (e.shiftKey && (e.key === "S" || e.key === "s")) {
-      await seedCatalogIfAllowed();
+      try {
+        await seedCatalogIfAllowed();
+      } catch (err) {
+        toast(normalizeError(err));
+      }
     }
   });
 
