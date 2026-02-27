@@ -87,11 +87,11 @@ body{
 .hidden{display: none;}
 
 .wrap{
-  width:min(600px, 96vw);
+  width:min(1100px, 96vw);
   margin: 10px auto 26px;
-  display:flex;
-  flex-direction:column;
-  gap: 14px;
+  display:grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
 }
 
 .panel{
