@@ -5,6 +5,7 @@ import {
   DEFAULT_SCHOOL_ID,
   waitForAuthReady,
   fetchActivePublicStudentsByGrade,
+  fetchActivePublicStudentsByHouse, // ✅ NEW (you will add this in firebase.js next step)
 } from "/readathon-world_Ver2/js/firebase.js";
 
 import {
@@ -18,7 +19,6 @@ import {
 } from "/readathon-world_Ver2/js/app.js";
 
 const ENDPOINTS = {
-  // keep using your existing HTTP endpoint, but we'll enforce minutes-only on the server
   submitTransactionHttp:
     "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
 };
@@ -27,7 +27,6 @@ const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
 
-  // Quick roster submit
   quick: {
     gradeButtons: document.getElementById("gradeButtons"),
     homeroomButtons: document.getElementById("homeroomButtons"),
@@ -42,7 +41,6 @@ const els = {
     okBox: document.getElementById("quickOkBox"),
   },
 
-  // Self submit
   selfIdLabel: document.getElementById("selfIdLabel"),
   selfMinutesInput: document.getElementById("selfMinutesInput"),
   selfNoteInput: document.getElementById("selfNoteInput"),
@@ -59,8 +57,9 @@ let current = { schoolId: null, staffId: null };
 let quickState = {
   gradeNum: null,
   homeroomId: null,
-  rosterAllForGrade: /** @type {Array<{id:string, displayName:string, grade:number, homeroomId:string}>} */ ([]),
-  rosterForHomeroom: /** @type {Array<{id:string, displayName:string, grade:number, homeroomId:string}>} */ ([]),
+  houseId: null, // ✅ NEW
+  rosterAllForGrade: /** @type {Array<{id:string, displayName:string, grade:number, homeroomId:string, houseId?:string}>} */ ([]),
+  rosterForHomeroom: /** @type {Array<{id:string, displayName:string, grade:number, homeroomId:string, houseId?:string}>} */ ([]),
   selectedIds: new Set(),
 };
 
@@ -90,7 +89,6 @@ async function init() {
 
   current.schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
 
-  // IMPORTANT: prefer your own “staff_lastname” userId claim
   current.staffId =
     (claims.userId ||
       localStorage.getItem("readathonV2_userId") ||
@@ -169,29 +167,43 @@ function wireQuick() {
   ];
 
   els.quick.gradeButtons.innerHTML = gradeDefs
-    .map((g) => `<button type="button" class="chip" data-grade="${g.value}"> ${g.label}</button>`)
+    .map((g) => `<button type="button" class="chip" data-grade="${g.value}">${g.label}</button>`)
     .join("");
 
   els.quick.gradeButtons.addEventListener("click", async (e) => {
     const btn = e.target?.closest?.("button[data-grade]");
     if (!btn) return;
-const gradeVal = btn.getAttribute("data-grade");
-if (gradeVal === "houses") {
-  await loadHouseRoster(); // we will create this next step
-} else {
-  const gradeNum = parseInt(gradeVal, 10);
-  await loadGradeRoster(gradeNum);
-}
+
+    const gradeVal = btn.getAttribute("data-grade");
+    if (gradeVal === "houses") {
+      await loadHouseRoster();
+    } else {
+      const gradeNum = parseInt(gradeVal, 10);
+      await loadGradeRoster(gradeNum);
+    }
+
     setActiveChip(els.quick.gradeButtons, btn);
   });
 
-  els.quick.homeroomButtons.addEventListener("click", (e) => {
-    const btn = e.target?.closest?.("button[data-hr]");
-    if (!btn) return;
-    const hr = btn.getAttribute("data-hr");
-    if (!hr) return;
-    loadHomeroomRoster(hr);
-    setActiveChip(els.quick.homeroomButtons, btn);
+  // ✅ UPDATED: handles both homeroom and house clicks
+  els.quick.homeroomButtons.addEventListener("click", async (e) => {
+    const hrBtn = e.target?.closest?.("button[data-hr]");
+    if (hrBtn) {
+      const hr = hrBtn.getAttribute("data-hr");
+      if (!hr) return;
+      loadHomeroomRoster(hr);
+      setActiveChip(els.quick.homeroomButtons, hrBtn);
+      return;
+    }
+
+    const houseBtn = e.target?.closest?.("button[data-house]");
+    if (houseBtn) {
+      const houseId = houseBtn.getAttribute("data-house");
+      if (!houseId) return;
+      await loadHouseMembersRoster(houseId);
+      setActiveChip(els.quick.homeroomButtons, houseBtn);
+      return;
+    }
   });
 
   els.quick.btnSelectAll.addEventListener("click", () => {
@@ -222,8 +234,13 @@ if (gradeVal === "houses") {
     const minutes = parseInt((els.quick.minutesInput.value || "0").trim(), 10) || 0;
     const note = (els.quick.noteInput.value || "").trim();
 
-    if (quickState.gradeNum === null) return showQuickError("Pick a grade first.");
-    if (!quickState.homeroomId) return showQuickError("Pick a homeroom.");
+    if (quickState.gradeNum === null) return showQuickError("Pick a grade (or Houses) first.");
+
+    // ✅ Updated: require either homeroom OR house
+    const isHouseMode = quickState.gradeNum === "houses";
+    if (!isHouseMode && !quickState.homeroomId) return showQuickError("Pick a homeroom.");
+    if (isHouseMode && !quickState.houseId) return showQuickError("Pick a house.");
+
     if (minutes <= 0) return showQuickError("Enter minutes greater than 0.");
 
     const selected = Array.from(quickState.selectedIds);
@@ -237,7 +254,6 @@ if (gradeVal === "houses") {
       if (!user) return;
       const token = await user.getIdToken(true);
 
-      // run small pool to avoid hammering functions
       const results = await runPool(
         selected.map((studentId) => async () => {
           await postSubmitMinutes(token, {
@@ -267,8 +283,10 @@ if (gradeVal === "houses") {
 
 async function loadGradeRoster(gradeNum) {
   hideQuickMsgs();
+
   quickState.gradeNum = gradeNum;
   quickState.homeroomId = null;
+  quickState.houseId = null;
   quickState.rosterForHomeroom = [];
   quickState.selectedIds.clear();
 
@@ -308,9 +326,67 @@ async function loadGradeRoster(gradeNum) {
   }
 }
 
+async function loadHouseRoster() {
+  hideQuickMsgs();
+
+  quickState.gradeNum = "houses"; // ✅
+  quickState.homeroomId = null;
+  quickState.houseId = null;
+  quickState.rosterAllForGrade = [];
+  quickState.rosterForHomeroom = [];
+  quickState.selectedIds.clear();
+
+  els.quick.rosterList.innerHTML = "";
+  els.quick.homeroomButtons.innerHTML = "";
+
+  const houseDefs = [
+    { id: "house_altruismo", label: "Altruismo" },
+    { id: "house_isibindi", label: "Isibindi" },
+    { id: "house_amistad", label: "Amistad" },
+    { id: "house_reveur", label: "Reveur" },
+  ];
+
+  els.quick.homeroomButtons.innerHTML = houseDefs
+    .map((h) => `<button type="button" class="chip" data-house="${escapeAttr(h.id)}">${escapeHtml(h.label)}</button>`)
+    .join("");
+
+  els.quick.rosterMeta.textContent = `Houses: pick a house`;
+}
+
+async function loadHouseMembersRoster(houseId) {
+  hideQuickMsgs();
+
+  quickState.houseId = houseId;
+  quickState.homeroomId = null;
+  quickState.rosterForHomeroom = [];
+  quickState.selectedIds.clear();
+
+  els.quick.rosterList.innerHTML = "";
+  els.quick.rosterMeta.textContent = "Loading house roster…";
+
+  try {
+    showLoading(els.loadingOverlay, els.loadingText, "Loading house roster…");
+    const students = await fetchActivePublicStudentsByHouse(current.schoolId, houseId);
+    const roster = Array.isArray(students) ? students : [];
+
+    roster.sort((a, b) => String(a.displayName || "").localeCompare(String(b.displayName || "")));
+
+    quickState.rosterForHomeroom = roster;
+    roster.forEach((s) => quickState.selectedIds.add(s.id));
+
+    renderRosterList();
+  } catch (err) {
+    showQuickError(normalizeError(err));
+    els.quick.rosterMeta.textContent = "Couldn’t load house roster.";
+  } finally {
+    hideLoading(els.loadingOverlay);
+  }
+}
+
 function loadHomeroomRoster(homeroomId) {
   hideQuickMsgs();
   quickState.homeroomId = homeroomId;
+  quickState.houseId = null;
 
   const roster = quickState.rosterAllForGrade.filter((s) => s.homeroomId === homeroomId);
   roster.sort((a, b) => String(a.displayName || "").localeCompare(String(b.displayName || "")));
@@ -326,7 +402,8 @@ function renderRosterList() {
   const roster = quickState.rosterForHomeroom;
 
   if (!roster || roster.length === 0) {
-    els.quick.rosterList.innerHTML = `<div class="sub" style="margin:0;">No students found for this homeroom.</div>`;
+    const isHouseMode = quickState.gradeNum === "houses";
+    els.quick.rosterList.innerHTML = `<div class="sub" style="margin:0;">No students found for this ${isHouseMode ? "house" : "homeroom"}.</div>`;
     updateRosterMeta();
     return;
   }
@@ -348,13 +425,29 @@ function renderRosterList() {
 }
 
 function updateRosterMeta() {
+  const isHouseMode = quickState.gradeNum === "houses";
+
+  const total = quickState.rosterForHomeroom.length || 0;
+  const selected = quickState.selectedIds.size || 0;
+
+  if (isHouseMode) {
+    const houseLabel = quickState.houseId ? prettifyHouse(quickState.houseId) : "—";
+    els.quick.rosterMeta.textContent = `Houses • ${houseLabel} • Selected: ${selected}/${total}`;
+    return;
+  }
+
   const g = quickState.gradeNum;
   const hr = quickState.homeroomId;
   const gradeLabel = g === null ? "—" : g === 0 ? "K" : String(g);
   const hrLabel = hr ? prettifyHomeroom(hr) : "—";
-  const total = quickState.rosterForHomeroom.length || 0;
-  const selected = quickState.selectedIds.size || 0;
   els.quick.rosterMeta.textContent = `Grade ${gradeLabel} • ${hrLabel} • Selected: ${selected}/${total}`;
+}
+
+function prettifyHouse(h) {
+  let x = String(h || "");
+  if (x.startsWith("house_")) x = x.slice(6);
+  x = x.replace(/[_-]+/g, " ").trim();
+  return x ? x.charAt(0).toUpperCase() + x.slice(1) : h;
 }
 
 function prettifyHomeroom(h) {
