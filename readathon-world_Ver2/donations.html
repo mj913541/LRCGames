@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-A-Thon Donations | Long Beach Elementary LRC</title>
+  <meta name="description" content="Support our Read-A-Thon! Donate by buying library-bound books, sending cash/check/coins, or giving online through Omella. 20% goes to student prizes, 80% to LRC books." />
+
+  <style>
+    :root{
+      --bg1:#0b2a24;
+      --bg2:#0f3a31;
+      --card:#ffffff10;
+      --card2:#ffffff14;
+      --text:#f4fff9;
+      --muted:#cfe9dd;
+      --accent:#66f2c2;
+      --accent2:#ffd36a;
+      --danger:#ff6b6b;
+      --shadow: 0 18px 55px rgba(0,0,0,.35);
+      --radius: 22px;
+      --max: 1100px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 15% 5%, #1a6b56 0%, transparent 60%),
+        radial-gradient(900px 600px at 85% 15%, #2b5f79 0%, transparent 55%),
+        radial-gradient(900px 700px at 35% 90%, #0f5a47 0%, transparent 60%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 60px;}
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between; gap:14px;
+      margin-bottom:18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+    }
+    .logo{
+      width:42px; height:42px; border-radius:12px;
+      background: linear-gradient(135deg, #2cf0c0, #ffd36a);
+      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      position:relative;
+      overflow:hidden;
+    }
+    .logo::after{
+      content:"";
+      position:absolute; inset:-40%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.65), transparent 55%);
+      transform: rotate(25deg);
+      animation: shimmer 6s linear infinite;
+    }
+    @keyframes shimmer{
+      0%{transform: translateX(-10%) rotate(25deg)}
+      50%{transform: translateX(10%) rotate(25deg)}
+      100%{transform: translateX(-10%) rotate(25deg)}
+    }
+    .brand h1{
+      font-size:16px; letter-spacing:.3px; margin:0;
+      line-height:1.2;
+    }
+    .brand p{margin:0; color:var(--muted); font-size:12px}
+
+    .pillrow{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+    .pill{
+      padding:10px 12px; border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border: 1px solid rgba(255,255,255,.16);
+      backdrop-filter: blur(8px);
+      font-size:12px; color:var(--muted);
+    }
+
+    .hero{
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--shadow);
+      padding:26px 22px;
+      position:relative;
+      overflow:hidden;
+    }
+    .hero::before{
+      content:"";
+      position:absolute; inset:-80px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(102,242,194,.26), transparent 55%),
+        radial-gradient(circle at 80% 20%, rgba(255,211,106,.24), transparent 55%),
+        radial-gradient(circle at 40% 90%, rgba(255,255,255,.10), transparent 60%);
+      filter: blur(1px);
+      pointer-events:none;
+    }
+    .herogrid{
+      display:grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap:18px;
+      position:relative;
+      z-index:1;
+    }
+    @media (max-width: 900px){
+      .herogrid{grid-template-columns:1fr}
+    }
+    .hero h2{
+      margin:0 0 10px;
+      font-size:32px;
+      line-height:1.05;
+      letter-spacing:.2px;
+    }
+    .hero p{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.5;
+      max-width: 60ch;
+    }
+
+    .ctaRow{
+      display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+      margin-top: 14px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; gap:10px;
+      padding:12px 14px;
+      border-radius: 14px;
+      text-decoration:none;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(8px);
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
+      font-weight:650;
+    }
+    .btn:hover{transform: translateY(-2px); background: rgba(0,0,0,.26); border-color: rgba(255,255,255,.28)}
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(102,242,194,.55));
+      color:#073022;
+      border-color: rgba(102,242,194,.4);
+    }
+    .btn.primary:hover{transform: translateY(-2px) scale(1.01)}
+    .btn.warn{
+      background: linear-gradient(135deg, rgba(255,211,106,.95), rgba(255,211,106,.55));
+      color:#3a2b06;
+      border-color: rgba(255,211,106,.35);
+    }
+
+    .heroAside{
+      display:flex; flex-direction:column; gap:12px;
+      justify-content:center;
+    }
+    .miniCard{
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.15);
+      border-radius: 18px;
+      padding:14px 14px;
+    }
+    .miniCard h3{margin:0 0 6px; font-size:14px}
+    .miniCard p{margin:0; color:var(--muted); font-size:13px; line-height:1.4}
+    .split{
+      display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;
+    }
+    .split .badge{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px; border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.16);
+      font-size:12px; color:var(--muted);
+    }
+    .dot{width:10px; height:10px; border-radius:50%;}
+    .dot.accent{background: var(--accent)}
+    .dot.gold{background: var(--accent2)}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:14px;
+      margin-top:16px;
+    }
+    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+
+    .card{
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.08);
+      border:1px solid rgba(255,255,255,.16);
+      box-shadow: 0 14px 40px rgba(0,0,0,.22);
+      overflow:hidden;
+      position:relative;
+      transform: translateY(10px);
+      opacity: 0;
+      transition: opacity .55s ease, transform .55s ease;
+    }
+    .card.reveal{
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .cardHeader{
+      padding:16px 16px 12px;
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    }
+    .tag{
+      font-size:12px; color: rgba(255,255,255,.86);
+      padding:7px 10px; border-radius:999px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+      white-space:nowrap;
+    }
+    .cardBody{padding:0 16px 16px;}
+    .card h3{margin:0 0 6px; font-size:18px}
+    .card p{margin:0 0 10px; color:var(--muted); font-size:14px; line-height:1.5}
+    .bullets{margin:10px 0 0; padding:0 0 0 18px; color:var(--muted); font-size:14px; line-height:1.5}
+    .bullets li{margin:6px 0}
+    .callout{
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius:16px;
+      background: rgba(102,242,194,.10);
+      border: 1px solid rgba(102,242,194,.22);
+      color: var(--text);
+      font-size:13px;
+      line-height:1.45;
+    }
+    .callout strong{color:#d6fff0}
+
+    .imgSlot{
+      width:100%;
+      height:160px;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
+      border-top:1px solid rgba(255,255,255,.14);
+      position:relative;
+      overflow:hidden;
+    }
+    .imgSlot img{
+      width:100%; height:100%;
+      object-fit: cover;
+      display:block;
+      opacity:.95;
+    }
+    .imgSlot .placeholder{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      text-align:center;
+      padding: 10px 14px;
+      color: rgba(255,255,255,.75);
+      font-size: 13px;
+      pointer-events:none;
+    }
+
+    .section{
+      margin-top: 18px;
+      padding: 18px 2px 0;
+    }
+    .section h2{
+      font-size:20px;
+      margin:0 0 10px;
+      letter-spacing:.2px;
+    }
+
+    .footer{
+      margin-top: 20px;
+      padding: 18px 16px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.14);
+      color: var(--muted);
+      line-height:1.5;
+      font-size: 13px;
+    }
+    .footer strong{color: var(--text)}
+    .fineprint{
+      margin-top: 8px;
+      font-size: 12px;
+      opacity:.9;
+    }
+
+    .noteDanger{
+      display:flex; gap:10px; align-items:flex-start;
+      padding:12px 12px;
+      border-radius: 16px;
+      background: rgba(255,107,107,.12);
+      border: 1px solid rgba(255,107,107,.24);
+      margin-top: 12px;
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
+      line-height:1.45;
+    }
+    .icon{
+      width: 20px; height: 20px; border-radius: 6px;
+      background: rgba(255,255,255,.16);
+      display:inline-flex; align-items:center; justify-content:center;
+      flex: 0 0 auto;
+    }
+    .sparkle{
+      position:absolute;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: rgba(255,255,255,.7);
+      filter: blur(.2px);
+      opacity:.35;
+      animation: floaty 7s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes floaty{
+      0%{ transform: translateY(0) translateX(0) scale(1); opacity:.22}
+      50%{ transform: translateY(-18px) translateX(10px) scale(1.1); opacity:.40}
+      100%{ transform: translateY(0) translateX(0) scale(1); opacity:.22}
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce){
+      *{animation:none !important; transition:none !important; scroll-behavior:auto !important;}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand" aria-label="Long Beach Elementary LRC">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Long Beach Elementary • LRC Read-A-Thon</h1>
+          <p>Donations • Books • Student prizes • Library joy</p>
+        </div>
+      </div>
+
+      <div class="pillrow" aria-label="Quick notes">
+        <div class="pill">✅ Mix & match donation types</div>
+        <div class="pill">🎁 20% → Prize Store</div>
+        <div class="pill">📚 80% → New LRC Books</div>
+      </div>
+    </div>
+
+    <section class="hero" aria-label="Donate hero">
+      <!-- cute floating sparkles -->
+      <span class="sparkle" style="top:18px; left:18px;"></span>
+      <span class="sparkle" style="top:32px; right:60px; animation-delay: -2s;"></span>
+      <span class="sparkle" style="bottom:20px; left:55%; animation-delay: -4s;"></span>
+
+      <div class="herogrid">
+        <div>
+          <h2>Help our readers roar! 🦁📚</h2>
+          <p>
+            Families can support our Read-A-Thon in <strong>three easy ways</strong> — and you can use
+            <strong>any combination</strong> of them. Every donation helps grow our Learning Resource Center
+            with fresh, high-interest books and exciting student rewards.
+          </p>
+
+          <div class="miniCard" style="margin-top:12px;">
+            <h3>Where does the money go?</h3>
+            <p>
+              <strong>20%</strong> of proceeds go back to students to spend in the <strong>Prize Store</strong>.
+              The remaining <strong>80%</strong> goes directly to the <strong>LRC for books</strong>.
+            </p>
+            <div class="split" role="list" aria-label="Proceeds breakdown">
+              <span class="badge" role="listitem"><span class="dot accent"></span> 20% Student Prize Store</span>
+              <span class="badge" role="listitem"><span class="dot gold"></span> 80% LRC Books</span>
+            </div>
+          </div>
+
+          <div class="ctaRow">
+            <!-- ✅ Update this to your real prize store path -->
+            <a class="btn primary" href="/readathon-world_Ver2/html/prize-store.html" id="prizeStoreLink">
+              🎁 Visit the Prize Store
+            </a>
+
+            <a class="btn warn" href="https://www.btsb.com/sosl/longbeachelementary" target="_blank" rel="noopener">
+              📚 Buy a Book from BTSB Wishlist
+            </a>
+
+            <!-- ✅ Optional: link to Omella page -->
+            <a class="btn" href="#" id="omellaLink">
+              🌐 Donate Online (Omella)
+            </a>
+          </div>
+        </div>
+
+        <aside class="heroAside" aria-label="Helpful highlights">
+          <div class="miniCard">
+            <h3>Quick reminder</h3>
+            <p>
+              Please make sure all donations are clearly labeled with the student’s
+              <strong>first & last name</strong> and their <strong>homeroom teacher</strong>.
+            </p>
+          </div>
+
+          <div class="miniCard">
+            <h3>Business sponsorships</h3>
+            <p>
+              Have a business and want to buy advertising on our Read-A-Thon homepage?
+              Email <strong>Mrs. A</strong> at <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a>.
+            </p>
+          </div>
+
+          <div class="miniCard">
+            <h3>PNG image placeholders</h3>
+            <p>
+              This page includes spots for your cute graphics. Replace the image paths in the cards below.
+            </p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Donation options">
+      <h2>Choose a donation option (or use any mix!)</h2>
+
+      <div class="grid">
+        <!-- Option 1: BTSB -->
+        <article class="card revealOnScroll" aria-label="Buy a book from Bound to Stay Bound">
+          <div class="cardHeader">
+            <div>
+              <h3>1) Buy a book from our BTSB Wishlist</h3>
+              <p>
+                The easiest way to donate AND instantly grow our library collection.
+              </p>
+            </div>
+            <span class="tag">📦 Ships to school</span>
+          </div>
+
+          <div class="imgSlot" aria-label="Image placeholder for BTSB books">
+            <!-- ✅ Replace with your own PNG/JPG -->
+            <!-- <img src="/readathon-world_Ver2/assets/png/donate_btsb.png" alt="Books and library-themed illustration"> -->
+            <div class="placeholder">PNG Placeholder: <strong>donate_btsb.png</strong></div>
+          </div>
+
+          <div class="cardBody">
+            <div class="callout">
+              <strong>Important:</strong> These are <strong>library-bound</strong> materials designed to last longer
+              (stronger covers + higher durability for school use). Please <strong>do not</strong> order similar titles
+              from Amazon — BTSB ensures our books arrive school-ready.
+            </div>
+
+            <ul class="bullets">
+              <li><strong>Your total purchase price</strong> will be added to the student’s Read-A-Thon account and becomes <strong>eligible for the Prize Store</strong>.</li>
+              <li>Books arrive <strong>ready to check out</strong> — no extra processing needed.</li>
+              <li>Shop here: <a href="https://www.btsb.com/sosl/longbeachelementary" target="_blank" rel="noopener">Bound to Stay Bound Wishlist</a></li>
+            </ul>
+
+            <div class="noteDanger" role="note">
+              <span class="icon" aria-hidden="true">!</span>
+              <div>
+                <strong>Please don’t order off Amazon</strong> for this donation option — our wishlist is purpose-built
+                for durable, library-bound books that can handle hundreds of checkouts.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Option 2: Cash/Check/Coins -->
+        <article class="card revealOnScroll" aria-label="Donate by cash check or coins">
+          <div class="cardHeader">
+            <div>
+              <h3>2) Cash, check, or coins</h3>
+              <p>
+                Quick and simple — every bit helps!
+              </p>
+            </div>
+            <span class="tag">💛 Any amount</span>
+          </div>
+
+          <div class="imgSlot" aria-label="Image placeholder for cash/check/coins">
+            <!-- ✅ Replace with your own PNG/JPG -->
+            <!-- <img src="/readathon-world_Ver2/assets/png/donate_cash.png" alt="Illustration of donation envelope and coins"> -->
+            <div class="placeholder">PNG Placeholder: <strong>donate_cash.png</strong></div>
+          </div>
+
+          <div class="cardBody">
+            <div class="callout">
+              <strong>Please label clearly:</strong> Student’s <strong>first & last name</strong> + <strong>homeroom teacher</strong>.
+              This ensures donations are credited correctly.
+            </div>
+
+            <ul class="bullets">
+              <li>Put donations in the <strong>donation box by the office</strong>, <em>OR</em> hand them to the <strong>homeroom teacher</strong>.</li>
+              <li>Checks/cash/coins can be used alongside the other donation options.</li>
+              <li>Labeling matters — it’s how we match donations to the correct student account.</li>
+            </ul>
+          </div>
+        </article>
+
+        <!-- Option 3: Omella -->
+        <article class="card revealOnScroll" aria-label="Donate online via Omella">
+          <div class="cardHeader">
+            <div>
+              <h3>3) Optional online donations (Omella)</h3>
+              <p>
+                Prefer digital? Set up an online donation page to share with family & friends.
+              </p>
+            </div>
+            <span class="tag">🌐 Shareable link</span>
+          </div>
+
+          <div class="imgSlot" aria-label="Image placeholder for Omella QR code">
+            <!-- ✅ Replace with your QR code PNG if you have one -->
+            <!-- <img src="/readathon-world_Ver2/assets/png/omella_qr.png" alt="QR code for Omella donation page"> -->
+            <div class="placeholder">PNG Placeholder: <strong>omella_qr.png</strong> (QR code)</div>
+          </div>
+
+          <div class="cardBody">
+            <div class="callout">
+              This option is <strong>optional</strong>, and families can still use cash/check/coins and/or the BTSB wishlist too.
+            </div>
+
+            <ul class="bullets">
+              <li>Set up your Omella page, then share the link with family and friends.</li>
+              <li>You can use Omella <strong>in addition to</strong> the other donation options.</li>
+              <li>
+                Omella link:
+                <!-- ✅ Put your real Omella URL here -->
+                <a href="#" id="omellaLinkInline">[Add Omella link here]</a>
+              </li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-label="Business advertising">
+      <div class="footer">
+        <strong>Business advertising opportunity:</strong>
+        If you have a business and would like to buy advertising on our Read-A-Thon homepage, reach out to
+        <strong>Mrs. A</strong> at <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a>.
+        <div class="fineprint">
+          Thanks for supporting our readers and helping us bring more books into kids’ hands! 🦁💚
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // ✅ Put your real links here (optional)
+    const LINKS = {
+      prizeStore: "/readathon-world_Ver2/html/prize-store.html", // change if needed
+      omella: "#", // paste your Omella URL (example: "https://www.omella.com/yourpage")
+    };
+
+    // Apply links
+    const prizeStoreLink = document.getElementById("prizeStoreLink");
+    if (prizeStoreLink) prizeStoreLink.href = LINKS.prizeStore;
+
+    const omellaLink = document.getElementById("omellaLink");
+    const omellaLinkInline = document.getElementById("omellaLinkInline");
+    if (omellaLink) omellaLink.href = LINKS.omella;
+    if (omellaLinkInline) omellaLinkInline.href = LINKS.omella;
+
+    // Scroll-reveal animations
+    const cards = document.querySelectorAll(".revealOnScroll");
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add("reveal");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.18 });
+
+    cards.forEach(c => io.observe(c));
+  </script>
+</body>
+</html>
