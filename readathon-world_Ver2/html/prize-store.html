@@ -1,0 +1,862 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prize Store</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111b2e;
+      --panel2:#0f1726;
+      --text:#e9f0ff;
+      --muted:#a9b6d3;
+      --accent:#ffd54a;
+      --good:#42d392;
+      --warn:#ff6b6b;
+      --line:rgba(255,255,255,.10);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 18px;
+      --radius2: 14px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% -10%, rgba(255,213,74,.18), transparent 60%),
+        radial-gradient(900px 500px at 90% 10%, rgba(66,211,146,.12), transparent 60%),
+        linear-gradient(180deg, #070c16, var(--bg));
+      min-height:100vh;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 22px 14px 60px;
+    }
+
+    header{
+      display:flex;
+      gap:14px;
+      align-items:flex-end;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom: 14px;
+    }
+
+    .title{
+      display:flex; flex-direction:column; gap:6px;
+    }
+    h1{
+      margin:0;
+      font-size: 28px;
+      letter-spacing:.2px;
+    }
+    .sub{
+      margin:0;
+      color:var(--muted);
+      font-size: 14px;
+      line-height: 1.3;
+      max-width: 70ch;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .panel .hd{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,.02);
+    }
+
+    .panel .hd h2{
+      margin:0;
+      font-size: 16px;
+      letter-spacing:.2px;
+    }
+
+    .panel .bd{
+      padding: 14px 16px 16px;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:flex-end;
+    }
+
+    label{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    input, select, textarea{
+      width: 100%;
+      min-width: 160px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.22);
+      color: var(--text);
+      outline: none;
+    }
+
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(255,213,74,.55);
+      box-shadow: 0 0 0 3px rgba(255,213,74,.12);
+    }
+
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      background: rgba(255,213,74,.18);
+      color: var(--text);
+      border: 1px solid rgba(255,213,74,.35);
+      cursor:pointer;
+      font-weight: 600;
+      letter-spacing:.2px;
+      transition: transform .06s ease, background .2s ease, border-color .2s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{
+      background: rgba(255,213,74,.24);
+      border-color: rgba(255,213,74,.55);
+    }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.primary{
+      background: rgba(66,211,146,.18);
+      border-color: rgba(66,211,146,.35);
+    }
+    .btn.primary:hover{
+      background: rgba(66,211,146,.24);
+      border-color: rgba(66,211,146,.55);
+    }
+
+    .btn.danger{
+      background: rgba(255,107,107,.16);
+      border-color: rgba(255,107,107,.35);
+    }
+    .btn.danger:hover{
+      background: rgba(255,107,107,.22);
+      border-color: rgba(255,107,107,.55);
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 520px){
+      .stats{ grid-template-columns: 1fr; }
+    }
+
+    .stat{
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: var(--radius2);
+      padding: 10px 12px;
+    }
+    .stat .k{
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .stat .v{
+      margin-top: 3px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+
+    .pill{
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      border-radius:999px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .catalog{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    @media (max-width: 920px){ .catalog{ grid-template-columns: repeat(2, 1fr);} }
+    @media (max-width: 520px){ .catalog{ grid-template-columns: 1fr;} }
+
+    .card{
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      border-radius: var(--radius2);
+      padding: 12px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+
+    .card .top{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .card h3{
+      margin:0;
+      font-size: 14px;
+      line-height: 1.2;
+    }
+    .meta{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.25;
+    }
+
+    .price{
+      font-weight: 900;
+      font-size: 16px;
+      color: var(--accent);
+      white-space:nowrap;
+    }
+
+    .tagrow{ display:flex; flex-wrap:wrap; gap:6px; }
+    .tag{
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .cartList{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .cartItem{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .cartItem .left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      min-width: 0;
+    }
+    .cartItem .name{
+      font-weight: 800;
+      font-size: 13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 290px;
+    }
+    .cartItem .small{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .qty{
+      display:flex;
+      align-items:center;
+      gap:6px;
+    }
+    .qty button{
+      width: 30px;
+      height: 30px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.03);
+      color: var(--text);
+      cursor:pointer;
+      font-weight: 900;
+    }
+
+    .msg{
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.16);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+    .msg.good{ border-color: rgba(66,211,146,.35); color: rgba(234,255,245,.92); background: rgba(66,211,146,.08); }
+    .msg.warn{ border-color: rgba(255,107,107,.45); color: rgba(255,235,235,.95); background: rgba(255,107,107,.08); }
+
+    textarea{ min-height: 86px; resize: vertical; }
+
+    .footerBtns{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top: 10px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    .smallnote{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .divider{ height:1px; background: var(--line); margin: 12px 0; }
+
+    details{
+      border: 1px dashed rgba(255,255,255,.18);
+      border-radius: 14px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.12);
+    }
+    summary{
+      cursor:pointer;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .calc{
+      margin-top: 10px;
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+    }
+    @media (max-width: 920px){ .calc{ grid-template-columns: repeat(2, 1fr);} }
+    .calc .out{
+      grid-column: 1 / -1;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,213,74,.35);
+      background: rgba(255,213,74,.08);
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+    code{ color: rgba(255,255,255,.85); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Prize Store</h1>
+        <p class="sub">
+          Students earn <b>20%</b> of donations raised as store credit. Add prizes to the cart and submit the order.
+          (You’ll purchase and deliver prizes.)
+        </p>
+      </div>
+      <div class="pill" id="todayPill">🧾 Ready for orders</div>
+    </header>
+
+    <div class="grid">
+
+      <!-- LEFT: CATALOG -->
+      <section class="panel">
+        <div class="hd">
+          <h2>Catalog</h2>
+          <div class="row" style="align-items:center;">
+            <label style="min-width:260px;">
+              Search / filter
+              <input id="search" placeholder="Try: fidget, bookmark, plush, sticker…" />
+            </label>
+            <label style="min-width:190px;">
+              Category
+              <select id="category"></select>
+            </label>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="catalog" id="catalog"></div>
+
+          <div class="divider"></div>
+
+          <details>
+            <summary>Admin: Quick pricing helper (so you never lose money)</summary>
+            <div class="calc">
+              <label>Item cost ($)
+                <input id="pc_cost" type="number" step="0.01" value="5.00" />
+              </label>
+              <label>Shipping ($)
+                <input id="pc_ship" type="number" step="0.01" value="1.25" />
+              </label>
+              <label>Tax/fees ($)
+                <input id="pc_tax" type="number" step="0.01" value="0.50" />
+              </label>
+              <label>Cushion %
+                <input id="pc_buffer" type="number" step="1" value="15" />
+              </label>
+              <label>Round to
+                <select id="pc_round">
+                  <option value="0.5">nearest $0.50</option>
+                  <option value="1">nearest $1</option>
+                  <option value="0.25">nearest $0.25</option>
+                </select>
+              </label>
+
+              <div class="out" id="pc_out">
+                Suggested credit price will appear here.
+              </div>
+            </div>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- RIGHT: CART / CHECKOUT -->
+      <aside class="panel">
+        <div class="hd">
+          <h2>Student Cart</h2>
+          <span class="pill">💛 Credits only</span>
+        </div>
+
+        <div class="bd">
+          <div class="row">
+            <label style="min-width: 190px;">
+              Student name
+              <input id="studentName" placeholder="Student name" />
+            </label>
+            <label style="min-width: 190px;">
+              Teacher / homeroom
+              <input id="teacherName" placeholder="Teacher" />
+            </label>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <label style="min-width: 210px;">
+              Donations raised ($)
+              <input id="raised" type="number" step="0.01" value="0" />
+            </label>
+            <label style="min-width: 210px;">
+              Credit percent
+              <select id="percent">
+                <option value="0.20" selected>20%</option>
+                <option value="0.15">15%</option>
+                <option value="0.25">25%</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <div class="k">Store credit</div>
+              <div class="v" id="credit">$0.00</div>
+            </div>
+            <div class="stat">
+              <div class="k">Cart total</div>
+              <div class="v" id="total">$0.00</div>
+            </div>
+            <div class="stat">
+              <div class="k">Remaining</div>
+              <div class="v" id="remaining">$0.00</div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="cartList" id="cart"></div>
+
+          <div id="msg" class="msg">Add items from the catalog. If the cart is over credit, checkout will be blocked.</div>
+
+          <label style="margin-top:10px;">
+            Notes (optional)
+            <textarea id="notes" placeholder="Color preference, swap options, or anything helpful…"></textarea>
+          </label>
+
+          <div class="footerBtns">
+            <button class="btn danger" id="clearCart">Clear</button>
+            <button class="btn" id="copyOrder">Copy order</button>
+            <button class="btn primary" id="checkout">Open Google Form</button>
+          </div>
+
+          <p class="smallnote">
+            ✅ Tip: Put a “swap allowed” option in your form (ex: “If unavailable, pick a similar item of equal/lower credit value.”)
+          </p>
+
+        </div>
+      </aside>
+
+    </div>
+  </div>
+
+  <script>
+    /************************************************************
+     * 1) PASTE YOUR GOOGLE FORM LINK HERE
+     *    - simplest: just paste the form "viewform" URL.
+     *    - optional: you can use a prefilled link later.
+     ************************************************************/
+    const GOOGLE_FORM_URL = "PASTE_YOUR_GOOGLE_FORM_LINK_HERE";
+
+    /************************************************************
+     * 2) CATALOG ITEMS (edit these)
+     *    price = credit price students pay (in dollars of credit)
+     ************************************************************/
+    const ITEMS = [
+      { id:"sticker_pack", name:"Sticker Pack (10–20 stickers)", category:"Small", price:2.00, tags:["fun","easy"] },
+      { id:"bookmark", name:"Laminated Bookmark", category:"Small", price:1.50, tags:["reading","classic"] },
+      { id:"pencil_topper", name:"Pencil Topper / Eraser", category:"Small", price:1.00, tags:["school"] },
+      { id:"fidget_mini", name:"Mini Fidget (mystery pick)", category:"Fidgets", price:4.00, tags:["popular"] },
+      { id:"pop_it", name:"Pop-It (small)", category:"Fidgets", price:6.00, tags:["sensory"] },
+      { id:"slime", name:"Slime (small tub)", category:"Fidgets", price:6.50, tags:["gooey"] },
+      { id:"mini_plush", name:"Mini Plush (mystery)", category:"Plush", price:8.00, tags:["soft"] },
+      { id:"pokemon_card", name:"Trading Card Pack (approved)", category:"Collectibles", price:7.00, tags:["collect"] },
+      { id:"book_fair_pick", name:"Book Pick (teacher-approved)", category:"Books", price:10.00, tags:["reading"] },
+      { id:"premium_fidget", name:"Premium Fidget (choice)", category:"Premium", price:12.00, tags:["big reward"] },
+    ];
+
+    /************************************************************
+     * STATE
+     ************************************************************/
+    const state = {
+      q: "",
+      cat: "All",
+      cart: new Map(), // id -> qty
+    };
+
+    /************************************************************
+     * ELEMENTS
+     ************************************************************/
+    const elCatalog = document.getElementById("catalog");
+    const elSearch = document.getElementById("search");
+    const elCategory = document.getElementById("category");
+
+    const elStudent = document.getElementById("studentName");
+    const elTeacher = document.getElementById("teacherName");
+    const elRaised = document.getElementById("raised");
+    const elPercent = document.getElementById("percent");
+
+    const elCredit = document.getElementById("credit");
+    const elTotal = document.getElementById("total");
+    const elRemaining = document.getElementById("remaining");
+    const elCart = document.getElementById("cart");
+    const elMsg = document.getElementById("msg");
+
+    const elNotes = document.getElementById("notes");
+    const btnClear = document.getElementById("clearCart");
+    const btnCopy = document.getElementById("copyOrder");
+    const btnCheckout = document.getElementById("checkout");
+
+    // Pricing helper
+    const pc_cost = document.getElementById("pc_cost");
+    const pc_ship = document.getElementById("pc_ship");
+    const pc_tax  = document.getElementById("pc_tax");
+    const pc_buffer = document.getElementById("pc_buffer");
+    const pc_round = document.getElementById("pc_round");
+    const pc_out = document.getElementById("pc_out");
+
+    /************************************************************
+     * HELPERS
+     ************************************************************/
+    const money = (n) => `$${(Number(n)||0).toFixed(2)}`;
+
+    function roundUpTo(x, step){
+      step = Number(step) || 1;
+      return Math.ceil(x / step) * step;
+    }
+
+    function getCredit(){
+      const raised = Number(elRaised.value) || 0;
+      const pct = Number(elPercent.value) || 0.2;
+      return Math.max(0, raised * pct);
+    }
+
+    function getCartTotal(){
+      let t = 0;
+      for (const [id, qty] of state.cart.entries()){
+        const item = ITEMS.find(x => x.id === id);
+        if (!item) continue;
+        t += item.price * qty;
+      }
+      return t;
+    }
+
+    function buildCategories(){
+      const cats = ["All", ...Array.from(new Set(ITEMS.map(i => i.category))).sort()];
+      elCategory.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join("");
+      elCategory.value = "All";
+    }
+
+    function filteredItems(){
+      const q = state.q.trim().toLowerCase();
+      return ITEMS.filter(i => {
+        const matchQ = !q || (i.name.toLowerCase().includes(q) || i.tags.join(" ").toLowerCase().includes(q));
+        const matchC = (state.cat === "All") || (i.category === state.cat);
+        return matchQ && matchC;
+      });
+    }
+
+    function renderCatalog(){
+      const list = filteredItems();
+      elCatalog.innerHTML = list.map(item => `
+        <div class="card">
+          <div class="top">
+            <div style="min-width:0;">
+              <h3 title="${item.name}">${item.name}</h3>
+              <p class="meta">${item.category}</p>
+            </div>
+            <div class="price">${money(item.price)}</div>
+          </div>
+          <div class="tagrow">
+            ${item.tags.map(t => `<span class="tag">${t}</span>`).join("")}
+          </div>
+          <button class="btn" data-add="${item.id}">Add to cart</button>
+        </div>
+      `).join("");
+
+      elCatalog.querySelectorAll("[data-add]").forEach(btn => {
+        btn.addEventListener("click", () => addToCart(btn.getAttribute("data-add")));
+      });
+    }
+
+    function addToCart(id){
+      const prev = state.cart.get(id) || 0;
+      state.cart.set(id, prev + 1);
+      renderCart();
+      renderTotals();
+    }
+
+    function setQty(id, qty){
+      qty = Number(qty) || 0;
+      if (qty <= 0) state.cart.delete(id);
+      else state.cart.set(id, qty);
+      renderCart();
+      renderTotals();
+    }
+
+    function renderCart(){
+      if (state.cart.size === 0){
+        elCart.innerHTML = `<div class="msg">Cart is empty. Add prizes from the catalog.</div>`;
+        return;
+      }
+
+      const rows = Array.from(state.cart.entries()).map(([id, qty]) => {
+        const item = ITEMS.find(x => x.id === id);
+        if (!item) return "";
+        const line = item.price * qty;
+        return `
+          <div class="cartItem">
+            <div class="left">
+              <div class="name">${item.name}</div>
+              <div class="small">${qty} × ${money(item.price)} = <b>${money(line)}</b></div>
+            </div>
+            <div class="qty">
+              <button aria-label="decrease" data-dec="${id}">–</button>
+              <div style="min-width:18px;text-align:center;font-weight:900;">${qty}</div>
+              <button aria-label="increase" data-inc="${id}">+</button>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      elCart.innerHTML = rows;
+
+      elCart.querySelectorAll("[data-dec]").forEach(b => {
+        b.addEventListener("click", () => {
+          const id = b.getAttribute("data-dec");
+          setQty(id, (state.cart.get(id)||0) - 1);
+        });
+      });
+      elCart.querySelectorAll("[data-inc]").forEach(b => {
+        b.addEventListener("click", () => {
+          const id = b.getAttribute("data-inc");
+          setQty(id, (state.cart.get(id)||0) + 1);
+        });
+      });
+    }
+
+    function renderTotals(){
+      const credit = getCredit();
+      const total = getCartTotal();
+      const remaining = credit - total;
+
+      elCredit.textContent = money(credit);
+      elTotal.textContent = money(total);
+      elRemaining.textContent = money(remaining);
+
+      const over = total > credit + 1e-9;
+
+      if (state.cart.size === 0){
+        elMsg.className = "msg";
+        elMsg.textContent = "Add items from the catalog. If the cart is over credit, checkout will be blocked.";
+        btnCheckout.disabled = true;
+        btnCheckout.style.opacity = 0.6;
+        return;
+      }
+
+      if (over){
+        elMsg.className = "msg warn";
+        elMsg.textContent = "Over credit. Remove an item or lower quantity to submit.";
+        btnCheckout.disabled = true;
+        btnCheckout.style.opacity = 0.6;
+      } else {
+        elMsg.className = "msg good";
+        elMsg.textContent = "Ready! You’re within credit. Copy the order, then submit it on the Google Form.";
+        btnCheckout.disabled = false;
+        btnCheckout.style.opacity = 1;
+      }
+    }
+
+    function orderSummaryText(){
+      const student = (elStudent.value || "").trim() || "(student)";
+      const teacher = (elTeacher.value || "").trim() || "(teacher)";
+      const raised = Number(elRaised.value)||0;
+      const pct = Number(elPercent.value)||0.2;
+
+      const credit = getCredit();
+      const total = getCartTotal();
+
+      const lines = [];
+      lines.push(`Prize Store Order`);
+      lines.push(`Student: ${student}`);
+      lines.push(`Teacher/Homeroom: ${teacher}`);
+      lines.push(`Raised: ${money(raised)}`);
+      lines.push(`Credit Percent: ${(pct*100).toFixed(0)}%`);
+      lines.push(`Credit: ${money(credit)}`);
+      lines.push(`Cart Total: ${money(total)}`);
+      lines.push(`--- Items ---`);
+
+      for (const [id, qty] of state.cart.entries()){
+        const item = ITEMS.find(x => x.id === id);
+        if (!item) continue;
+        lines.push(`${qty} x ${item.name} @ ${money(item.price)} = ${money(item.price*qty)}`);
+      }
+
+      const notes = (elNotes.value || "").trim();
+      if (notes) {
+        lines.push(`--- Notes ---`);
+        lines.push(notes);
+      }
+
+      return lines.join("\n");
+    }
+
+    async function copyOrder(){
+      const txt = orderSummaryText();
+      try{
+        await navigator.clipboard.writeText(txt);
+        elMsg.className = "msg good";
+        elMsg.textContent = "Copied order summary to clipboard ✅ Paste it into your Google Form.";
+      } catch(e){
+        elMsg.className = "msg warn";
+        elMsg.textContent = "Couldn’t copy automatically. Select and copy manually from the prompt.";
+        window.prompt("Copy this order summary:", txt);
+      }
+    }
+
+    function checkout(){
+      if (!GOOGLE_FORM_URL || GOOGLE_FORM_URL.includes("PASTE_YOUR_GOOGLE_FORM_LINK_HERE")){
+        alert("Paste your Google Form link into GOOGLE_FORM_URL at the top of this file.");
+        return;
+      }
+      // Open form in a new tab. (Use “Copy order” first and paste into the form.)
+      window.open(GOOGLE_FORM_URL, "_blank", "noopener,noreferrer");
+    }
+
+    function clearCart(){
+      state.cart.clear();
+      renderCart();
+      renderTotals();
+    }
+
+    function renderPricingHelper(){
+      const cost = Number(pc_cost.value)||0;
+      const ship = Number(pc_ship.value)||0;
+      const tax  = Number(pc_tax.value)||0;
+      const bufferPct = (Number(pc_buffer.value)||0)/100;
+      const roundStep = Number(pc_round.value)||1;
+
+      const base = cost + ship + tax;
+      const suggested = roundUpTo(base * (1 + bufferPct), roundStep);
+
+      pc_out.innerHTML = `
+        If your real cost is <b>${money(base)}</b>, a safe credit price is:
+        <b>${money(suggested)}</b> (includes ${Math.round(bufferPct*100)}% cushion, rounded to ${roundStep}).
+        <br><br>
+        Quick rule: <code>price = roundUp((cost+ship+tax) × 1.${String(Math.round(bufferPct*100)).padStart(2,"0")})</code>
+      `;
+    }
+
+    /************************************************************
+     * INIT + EVENTS
+     ************************************************************/
+    function init(){
+      // “Today” pill
+      const d = new Date();
+      document.getElementById("todayPill").textContent = `🧾 ${d.toLocaleDateString()} · Taking orders`;
+
+      buildCategories();
+      renderCatalog();
+      renderCart();
+      renderTotals();
+      renderPricingHelper();
+
+      elSearch.addEventListener("input", () => {
+        state.q = elSearch.value;
+        renderCatalog();
+      });
+
+      elCategory.addEventListener("change", () => {
+        state.cat = elCategory.value;
+        renderCatalog();
+      });
+
+      [elRaised, elPercent].forEach(x => x.addEventListener("input", renderTotals));
+
+      btnClear.addEventListener("click", clearCart);
+      btnCopy.addEventListener("click", copyOrder);
+      btnCheckout.addEventListener("click", () => {
+        // Encourage copy first
+        copyOrder().finally(checkout);
+      });
+
+      [pc_cost, pc_ship, pc_tax, pc_buffer, pc_round].forEach(x => x.addEventListener("input", renderPricingHelper));
+    }
+
+    init();
+  </script>
+</body>
+</html>
