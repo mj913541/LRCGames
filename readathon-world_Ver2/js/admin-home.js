@@ -1,5 +1,4 @@
 // /readathon-world_Ver2/js/admin-home.js
-
 import { httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
 import {
@@ -26,7 +25,7 @@ const els = {
   loadingText: document.getElementById("loadingText"),
   errorBox: document.getElementById("errorBox"),
 
-  // NEW: Analytics UI (from the HTML panel we added)
+  // Analytics UI
   statTotalMinutes: document.getElementById("statTotalMinutes"),
   statTotalMoney: document.getElementById("statTotalMoney"),
   statTotalStudents: document.getElementById("statTotalStudents"),
@@ -35,12 +34,6 @@ const els = {
   homeroomMinutesBody: document.getElementById("homeroomMinutesBody"),
   homeroomMoneyBody: document.getElementById("homeroomMoneyBody"),
   topReadersBody: document.getElementById("topReadersBody"),
-
-  // OPTIONAL: legacy debug boxes (if you still have them somewhere)
-  totalsBox: document.getElementById("totalsBox"),
-  gradesBox: document.getElementById("gradesBox"),
-  homeroomsBox: document.getElementById("homeroomsBox"),
-  topReadersBox: document.getElementById("topReadersBox"),
 };
 
 init().catch((e) => showError(normalizeError(e)));
@@ -48,21 +41,20 @@ init().catch((e) => showError(normalizeError(e)));
 async function init() {
   showLoading(els.loadingOverlay, els.loadingText, "Loading admin dashboard…");
 
-  // ✅ Make sure auth + claims are present FIRST
+  // must be admin
   const claims = await guardRoleOrRedirect(["admin"], ABS.adminLogin);
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
-  const userId = claims.userId || auth.currentUser?.uid;
+  const userId = claims.userId || auth.currentUser?.uid || "(unknown)";
 
   setHeaderUser(els.hdr, {
     title: "Readathon World",
     subtitle: `${schoolId} • ${userId}`,
   });
 
-  // ✅ Now that you're confirmed admin, load analytics
   await loadAnalytics();
 
   hideLoading(els.loadingOverlay);
@@ -70,111 +62,104 @@ async function init() {
 
 async function loadAnalytics() {
   try {
+    // ✅ REAL callable (no manual fetch, no URL)
     const fn = httpsCallable(functions, "getReadathonAnalytics");
+
+    console.log("📡 Calling getReadathonAnalytics via httpsCallable...");
     const res = await fn({ limitTopReaders: 10, limitHomerooms: 30 });
-
     const data = res.data || {};
-    const totals = data.totals || {};
-    const byGrade = data.byGrade || [];
-    const leaderboards = data.homeroomLeaderboards || {};
-    const topReaders = data.topReaders || [];
-
-    // Console logs (still helpful)
-    console.log("Totals:", totals);
-    console.log("Grades:", byGrade);
-    console.log("Homerooms (minutes):", leaderboards.byMinutes);
-    console.log("Homerooms (money):", leaderboards.byMoney);
-    console.log("Top Readers:", topReaders);
 
     // Render totals
-    renderTotals(totals);
+    renderTotals(data.totals);
 
     // Render tables
-    renderGradeTable(byGrade);
-    renderHomeroomTable(els.homeroomMinutesBody, leaderboards.byMinutes || []);
-    renderHomeroomTable(els.homeroomMoneyBody, leaderboards.byMoney || []);
-    renderTopReaders(topReaders);
+    renderGradeTotals(data.byGrade || []);
+    renderHomeroomTable(els.homeroomMinutesBody, data.homeroomLeaderboards?.byMinutes || []);
+    renderHomeroomTable(els.homeroomMoneyBody, data.homeroomLeaderboards?.byMoney || []);
+    renderTopReaders(data.topReaders || []);
 
-    // OPTIONAL: show raw JSON if those containers exist
-    if (els.totalsBox) els.totalsBox.textContent = JSON.stringify(totals, null, 2);
-    if (els.gradesBox) els.gradesBox.textContent = JSON.stringify(byGrade, null, 2);
-    if (els.homeroomsBox) els.homeroomsBox.textContent = JSON.stringify(leaderboards.byMinutes || [], null, 2);
-    if (els.topReadersBox) els.topReadersBox.textContent = JSON.stringify(topReaders, null, 2);
+    // Optional debug
+    console.log("✅ Analytics data:", data);
   } catch (e) {
     console.error("Analytics load failed:", e);
     showError(normalizeError(e));
   }
 }
 
-function renderTotals(totals) {
-  if (els.statTotalMinutes) els.statTotalMinutes.textContent = formatNumber(totals.totalMinutes || 0);
+function renderTotals(t) {
+  if (!t) return;
 
-  // totals.totalMoneyDollars already comes back as a string like "9134.50"
+  if (els.statTotalMinutes) els.statTotalMinutes.textContent = formatInt(t.totalMinutes);
   if (els.statTotalMoney) {
-    const dollars = totals.totalMoneyDollars ?? ((Number(totals.totalMoneyCents || 0) / 100).toFixed(2));
+    const dollars = t.totalMoneyDollars ?? (Number(t.totalMoneyCents || 0) / 100).toFixed(2);
     els.statTotalMoney.textContent = `$${dollars}`;
   }
-
-  if (els.statTotalStudents) els.statTotalStudents.textContent = formatNumber(totals.totalStudents || 0);
+  if (els.statTotalStudents) els.statTotalStudents.textContent = formatInt(t.totalStudents);
 }
 
-function renderGradeTable(rows) {
+function renderGradeTotals(rows) {
   if (!els.gradeTableBody) return;
+  els.gradeTableBody.innerHTML = "";
 
-  if (!rows.length) {
-    els.gradeTableBody.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
-    return;
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.grade)}</td>
+      <td class="num">${formatInt(r.students)}</td>
+      <td class="num">${formatInt(r.minutes)}</td>
+      <td class="num">$${escapeHtml(r.moneyDollars ?? (Number(r.moneyCents || 0) / 100).toFixed(2))}</td>
+    `;
+    els.gradeTableBody.appendChild(tr);
   }
 
-  els.gradeTableBody.innerHTML = rows.map((r) => `
-    <tr>
-      <td>${escapeHtml(r.grade)}</td>
-      <td class="num">${formatNumber(r.students)}</td>
-      <td class="num">${formatNumber(r.minutes)}</td>
-      <td class="num">$${escapeHtml(r.moneyDollars)}</td>
-    </tr>
-  `).join("");
+  if (!rows.length) {
+    els.gradeTableBody.innerHTML = `<tr><td colspan="4" class="num">No data yet</td></tr>`;
+  }
 }
 
 function renderHomeroomTable(tbodyEl, rows) {
   if (!tbodyEl) return;
+  tbodyEl.innerHTML = "";
 
-  if (!rows.length) {
-    tbodyEl.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
-    return;
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.homeroom)}</td>
+      <td class="num">${formatInt(r.students)}</td>
+      <td class="num">${formatInt(r.minutes)}</td>
+      <td class="num">$${escapeHtml(r.moneyDollars ?? (Number(r.moneyCents || 0) / 100).toFixed(2))}</td>
+    `;
+    tbodyEl.appendChild(tr);
   }
 
-  tbodyEl.innerHTML = rows.map((r) => `
-    <tr>
-      <td>${escapeHtml(r.homeroom)}</td>
-      <td class="num">${formatNumber(r.students)}</td>
-      <td class="num">${formatNumber(r.minutes)}</td>
-      <td class="num">$${escapeHtml(r.moneyDollars)}</td>
-    </tr>
-  `).join("");
+  if (!rows.length) {
+    tbodyEl.innerHTML = `<tr><td colspan="4" class="num">No data yet</td></tr>`;
+  }
 }
 
 function renderTopReaders(rows) {
   if (!els.topReadersBody) return;
+  els.topReadersBody.innerHTML = "";
 
-  if (!rows.length) {
-    els.topReadersBody.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
-    return;
-  }
-
-  els.topReadersBody.innerHTML = rows.map((r) => `
-    <tr>
-      <td>${escapeHtml(r.name)}</td>
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${escapeHtml(r.name || r.userId)}</td>
       <td>${escapeHtml(r.grade)}</td>
       <td>${escapeHtml(r.homeroom)}</td>
-      <td class="num">${formatNumber(r.minutes)}</td>
-    </tr>
-  `).join("");
+      <td class="num">${formatInt(r.minutes)}</td>
+    `;
+    els.topReadersBody.appendChild(tr);
+  }
+
+  if (!rows.length) {
+    els.topReadersBody.innerHTML = `<tr><td colspan="4" class="num">No data yet</td></tr>`;
+  }
 }
 
-function formatNumber(n) {
+function formatInt(n) {
   const num = Number(n || 0);
-  return num.toLocaleString();
+  return Number.isFinite(num) ? num.toLocaleString() : "0";
 }
 
 function escapeHtml(s) {
