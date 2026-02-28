@@ -26,7 +26,17 @@ const els = {
   loadingText: document.getElementById("loadingText"),
   errorBox: document.getElementById("errorBox"),
 
-  // OPTIONAL: if you add these divs later, this will populate them
+  // NEW: Analytics UI (from the HTML panel we added)
+  statTotalMinutes: document.getElementById("statTotalMinutes"),
+  statTotalMoney: document.getElementById("statTotalMoney"),
+  statTotalStudents: document.getElementById("statTotalStudents"),
+
+  gradeTableBody: document.getElementById("gradeTableBody"),
+  homeroomMinutesBody: document.getElementById("homeroomMinutesBody"),
+  homeroomMoneyBody: document.getElementById("homeroomMoneyBody"),
+  topReadersBody: document.getElementById("topReadersBody"),
+
+  // OPTIONAL: legacy debug boxes (if you still have them somewhere)
   totalsBox: document.getElementById("totalsBox"),
   gradesBox: document.getElementById("gradesBox"),
   homeroomsBox: document.getElementById("homeroomsBox"),
@@ -63,21 +73,117 @@ async function loadAnalytics() {
     const fn = httpsCallable(functions, "getReadathonAnalytics");
     const res = await fn({ limitTopReaders: 10, limitHomerooms: 30 });
 
-    console.log("Totals:", res.data.totals);
-    console.log("Grades:", res.data.byGrade);
-    console.log("Homerooms:", res.data.homeroomLeaderboards.byMinutes);
-    console.log("Top Readers:", res.data.topReaders);
+    const data = res.data || {};
+    const totals = data.totals || {};
+    const byGrade = data.byGrade || [];
+    const leaderboards = data.homeroomLeaderboards || {};
+    const topReaders = data.topReaders || [];
 
-    // OPTIONAL: show it on the page if you have containers
-    if (els.totalsBox) els.totalsBox.textContent = JSON.stringify(res.data.totals, null, 2);
-    if (els.gradesBox) els.gradesBox.textContent = JSON.stringify(res.data.byGrade, null, 2);
-    if (els.homeroomsBox) els.homeroomsBox.textContent = JSON.stringify(res.data.homeroomLeaderboards.byMinutes, null, 2);
-    if (els.topReadersBox) els.topReadersBox.textContent = JSON.stringify(res.data.topReaders, null, 2);
+    // Console logs (still helpful)
+    console.log("Totals:", totals);
+    console.log("Grades:", byGrade);
+    console.log("Homerooms (minutes):", leaderboards.byMinutes);
+    console.log("Homerooms (money):", leaderboards.byMoney);
+    console.log("Top Readers:", topReaders);
+
+    // Render totals
+    renderTotals(totals);
+
+    // Render tables
+    renderGradeTable(byGrade);
+    renderHomeroomTable(els.homeroomMinutesBody, leaderboards.byMinutes || []);
+    renderHomeroomTable(els.homeroomMoneyBody, leaderboards.byMoney || []);
+    renderTopReaders(topReaders);
+
+    // OPTIONAL: show raw JSON if those containers exist
+    if (els.totalsBox) els.totalsBox.textContent = JSON.stringify(totals, null, 2);
+    if (els.gradesBox) els.gradesBox.textContent = JSON.stringify(byGrade, null, 2);
+    if (els.homeroomsBox) els.homeroomsBox.textContent = JSON.stringify(leaderboards.byMinutes || [], null, 2);
+    if (els.topReadersBox) els.topReadersBox.textContent = JSON.stringify(topReaders, null, 2);
   } catch (e) {
-    // If analytics fails, we still want the dashboard to load
     console.error("Analytics load failed:", e);
     showError(normalizeError(e));
   }
+}
+
+function renderTotals(totals) {
+  if (els.statTotalMinutes) els.statTotalMinutes.textContent = formatNumber(totals.totalMinutes || 0);
+
+  // totals.totalMoneyDollars already comes back as a string like "9134.50"
+  if (els.statTotalMoney) {
+    const dollars = totals.totalMoneyDollars ?? ((Number(totals.totalMoneyCents || 0) / 100).toFixed(2));
+    els.statTotalMoney.textContent = `$${dollars}`;
+  }
+
+  if (els.statTotalStudents) els.statTotalStudents.textContent = formatNumber(totals.totalStudents || 0);
+}
+
+function renderGradeTable(rows) {
+  if (!els.gradeTableBody) return;
+
+  if (!rows.length) {
+    els.gradeTableBody.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
+    return;
+  }
+
+  els.gradeTableBody.innerHTML = rows.map((r) => `
+    <tr>
+      <td>${escapeHtml(r.grade)}</td>
+      <td class="num">${formatNumber(r.students)}</td>
+      <td class="num">${formatNumber(r.minutes)}</td>
+      <td class="num">$${escapeHtml(r.moneyDollars)}</td>
+    </tr>
+  `).join("");
+}
+
+function renderHomeroomTable(tbodyEl, rows) {
+  if (!tbodyEl) return;
+
+  if (!rows.length) {
+    tbodyEl.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
+    return;
+  }
+
+  tbodyEl.innerHTML = rows.map((r) => `
+    <tr>
+      <td>${escapeHtml(r.homeroom)}</td>
+      <td class="num">${formatNumber(r.students)}</td>
+      <td class="num">${formatNumber(r.minutes)}</td>
+      <td class="num">$${escapeHtml(r.moneyDollars)}</td>
+    </tr>
+  `).join("");
+}
+
+function renderTopReaders(rows) {
+  if (!els.topReadersBody) return;
+
+  if (!rows.length) {
+    els.topReadersBody.innerHTML = `<tr><td colspan="4">No data</td></tr>`;
+    return;
+  }
+
+  els.topReadersBody.innerHTML = rows.map((r) => `
+    <tr>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${escapeHtml(r.grade)}</td>
+      <td>${escapeHtml(r.homeroom)}</td>
+      <td class="num">${formatNumber(r.minutes)}</td>
+    </tr>
+  `).join("");
+}
+
+function formatNumber(n) {
+  const num = Number(n || 0);
+  return num.toLocaleString();
+}
+
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function showError(msg) {
