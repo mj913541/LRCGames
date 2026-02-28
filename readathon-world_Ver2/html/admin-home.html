@@ -3,8 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AAA Admin Home • Readathon World</title>
-
+  <title>Admin Home • Readathon World</title>
   <link rel="stylesheet" href="/readathon-world_Ver2/css/admin.css" />
 </head>
 
@@ -40,7 +39,101 @@
         <a class="btnBig" href="/readathon-world_Ver2/html/admin-minutes-approve.html">✅ Approve Pending</a>
       </div>
     </section>
+<section class="panel" id="analyticsPanel">
+  <div class="sectionHead">
+    <h2 class="h2">📊 Readathon Analytics</h2>
+    <p class="sub">Live totals + leaderboards</p>
+  </div>
 
+  <div class="dashGrid">
+    <div class="statCard">
+      <div class="statLabel">Total Minutes</div>
+      <div class="statValue" id="statTotalMinutes">—</div>
+    </div>
+
+    <div class="statCard">
+      <div class="statLabel">Total Raised</div>
+      <div class="statValue" id="statTotalMoney">—</div>
+    </div>
+
+    <div class="statCard">
+      <div class="statLabel">Students Counted</div>
+      <div class="statValue" id="statTotalStudents">—</div>
+    </div>
+  </div>
+
+  <div class="dashTwo">
+    <div class="dashCol">
+      <h3 class="h3">🏫 Grade Totals</h3>
+      <div class="tableWrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Grade</th>
+              <th class="num">Students</th>
+              <th class="num">Minutes</th>
+              <th class="num">$ Raised</th>
+            </tr>
+          </thead>
+          <tbody id="gradeTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="dashCol">
+      <h3 class="h3">🏆 Homeroom Leaderboard (Minutes)</h3>
+      <div class="tableWrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Homeroom</th>
+              <th class="num">Students</th>
+              <th class="num">Minutes</th>
+              <th class="num">$ Raised</th>
+            </tr>
+          </thead>
+          <tbody id="homeroomMinutesBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashTwo">
+    <div class="dashCol">
+      <h3 class="h3">💰 Homeroom Leaderboard (Money)</h3>
+      <div class="tableWrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Homeroom</th>
+              <th class="num">Students</th>
+              <th class="num">Minutes</th>
+              <th class="num">$ Raised</th>
+            </tr>
+          </thead>
+          <tbody id="homeroomMoneyBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="dashCol">
+      <h3 class="h3">📚 Top Readers</h3>
+      <div class="tableWrap">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Grade</th>
+              <th>Homeroom</th>
+              <th class="num">Minutes</th>
+            </tr>
+          </thead>
+          <tbody id="topReadersBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
         <section class="panel">
       <div class="sectionHead">
         <h2 class="h2">🧍 Avatar Space</h2>
