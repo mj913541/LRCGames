@@ -601,7 +601,7 @@ async function seedCatalogIfAllowed() {
 
   toast("Seeding shop…");
   for (const it of seed) {
-    const ref = doc(db, "readathonV2_schools", ctx.schoolId, "avatarCatalog", "items", it.itemId);
+const ref = doc(db, "readathonV2_schools", ctx.schoolId, "avatarCatalog", "catalog", "items", it.itemId);
     await setDoc(ref, { ...it, createdAt: serverTimestamp() }, { merge: true });
   }
 
