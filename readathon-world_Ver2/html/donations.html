@@ -8,315 +8,601 @@
 
   <style>
     :root{
-      --bg1:#0b2a24;
-      --bg2:#0f3a31;
-      --card:#ffffff10;
-      --card2:#ffffff14;
+      /* Jungle palette */
+      --bg1:#061f1a;
+      --bg2:#0b2a24;
+
       --text:#f4fff9;
       --muted:#cfe9dd;
-      --accent:#66f2c2;
-      --accent2:#ffd36a;
+
+      --mint:#66f2c2;
+      --gold:#ffd36a;
+      --sky:#74b0ff;
       --danger:#ff6b6b;
+
+      /* Glass + strokes */
+      --glass: rgba(255,255,255,.09);
+      --glass2: rgba(255,255,255,.13);
+      --stroke: rgba(255,255,255,.16);
+
+      /* Shadows + radius */
       --shadow: 0 18px 55px rgba(0,0,0,.35);
-      --radius: 22px;
-      --max: 1100px;
+      --shadow2: 0 22px 70px rgba(0,0,0,.35);
+      --radius: 26px;
+
+      /* Layout */
+      --max: 1220px;
+
+      /* Type scale */
+      --title: clamp(36px, 3.4vw, 56px);
+      --h2: clamp(20px, 1.7vw, 24px);
+      --sub: clamp(16px, 1.25vw, 19px);
+      --body: 16px;
+
+      /* Wood tones */
+      --wood1:#2d1b12;
+      --wood2:#4a2e1a;
+      --wood3:#6a3f22;
+      --woodHi: rgba(255, 218, 160, .20);
+      --woodLo: rgba(0,0,0,.36);
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--text);
-      background:
-        radial-gradient(1200px 700px at 15% 5%, #1a6b56 0%, transparent 60%),
-        radial-gradient(900px 600px at 85% 15%, #2b5f79 0%, transparent 55%),
-        radial-gradient(900px 700px at 35% 90%, #0f5a47 0%, transparent 60%),
-        linear-gradient(180deg, var(--bg1), var(--bg2));
       overflow-x:hidden;
+
+      background:
+        radial-gradient(1100px 700px at 12% 8%, rgba(46, 182, 130,.36) 0%, transparent 60%),
+        radial-gradient(950px 650px at 85% 16%, rgba(64, 125, 170,.30) 0%, transparent 58%),
+        radial-gradient(900px 700px at 35% 92%, rgba(22, 150, 110,.28) 0%, transparent 62%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
     }
 
-    a{color:inherit}
-    .wrap{max-width:var(--max); margin:0 auto; padding:28px 18px 60px;}
+    /* Soft jungle canopy overlay (pure CSS, no images) */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 420px at 10% -10%, rgba(102,242,194,.22), transparent 60%),
+        radial-gradient(900px 420px at 90% -10%, rgba(255,211,106,.18), transparent 60%),
+        radial-gradient(1000px 520px at 50% 0%, rgba(255,255,255,.10), transparent 60%),
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,.035) 0px,
+          rgba(255,255,255,.035) 2px,
+          transparent 2px,
+          transparent 16px);
+      mix-blend-mode: soft-light;
+      opacity:.9;
+      z-index:0;
+    }
+
+    /* Gentle vignette */
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background: radial-gradient(1200px 700px at 50% 25%, transparent 55%, rgba(0,0,0,.35) 100%);
+      opacity:.55;
+      z-index:0;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:34px 18px 84px;
+      position:relative;
+      z-index:1;
+    }
+
+    /* --- Leaf frame around the page --- */
+    .wrap::before{
+      content:"";
+      position:absolute;
+      inset:-14px;
+      border-radius: calc(var(--radius) + 18px);
+      pointer-events:none;
+      z-index:-1;
+
+      background:
+        radial-gradient(1200px 700px at 50% 0%, rgba(102,242,194,.16), transparent 60%),
+        radial-gradient(900px 600px at 10% 20%, rgba(255,211,106,.12), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(116,176,255,.10), transparent 60%),
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,.03) 0px,
+          rgba(255,255,255,.03) 2px,
+          transparent 2px,
+          transparent 18px);
+
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.30),
+        inset 0 0 0 1px rgba(0,0,0,.18);
+      opacity:.95;
+    }
+
+    .wrap::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      border-radius: calc(var(--radius) + 6px);
+      pointer-events:none;
+      z-index:-1;
+
+      background:
+        radial-gradient(30px 18px at 16px 18px, rgba(102,242,194,.25), transparent 70%),
+        radial-gradient(30px 18px at calc(100% - 16px) 18px, rgba(255,211,106,.22), transparent 70%),
+        radial-gradient(30px 18px at 16px calc(100% - 18px), rgba(116,176,255,.18), transparent 70%),
+        radial-gradient(30px 18px at calc(100% - 16px) calc(100% - 18px), rgba(102,242,194,.22), transparent 70%);
+      opacity:.9;
+    }
+
+    /* Top bar */
     .topbar{
-      display:flex; align-items:center; justify-content:space-between; gap:14px;
-      margin-bottom:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:14px;
+      margin-bottom:20px;
     }
+
     .brand{
-      display:flex; align-items:center; gap:12px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
     }
+
     .logo{
-      width:42px; height:42px; border-radius:12px;
-      background: linear-gradient(135deg, #2cf0c0, #ffd36a);
-      box-shadow: 0 12px 30px rgba(0,0,0,.25);
+      width:52px;
+      height:52px;
+      border-radius:18px;
+      background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(255,211,106,.92));
+      box-shadow: 0 14px 34px rgba(0,0,0,.30);
       position:relative;
       overflow:hidden;
+      border:1px solid rgba(255,255,255,.22);
+      flex: 0 0 auto;
     }
     .logo::after{
       content:"";
-      position:absolute; inset:-40%;
-      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.65), transparent 55%);
+      position:absolute;
+      inset:-60%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.70), transparent 55%);
       transform: rotate(25deg);
-      animation: shimmer 6s linear infinite;
+      animation: shimmer 7s linear infinite;
+      opacity:.85;
     }
     @keyframes shimmer{
-      0%{transform: translateX(-10%) rotate(25deg)}
-      50%{transform: translateX(10%) rotate(25deg)}
-      100%{transform: translateX(-10%) rotate(25deg)}
+      0%{ transform: translateX(-12%) rotate(25deg); }
+      50%{ transform: translateX(12%) rotate(25deg); }
+      100%{ transform: translateX(-12%) rotate(25deg); }
     }
+
     .brand h1{
-      font-size:16px; letter-spacing:.3px; margin:0;
-      line-height:1.2;
+      font-size:16px;
+      letter-spacing:.25px;
+      margin:0;
+      line-height:1.15;
     }
-    .brand p{margin:0; color:var(--muted); font-size:12px}
-
-    .pillrow{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
-    .pill{
-      padding:10px 12px; border-radius:999px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.16);
-      backdrop-filter: blur(8px);
-      font-size:12px; color:var(--muted);
+    .brand p{
+      margin:4px 0 0;
+      color:rgba(207,233,221,.92);
+      font-size:13px;
     }
 
+    @media (max-width: 900px){
+      .topbar{ flex-direction:column; align-items:center; }
+    }
+
+    /* Hero */
     .hero{
       border-radius: var(--radius);
       background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
       border: 1px solid rgba(255,255,255,.18);
       box-shadow: var(--shadow);
-      padding:26px 22px;
+      padding:30px 24px;
       position:relative;
       overflow:hidden;
+      text-align:center;
     }
     .hero::before{
       content:"";
-      position:absolute; inset:-80px;
+      position:absolute;
+      inset:-120px;
       background:
-        radial-gradient(circle at 20% 20%, rgba(102,242,194,.26), transparent 55%),
-        radial-gradient(circle at 80% 20%, rgba(255,211,106,.24), transparent 55%),
-        radial-gradient(circle at 40% 90%, rgba(255,255,255,.10), transparent 60%);
+        radial-gradient(circle at 18% 18%, rgba(102,242,194,.28), transparent 55%),
+        radial-gradient(circle at 82% 22%, rgba(255,211,106,.22), transparent 55%),
+        radial-gradient(circle at 38% 92%, rgba(116,176,255,.18), transparent 60%),
+        radial-gradient(circle at 60% 70%, rgba(255,255,255,.10), transparent 62%);
       filter: blur(1px);
       pointer-events:none;
     }
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(10px 10px at 12% 30%, rgba(255,255,255,.12), transparent 70%),
+        radial-gradient(10px 10px at 22% 62%, rgba(255,255,255,.10), transparent 70%),
+        radial-gradient(10px 10px at 46% 38%, rgba(255,255,255,.10), transparent 70%),
+        radial-gradient(10px 10px at 74% 48%, rgba(255,255,255,.12), transparent 70%),
+        radial-gradient(10px 10px at 88% 70%, rgba(255,255,255,.10), transparent 70%);
+      opacity:.7;
+    }
+
     .herogrid{
       display:grid;
-      grid-template-columns: 1.4fr .9fr;
       gap:18px;
       position:relative;
+      justify-items:center;
+      align-items:center;
       z-index:1;
     }
-    @media (max-width: 900px){
-      .herogrid{grid-template-columns:1fr}
-      .pillrow{justify-content:flex-start}
-      .topbar{flex-direction:column; align-items:flex-start}
+
+    .herogrid > div{
+      max-width: 860px;
     }
+
     .hero h2{
       margin:0 0 10px;
-      font-size:32px;
-      line-height:1.05;
+      text-align:center;
+      font-size: var(--title);
+      line-height:1.02;
       letter-spacing:.2px;
+      text-shadow: 0 12px 30px rgba(0,0,0,.25);
     }
     .hero p{
-      margin:0 0 14px;
-      color:var(--muted);
-      font-size:15px;
-      line-height:1.5;
-      max-width: 60ch;
+      margin:0 0 16px;
+      text-align:center;
+      color:rgba(207,233,221,.96);
+      font-size: var(--sub);
+      line-height:1.65;
+      max-width: 62ch;
+      margin-left:auto;
+      margin-right:auto;
     }
 
     .ctaRow{
-      display:flex; gap:12px; flex-wrap:wrap; align-items:center;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
       margin-top: 14px;
     }
+
     .btn{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:12px 14px;
-      border-radius: 14px;
-      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:13px 16px;
+      border-radius: 16px;
       border:1px solid rgba(255,255,255,.18);
       background: rgba(0,0,0,.18);
-      backdrop-filter: blur(8px);
-      transition: transform .15s ease, background .15s ease, border-color .15s ease;
-      box-shadow: 0 10px 26px rgba(0,0,0,.18);
-      font-weight:650;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
+      font-weight:800;
+      transition: transform .18s ease, filter .18s ease, background .18s ease, border-color .18s ease;
+      text-decoration:none;
+      white-space: nowrap;
     }
-    .btn:hover{transform: translateY(-2px); background: rgba(0,0,0,.26); border-color: rgba(255,255,255,.28)}
+    .btn:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.03);
+      background: rgba(0,0,0,.24);
+      border-color: rgba(255,255,255,.28);
+      text-decoration:none;
+    }
+
     .btn.primary{
       background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(102,242,194,.55));
       color:#073022;
       border-color: rgba(102,242,194,.4);
     }
-    .btn.primary:hover{transform: translateY(-2px) scale(1.01)}
     .btn.warn{
-      background: linear-gradient(135deg, rgba(255,211,106,.95), rgba(255,211,106,.55));
+      background: linear-gradient(135deg, rgba(255,211,106,.96), rgba(255,211,106,.55));
       color:#3a2b06;
-      border-color: rgba(255,211,106,.35);
+      border-color: rgba(255,211,106,.38);
+    }
+    .btn.sky{
+      background: linear-gradient(135deg, rgba(116,176,255,.95), rgba(116,176,255,.55));
+      color:#061a33;
+      border-color: rgba(116,176,255,.38);
     }
 
-    .heroAside{
-      display:flex; flex-direction:column; gap:12px;
-      justify-content:center;
+    /* Sections */
+    .section{
+      margin-top: 18px;
+      padding: 18px 2px 0;
+      text-align: center;
     }
-    .miniCard{
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.15);
-      border-radius: 18px;
-      padding:14px 14px;
+    .section h2{
+      font-size: var(--h2);
+      margin:0 0 10px;
+      letter-spacing:.25px;
+      text-align: center;
+      text-shadow: 0 10px 26px rgba(0,0,0,.20);
     }
-    .miniCard h3{margin:0 0 6px; font-size:14px}
-    .miniCard p{margin:0; color:var(--muted); font-size:13px; line-height:1.4}
-    .split{
-      display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;
-    }
-    .split .badge{
-      display:inline-flex; align-items:center; gap:8px;
-      padding:8px 10px; border-radius:999px;
-      background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.16);
-      font-size:12px; color:var(--muted);
-    }
-    .dot{width:10px; height:10px; border-radius:50%;}
-    .dot.accent{background: var(--accent)}
-    .dot.gold{background: var(--accent2)}
 
-    .grid{
+    /* Donation tiles grid */
+    .accordions{
       display:grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap:14px;
-      margin-top:16px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:18px;
+      margin-top:14px;
+      align-items:stretch;
     }
-    @media (max-width: 980px){ .grid{grid-template-columns:1fr} }
+    @media (max-width: 980px){
+      .accordions{ grid-template-columns: 1fr; }
+    }
 
-    .card{
-      border-radius: var(--radius);
-      background: rgba(255,255,255,.08);
-      border:1px solid rgba(255,255,255,.16);
-      box-shadow: 0 14px 40px rgba(0,0,0,.22);
-      overflow:hidden;
+    /* --- Carved wood cards (PURE CSS) --- */
+    details.ac{
       position:relative;
-      transform: translateY(10px);
-      opacity: 0;
-      transition: opacity .55s ease, transform .55s ease;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.09);
+      box-shadow: 0 18px 48px rgba(0,0,0,.24);
+      overflow:hidden;
+      min-height: 300px;
+      border:none;
+      transition: transform .18s ease, box-shadow .18s ease;
+
+      /* ✅ stacking context safety */
+      isolation: isolate;
     }
-    .card.reveal{
-      transform: translateY(0);
-      opacity: 1;
+    details.ac:hover{
+      transform: translateY(-4px);
+      box-shadow: var(--shadow2);
     }
-    .cardHeader{
-      padding:16px 16px 12px;
-      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+
+    /* Colored jungle stripe */
+    details.ac::before{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height:7px;
+      opacity:.98;
+      background: linear-gradient(90deg, rgba(102,242,194,.9), rgba(255,211,106,.9));
+      z-index:1; /* ✅ below content, above rim */
     }
-    .tag{
-      font-size:12px; color: rgba(255,255,255,.86);
-      padding:7px 10px; border-radius:999px;
+    details.ac[aria-label*="Bound"]::before{
+      background: linear-gradient(90deg, rgba(255,211,106,.98), rgba(255,211,106,.55));
+    }
+    details.ac[aria-label*="Cash"]::before,
+    details.ac[aria-label*="cash"]::before{
+      background: linear-gradient(90deg, rgba(102,242,194,.98), rgba(102,242,194,.55));
+    }
+    details.ac[aria-label*="Omella"]::before{
+      background: linear-gradient(90deg, rgba(116,176,255,.98), rgba(102,242,194,.55));
+    }
+
+    /* Wood rim + grain ring */
+    details.ac::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: var(--radius);
+      pointer-events:none;
+      z-index:0; /* ✅ behind everything */
+
+      background:
+        /* rim shading */
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.18)),
+        /* wood grain */
+        repeating-linear-gradient(90deg,
+          rgba(255, 224, 170, .07) 0px,
+          rgba(255, 224, 170, .07) 2px,
+          rgba(0,0,0,.00) 2px,
+          rgba(0,0,0,.00) 11px),
+        /* wood tone */
+        linear-gradient(135deg, var(--wood2), var(--wood1));
+
+      /* carve out the center so only rim shows */
+      -webkit-mask:
+        linear-gradient(#000,#000) content-box,
+        linear-gradient(#000,#000);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+
+      padding: 10px; /* rim thickness */
+
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.22),
+        inset 0 0 0 2px rgba(255,255,255,.07),
+        inset 0 0 0 1px rgba(0,0,0,.38);
+      opacity:.95;
+    }
+
+    /* Optional slight tint per card so the wood feels “themed” */
+    details.ac[aria-label*="Bound"]::after{ filter: hue-rotate(-8deg) saturate(1.05); }
+    details.ac[aria-label*="Cash"]::after,
+    details.ac[aria-label*="cash"]::after{ filter: hue-rotate(10deg) saturate(1.05); }
+    details.ac[aria-label*="Omella"]::after{ filter: hue-rotate(22deg) saturate(1.05); }
+
+    /* Keep inner content above the rim */
+    details.ac > summary,
+    details.ac > .acBody{
+      position:relative;
+      z-index:2;
+    }
+
+    summary{
+      list-style:none;
+      padding:18px 16px 10px;
+      user-select:none;
+      display:block;               /* ✅ keep visible for <details> rendering */
+      pointer-events:none;         /* ✅ always-open: disable collapsing */
+      cursor:default;
+      background: transparent;
+    }
+    summary::-webkit-details-marker{ display:none; }
+
+    /* “Carved” inner bevel feel */
+    details.ac > summary{
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    details.ac .acBody{
+      padding:0 16px 18px;
+      border-radius: calc(var(--radius) - 4px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        inset 0 -18px 28px rgba(0,0,0,.18);
+    }
+
+    /* Title badge inside summary */
+    .sumLeft{ display:flex; flex-direction:column; gap:10px; }
+
+    .sumTitle .titleBadge{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      padding:14px 14px;
+      border-radius:18px;
+      font-size:16px;
+      font-weight:950;
+      letter-spacing:.25px;
+      border:1px solid rgba(255,255,255,.20);
       background: rgba(0,0,0,.18);
-      border:1px solid rgba(255,255,255,.18);
-      backdrop-filter: blur(8px);
-      white-space:nowrap;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
     }
-    .cardBody{padding:0 16px 16px;}
-    .card h3{margin:0 0 6px; font-size:18px}
-    .card p{margin:0 0 10px; color:var(--muted); font-size:14px; line-height:1.5}
-    .bullets{margin:10px 0 0; padding:0 0 0 18px; color:var(--muted); font-size:14px; line-height:1.5}
-    .bullets li{margin:6px 0}
-    .callout{
+
+    .titleBadge.warn{
+      background: linear-gradient(135deg, rgba(255,211,106,.96), rgba(255,211,106,.55));
+      color:#3a2b06;
+      border-color: rgba(255,211,106,.38);
+    }
+    .titleBadge.primary{
+      background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(102,242,194,.55));
+      color:#073022;
+      border-color: rgba(102,242,194,.40);
+    }
+    .titleBadge.sky{
+      background: linear-gradient(135deg, rgba(116,176,255,.95), rgba(116,176,255,.55));
+      color:#061a33;
+      border-color: rgba(116,176,255,.38);
+    }
+
+    .sumDesc{
+      margin:0;
+      color:rgba(207,233,221,.95);
+      font-size:14px;
+      line-height:1.45;
+      opacity:.95;
+      padding: 0 2px;
+    }
+
+    /* Steps */
+    .steps{
+      margin: 12px 0 0;
+      padding: 0;
+      display:grid;
+      gap:10px;
+    }
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.14);
+      text-align:left;
+    }
+    .stepNum{
+      width:32px; height:32px;
+      border-radius: 12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:950;
+      flex:0 0 auto;
+      font-size:14px;
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 20px rgba(0,0,0,.15);
+    }
+
+    /* number badge tint per card */
+    details.ac[aria-label*="Bound"] .stepNum{
+      background: rgba(255,211,106,.18);
+      border-color: rgba(255,211,106,.26);
+      color: #fff5d3;
+    }
+    details.ac[aria-label*="Cash"] .stepNum,
+    details.ac[aria-label*="cash"] .stepNum{
+      background: rgba(102,242,194,.18);
+      border-color: rgba(102,242,194,.26);
+      color:#d6fff0;
+    }
+    details.ac[aria-label*="Omella"] .stepNum{
+      background: rgba(116,176,255,.18);
+      border-color: rgba(116,176,255,.26);
+      color:#d8ebff;
+    }
+
+    .step p{
+      margin:0;
+      color:rgba(207,233,221,.95);
+      font-size:14px;
+      line-height:1.55;
+    }
+    .step strong{ color:var(--text); }
+    .step a{ text-decoration: underline; }
+
+    /* Notes */
+    .note{
       margin-top:12px;
       padding:12px 12px;
-      border-radius:16px;
+      border-radius: 16px;
       background: rgba(102,242,194,.10);
       border: 1px solid rgba(102,242,194,.22);
       color: var(--text);
       font-size:13px;
-      line-height:1.45;
-    }
-    .callout strong{color:#d6fff0}
-
-    .imgSlot{
-      width:100%;
-      height:160px;
-      background:
-        linear-gradient(135deg, rgba(255,255,255,.10), rgba(255,255,255,.04));
-      border-top:1px solid rgba(255,255,255,.14);
-      position:relative;
-      overflow:hidden;
-    }
-    .imgSlot img{
-      width:100%; height:100%;
-      object-fit: cover;
-      display:block;
-      opacity:.95;
-    }
-    .imgSlot .placeholder{
-      position:absolute; inset:0;
-      display:flex; align-items:center; justify-content:center;
-      text-align:center;
-      padding: 10px 14px;
-      color: rgba(255,255,255,.75);
-      font-size: 13px;
-      pointer-events:none;
-    }
-
-    .section{
-      margin-top: 18px;
-      padding: 18px 2px 0;
-    }
-    .section h2{
-      font-size:20px;
-      margin:0 0 10px;
-      letter-spacing:.2px;
-    }
-
-    .footer{
-      margin-top: 20px;
-      padding: 18px 16px;
-      border-radius: var(--radius);
-      background: rgba(255,255,255,.06);
-      border:1px solid rgba(255,255,255,.14);
-      color: var(--muted);
       line-height:1.5;
-      font-size: 13px;
+      text-align:left;
     }
-    .footer strong{color: var(--text)}
-    .fineprint{
-      margin-top: 8px;
-      font-size: 12px;
-      opacity:.9;
-    }
-
     .noteDanger{
-      display:flex; gap:10px; align-items:flex-start;
+      margin-top:12px;
       padding:12px 12px;
       border-radius: 16px;
       background: rgba(255,107,107,.12);
       border: 1px solid rgba(255,107,107,.24);
-      margin-top: 12px;
       color: rgba(255,255,255,.92);
       font-size: 13px;
-      line-height:1.45;
+      line-height:1.5;
+      display:flex; gap:10px; align-items:flex-start;
+      text-align:left;
     }
     .icon{
-      width: 20px; height: 20px; border-radius: 6px;
+      width: 22px; height: 22px;
+      border-radius: 8px;
       background: rgba(255,255,255,.16);
-      display:inline-flex; align-items:center; justify-content:center;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
       flex: 0 0 auto;
-    }
-    .sparkle{
-      position:absolute;
-      width: 10px; height: 10px; border-radius: 50%;
-      background: rgba(255,255,255,.7);
-      filter: blur(.2px);
-      opacity:.35;
-      animation: floaty 7s ease-in-out infinite;
-      pointer-events:none;
-    }
-    @keyframes floaty{
-      0%{ transform: translateY(0) translateX(0) scale(1); opacity:.22}
-      50%{ transform: translateY(-18px) translateX(10px) scale(1.1); opacity:.40}
-      100%{ transform: translateY(0) translateX(0) scale(1); opacity:.22}
+      font-weight:950;
     }
 
     /* Reduced motion support */
     @media (prefers-reduced-motion: reduce){
-      *{animation:none !important; transition:none !important; scroll-behavior:auto !important;}
+      *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
     }
   </style>
 </head>
@@ -328,43 +614,19 @@
         <div class="logo" aria-hidden="true"></div>
         <div>
           <h1>Long Beach Elementary • LRC Read-A-Thon</h1>
-          <p>Donations • Books • Student prizes • Library joy</p>
+          <p>Donations • Student prizes • New library books</p>
         </div>
-      </div>
-
-      <div class="pillrow" aria-label="Quick notes">
-        <div class="pill">✅ Mix & match donation types</div>
-        <div class="pill">🎁 20% → Prize Store</div>
-        <div class="pill">📚 80% → New LRC Books</div>
       </div>
     </div>
 
     <section class="hero" aria-label="Donate hero">
-      <!-- cute floating sparkles -->
-      <span class="sparkle" style="top:18px; left:18px;"></span>
-      <span class="sparkle" style="top:32px; right:60px; animation-delay: -2s;"></span>
-      <span class="sparkle" style="bottom:20px; left:55%; animation-delay: -4s;"></span>
-
       <div class="herogrid">
         <div>
           <h2>Help our readers roar! 🦁📚</h2>
           <p>
-            Families can support our Read-A-Thon in <strong>three easy ways</strong> — and you can use
-            <strong>any combination</strong> of them. Every donation helps grow our Learning Resource Center
-            with fresh, high-interest books and exciting student rewards.
+            Choose <strong>one</strong> donation option or <strong>combine</strong> them.<br>
+            Every gift supports <strong>student rewards</strong> and brings in <strong>fresh, high-interest books</strong> for our LRC.
           </p>
-
-          <div class="miniCard" style="margin-top:12px;">
-            <h3>Where does the money go?</h3>
-            <p>
-              <strong>20%</strong> of proceeds go back to students to spend in the <strong>Prize Store</strong>.
-              The remaining <strong>80%</strong> goes directly to the <strong>LRC for books</strong>.
-            </p>
-            <div class="split" role="list" aria-label="Proceeds breakdown">
-              <span class="badge" role="listitem"><span class="dot accent"></span> 20% Student Prize Store</span>
-              <span class="badge" role="listitem"><span class="dot gold"></span> 80% LRC Books</span>
-            </div>
-          </div>
 
           <div class="ctaRow">
             <a class="btn primary"
@@ -372,189 +634,117 @@
                target="_blank" rel="noopener">
               🎁 Visit the Prize Store
             </a>
-
-            <a class="btn warn"
-               href="https://www.btsb.com/sosl/longbeachelementary"
-               target="_blank" rel="noopener">
-              📚 Buy a Book from BTSB Wishlist
-            </a>
-
-            <a class="btn"
-               href="#omella"
-               id="omellaJump">
-              🌐 Donate Online (Omella)
-            </a>
           </div>
         </div>
-
-        <aside class="heroAside" aria-label="Helpful highlights">
-          <div class="miniCard">
-            <h3>Quick reminder</h3>
-            <p>
-              Please make sure all donations are clearly labeled with the student’s
-              <strong>first & last name</strong> and their <strong>homeroom teacher</strong>.
-            </p>
-          </div>
-
-          <div class="miniCard">
-            <h3>Business sponsorships</h3>
-            <p>
-              Have a business and want to buy advertising on our Read-A-Thon homepage?
-              Email <strong>Mrs. A</strong> at <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a>.
-            </p>
-          </div>
-
-
-        </aside>
       </div>
     </section>
 
-    <section class="section" aria-label="Donation options">
-      <h2>Choose a donation option (or use any mix!)</h2>
+    <section class="section" id="donateOptions" aria-label="Donation options">
+      <h2>Donation options work great alone or in any combination.</h2>
 
-      <div class="grid">
-        <!-- Option 1: BTSB -->
-        <article class="card revealOnScroll" aria-label="Buy a book from Bound to Stay Bound">
-          <div class="cardHeader">
-            <div>
-              <h3>1) Buy a book from our BTSB Wishlist</h3>
-              <p>The easiest way to donate AND instantly grow our library collection.</p>
+      <div class="accordions">
+        <!-- 1) BTSB -->
+        <details class="ac" open aria-label="Buy a book from Bound to Stay Bound">
+          <summary>
+            <div class="sumLeft">
+              <div class="sumTitle">
+                <span class="titleBadge warn" aria-hidden="true">📚 Buy a Library-Bound Book!</span>
+              </div>
+              <p class="sumDesc">Donate &amp; grow our library instantly.</p>
             </div>
-            <span class="tag">📦 Ships to school</span>
-          </div>
+          </summary>
 
-          <div class="imgSlot" aria-label="Image placeholder for BTSB books">
-            <!-- ✅ Replace with your own PNG/JPG -->
-            <!-- <img src="/readathon-worldVer2/assets/png/donate_btsb.png" alt="Books and library-themed illustration"> -->
-            <div class="placeholder">PNG Placeholder: <strong>donate_btsb.png</strong></div>
-          </div>
-
-          <div class="cardBody">
-            <div class="callout">
-              <strong>Important:</strong> These are <strong>library-bound</strong> materials designed to last longer
-              (stronger covers + higher durability for school use). Please <strong>do not</strong> order similar titles
-              from Amazon — BTSB ensures our books arrive school-ready.
+          <div class="acBody">
+            <div class="steps" role="list" aria-label="BTSB steps">
+              <div class="step" role="listitem">
+                <span class="stepNum">1</span>
+                <p>Shop the official wishlist: <strong><a href="https://www.btsb.com/sosl/longbeachelementary" target="_blank" rel="noopener">Bound to Stay Bound</a></strong></p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">2</span>
+                <p>Your purchase total is credited to the student’s Read-A-Thon account.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">3</span>
+                <p>Books ship to school &amp; arrive <strong>shelf-ready</strong> (durable, library-bound).</p>
+              </div>
             </div>
-
-            <ul class="bullets">
-              <li><strong>The total purchase price</strong> is added to the student’s Read-A-Thon account and becomes <strong>eligible for the Prize Store</strong>.</li>
-              <li>Books arrive <strong>ready to check out</strong> — no extra processing needed.</li>
-              <li>
-                Wishlist link:
-                <a href="https://www.btsb.com/sosl/longbeachelementary" target="_blank" rel="noopener">
-                  Bound to Stay Bound Wishlist
-                </a>
-              </li>
-            </ul>
 
             <div class="noteDanger" role="note">
               <span class="icon" aria-hidden="true">!</span>
               <div>
-                <strong>Please don’t order off Amazon</strong> for this donation option — our wishlist is purpose-built
-                for durable, library-bound books that can handle hundreds of checkouts.
+                Please don’t order this option through Amazon—BTSB ensures the books are <strong>library-bound</strong>
+                and built for hundreds of checkouts.
               </div>
             </div>
           </div>
-        </article>
+        </details>
 
-        <!-- Option 2: Cash/Check/Coins -->
-        <article class="card revealOnScroll" aria-label="Donate by cash check or coins">
-          <div class="cardHeader">
-            <div>
-              <h3>2) Cash, check, or coins</h3>
-              <p>Quick and simple — every bit helps!</p>
+        <!-- 2) Cash/Check/Coins -->
+        <details class="ac" open aria-label="Donate by cash check or coins">
+          <summary>
+            <div class="sumLeft">
+              <div class="sumTitle">
+                <span class="titleBadge primary" aria-hidden="true">💛 Cash, Check, or Coins!</span>
+              </div>
+              <p class="sumDesc">Quick &amp; simple — any amount helps our readers.</p>
             </div>
-            <span class="tag">💛 Any amount</span>
-          </div>
+          </summary>
 
-          <div class="imgSlot" aria-label="Image placeholder for cash/check/coins">
-            <!-- ✅ Replace with your own PNG/JPG -->
-            <!-- <img src="/readathon-worldVer2/assets/png/donate_cash.png" alt="Illustration of donation envelope and coins"> -->
-            <div class="placeholder">PNG Placeholder: <strong>donate_cash.png</strong></div>
-          </div>
-
-          <div class="cardBody">
-            <div class="callout">
-              <strong>Please label clearly:</strong> Student’s <strong>first & last name</strong> + <strong>homeroom teacher</strong>.
-              This ensures donations are credited correctly.
-            </div>
-
-            <ul class="bullets">
-              <li>Donations may be placed in the <strong>donation box by the office</strong>, <em>OR</em> handed to the <strong>homeroom teacher</strong>.</li>
-              <li>Cash/check/coins can be used alongside the other donation options.</li>
-              <li>Labeling matters — it’s how we match donations to the correct student account.</li>
-            </ul>
-          </div>
-        </article>
-
-        <!-- Option 3: Omella -->
-        <article class="card revealOnScroll" id="omella" aria-label="Donate online via Omella">
-          <div class="cardHeader">
-            <div>
-              <h3>3) Optional online donations (Omella)</h3>
-              <p>Prefer digital? Create an online donation page to share with family & friends.</p>
-            </div>
-            <span class="tag">🌐 Shareable link</span>
-          </div>
-
-          <div class="imgSlot" aria-label="Image placeholder for Omella QR code">
-            <!-- ✅ Replace with your QR code PNG if you have one -->
-            <!-- <img src="/readathon-worldVer2/assets/png/omella_qr.png" alt="QR code for Omella donation page"> -->
-            <div class="placeholder">PNG Placeholder: <strong>omella_qr.png</strong> (QR code)</div>
-          </div>
-
-          <div class="cardBody">
-            <div class="callout">
-              This option is <strong>optional</strong>. Families may use Omella,
-              cash/check/coins, the BTSB wishlist — or any combination of the three!
+          <div class="acBody">
+            <div class="steps" role="list" aria-label="Cash steps">
+              <div class="step" role="listitem">
+                <span class="stepNum">1</span>
+                <p>Place donations in the <strong>donation box by the office</strong> OR send them to the <strong>homeroom teacher</strong>.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">2</span>
+                <p>Label with <strong>student first &amp; last name</strong> and <strong>homeroom teacher</strong>.</p>
+              </div>
             </div>
 
-            <ul class="bullets">
-              <li>Set up your Omella page and share it with friends & family.</li>
-              <li>Online totals may be credited to your student’s Read-A-Thon account.</li>
-              <li>
-                Omella Donation Page:
-                <a href="#" id="omellaLinkInline" target="_blank" rel="noopener">[Add Omella link here]</a>
-              </li>
-              <li>
-                Need help?
-                <a href="#" id="omellaSlidesLinkInline" target="_blank" rel="noopener">
-                  View the “How to Set Up Omella” Step-By-Step Guide
-                </a>
-              </li>
-            </ul>
+            <div class="note">
+              Labeling ensures donations are credited to the correct student account. Thank you!
+            </div>
           </div>
-        </article>
-      </div>
-    </section>
+        </details>
 
-    <section class="section" aria-label="Omella help guide">
-      <div class="footer">
-        <strong>Need help setting up Omella?</strong><br>
-        We created a simple step-by-step slideshow guide for families. Click below to walk through the setup process:
+        <!-- 3) Omella -->
+        <details class="ac" open id="omella" aria-label="Donate online via Omella">
+          <summary>
+            <div class="sumLeft">
+              <div class="sumTitle">
+                <span class="titleBadge sky" aria-hidden="true">🌐 Online Donation (Omella)</span>
+              </div>
+              <p class="sumDesc">Create a shareable link for family &amp; friends.</p>
+            </div>
+          </summary>
 
-        <div style="margin-top:10px;">
-          <a class="btn primary" href="#" id="omellaSlidesBtn" target="_blank" rel="noopener">
-            📽 View Omella Setup Guide
-          </a>
-        </div>
-
-        <div class="fineprint">
-          Remember — Omella is optional! Families may donate using any mix of
-          online donations, cash/check/coins, or purchasing a library-bound book
-          from our wishlist.
-        </div>
-      </div>
-    </section>
-
-    <section class="section" aria-label="Business advertising">
-      <div class="footer">
-        <strong>Business advertising opportunity:</strong>
-        If you have a business and would like to buy advertising on our Read-A-Thon homepage, reach out to
-        <strong>Mrs. A</strong> at <a href="mailto:malbrecht@sd308.org">malbrecht@sd308.org</a>.
-        <div class="fineprint">
-          Thanks for supporting our readers and helping us bring more books into kids’ hands! 🦁💚
-        </div>
+          <div class="acBody">
+            <div class="steps" role="list" aria-label="Omella steps">
+              <div class="step" role="listitem">
+                <span class="stepNum">1</span>
+                <p>Create your family’s donation page on Omella.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">2</span>
+                <p>Share your link with friends &amp; family.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">3</span>
+                <p>
+                  Donation link:
+                  <strong><a href="#" id="omellaLinkInline" target="_blank" rel="noopener">Click Here to get Started</a></strong>
+                  <br>
+                  Need help?
+                  <a class="btn primary" href="#" id="omellaSlidesBtn" target="_blank" rel="noopener" style="margin-top:10px;">
+                    📽 View Omella Setup Guide
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
     </section>
   </div>
@@ -562,37 +752,16 @@
   <script>
     const LINKS = {
       prizeStore: "https://lrcquest.org/readathon-worldVer2/html/prizeStore.html",
-      omella: "YOUR_OMELLA_LINK_HERE",
-      omellaSetupSlides: "https://docs.google.com/presentation/d/e/2PACX-1vQVslFp0bfAmp9OXidX6HTDkQAJ8281JaKFNVyX4bDmS7J2wpQ7JGlJWyY7Hto4crnFOqxQyIQWyIkh/pub?start=false&loop=false&delayms=3000"
-,
+      omella: "https://omella.com/1pv8u/p/signup?utm_medium=qr&utm_source=share_page",
+      omellaSetupSlides: "https://docs.google.com/presentation/d/e/2PACX-1vQVslFp0bfAmp9OXidX6HTDkQAJ8281JaKFNVyX4bDmS7J2wpQ7JGlJWyY7Hto4crnFOqxQyIQWyIkh/pub?start=false&loop=false&delayms=3000",
     };
 
     // Apply links
     const omellaInline = document.getElementById("omellaLinkInline");
-    const slidesInline = document.getElementById("omellaSlidesLinkInline");
     const slidesBtn = document.getElementById("omellaSlidesBtn");
 
     if (omellaInline) omellaInline.href = LINKS.omella;
-    if (slidesInline) slidesInline.href = LINKS.omellaSetupSlides;
     if (slidesBtn) slidesBtn.href = LINKS.omellaSetupSlides;
-
-    // Scroll-reveal animations
-    const cards = document.querySelectorAll(".revealOnScroll");
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach(e => {
-        if (e.isIntersecting) {
-          e.target.classList.add("reveal");
-          io.unobserve(e.target);
-        }
-      });
-    }, { threshold: 0.18 });
-
-    cards.forEach(c => io.observe(c));
   </script>
 </body>
 </html>
-
-
-
-
-
