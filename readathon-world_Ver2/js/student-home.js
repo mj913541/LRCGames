@@ -77,26 +77,48 @@ async function init() {
 }
 
 function wireAvatarWorldEmbed() {
-  // If the button/modal isn't on the page, do nothing (safe)
   if (!els.btnOpenAvatarWorld || !els.awEmbedModal || !els.btnCloseAvatarWorld || !els.awEmbedFrame) return;
 
+  const main = document.querySelector("main");
+  let lastFocus = null;
+
   const open = () => {
+    lastFocus = document.activeElement;
+
+    // show
     els.awEmbedModal.classList.remove("isHidden");
     els.awEmbedModal.setAttribute("aria-hidden", "false");
 
-    // Refresh the iframe when opening (helps during development)
+    // prevent focus behind modal (best practice)
+    if (main) main.setAttribute("inert", "");
+
+    // refresh iframe (optional)
     els.awEmbedFrame.src = "/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student";
+
+    // move focus into modal safely
+    requestAnimationFrame(() => els.btnCloseAvatarWorld.focus());
   };
 
   const close = () => {
+    // IMPORTANT: move focus OUT of the modal BEFORE hiding it
+    if (lastFocus && typeof lastFocus.focus === "function") {
+      lastFocus.focus();
+    } else {
+      els.btnOpenAvatarWorld.focus();
+    }
+
+    // hide
     els.awEmbedModal.classList.add("isHidden");
     els.awEmbedModal.setAttribute("aria-hidden", "true");
+
+    // re-enable behind-page focus
+    if (main) main.removeAttribute("inert");
   };
 
   els.btnOpenAvatarWorld.addEventListener("click", open);
   els.btnCloseAvatarWorld.addEventListener("click", close);
 
-  // Click outside the card closes
+  // Click outside closes
   els.awEmbedModal.addEventListener("click", (e) => {
     if (e.target === els.awEmbedModal) close();
   });
@@ -106,7 +128,7 @@ function wireAvatarWorldEmbed() {
     if (e.key === "Escape" && els.awEmbedModal.getAttribute("aria-hidden") === "false") close();
   });
 
-  // Listen for "Back" message from iframe (avatar-world.js will post this)
+  // Message from iframe to close
   window.addEventListener("message", (e) => {
     if (e.origin !== window.location.origin) return;
     if (e.data?.type === "aw_close") close();
