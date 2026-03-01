@@ -60,7 +60,13 @@
       <div class="sectionHead">
         <h2 class="h2">🧍 Avatar Space</h2>
         <p class="sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
-      </div>
+
+        <div class="awLaunchRow">
+          <button id="btnOpenAvatarWorld" class="btnBig btnBig--primary" type="button">
+            🌿 Open Avatar World
+          </button>
+        </div>
+      </div><!-- closes .sectionHead -->
 
       <div class="avatarArea">
         <div class="avatarStage" aria-label="Avatar preview area">
@@ -105,6 +111,24 @@
 
     <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
   </main>
+
+  <!-- Avatar World Embed Modal -->
+  <div id="awEmbedModal" class="awModal isHidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Avatar World">
+    <div class="awModal__card">
+      <div class="awModal__hdr">
+        <div class="awModal__title">Avatar World</div>
+        <button id="btnCloseAvatarWorld" class="awModal__close" type="button" aria-label="Close">✖</button>
+      </div>
+
+      <iframe
+        id="awEmbedFrame"
+        class="awModal__frame"
+        src="/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student"
+        title="Avatar World"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </div>
 
   <script type="module" src="/readathon-world_Ver2/js/student-home.js"></script>
 </body>

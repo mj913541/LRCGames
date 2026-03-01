@@ -38,6 +38,12 @@ const els = {
   loadingOverlay: document.getElementById("loadingOverlay"),
   loadingText: document.getElementById("loadingText"),
   errorBox: document.getElementById("errorBox"),
+
+  // Avatar World embed (modal + iframe)
+  btnOpenAvatarWorld: document.getElementById("btnOpenAvatarWorld"),
+  awEmbedModal: document.getElementById("awEmbedModal"),
+  btnCloseAvatarWorld: document.getElementById("btnCloseAvatarWorld"),
+  awEmbedFrame: document.getElementById("awEmbedFrame"),
 };
 
 init().catch((e) => showError(normalizeError(e)));
@@ -49,6 +55,7 @@ async function init() {
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
+  wireAvatarWorldEmbed(); // ✅ NEW
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
   const userId = claims.userId || auth.currentUser?.uid;
@@ -59,14 +66,51 @@ async function init() {
   const summary = await loadSummary({ schoolId, userId });
   renderSummary(summary);
 
-// Load inventory
-const inv = await loadInventory({ schoolId, userId });
-renderInventory({ schoolId, userId, inv });
-  
+  // Load inventory
+  const inv = await loadInventory({ schoolId, userId });
+  renderInventory({ schoolId, userId, inv });
+
   // Equipped preview
   renderEquipped({ schoolId, userId });
 
   hideLoading(els.loadingOverlay);
+}
+
+function wireAvatarWorldEmbed() {
+  // If the button/modal isn't on the page, do nothing (safe)
+  if (!els.btnOpenAvatarWorld || !els.awEmbedModal || !els.btnCloseAvatarWorld || !els.awEmbedFrame) return;
+
+  const open = () => {
+    els.awEmbedModal.classList.remove("isHidden");
+    els.awEmbedModal.setAttribute("aria-hidden", "false");
+
+    // Refresh the iframe when opening (helps during development)
+    els.awEmbedFrame.src = "/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student";
+  };
+
+  const close = () => {
+    els.awEmbedModal.classList.add("isHidden");
+    els.awEmbedModal.setAttribute("aria-hidden", "true");
+  };
+
+  els.btnOpenAvatarWorld.addEventListener("click", open);
+  els.btnCloseAvatarWorld.addEventListener("click", close);
+
+  // Click outside the card closes
+  els.awEmbedModal.addEventListener("click", (e) => {
+    if (e.target === els.awEmbedModal) close();
+  });
+
+  // ESC closes
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && els.awEmbedModal.getAttribute("aria-hidden") === "false") close();
+  });
+
+  // Listen for "Back" message from iframe (avatar-world.js will post this)
+  window.addEventListener("message", (e) => {
+    if (e.origin !== window.location.origin) return;
+    if (e.data?.type === "aw_close") close();
+  });
 }
 
 function renderSummary(s) {
@@ -97,7 +141,7 @@ function renderInventory({ schoolId, userId, inv }) {
   }
 
   // Only show items with qty > 0
-  const items = inv.filter(x => Number(x.qty || 0) > 0);
+  const items = inv.filter((x) => Number(x.qty || 0) > 0);
 
   for (const it of items) {
     const btn = document.createElement("button");
@@ -138,7 +182,7 @@ function prettyItemId(itemId) {
   return String(itemId || "")
     .replace(/^item_/, "")
     .replace(/_/g, " ")
-    .replace(/\b\w/g, m => m.toUpperCase());
+    .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
 function showError(msg) {
