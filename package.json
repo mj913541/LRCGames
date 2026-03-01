@@ -20,6 +20,7 @@
   "homepage": "https://github.com/mj913541/LRCGames#readme",
   "dependencies": {
     "bcryptjs": "^3.0.3",
-    "firebase-admin": "^13.6.1"
+    "firebase-admin": "^13.6.1",
+    "sharp": "^0.34.5"
   }
 }

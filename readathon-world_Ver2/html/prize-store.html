@@ -563,7 +563,25 @@
     </div>
   </div>
 
-  <script>
+<script type="module">
+  import {
+    auth,
+    db,
+    DEFAULT_SCHOOL_ID,
+    getSchoolId,
+  } from "/readathon-world_Ver2/js/firebase.js";
+
+  import {
+    doc,
+    getDoc,
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  import {
+    onAuthStateChanged,
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+  // ...everything else from your prize-store JS goes here...
+
     /************************************************************
      * 1) PASTE YOUR GOOGLE FORM LINK HERE
      ************************************************************/
@@ -789,6 +807,63 @@
       renderCart();
       renderTotals();
     }
+
+    async function loadStudentCreditFromFirebase() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      try {
+        if (!user) {
+          // Not signed in — keep manual mode available
+          resolve({ mode: "manual" });
+          return;
+        }
+
+        // 1) Identify schoolId
+        const schoolId = getSchoolId ? getSchoolId() : (DEFAULT_SCHOOL_ID || "308_longbeach_elementary");
+
+        // 2) Identify userId (best: from custom claim; fallback: UID)
+        const token = await user.getIdTokenResult();
+        const claimedUserId = token?.claims?.userId;
+        const userId = claimedUserId || user.uid;
+
+        // 3) Read the student's summary doc
+        const summaryRef = doc(db,
+          "readathonV2_schools", schoolId,
+          "users", userId,
+          "readathon", "summary"
+        );
+
+        const snap = await getDoc(summaryRef);
+        if (!snap.exists()) {
+          resolve({ mode: "signed-in-no-summary", schoolId, userId });
+          return;
+        }
+
+        const data = snap.data();
+
+        // Use cents if available
+        const moneyRaisedCents = Number(data.moneyRaisedCents ?? data.moneyRaised_cents ?? 0);
+        const raisedDollars = moneyRaisedCents > 0
+          ? (moneyRaisedCents / 100)
+          : Number(data.moneyRaisedDollars ?? data.moneyRaised ?? 0);
+
+        const creditPercent = 0.20; // your rule
+        const creditDollars = Math.max(0, raisedDollars * creditPercent);
+
+        resolve({
+          mode: "auto",
+          schoolId,
+          userId,
+          raisedDollars,
+          creditDollars
+        });
+      } catch (err) {
+        console.error("Credit load failed:", err);
+        resolve({ mode: "error", error: String(err) });
+      }
+    });
+  });
+}
 function priceTierLabel(price){
   if (price < 5)  return "$0–$4.99";
   if (price < 10) return "$5–$9.99";
@@ -1091,6 +1166,38 @@ function priceTierLabel(price){
       btnCheckout.addEventListener("click", () => {
         copyOrder().finally(checkout);
       });
+
+
+  // AUTO CREDIT LOAD (Firebase)
+  const result = await loadStudentCreditFromFirebase();
+
+  if (result.mode === "auto") {
+    // Set raised input for transparency (optional)
+    elRaised.value = result.raisedDollars.toFixed(2);
+
+    // Lock fields so kids can’t edit the credit math
+    elRaised.setAttribute("readonly", "readonly");
+    elPercent.value = "0.20";
+    elPercent.setAttribute("disabled", "disabled");
+
+    // Optional: auto-fill student name if you store it on user doc
+    // elStudent.value = elStudent.value || "(signed-in student)";
+
+    renderTotals();
+
+    elMsg.className = "msg good";
+    elMsg.textContent = `Credit loaded automatically ✅ Store credit: ${money(result.creditDollars)} (20% of ${money(result.raisedDollars)}).`;
+  } else if (result.mode === "signed-in-no-summary") {
+    elMsg.className = "msg warn";
+    elMsg.textContent = "Signed in, but I couldn't find your readathon summary. Ask Mrs. A to check your account.";
+  } else if (result.mode === "error") {
+    elMsg.className = "msg warn";
+    elMsg.textContent = "Signed in, but credit couldn't load. You can still enter donations manually for now.";
+  } else {
+    // manual mode (not signed in)
+    // keep the page usable
+  }
+
 
       [pc_cost, pc_ship, pc_tax, pc_buffer, pc_round].forEach(x => x.addEventListener("input", renderPricingHelper));
     }
