@@ -4,7 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Home • Readathon World</title>
+
   <link rel="stylesheet" href="/readathon-world_Ver2/css/admin.css" />
+  <link rel="stylesheet" href="/readathon-world_Ver2/css/components.css" />
 </head>
 
 <body class="page page--admin-home">
@@ -16,130 +18,57 @@
     </a>
 
     <div class="topbar__title">
-      <div class="pill">🛠️ Admin Home</div>
+      <div class="pill">👑 Admin Home</div>
     </div>
 
     <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" id="pageWrap">
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
         <div>
           <h1 class="h1" data-title>Readathon World</h1>
           <p class="sub" data-subtitle></p>
         </div>
-        <a class="btnBig btnBig--primary" href="/readathon-world_Ver2/html/admin-minutes-approve.html">
-          ✅ Approve Pending Minutes
+
+        <a class="btnBig btnBig--primary" href="/readathon-world_Ver2/html/admin-tools.html">
+          🧰 Admin Tools
         </a>
       </div>
 
-      <div class="gridButtons">
-        <a class="btnBig" href="/readathon-world_Ver2/html/staff-minutes-submit.html">🎁 Submit / Award (Admin)</a>
-        <a class="btnBig" href="/readathon-world_Ver2/html/admin-minutes-approve.html">✅ Approve Pending</a>
-      </div>
-    </section>
-
-    <section class="panel" id="analyticsPanel">
-      <div class="sectionHead">
-        <h2 class="h2">📊 Readathon Analytics</h2>
-        <p class="sub">Live totals + leaderboards</p>
-      </div>
-
-      <div class="dashGrid">
-        <div class="statCard">
-          <div class="statLabel">Total Minutes</div>
-          <div class="statValue" id="statTotalMinutes">—</div>
+      <div class="gridCards">
+        <div class="cardStat">
+          <div class="cardStat__label">Minutes (School)</div>
+          <div class="cardStat__value" id="minutesTotal">—</div>
         </div>
-
-        <div class="statCard">
-          <div class="statLabel">Total Raised</div>
-          <div class="statValue" id="statTotalMoney">—</div>
+        <div class="cardStat">
+          <div class="cardStat__label">Pending (School)</div>
+          <div class="cardStat__value" id="minutesPending">—</div>
         </div>
-
-        <div class="statCard">
-          <div class="statLabel">Students Counted</div>
-          <div class="statValue" id="statTotalStudents">—</div>
+        <div class="cardStat">
+          <div class="cardStat__label">Rubies (School)</div>
+          <div class="cardStat__value" id="rubiesBalance">—</div>
+          <div class="cardStat__sub" id="rubiesLifetime">—</div>
         </div>
-      </div>
-
-      <div class="dashTwo">
-        <div class="dashCol">
-          <h3 class="h3">🏫 Grade Totals</h3>
-          <div class="tableWrap">
-            <table class="tbl">
-              <thead>
-                <tr>
-                  <th>Grade</th>
-                  <th class="num">Students</th>
-                  <th class="num">Minutes</th>
-                  <th class="num">$ Raised</th>
-                </tr>
-              </thead>
-              <tbody id="gradeTableBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="dashCol">
-          <h3 class="h3">🏆 Homeroom Leaderboard (Minutes)</h3>
-          <div class="tableWrap">
-            <table class="tbl">
-              <thead>
-                <tr>
-                  <th>Homeroom</th>
-                  <th class="num">Students</th>
-                  <th class="num">Minutes</th>
-                  <th class="num">$ Raised</th>
-                </tr>
-              </thead>
-              <tbody id="homeroomMinutesBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="dashTwo">
-        <div class="dashCol">
-          <h3 class="h3">💰 Homeroom Leaderboard (Money)</h3>
-          <div class="tableWrap">
-            <table class="tbl">
-              <thead>
-                <tr>
-                  <th>Homeroom</th>
-                  <th class="num">Students</th>
-                  <th class="num">Minutes</th>
-                  <th class="num">$ Raised</th>
-                </tr>
-              </thead>
-              <tbody id="homeroomMoneyBody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="dashCol">
-          <h3 class="h3">📚 Top Readers</h3>
-          <div class="tableWrap">
-            <table class="tbl">
-              <thead>
-                <tr>
-                  <th>Student</th>
-                  <th>Grade</th>
-                  <th>Homeroom</th>
-                  <th class="num">Minutes</th>
-                </tr>
-              </thead>
-              <tbody id="topReadersBody"></tbody>
-            </table>
-          </div>
+        <div class="cardStat">
+          <div class="cardStat__label">Money (School)</div>
+          <div class="cardStat__value" id="moneyRaised">—</div>
         </div>
       </div>
     </section>
 
+    <!-- AVATAR SPACE (Admin) -->
     <section class="panel">
       <div class="sectionHead">
         <h2 class="h2">🧍 Avatar Space</h2>
         <p class="sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
+
+        <div class="awLaunchRow">
+          <button id="btnOpenAvatarWorld" class="btnBig btnBig--primary" type="button">
+            🌿 Open Avatar World
+          </button>
+        </div>
       </div>
 
       <div class="avatarArea">
@@ -165,17 +94,6 @@
       </div>
     </section>
 
-    <section class="panel">
-      <div class="sectionHead">
-        <h2 class="h2">Admin Tools</h2>
-        <p class="sub">Coming next: search any user, view inventory, edit balances, group awards.</p>
-      </div>
-
-      <div class="gridButtons">
-        <a class="btnBig" href="/readathon-world_Ver2/html/index.html">🏠 Home</a>
-      </div>
-    </section>
-
     <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
       <div class="loadingCard">
         <div class="spinner" aria-hidden="true"></div>
@@ -185,6 +103,24 @@
 
     <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
   </main>
+
+  <!-- Avatar World Embed Modal (Admin) -->
+  <div id="awEmbedModal" class="awModal isHidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Avatar World">
+    <div class="awModal__card">
+      <div class="awModal__hdr">
+        <div class="awModal__title">Avatar World</div>
+        <button id="btnCloseAvatarWorld" class="awModal__close" type="button" aria-label="Close">✖</button>
+      </div>
+
+      <iframe
+        id="awEmbedFrame"
+        class="awModal__frame"
+        src="/readathon-world_Ver2/html/avatar-world.html?embed=1&from=admin"
+        title="Avatar World"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </div>
 
   <script type="module" src="/readathon-world_Ver2/js/admin-home.js"></script>
 </body>
