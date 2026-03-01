@@ -24,23 +24,26 @@
     <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" id="pageWrap">
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
         <div>
           <h1 class="h1" data-title>Readathon World</h1>
           <p class="sub" data-subtitle></p>
         </div>
+
         <a class="btnBig btnBig--primary" href="/readathon-world_Ver2/html/staff-minutes-submit.html">
           🎁 Award / Submit
         </a>
-        <a href="https://www.lrcquest.org/readathon-world_Ver2/html/donations.html" 
+
+        <a href="https://www.lrcquest.org/readathon-world_Ver2/html/donations.html"
            class="btn-action btn-donate">
-            💰 Donate Now
+          💰 Donate Now
         </a>
-        <a href="/readathon-world_Ver2/html/prize-store.html" 
+
+        <a href="/readathon-world_Ver2/html/prize-store.html"
            class="btn-action btn-store">
-           🏆 Prize Store
+          🏆 Prize Store
         </a>
       </div>
 
@@ -65,10 +68,18 @@
       </div>
     </section>
 
+    <!-- AVATAR SPACE (Staff) -->
     <section class="panel">
       <div class="sectionHead">
         <h2 class="h2">🧍 Avatar Space</h2>
         <p class="sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
+
+        <!-- NEW: Avatar World Launch Button (Embed Modal) -->
+        <div class="awLaunchRow">
+          <button id="btnOpenAvatarWorld" class="btnBig btnBig--primary" type="button">
+            🌿 Open Avatar World
+          </button>
+        </div>
       </div>
 
       <div class="avatarArea">
@@ -93,7 +104,8 @@
         </div>
       </div>
     </section>
-    
+
+    <!-- Permissions panel (kept as-is, currently hidden in your build) -->
     <section class="isHidden panel">
       <div class="isHidden sectionHead">
         <h2 class="isHidden h2">🏫 Your Award Permissions</h2>
@@ -124,6 +136,24 @@
 
     <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
   </main>
+
+  <!-- Avatar World Embed Modal (Staff) -->
+  <div id="awEmbedModal" class="awModal isHidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Avatar World">
+    <div class="awModal__card">
+      <div class="awModal__hdr">
+        <div class="awModal__title">Avatar World</div>
+        <button id="btnCloseAvatarWorld" class="awModal__close" type="button" aria-label="Close">✖</button>
+      </div>
+
+      <iframe
+        id="awEmbedFrame"
+        class="awModal__frame"
+        src="/readathon-world_Ver2/html/avatar-world.html?embed=1&from=staff"
+        title="Avatar World"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </div>
 
   <script type="module" src="/readathon-world_Ver2/js/staff-home.js"></script>
 </body>
