@@ -55,6 +55,9 @@ const els = {
 
   toast: document.getElementById("toast"),
 
+  // Room background
+  roomBackground: document.getElementById("roomBackground"),
+
   panelWear: document.getElementById("panelWear"),
   panelPets: document.getElementById("panelPets"),
   panelWall: document.getElementById("panelWall"),
@@ -187,7 +190,7 @@ async function loadOrCreateRoomState() {
 
   if (!snap.exists()) {
     const fresh = {
-      equipped: { head: null, body: null, accessory: null, pet: null },
+      equipped: { base: null, head: null, body: null, accessory: null, pet: null, background: null },
       placed: { wall1: null, wall2: null, floor1: null, floor2: null },
       updatedAt: serverTimestamp(),
     };
@@ -198,6 +201,8 @@ async function loadOrCreateRoomState() {
   const d = snap.data() || {};
   return {
     equipped: {
+      base: null,
+      background: null,
       head: null,
       body: null,
       accessory: null,
@@ -241,6 +246,32 @@ async function loadCatalog() {
 /* ----------------------------
   Rendering: Room
 ---------------------------- */
+function applyRoomBackground(itemId) {
+  if (!els.roomBackground) return;
+
+  // default background (keep this file in your assets)
+  const fallback = "/readathon-world_Ver2/assets/avatar/room/backgrounds/default.png";
+
+  if (!itemId) {
+    els.roomBackground.src = fallback;
+    return;
+  }
+  const it = catalogById.get(itemId);
+  const src = it?.imagePath || fallback;
+  els.roomBackground.src = src;
+}
+
+function applyAvatarBase(imgEl, itemId) {
+  if (!imgEl) return;
+
+  // If no base equipped, keep whatever default is in the HTML (do nothing)
+  if (!itemId) return;
+
+  const it = catalogById.get(itemId);
+  const src = it?.imagePath || "";
+  if (src) imgEl.src = src;
+}
+
 function applyAvatarLayer(imgEl, itemId) {
   if (!imgEl) return;
 
@@ -292,6 +323,11 @@ function renderZone(slotKey, label, itemId) {
 function renderRoom() {
   if (!roomState) return;
 
+  // Background (catalog-driven)
+  applyRoomBackground(roomState.equipped.background);
+
+  // Avatar layers (catalog-driven)
+  applyAvatarBase(els.avatarBase, roomState.equipped.base);
   applyAvatarLayer(els.avatarHead, roomState.equipped.head);
   applyAvatarLayer(els.avatarBody, roomState.equipped.body);
   applyAvatarLayer(els.avatarAcc, roomState.equipped.accessory);
@@ -348,6 +384,15 @@ function renderInventoryPanels() {
 
     const card = document.createElement("div");
     card.className = "card";
+    // Drag payload: itemId + type
+    card.classList.add("draggableCard");
+    card.draggable = true;
+    card.addEventListener("dragstart", (e) => {
+      try {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ itemId, type }));
+        e.dataTransfer.effectAllowed = "move";
+      } catch {}
+    });
 
     const imgWrap = document.createElement("div");
     imgWrap.className = "cardImg";
@@ -415,6 +460,23 @@ async function onUseItem({ itemId, type }) {
 
   if (!isOwned(itemId)) {
     toast("You don’t own that item yet.");
+    return;
+  }
+
+  // ✅ NEW: Background (room) + Base (avatar)
+  if (type === "background" || type === "roomBg" || type === "room_bg" || type === "bg") {
+    roomState.equipped.background = roomState.equipped.background === itemId ? null : itemId;
+    await saveRoomState();
+    renderRoom();
+    toast(roomState.equipped.background ? "Background equipped!" : "Background removed!");
+    return;
+  }
+
+  if (type === "base" || type === "avatarBase" || type === "avatar_base") {
+    roomState.equipped.base = roomState.equipped.base === itemId ? null : itemId;
+    await saveRoomState();
+    renderRoom();
+    toast(roomState.equipped.base ? "Base equipped!" : "Base removed!");
     return;
   }
 
@@ -505,6 +567,15 @@ function renderShop() {
 
     const card = document.createElement("div");
     card.className = "card";
+    // Drag payload: itemId + type
+    card.classList.add("draggableCard");
+    card.draggable = true;
+    card.addEventListener("dragstart", (e) => {
+      try {
+        e.dataTransfer.setData("text/plain", JSON.stringify({ itemId, type }));
+        e.dataTransfer.effectAllowed = "move";
+      } catch {}
+    });
 
     const imgWrap = document.createElement("div");
     imgWrap.className = "cardImg";
@@ -641,6 +712,9 @@ function wireUI() {
     toast(on ? "Debug ON (zone outlines)" : "Debug OFF");
   });
 
+  // Drag & Drop from Inventory -> Room
+  wireDragDrop();
+
   // Tap filled zones to remove
   zoneEls.pet?.addEventListener("click", () => (roomState?.equipped?.pet ? removeSlot("pet") : null));
   zoneEls.wall1?.addEventListener("click", () => (roomState?.placed?.wall1 ? removeSlot("wall1") : null));
@@ -655,6 +729,167 @@ function wireUI() {
     }
   });
 }
+
+
+function wireDragDrop() {
+  const roomEl = document.querySelector(".room");
+  const bgEl = els.roomBackground;
+
+  const targets = [
+    { el: document.getElementById("zone-avatar"), accepts: ["head","body","accessory","base","avatarBase","avatar_base"] },
+    { el: document.getElementById("zone-pet"), accepts: ["pet"] },
+    { el: document.getElementById("zone-wall-1"), accepts: ["wall"] , slotKey: "wall1" },
+    { el: document.getElementById("zone-wall-2"), accepts: ["wall"] , slotKey: "wall2" },
+    { el: document.getElementById("zone-floor-1"), accepts: ["floor"], slotKey: "floor1" },
+    { el: document.getElementById("zone-floor-2"), accepts: ["floor"], slotKey: "floor2" },
+  ];
+
+  // Background drop target: drop anywhere on the room background
+  if (roomEl) {
+    roomEl.addEventListener("dragover", (e) => {
+      // only allow if payload is a background
+      const t = e.dataTransfer?.types?.includes("text/plain");
+      if (!t) return;
+      e.preventDefault();
+    });
+
+    roomEl.addEventListener("drop", async (e) => {
+      const raw = e.dataTransfer?.getData("text/plain") || "";
+      const payload = safeParseDragPayload(raw);
+      if (!payload) return;
+
+      const { itemId, type } = payload;
+      if (!itemId) return;
+
+      if (isBackgroundType(type)) {
+        e.preventDefault();
+        await equipBackground(itemId);
+      }
+    });
+  }
+
+  for (const t of targets) {
+    if (!t.el) continue;
+
+    t.el.addEventListener("dragover", (e) => {
+      const raw = e.dataTransfer?.getData("text/plain") || "";
+      const payload = safeParseDragPayload(raw);
+      if (!payload) return;
+
+      const ok = canDropType(payload.type, t.accepts);
+      if (!ok) return;
+
+      e.preventDefault();
+      t.el.classList.add("dropHover");
+    });
+
+    t.el.addEventListener("dragleave", () => t.el.classList.remove("dropHover"));
+
+    t.el.addEventListener("drop", async (e) => {
+      t.el.classList.remove("dropHover");
+      const raw = e.dataTransfer?.getData("text/plain") || "";
+      const payload = safeParseDragPayload(raw);
+      if (!payload) return;
+
+      const { itemId, type } = payload;
+      if (!itemId) return;
+
+      const ok = canDropType(type, t.accepts);
+      if (!ok) return;
+
+      e.preventDefault();
+
+      // Slot-specific placement for wall/floor
+      if (t.slotKey && (type === "wall" || type === "floor")) {
+        await placeIntoSpecificSlot(t.slotKey, itemId, type);
+        return;
+      }
+
+      // Pet slot
+      if (t.el.id === "zone-pet" && type === "pet") {
+        await toggleEquip("pet", itemId);
+        return;
+      }
+
+      // Avatar stack
+      if (t.el.id === "zone-avatar") {
+        if (isBaseType(type)) await toggleEquip("base", itemId);
+        else if (type === "head") await toggleEquip("head", itemId);
+        else if (type === "body") await toggleEquip("body", itemId);
+        else if (type === "accessory") await toggleEquip("accessory", itemId);
+        return;
+      }
+    });
+  }
+}
+
+function safeParseDragPayload(raw) {
+  try {
+    const obj = JSON.parse(raw);
+    if (!obj || typeof obj !== "object") return null;
+    return { itemId: String(obj.itemId || ""), type: String(obj.type || "") };
+  } catch {
+    return null;
+  }
+}
+
+function isBackgroundType(type) {
+  const t = String(type || "");
+  return t === "background" || t === "roomBg" || t === "room_bg" || t === "bg";
+}
+function isBaseType(type) {
+  const t = String(type || "");
+  return t === "base" || t === "avatarBase" || t === "avatar_base";
+}
+function canDropType(type, accepts) {
+  const t = String(type || "");
+  if (accepts.includes(t)) return true;
+  // allow base synonyms
+  if (isBaseType(t) && accepts.includes("base")) return true;
+  return false;
+}
+
+async function toggleEquip(slotKey, itemId) {
+  if (!roomState) return;
+  const cur = roomState?.equipped?.[slotKey] || null;
+  roomState.equipped[slotKey] = cur === itemId ? null : itemId;
+  await saveRoomState();
+  renderRoom();
+  toast(roomState.equipped[slotKey] ? "Equipped!" : "Removed!");
+}
+
+async function equipBackground(itemId) {
+  if (!roomState) return;
+  const cur = roomState?.equipped?.background || null;
+  roomState.equipped.background = cur === itemId ? null : itemId;
+  await saveRoomState();
+  renderRoom();
+  toast(roomState.equipped.background ? "Background equipped!" : "Background removed!");
+}
+
+async function placeIntoSpecificSlot(slotKey, itemId, type) {
+  if (!roomState) return;
+
+  // Only allow correct types
+  if (type === "wall" && !(slotKey === "wall1" || slotKey === "wall2")) return;
+  if (type === "floor" && !(slotKey === "floor1" || slotKey === "floor2")) return;
+
+  // If already occupied with same item, toggle remove
+  if (roomState.placed[slotKey] === itemId) {
+    roomState.placed[slotKey] = null;
+    await saveRoomState();
+    renderRoom();
+    toast("Removed!");
+    return;
+  }
+
+  // If slot occupied with different item, replace it
+  roomState.placed[slotKey] = itemId;
+  await saveRoomState();
+  renderRoom();
+  toast(type === "wall" ? "Placed on the wall!" : "Placed on the floor!");
+}
+
 
 /* ----------------------------
   Init

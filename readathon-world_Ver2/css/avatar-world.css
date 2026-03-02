@@ -151,13 +151,24 @@ body.aw{
 .roomBg{
   position:absolute;
   inset:0;
-  background:
-    radial-gradient(500px 300px at 50% 20%, rgba(255,255,255,0.12), transparent),
-    url("/readathon-world_Ver2/img/bg/student-login.png");
-  background-size: cover;
-  background-position:center;
+  overflow:hidden;
   filter: saturate(1.05);
 }
+.roomBg::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: radial-gradient(500px 300px at 50% 20%, rgba(255,255,255,0.12), transparent);
+  pointer-events:none;
+}
+.roomBgImg{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit: cover;
+}
+
 
 /* Zones */
 .zone{
@@ -181,14 +192,51 @@ body.aw{
 }
 
 /* Position zones from CSS vars */
-#zone-avatar{ left: var(--avatar-x); top: var(--avatar-y); width: var(--avatar-w); height: var(--avatar-w); }
-#zone-pet{ left: var(--pet-x); top: var(--pet-y); width: var(--pet-w); height: var(--pet-w); }
+#zone-avatar{
+  left: var(--avatar-x);
+  top: var(--avatar-y);
+  width: var(--avatar-w);
+  height: calc(var(--avatar-w) * 1.5); /* 640x960 ratio (2:3) */
+}
+#zone-pet{
+  left: var(--pet-x);
+  top: var(--pet-y);
+  width: var(--pet-w);
+  height: var(--pet-w); /* 300x300 */
+}
 
-#zone-wall-1{ left: var(--wall1-x); top: var(--wall1-y); width: var(--wall1-w); height: var(--wall1-w); }
-#zone-wall-2{ left: var(--wall2-x); top: var(--wall2-y); width: var(--wall2-w); height: var(--wall2-w); }
+#zone-wall-1{
+  left: var(--wall1-x);
+  top: var(--wall1-y);
+  width: var(--wall1-w);
+  height: calc(var(--wall1-w) * 0.625); /* 400x250 */
+}
+#zone-wall-2{
+  left: var(--wall2-x);
+  top: var(--wall2-y);
+  width: var(--wall2-w);
+  height: calc(var(--wall2-w) * 0.625); /* 400x250 */
+}
 
-#zone-floor-1{ left: var(--floor1-x); top: var(--floor1-y); width: var(--floor1-w); height: var(--floor1-w); }
-#zone-floor-2{ left: var(--floor2-x); top: var(--floor2-y); width: var(--floor2-w); height: var(--floor2-w); }
+#zone-floor-1{
+  left: var(--floor1-x);
+  top: var(--floor1-y);
+  width: var(--floor1-w);
+  height: var(--floor1-w); /* 350x350 */
+}
+#zone-floor-2{
+  left: var(--floor2-x);
+  top: var(--floor2-y);
+  width: var(--floor2-w);
+  height: var(--floor2-w); /* 350x350 */
+}
+
+/* Drop affordance */
+.zone.dropHover{
+  outline: 3px solid rgba(255,255,255,0.90);
+  outline-offset: 6px;
+}
+
 
 /* Avatar layers */
 .avatarStack{ position:relative; width:100%; height:100%; }
@@ -386,3 +434,8 @@ body.aw{
   .drawer[aria-hidden]{ transition:none; }
   .btn:active{ transform:none; }
 }
+
+
+/* Drag & Drop */
+.draggableCard{ cursor: grab; }
+.draggableCard:active{ cursor: grabbing; }
