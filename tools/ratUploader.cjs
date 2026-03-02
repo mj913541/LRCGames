@@ -7,7 +7,10 @@
  * (and supports future: transaction/link/inventory if you add those recordTypes later)
  *
  * SAFE DEFAULT: dry-run (no writes) unless you pass --commit
- *
+ *admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  projectId: "lrcquest-3039e", // 👈 ADD THIS
+});
  * Usage:
  *   node tools/ratUploader.cjs --csv data_imports/ratUploader_308_longbeach_elementary.csv
  *   node tools/ratUploader.cjs --csv data_imports/ratUploader_308_longbeach_elementary.csv --commit
@@ -136,7 +139,9 @@ async function main() {
   // - easiest: set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON
   // - or use firebase CLI auth + ADC (depends on setup)
   admin.initializeApp({
-    credential: admin.credential.applicationDefault(),
+
+      credential: admin.credential.cert(serviceAccount),
+  projectId: "lrcquest-3039e", // 👈 ADD THIS
   });
   const db = admin.firestore();
 
