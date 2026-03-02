@@ -250,7 +250,7 @@ function applyRoomBackground(itemId) {
   if (!els.roomBackground) return;
 
   // default background (keep this file in your assets)
-  const fallback = "/readathon-world_Ver2/assets/avatar/room/backgrounds/default.png";
+  const fallback = "/readathon-world_Ver2/img/bg/index.png";
 
   if (!itemId) {
     els.roomBackground.src = fallback;
