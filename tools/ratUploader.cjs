@@ -4,19 +4,14 @@
  * Reads a single sheet with recordType rows:
  *   - user
  *   - homeroom
- * (and supports future: transaction/link/inventory if you add those recordTypes later)
  *
- * SAFE DEFAULT: dry-run (no writes) unless you pass --commit
- *admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  projectId: "lrcquest-3039e", // 👈 ADD THIS
-});
  * Usage:
  *   node tools/ratUploader.cjs --csv data_imports/ratUploader_308_longbeach_elementary.csv
  *   node tools/ratUploader.cjs --csv data_imports/ratUploader_308_longbeach_elementary.csv --commit
  *
  * Optional:
  *   --schoolId 308_longbeach_elementary   (overrides per-row schoolId if provided)
+ *   --overwrite                           (writes with merge:false; replaces docs)
  */
 
 const fs = require("fs");
@@ -24,15 +19,61 @@ const path = require("path");
 const admin = require("firebase-admin");
 const bcrypt = require("bcryptjs");
 
+// 🔐 YOUR SERVICE ACCOUNT
+const serviceAccount = require("C:/Users/malbr/OneDrive/Desktop/keys/lrcquest-3039e-serviceAccount.json");
+
+// Initialize Firebase Admin ONCE (IMPORTANT: do not initialize again in main)
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    projectId: "lrcquest-3039e",
+  });
+}
+
+/* ---------------- ARG PARSER ---------------- */
+
 function parseArgs() {
   const args = process.argv.slice(2);
-  const out = { commit: false, csv: "", schoolId: "" };
+  const out = { commit: false, overwrite: false, csv: "", schoolId: "" };
+
   for (let i = 0; i < args.length; i++) {
     const a = args[i];
     if (a === "--commit") out.commit = true;
+    else if (a === "--overwrite") out.overwrite = true;
     else if (a === "--csv") out.csv = args[++i] || "";
     else if (a === "--schoolId") out.schoolId = args[++i] || "";
   }
+  return out;
+}
+
+/* ---------------- CSV ---------------- */
+
+// simple CSV splitter that respects quotes
+function splitCsvLine(line) {
+  const out = [];
+  let cur = "";
+  let inQ = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+
+    if (ch === '"' && line[i + 1] === '"') {
+      cur += '"';
+      i++;
+      continue;
+    }
+    if (ch === '"') {
+      inQ = !inQ;
+      continue;
+    }
+    if (ch === "," && !inQ) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
   return out;
 }
 
@@ -40,32 +81,20 @@ function readCSV(filePath) {
   const raw = fs.readFileSync(filePath, "utf8");
   const lines = raw.split(/\r?\n/).filter(Boolean);
   if (!lines.length) return [];
-  const headers = splitCsvLine(lines[0]).map(h => h.trim());
+
+  const headers = splitCsvLine(lines[0]).map((h) => h.trim());
   const rows = [];
+
   for (let i = 1; i < lines.length; i++) {
     const parts = splitCsvLine(lines[i]);
     const obj = {};
-    headers.forEach((h, idx) => obj[h] = (parts[idx] ?? "").trim());
+    headers.forEach((h, idx) => (obj[h] = (parts[idx] ?? "").trim()));
     rows.push(obj);
   }
   return rows;
 }
 
-// simple CSV splitter that respects quotes
-function splitCsvLine(line) {
-  const out = [];
-  let cur = "";
-  let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; continue; }
-    if (ch === '"') { inQ = !inQ; continue; }
-    if (ch === "," && !inQ) { out.push(cur); cur = ""; continue; }
-    cur += ch;
-  }
-  out.push(cur);
-  return out;
-}
+/* ---------------- COERCION ---------------- */
 
 function asBool(v) {
   const s = String(v ?? "").trim().toLowerCase();
@@ -82,7 +111,6 @@ function asNum(v, fallback = 0) {
 
 function asStr(v) {
   if (v == null) return "";
-  // handle common "5122025.0" style values from spreadsheets
   let s = String(v).trim();
   if (s.endsWith(".0")) s = s.slice(0, -2);
   return s;
@@ -92,10 +120,11 @@ function parseCanAwardHomerooms(v) {
   const s = asStr(v);
   if (!s) return undefined;
   if (s.toUpperCase() === "ALL") return "ALL";
-  // allow pipe-separated OR comma-separated
   const parts = s.includes("|") ? s.split("|") : s.split(",");
-  return parts.map(x => x.trim()).filter(Boolean);
+  return parts.map((x) => x.trim()).filter(Boolean);
 }
+
+/* ---------------- PATH HELPERS ---------------- */
 
 function rootSchool(schoolId) {
   return `readathonV2_schools/${schoolId}`;
@@ -104,15 +133,20 @@ function rootSchool(schoolId) {
 function userPath(schoolId, userId) {
   return `${rootSchool(schoolId)}/users/${userId}`;
 }
+
 function secretPath(schoolId, userId) {
+  // ✅ per your permanent memory: secrets/{userId} (not nested under users)
   return `${rootSchool(schoolId)}/secrets/${userId}`;
 }
+
 function publicStudentPath(schoolId, studentId) {
   return `${rootSchool(schoolId)}/publicStudents/${studentId}`;
 }
+
 function homeroomPath(schoolId, homeroomId) {
   return `${rootSchool(schoolId)}/homerooms/${homeroomId}`;
 }
+
 function summaryPath(schoolId, userId) {
   return `${rootSchool(schoolId)}/users/${userId}/readathon/summary`;
 }
@@ -123,39 +157,36 @@ function chunk(arr, size) {
   return out;
 }
 
+/* ---------------- MAIN ---------------- */
+
 async function main() {
-  const { csv, commit, schoolId: schoolOverride } = parseArgs();
+  const { csv, commit, overwrite, schoolId: schoolOverride } = parseArgs();
+
   if (!csv) {
     console.log("Missing --csv path");
     process.exit(1);
   }
+
   const csvPath = path.resolve(process.cwd(), csv);
   if (!fs.existsSync(csvPath)) {
     console.log(`CSV not found: ${csvPath}`);
     process.exit(1);
   }
 
-  // Uses Application Default Credentials:
-  // - easiest: set GOOGLE_APPLICATION_CREDENTIALS to a service account JSON
-  // - or use firebase CLI auth + ADC (depends on setup)
-  admin.initializeApp({
-
-      credential: admin.credential.cert(serviceAccount),
-  projectId: "lrcquest-3039e", // 👈 ADD THIS
-  });
   const db = admin.firestore();
-
   const rows = readCSV(csvPath);
 
   // Normalize + filter empty rows
   const clean = rows
-    .map(r => ({
+    .map((r) => ({
       recordType: asStr(r.recordType).toLowerCase(),
       schoolId: (schoolOverride || asStr(r.schoolId) || "308_longbeach_elementary").trim(),
+
       userId: asStr(r.userId).toLowerCase().trim(),
       role: asStr(r.role).toLowerCase().trim(),
       displayName: asStr(r.displayName).trim(),
       email: asStr(r.email).trim(),
+
       grade: asNum(r.grade, NaN),
       homeroomId: asStr(r.homeroomId).toLowerCase().trim(),
       active: asBool(r.active),
@@ -171,24 +202,22 @@ async function main() {
 
       canAwardHomerooms: parseCanAwardHomerooms(r.canAwardHomerooms),
     }))
-    .filter(r => r.recordType && r.schoolId);
+    .filter((r) => r.recordType && r.schoolId);
 
-  const users = clean.filter(r => r.recordType === "user");
-  const homerooms = clean.filter(r => r.recordType === "homeroom");
+  const users = clean.filter((r) => r.recordType === "user");
+  const homerooms = clean.filter((r) => r.recordType === "homeroom");
 
   console.log("----- RAT UPLOADER -----");
   console.log("CSV:", csvPath);
   console.log("Mode:", commit ? "COMMIT (writes enabled)" : "DRY RUN (no writes)");
+  console.log("Write style:", overwrite ? "OVERWRITE (merge:false)" : "MERGE (merge:true)");
   console.log("Rows:", clean.length);
   console.log("Users:", users.length);
   console.log("Homerooms:", homerooms.length);
   console.log("------------------------\n");
 
-  // Validate PINs (must be 4 digits). If not, we skip hashing and warn.
-  const badPins = users
-    .filter(u => u.pinPlain && !/^\d{4}$/.test(u.pinPlain))
-    .slice(0, 20);
-
+  // Validate PINs (must be 4 digits)
+  const badPins = users.filter((u) => u.pinPlain && !/^\d{4}$/.test(u.pinPlain)).slice(0, 20);
   if (badPins.length) {
     console.log("⚠️ Found PINs that are NOT 4 digits (showing up to 20):");
     for (const b of badPins) console.log(`  ${b.userId}: pinPlain="${b.pinPlain}"`);
@@ -200,11 +229,12 @@ async function main() {
     return;
   }
 
+  const writeOpts = { merge: !overwrite };
+
   // ---- Write homerooms first ----
-  // In your sheet, homeroom rows often store hr_id in userId column.
   const homeroomWrites = [];
   for (const hr of homerooms) {
-    const homeroomId = hr.userId || hr.homeroomId; // prefer userId if that’s where hr_ is
+    const homeroomId = hr.userId || hr.homeroomId; // some sheets store hr_id in userId column
     if (!homeroomId) continue;
 
     homeroomWrites.push({
@@ -222,7 +252,7 @@ async function main() {
     const batch = db.batch();
     for (const w of group) {
       const ref = db.doc(homeroomPath(w.schoolId, w.homeroomId));
-      batch.set(ref, w.data, { merge: true });
+      batch.set(ref, w.data, writeOpts);
     }
     await batch.commit();
     console.log(`✅ Homerooms batch committed: ${group.length}`);
@@ -268,7 +298,7 @@ async function main() {
     };
     summaryWrites.push({ schoolId: u.schoolId, userId: u.userId, data: summaryDoc });
 
-    // publicStudents only for student_#### users (for student login picker)
+    // publicStudents only for student_#### users
     if (u.userId.startsWith("student_")) {
       const pubDoc = {
         displayName: u.displayName || u.userId,
@@ -280,29 +310,32 @@ async function main() {
     }
   }
 
-  // Batch commit helper
-  async function commitBatches(writes, getRef) {
+  async function commitBatches(writes, getRef, label) {
     for (const group of chunk(writes, 450)) {
       const batch = db.batch();
       for (const w of group) {
-        batch.set(getRef(w), w.data, { merge: true });
+        batch.set(getRef(w), w.data, writeOpts);
       }
       await batch.commit();
-      console.log(`✅ Batch committed: ${group.length}`);
+      console.log(`✅ ${label} batch committed: ${group.length}`);
     }
   }
 
   console.log("\nWriting users...");
-  await commitBatches(userWrites, (w) => db.doc(userPath(w.schoolId, w.userId)));
+  await commitBatches(userWrites, (w) => db.doc(userPath(w.schoolId, w.userId)), "Users");
 
   console.log("\nWriting secrets (PIN hashes)...");
-  await commitBatches(secretWrites, (w) => db.doc(secretPath(w.schoolId, w.userId)));
+  await commitBatches(secretWrites, (w) => db.doc(secretPath(w.schoolId, w.userId)), "Secrets");
 
   console.log("\nWriting summaries...");
-  await commitBatches(summaryWrites, (w) => db.doc(summaryPath(w.schoolId, w.userId)));
+  await commitBatches(summaryWrites, (w) => db.doc(summaryPath(w.schoolId, w.userId)), "Summaries");
 
   console.log("\nWriting publicStudents...");
-  await commitBatches(publicStudentWrites, (w) => db.doc(publicStudentPath(w.schoolId, w.studentId)));
+  await commitBatches(
+    publicStudentWrites,
+    (w) => db.doc(publicStudentPath(w.schoolId, w.studentId)),
+    "publicStudents"
+  );
 
   console.log("\n🎉 Upload complete!");
   console.log(`Users written: ${userWrites.length}`);
