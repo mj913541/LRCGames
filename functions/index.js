@@ -742,6 +742,8 @@ async function rebuildPublicLeaderboardCore(schoolId) {
  * ✅ Automatic rebuild every 15 minutes (adjust if you want).
  * Note: uses Cloud Scheduler (PubSub) behind the scenes.
  */
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+
 exports.rebuildPublicLeaderboardScheduled = onSchedule(
   { schedule: "every 15 minutes", timeZone: "America/Chicago" },
   async () => {
