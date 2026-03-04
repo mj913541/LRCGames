@@ -742,16 +742,15 @@ async function rebuildPublicLeaderboardCore(schoolId) {
  * ✅ Automatic rebuild every 15 minutes (adjust if you want).
  * Note: uses Cloud Scheduler (PubSub) behind the scenes.
  */
-exports.rebuildPublicLeaderboardScheduled = functions.pubsub
-  .schedule("every 15 minutes")
-  .timeZone("America/Chicago")
-  .onRun(async () => {
+exports.rebuildPublicLeaderboardScheduled = onSchedule(
+  { schedule: "every 15 minutes", timeZone: "America/Chicago" },
+  async () => {
     const schoolId = "308_longbeach_elementary";
     console.log("Scheduled leaderboard rebuild start", { schoolId });
     const result = await rebuildPublicLeaderboardCore(schoolId);
     console.log("Scheduled leaderboard rebuild done", result);
-    return null;
-  });
+  }
+);
 
 /**
  * Optional: manual callable (great for testing)
