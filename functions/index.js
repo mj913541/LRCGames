@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 // ✅ CORS for HTTP endpoints (does NOT affect onCall functions)
 const cors = require("cors")({ origin: true });
 
-admin.initializeApp();
+if (!admin.apps.length) admin.initializeApp();
 const db = admin.firestore();
 
 /* --------------------------------------------------
@@ -89,6 +89,34 @@ function httpsErrorToStatus(err) {
 }
 
 /* --------------------------------------------------
+   Utility
+-------------------------------------------------- */
+
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+/**
+ * Public-facing name: "First L."
+ * - "Evelyn Lewis" => "Evelyn L."
+ * - "Evelyn" => "Evelyn"
+ * - "Evelyn Marie Lewis" => "Evelyn L."
+ */
+function toPublicName(displayName) {
+  const raw = (displayName || "").toString().trim();
+  if (!raw) return "";
+  const parts = raw.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0];
+
+  const first = parts[0];
+  const last = parts[parts.length - 1];
+  const initial = last[0] ? `${last[0].toUpperCase()}.` : "";
+  return initial ? `${first} ${initial}` : first;
+}
+
+/* --------------------------------------------------
    Shared Core: submitTransaction
 -------------------------------------------------- */
 
@@ -113,49 +141,34 @@ async function submitTransactionCore(data, claims, authUid) {
     throw new functions.https.HttpsError("invalid-argument", "Missing targetUserId/actionType.");
   }
 
-// Permission checks
-if (role === "student") {
-  if (targetUserId !== submittedByUserId) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Students can submit for self only."
-    );
+  // Permission checks
+  if (role === "student") {
+    if (targetUserId !== submittedByUserId) {
+      throw new functions.https.HttpsError("permission-denied", "Students can submit for self only.");
+    }
+  } else if (role === "staff") {
+    // ✅ NEW STAFF RULES:
+    // Staff can submit pending minutes for themselves OR any student.
+    // Staff cannot submit rubies or money, and cannot use other action types.
+
+    if (actionType !== "MINUTES_SUBMIT_PENDING") {
+      throw new functions.https.HttpsError("permission-denied", "Staff can only submit pending minutes.");
+    }
+
+    // Disallow any rubies/money deltas for staff
+    if (Number(deltaRubies) !== 0 || Number(deltaMoneyRaisedCents) !== 0) {
+      throw new functions.https.HttpsError("permission-denied", "Staff cannot submit rubies or money.");
+    }
+
+    // Require positive, reasonable minutes
+    if (!Number.isFinite(deltaMinutes) || deltaMinutes <= 0 || deltaMinutes > 600) {
+      throw new functions.https.HttpsError("invalid-argument", "Minutes must be between 1 and 600.");
+    }
+  } else if (role === "admin") {
+    // ok
+  } else {
+    throw new functions.https.HttpsError("permission-denied", "Unknown role.");
   }
-
-} else if (role === "staff") {
-  // ✅ NEW STAFF RULES:
-  // Staff can submit pending minutes for themselves OR any student.
-  // Staff cannot submit rubies or money, and cannot use other action types.
-
-  if (actionType !== "MINUTES_SUBMIT_PENDING") {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Staff can only submit pending minutes."
-    );
-  }
-
-  // Disallow any rubies/money deltas for staff
-  if (Number(deltaRubies) !== 0 || Number(deltaMoneyRaisedCents) !== 0) {
-    throw new functions.https.HttpsError(
-      "permission-denied",
-      "Staff cannot submit rubies or money."
-    );
-  }
-
-  // Require positive, reasonable minutes
-  if (!Number.isFinite(deltaMinutes) || deltaMinutes <= 0 || deltaMinutes > 600) {
-    throw new functions.https.HttpsError(
-      "invalid-argument",
-      "Minutes must be between 1 and 600."
-    );
-  }
-
-} else if (role === "admin") {
-  // ok
-
-} else {
-  throw new functions.https.HttpsError("permission-denied", "Unknown role.");
-}
 
   const txId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
   const txRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
@@ -166,8 +179,7 @@ if (role === "student") {
     const userRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}`);
     const userSnap = await t.get(userRef);
     if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "Target user not found.");
-    if (userSnap.data()?.active !== true)
-      throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
+    if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
 
     const sumSnap = await t.get(summaryRef);
     const sum = sumSnap.exists
@@ -307,11 +319,7 @@ async function awardHomeroomCore(data, claims, authUid) {
           { merge: true }
         );
 
-        batch.set(
-          summaryRef,
-          { minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes) },
-          { merge: true }
-        );
+        batch.set(summaryRef, { minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes) }, { merge: true });
       }
 
       if (deltaRubies > 0) {
@@ -626,11 +634,139 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
 });
 
 /* --------------------------------------------------
-   Utility
+   PUBLIC LEADERBOARD (AUTO)
+   Sources:
+   - publicStudents/{uid}: active, displayName, grade, homeroomId
+   - users/{uid}/readathon/summary: minutesTotal
+   Output:
+   - leaderboards/public doc: topHomerooms, topGrades, topStudents
 -------------------------------------------------- */
 
-function chunkArray(arr, size) {
-  const out = [];
-  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
-  return out;
+async function rebuildPublicLeaderboardCore(schoolId) {
+  const pubSnap = await db
+    .collection(`${schoolRoot(schoolId)}/publicStudents`)
+    .where("active", "==", true)
+    .get();
+
+  const pubStudents = pubSnap.docs.map((d) => ({
+    uid: d.id,
+    displayName: d.get("displayName") || "",
+    grade: d.get("grade"),
+    homeroomId: d.get("homeroomId") || "",
+  }));
+
+  const pubByUid = new Map(pubStudents.map((s) => [s.uid, s]));
+
+  const summaryRefs = pubStudents.map((s) =>
+    db.doc(`${schoolRoot(schoolId)}/users/${s.uid}/readathon/summary`)
+  );
+
+  const homeroomTotals = new Map(); // homeroomId -> minutes
+  const gradeTotals = new Map();    // grade (string) -> minutes
+  const students = [];              // for top 5
+
+  const refChunks = chunkArray(summaryRefs, 300);
+
+  for (const refs of refChunks) {
+    const snaps = await db.getAll(...refs);
+
+    for (const sumSnap of snaps) {
+      // Extract uid from doc path: .../users/{uid}/readathon/summary
+      const m = sumSnap.ref.path.match(/\/users\/([^/]+)\/readathon\/summary$/);
+      const uid = m ? m[1] : null;
+      if (!uid) continue;
+
+      const pub = pubByUid.get(uid);
+      if (!pub) continue;
+
+      const minutesTotal = Number(sumSnap.get("minutesTotal") || 0);
+
+      // Student top list
+      students.push({
+        userId: uid,
+        displayNamePublic: toPublicName(pub.displayName) || uid,
+        grade: pub.grade ?? null,
+        homeroomId: pub.homeroomId || null,
+        minutes: minutesTotal,
+      });
+
+      // Homeroom totals
+      if (pub.homeroomId) {
+        homeroomTotals.set(pub.homeroomId, (homeroomTotals.get(pub.homeroomId) || 0) + minutesTotal);
+      }
+
+      // Grade totals
+      const gKey = pub.grade === 0 || pub.grade ? String(pub.grade) : "";
+      if (gKey !== "") {
+        gradeTotals.set(gKey, (gradeTotals.get(gKey) || 0) + minutesTotal);
+      }
+    }
+  }
+
+  students.sort((a, b) => b.minutes - a.minutes);
+  const topStudents = students.slice(0, 5);
+
+  const topHomerooms = Array.from(homeroomTotals.entries())
+    .map(([homeroomId, minutes]) => ({ homeroomId, minutes }))
+    .sort((a, b) => b.minutes - a.minutes)
+    .slice(0, 5);
+
+  const topGrades = Array.from(gradeTotals.entries())
+    .map(([grade, minutes]) => ({ grade: Number.isFinite(Number(grade)) ? Number(grade) : grade, minutes }))
+    .sort((a, b) => b.minutes - a.minutes);
+
+  const outRef = db.doc(`${schoolRoot(schoolId)}/leaderboards/public`);
+  await outRef.set(
+    {
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      schoolId,
+      topHomerooms,
+      topGrades,
+      topStudents,
+    },
+    { merge: true }
+  );
+
+  return {
+    ok: true,
+    counts: {
+      activePublicStudents: pubStudents.length,
+      topHomerooms: topHomerooms.length,
+      topGrades: topGrades.length,
+      topStudents: topStudents.length,
+    },
+  };
 }
+
+/**
+ * ✅ Automatic rebuild every 15 minutes (adjust if you want).
+ * Note: uses Cloud Scheduler (PubSub) behind the scenes.
+ */
+exports.rebuildPublicLeaderboardScheduled = functions.pubsub
+  .schedule("every 15 minutes")
+  .timeZone("America/Chicago")
+  .onRun(async () => {
+    const schoolId = "308_longbeach_elementary";
+    console.log("Scheduled leaderboard rebuild start", { schoolId });
+    const result = await rebuildPublicLeaderboardCore(schoolId);
+    console.log("Scheduled leaderboard rebuild done", result);
+    return null;
+  });
+
+/**
+ * Optional: manual callable (great for testing)
+ * rebuildPublicLeaderboard({ schoolId })
+ */
+exports.rebuildPublicLeaderboard = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const role = String(claims.role || "").toLowerCase();
+  if (role !== "admin" && role !== "staff") {
+    throw new functions.https.HttpsError("permission-denied", "Staff/Admin only.");
+  }
+
+  const schoolId = String(data?.schoolId || claims.schoolId || "308_longbeach_elementary").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  return rebuildPublicLeaderboardCore(schoolId);
+});
