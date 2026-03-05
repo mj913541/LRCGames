@@ -16,6 +16,8 @@ import {
   normalizeError,
 } from "/readathon-world_Ver2/js/app.js";
 
+import { renderLeaderboard } from "/readathon-world_Ver2/js/leaderboard.js";
+
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
@@ -52,5 +54,5 @@ function showError(msg) {
   els.errorBox.classList.remove("isHidden");
 }
 
-import { renderLeaderboard } from "/readathon-world_Ver2/js/leaderboard.js";
+
 renderLeaderboard();
