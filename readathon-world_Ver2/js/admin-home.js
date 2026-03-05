@@ -176,3 +176,7 @@ function showError(msg) {
   els.errorBox.textContent = msg;
   els.errorBox.classList.remove("isHidden");
 }
+
+import { renderLeaderboard } from "/readathon-world_Ver2/js/leaderboard.js";
+
+renderLeaderboard();
