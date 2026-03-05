@@ -159,7 +159,7 @@ export async function renderLeaderboard(containerId = "leaderboard") {
         </div>
 
         <div class="lb-card">
-          <h3>🏫 Top Homerooms</h3>
+          <h3>🏫 Top Homerooms & Houses</h3>
           <div class="lb-list">${homeroomsHtml}</div>
         </div>
 
