@@ -13,9 +13,9 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-} from "/readathon-world_Ver2/js/app.js";
+} from "./app.js";
 
-import { mountAvatarWorldWidget } from "/readathon-world_Ver2/js/avatar-world-widget.js";
+import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
@@ -73,7 +73,7 @@ async function init() {
     role: "student",
     schoolId,
     userId,
-    openUrl: "/readathon-world_Ver2/html/avatar-world.html",
+    openUrl: "../html/avatar-world.html",
   });
 
   hideLoading(els.loadingOverlay);
@@ -95,7 +95,7 @@ function wireAvatarWorldEmbed() {
 
     if (main) main.setAttribute("inert", "");
 
-    els.awEmbedFrame.src = "/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student";
+    els.awEmbedFrame.src = "../html/avatar-world.html?embed=1&from=student";
 
     requestAnimationFrame(() => els.btnCloseAvatarWorld.focus());
   };

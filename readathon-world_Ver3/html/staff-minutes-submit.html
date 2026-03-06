@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Staff • Submit Minutes</title>
+    <link rel="stylesheet" href="../css/staff.css" />
+  </head>
+
+  <body class="page page--staff">
+    <div class="bg bg--home" aria-hidden="true"></div>
+
+    <header class="isHidden topbar">
+      <div id="hdr" class="isHidden hdr">
+        <div class="isHidden pill">
+          <div data-title>Submit Minutes</div>
+          <div data-subtitle>Loading…</div>
+        </div>
+      </div>
+
+      <button id="btnSignOut" class="isHidden topbar__btn" type="button">Sign out</button>
+    </header>
+
+    <main class="wrap">
+      <!-- Quick roster submit -->
+      <section class="panel quickSubmit">
+        <h2 class="h2">Class Minutes</h2>
+        <p class="sub">
+          Pick a grade and homeroom, check who is present, enter minutes once, submit to selected students.
+        </p>
+
+        <div class="formBlock">
+          <div>
+            <div class="field__label">1) Pick Grade</div>
+            <div id="gradeButtons" class="chipRow"></div>
+          </div>
+
+          <div>
+            <div class="field__label">2) Pick Homeroom</div>
+            <div id="homeroomButtons" class="chipRow"></div>
+          </div>
+
+          <div class="rosterTop">
+            <div id="rosterMeta" class="sub" style="margin:0;">Pick a grade to load rosters.</div>
+            <div class="rosterBtns">
+              <button id="btnSelectAll" type="button" class="btnSmall btnSmall--primary">Select all</button>
+              <button id="btnClearAll" type="button" class="btnSmall">Clear all</button>
+            </div>
+          </div>
+
+          <div id="rosterList" class="rosterList"></div>
+
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="quickMinutesInput">Minutes</label>
+              <input id="quickMinutesInput" class="input" type="number" min="0" step="1" value="0" />
+              <span class="hint">Pending minutes only.</span>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="quickNoteInput">Note (optional)</label>
+              <input id="quickNoteInput" class="input" type="text" placeholder="e.g., LRC specials block" />
+            </div>
+          </div>
+
+          <button id="btnQuickSubmit" class="btnPrimary" type="button">
+            Submit pending minutes to selected ✅
+          </button>
+
+          <div id="quickErrorBox" class="msg msg--error isHidden"></div>
+          <div id="quickOkBox" class="msg msg--ok isHidden"></div>
+        </div>
+      </section>
+
+      <!-- Self submit -->
+      <section class="panel">
+        <h2 class="h2">My Minutes</h2>
+        <p class="sub">Submit pending minutes for yourself (<span id="selfIdLabel"></span>).</p>
+
+        <div class="formBlock">
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="selfMinutesInput">Minutes</label>
+              <input id="selfMinutesInput" class="input" type="number" min="0" step="1" value="0" />
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="selfNoteInput">Note (optional)</label>
+              <input id="selfNoteInput" class="input" type="text" placeholder="e.g., Staff reading time" />
+            </div>
+          </div>
+
+          <button id="btnSelfSubmit" class="btnPrimary" type="button">
+            Submit my pending minutes ✅
+          </button>
+
+          <div id="selfErrorBox" class="msg msg--error isHidden"></div>
+          <div id="selfOkBox" class="msg msg--ok isHidden"></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loadingOverlay isHidden" aria-hidden="true">
+      <div class="loadingCard">
+        <div class="spinner" aria-hidden="true"></div>
+        <div id="loadingText" class="loadingText">Loading…</div>
+      </div>
+    </div>
+
+    <script type="module" src="../js/staff-minutes-submit.js"></script>
+  </body>
+</html>

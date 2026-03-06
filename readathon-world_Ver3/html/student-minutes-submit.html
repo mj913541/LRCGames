@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Submit Minutes • Student • Readathon World</title>
+
+  <link rel="stylesheet" href="../css/student.css" />
+</head>
+
+<body class="page page--student-minutes">
+  <div class="bg bg--home" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="topbar__back" href="./student-home.html" aria-label="Back to student home">
+      ← Home
+    </a>
+
+    <div class="topbar__title">
+      <div class="pill">⏱️ Submit Minutes</div>
+    </div>
+
+    <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
+  </header>
+
+  <main class="wrap">
+    <section class="panel" id="hdr">
+      <h1 class="h1" data-title>Submit your reading minutes</h1>
+      <p class="sub" data-subtitle></p>
+
+      <div class="gridButtons">
+        <a class="btnBig" href="./student-home.html">🧒 Back to Dashboard</a>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="sectionHead">
+        <h2 class="h2">Step 1: How many minutes did you read?</h2>
+        <p class="sub">These minutes will be <strong>pending</strong> until an admin approves them.</p>
+      </div>
+
+      <form id="minutesForm" class="formBlock">
+        <label class="field">
+          <span class="field__label">Minutes</span>
+          <input
+            class="input"
+            id="minutesInput"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="15"
+            autocomplete="off"
+          />
+          <span class="hint">Whole numbers only. Example: 20</span>
+        </label>
+
+        <label class="field">
+          <span class="field__label">Note (optional)</span>
+          <input
+            class="input"
+            id="noteInput"
+            placeholder="Book title or reading note"
+            autocomplete="off"
+          />
+          <span class="hint">Example: “Dog Man at home”</span>
+        </label>
+
+        <button class="btnPrimary" id="btnSubmit" type="submit">
+          Submit Pending Minutes
+        </button>
+
+        <div class="msg msg--error isHidden" id="errorBox" role="alert"></div>
+        <div class="msg msg--ok isHidden" id="okBox" role="status"></div>
+      </form>
+    </section>
+
+    <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+      <div class="loadingCard">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loadingText" id="loadingText">Loading…</div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../js/student-minutes-submit.js"></script>
+</body>
+</html>
