@@ -1,4 +1,5 @@
 // /readathon-world_Ver2/js/student-home.js
+
 import { auth, getSchoolId, DEFAULT_SCHOOL_ID } from "/readathon-world_Ver2/js/firebase.js";
 import {
   ABS,
@@ -12,10 +13,9 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-  getEquippedLocal,
-  setEquippedLocal,
-  pickSlotForItem,
 } from "/readathon-world_Ver2/js/app.js";
+
+import { mountAvatarWorldWidget } from "/readathon-world_Ver2/js/avatar-world-widget.js";
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
@@ -26,12 +26,6 @@ const els = {
   rubiesBalance: document.getElementById("rubiesBalance"),
   rubiesLifetime: document.getElementById("rubiesLifetime"),
   moneyRaised: document.getElementById("moneyRaised"),
-
-  roomBgLabel: document.getElementById("roomBgLabel"),
-  equipHead: document.getElementById("equipHead"),
-  equipBody: document.getElementById("equipBody"),
-  equipAcc: document.getElementById("equipAcc"),
-  equipPet: document.getElementById("equipPet"),
 
   inventoryList: document.getElementById("inventoryList"),
 
@@ -49,18 +43,21 @@ const els = {
 init().catch((e) => showError(normalizeError(e)));
 
 async function init() {
-  // Guard
   showLoading(els.loadingOverlay, els.loadingText, "Loading your dashboard…");
+
   const claims = await guardRoleOrRedirect(["student"], ABS.studentLogin);
   if (!claims) return;
 
   wireSignOut(els.btnSignOut);
-  wireAvatarWorldEmbed(); // ✅ NEW
+  wireAvatarWorldEmbed();
 
   const schoolId = claims.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
   const userId = claims.userId || auth.currentUser?.uid;
 
-  setHeaderUser(els.hdr, { title: "Readathon World", subtitle: `${schoolId} • ${userId}` });
+  setHeaderUser(els.hdr, {
+    title: "Readathon World",
+    subtitle: `${schoolId} • ${userId}`,
+  });
 
   // Load summary
   const summary = await loadSummary({ schoolId, userId });
@@ -68,16 +65,24 @@ async function init() {
 
   // Load inventory
   const inv = await loadInventory({ schoolId, userId });
-  renderInventory({ schoolId, userId, inv });
+  renderInventory(inv);
 
-  // Equipped preview
-  renderEquipped({ schoolId, userId });
+  // Mount shared Avatar World widget (real Firestore-backed preview)
+  await mountAvatarWorldWidget({
+    mountEl: "#avatarWorldMount",
+    role: "student",
+    schoolId,
+    userId,
+    openUrl: "/readathon-world_Ver2/html/avatar-world.html",
+  });
 
   hideLoading(els.loadingOverlay);
 }
 
 function wireAvatarWorldEmbed() {
-  if (!els.btnOpenAvatarWorld || !els.awEmbedModal || !els.btnCloseAvatarWorld || !els.awEmbedFrame) return;
+  if (!els.btnOpenAvatarWorld || !els.awEmbedModal || !els.btnCloseAvatarWorld || !els.awEmbedFrame) {
+    return;
+  }
 
   const main = document.querySelector("main");
   let lastFocus = null;
@@ -85,50 +90,42 @@ function wireAvatarWorldEmbed() {
   const open = () => {
     lastFocus = document.activeElement;
 
-    // show
     els.awEmbedModal.classList.remove("isHidden");
     els.awEmbedModal.setAttribute("aria-hidden", "false");
 
-    // prevent focus behind modal (best practice)
     if (main) main.setAttribute("inert", "");
 
-    // refresh iframe (optional)
     els.awEmbedFrame.src = "/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student";
 
-    // move focus into modal safely
     requestAnimationFrame(() => els.btnCloseAvatarWorld.focus());
   };
 
   const close = () => {
-    // IMPORTANT: move focus OUT of the modal BEFORE hiding it
     if (lastFocus && typeof lastFocus.focus === "function") {
       lastFocus.focus();
     } else {
       els.btnOpenAvatarWorld.focus();
     }
 
-    // hide
     els.awEmbedModal.classList.add("isHidden");
     els.awEmbedModal.setAttribute("aria-hidden", "true");
 
-    // re-enable behind-page focus
     if (main) main.removeAttribute("inert");
   };
 
   els.btnOpenAvatarWorld.addEventListener("click", open);
   els.btnCloseAvatarWorld.addEventListener("click", close);
 
-  // Click outside closes
   els.awEmbedModal.addEventListener("click", (e) => {
     if (e.target === els.awEmbedModal) close();
   });
 
-  // ESC closes
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && els.awEmbedModal.getAttribute("aria-hidden") === "false") close();
+    if (e.key === "Escape" && els.awEmbedModal.getAttribute("aria-hidden") === "false") {
+      close();
+    }
   });
 
-  // Message from iframe to close
   window.addEventListener("message", (e) => {
     if (e.origin !== window.location.origin) return;
     if (e.data?.type === "aw_close") close();
@@ -136,7 +133,6 @@ function wireAvatarWorldEmbed() {
 }
 
 function renderSummary(s) {
-  // s can be null if not created yet
   const minutesTotal = s?.minutesTotal ?? 0;
   const pending = s?.minutesPendingTotal ?? 0;
   const rubiesBal = s?.rubiesBalance ?? 0;
@@ -151,10 +147,12 @@ function renderSummary(s) {
   els.moneyRaised.textContent = fmtMoneyCents(money);
 }
 
-function renderInventory({ schoolId, userId, inv }) {
+function renderInventory(inv) {
   els.inventoryList.innerHTML = "";
 
-  if (!inv.length) {
+  const items = (inv || []).filter((x) => Number(x.qty || 0) > 0);
+
+  if (!items.length) {
     const empty = document.createElement("div");
     empty.className = "emptyNote";
     empty.textContent = "No items yet. Earn rubies to buy avatar items!";
@@ -162,49 +160,34 @@ function renderInventory({ schoolId, userId, inv }) {
     return;
   }
 
-  // Only show items with qty > 0
-  const items = inv.filter((x) => Number(x.qty || 0) > 0);
-
   for (const it of items) {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "invChip";
+    const row = document.createElement("div");
+    row.className = "invChip";
 
     const name = prettyItemId(it.itemId);
-    btn.innerHTML = `<span class="invChip__name">${name}</span><span class="invChip__qty">x${Number(it.qty || 0)}</span>`;
+    row.innerHTML = `
+      <span class="invChip__name">${escapeHtml(name)}</span>
+      <span class="invChip__qty">x${Number(it.qty || 0)}</span>
+    `;
 
-    btn.addEventListener("click", () => {
-      const equipped = getEquippedLocal({ schoolId, userId });
-      const slot = pickSlotForItem(it.itemId);
-
-      // Toggle off if already equipped
-      if (equipped[slot] === it.itemId) equipped[slot] = null;
-      else equipped[slot] = it.itemId;
-
-      setEquippedLocal({ schoolId, userId }, equipped);
-      renderEquipped({ schoolId, userId });
-    });
-
-    els.inventoryList.appendChild(btn);
+    els.inventoryList.appendChild(row);
   }
 }
 
-function renderEquipped({ schoolId, userId }) {
-  const eq = getEquippedLocal({ schoolId, userId });
-
-  els.roomBgLabel.textContent = `Room: ${eq.room ? prettyItemId(eq.room) : "(none)"}`;
-  els.equipHead.textContent = `Head: ${eq.head ? prettyItemId(eq.head) : "(none)"}`;
-  els.equipBody.textContent = `Body: ${eq.body ? prettyItemId(eq.body) : "(none)"}`;
-  els.equipAcc.textContent = `Accessory: ${eq.accessory ? prettyItemId(eq.accessory) : "(none)"}`;
-  els.equipPet.textContent = `Pet: ${eq.pet ? prettyItemId(eq.pet) : "(none)"}`;
-}
-
 function prettyItemId(itemId) {
-  // item_cool_hat -> "Cool Hat"
   return String(itemId || "")
     .replace(/^item_/, "")
     .replace(/_/g, " ")
     .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function showError(msg) {

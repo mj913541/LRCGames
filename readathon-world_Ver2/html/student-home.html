@@ -6,6 +6,7 @@
   <title>Student Home • Readathon World</title>
 
   <link rel="stylesheet" href="/readathon-world_Ver2/css/student.css" />
+  <link rel="stylesheet" href="/readathon-world_Ver2/css/avatar-world-widget.css" />
 </head>
 
 <body class="page page--student-home">
@@ -56,38 +57,7 @@
       </div>
     </section>
 
-    <section class="panel">
-      <div class="sectionHead">
-        <h2 class="h2">🧍 Avatar Space</h2>
-        <div class="awLaunchRow">
-          <button id="btnOpenAvatarWorld" class="btnBig btnBig--primary" type="button">
-            🌿 Open Avatar World
-          </button>
-        </div>
-      </div><!-- closes .sectionHead -->
-
-      <div class="isHidden avatarArea">
-        <div class="isHidden avatarStage" aria-label="Avatar preview area">
-          <div class="isHidden avatarStage__bg" id="roomBgLabel">Room: (none)</div>
-          <div class="isHidden avatarStage__body">
-            <div class="isHidden avatarDoll" id="avatarDoll">
-              <div class="isHidden avatarTag" id="equipHead">Head: (none)</div>
-              <div class="isHidden avatarTag" id="equipBody">Body: (none)</div>
-              <div class="isHidden avatarTag" id="equipAcc">Accessory: (none)</div>
-              <div class="isHidden avatarTag" id="equipPet">Pet: (none)</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="inventoryBox">
-          <div class="inventoryHead">
-            <h3 class="h3">🎒 Your Items</h3>
-            <p class="tiny">Tap an item to “equip” (preview only).</p>
-          </div>
-          <div class="inventoryList" id="inventoryList" aria-label="Inventory list"></div>
-        </div>
-      </div>
-    </section>
+<section id="avatarWorldMount"></section>
 
     <section class="isHidden panel">
       <div class="isHidden sectionHead">
@@ -106,27 +76,8 @@
         <div class="loadingText" id="loadingText">Loading…</div>
       </div>
     </div>
-
     <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
   </main>
-
-  <!-- Avatar World Embed Modal -->
-  <div id="awEmbedModal" class="awModal isHidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Avatar World">
-    <div class="awModal__card">
-      <div class="awModal__hdr">
-        <div class="awModal__title">Avatar World</div>
-        <button id="btnCloseAvatarWorld" class="awModal__close" type="button" aria-label="Close">✖</button>
-      </div>
-
-      <iframe
-        id="awEmbedFrame"
-        class="awModal__frame"
-        src="/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student"
-        title="Avatar World"
-        loading="lazy"
-      ></iframe>
-    </div>
-  </div>
 
   <script type="module" src="/readathon-world_Ver2/js/student-home.js"></script>
 </body>
