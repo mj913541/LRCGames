@@ -12,5 +12,13 @@
         "*.local"
       ]
     }
-  ]
+  ],
+  "hosting": {
+    "public": "readathon-world_Ver2",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
 }

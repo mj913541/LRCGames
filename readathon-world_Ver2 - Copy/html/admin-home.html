@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Home • Readathon World</title>
+  <link rel="stylesheet" href="/readathon-world_Ver2/css/admin.css" />
+  <link rel="stylesheet" href="/readathon-world_Ver2/css/leaderboard.css" />
+</head>
+
+<body class="page page--admin-home">
+  <div class="bg bg--home" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="topbar__back" href="/readathon-world_Ver2/html/admin-login.html" aria-label="Back to login">
+      ← Login
+    </a>
+
+    <div class="topbar__title">
+      <div class="pill">🛠️ Admin Home</div>
+    </div>
+
+    <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
+  </header>
+
+  <main class="wrap">
+    <section class="panel panel--hero" id="hdr">
+      <div class="heroRow">
+        <div>
+          <h1 class="h1" data-title>Readathon World</h1>
+          <p class="sub" data-subtitle></p>
+        </div>
+        <a class="btnBig btnBig--primary" href="/readathon-world_Ver2/html/admin-minutes-approve.html">
+          ✅ Approve Pending Minutes
+        </a>
+      </div>
+
+      <div class="gridButtons">
+        <a class="btnBig" href="/readathon-world_Ver2/html/staff-minutes-submit.html">🎁 Submit / Award (Admin)</a>
+        <a class="btnBig" href="/readathon-world_Ver2/html/admin-minutes-approve.html">✅ Approve Pending</a>
+      </div>
+    </section>
+
+<section class="leaderboard-panel">
+  <div id="leaderboard"></div>
+</section>
+
+    <section class="panel">
+      <div class="sectionHead">
+        <h2 class="h2">🧍 Avatar Space</h2>
+        <p class="sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
+      </div>
+
+      <div class="avatarArea">
+        <div class="avatarStage" aria-label="Avatar preview area">
+          <div class="avatarStage__bg" id="roomBgLabel">Room: (none)</div>
+          <div class="avatarStage__body">
+            <div class="avatarDoll" id="avatarDoll">
+              <div class="avatarTag" id="equipHead">Head: (none)</div>
+              <div class="avatarTag" id="equipBody">Body: (none)</div>
+              <div class="avatarTag" id="equipAcc">Accessory: (none)</div>
+              <div class="avatarTag" id="equipPet">Pet: (none)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inventoryBox">
+          <div class="inventoryHead">
+            <h3 class="h3">🎒 Your Items</h3>
+            <p class="tiny">Tap an item to “equip” (preview only).</p>
+          </div>
+          <div class="inventoryList" id="inventoryList" aria-label="Inventory list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="sectionHead">
+        <h2 class="h2">Admin Tools</h2>
+        <p class="sub">Coming next: search any user, view inventory, edit balances, group awards.</p>
+      </div>
+
+      <div class="gridButtons">
+        <a class="btnBig" href="/readathon-world_Ver2/html/index.html">🏠 Home</a>
+      </div>
+    </section>
+
+    <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+      <div class="loadingCard">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loadingText" id="loadingText">Loading…</div>
+      </div>
+    </div>
+
+    <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
+  </main>
+
+  <script type="module" src="/readathon-world_Ver2/js/admin-home.js"></script>
+</body>
+</html>
