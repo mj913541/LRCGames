@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Readathon World V2</title>
+
+  <link rel="stylesheet" href="../css/index.css" />
+</head>
+
+<body class="page page--index">
+  <main class="wrap">
+    <header class="hidden hero panel"><div class="hero__top"><a id="studentLogin" class="click-zone" href="./student-login.html" title="Click for Works of Choice!"></a></div>
+
+      <div class="hidden hero__actions">
+        <a class="btn btn--student" href="./student-login.html">
+          <span class="btn__icon" aria-hidden="true">🧒</span>
+          <span class="btn__text">
+            <strong>Student Login</strong>
+            <em>Log minutes • Earn rubies</em>
+          </span>
+        </a>
+
+        <a class="hidden btn btn--staff" href="./staff-login.html">
+          <span class="btn__icon" aria-hidden="true">🧑‍🏫</span>
+          <span class="btn__text">
+            <strong>Staff Login</strong>
+            <em>Award classes • Approve help</em>
+          </span>
+        </a>
+
+        <a class="hidden btn btn--admin" href="./admin-login.html">
+          <span class="btn__icon" aria-hidden="true">🛠️</span>
+          <span class="btn__text">
+            <strong>Admin Login</strong>
+            <em>Approve minutes • Manage all</em>
+          </span>
+        </a>
+      </div>
+
+      <div class="hidden mini">
+        <button class="mini__btn" id="btnSetSchool" type="button">
+          <span aria-hidden="true">🏫</span> Set School ID
+        </button>
+        <span class="mini__value" id="schoolIdLabel" aria-live="polite"></span>
+      </div>
+    </header>
+
+    
+<div class="stage" aria-label="Readathon World login screen">
+  <div class="frame">
+    <img class="frame__img" src="../img/bg/index.png" alt="" aria-hidden="true" />
+
+    <a id="zoneStudent" class="click-zone" href="./student-login.html" aria-label="Student Login">
+    </a>
+
+    <a id="zoneStaff" class="click-zone" href="./staff-login.html" aria-label="Staff Login">
+    </a>
+
+    <a id="zoneAdmin" class="hidden click-zone" href="./admin-login.html" aria-label="Admin Login">
+    </a>
+  </div>
+</div>
+  </main>
+
+  <dialog class="dialog" id="schoolDialog" aria-labelledby="schoolDialogTitle">
+    <form method="dialog" class="dialog__panel">
+      <h2 class="h2" id="schoolDialogTitle">Set School ID</h2>
+      <p class="p">Default is <strong>308_longbeach_elementary</strong>. Only change if you’re testing another school.</p>
+
+      <label class="field">
+        <span class="field__label">School ID</span>
+        <input class="input" id="schoolIdInput" autocomplete="off" spellcheck="false"
+               placeholder="308_longbeach_elementary" />
+      </label>
+
+      <div class="row">
+        <button class="btnSmall" value="cancel" type="submit">Cancel</button>
+        <button class="btnSmall btnSmall--primary" id="btnSaveSchool" value="ok" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="../js/index.js"></script>
+</body>
+</html>
