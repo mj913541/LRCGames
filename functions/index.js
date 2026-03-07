@@ -823,18 +823,28 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
  * Callable: buyAvatarItem({ schoolId, itemId })
  */
 exports.buyAvatarItem = functions.https.onCall(async (data, context) => {
+  const req = (data && typeof data === "object" && data.data && data.auth)
+    ? data
+    : null;
+
+  const auth = req?.auth || context?.auth || null;
+  const payload = req?.data || data || {};
+
   console.log("buyAvatarItem HIT", {
-    hasAuth: !!context.auth,
-    uid: context.auth?.uid,
-    tokenUserId: context.auth?.token?.userId,
-    tokenRole: context.auth?.token?.role,
-    tokenSchoolId: context.auth?.token?.schoolId,
-    data,
+    hasAuth: !!auth,
+    uid: auth?.uid,
+    tokenUserId: auth?.token?.userId,
+    tokenRole: auth?.token?.role,
+    tokenSchoolId: auth?.token?.schoolId,
+    payload,
   });
 
-  const auth = requireAuth(context);
+  if (!auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+  }
+
   const claims = auth.token || {};
-  return buyAvatarItemCore(data, claims, auth.uid);
+  return buyAvatarItemCore(payload, claims, auth.uid);
 });
 
 /* --------------------------------------------------
