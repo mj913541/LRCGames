@@ -565,20 +565,54 @@ function matchesOwnedFilter(item) {
 -------------------------------------------------- */
 
 async function handleBuy(itemId) {
-
   const item = state.catalog.find((x) => x.id === itemId);
-
   if (!item) {
     showError("That item could not be found.");
     return;
   }
-  await waitForAuthReady();
-  await auth.currentUser.getIdToken(true); // 🔧 force fresh auth token
 
-  const result = await fnBuyAvatarItem({
-    schoolId: state.schoolId,
-    itemId,
-  });
+  if (isOwned(itemId)) {
+    showTransientMessage(`${item.name} is already owned.`);
+    return;
+  }
+
+  if (state.rubiesBalance < Number(item.price || 0)) {
+    showError(`You need ${fmtInt(item.price)} rubies for ${item.name}.`);
+    return;
+  }
+
+  clearError();
+  state.busyBuyItemId = itemId;
+  renderGrid();
+
+  try {
+    await waitForAuthReady();
+
+    if (!auth.currentUser) {
+      throw new Error("Please sign in again.");
+    }
+
+    await auth.currentUser.getIdToken(true);
+
+    const result = await fnBuyAvatarItem({
+      schoolId: state.schoolId,
+      itemId,
+    });
+
+    const data = result?.data || result || {};
+    if (!data?.ok) {
+      throw new Error("Purchase failed.");
+    }
+
+    await refreshAfterPurchase();
+    showTransientMessage(`Purchased ${item.name}!`);
+  } catch (err) {
+    console.error("buyAvatarItem failed:", err);
+    showError(normalizeErrorPurchase(err, item));
+  } finally {
+    state.busyBuyItemId = null;
+    renderAll();
+  }
 }
 async function refreshAfterPurchase() {
   const [summary, inventoryDocs] = await Promise.all([
