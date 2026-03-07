@@ -4,47 +4,29 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Staff Home • Readathon World</title>
-
-  <link rel="stylesheet" href="../css/staff.css" />
-  <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/staff.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/leaderboard.css" />
+    <link rel="stylesheet" href="../css/avatar-world-widget.css" />
 </head>
 
 <body class="page page--staff-home">
   <div class="bg bg--home" aria-hidden="true"></div>
 
   <header class="topbar">
-    <a class="topbar__back" href="./staff-login.html" aria-label="Back to login">
-      ← Login
-    </a>
-
-    <div class="topbar__title">
-      <div class="pill">🧑‍🏫 Staff Home</div>
-    </div>
-
+    <a class="topbar__back" href="./staff-login.html" aria-label="Back to login">← Login</a>
+    <div class="topbar__title"><div class="pill">Staff Home</div></div>
     <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
   </header>
 
   <main class="wrap" id="pageWrap">
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
-        <div>
-          <h1 class="h1" data-title>Readathon World</h1>
-          <p class="sub" data-subtitle></p>
-        </div>
-
-        <a class="btnBig btnBig--primary" href="./staff-minutes-submit.html">
-          🎁 Award / Submit
-        </a>
-
-        <a href="./donations.html"
-           class="btn-action btn-donate">
-          💰 Donate Now
-        </a>
-
-        <a href="./prize-store.html"
-           class="btn-action btn-store">
-          🏆 Prize Store
-        </a>
+        <div><h1 class="h1" data-title>Readathon World</h1><p class="sub" data-subtitle></p></div>
+      <div class="gridButtons">
+        <a class="btnBig" href="./staff-minutes-submit.html">🎁 Submit Minutes</a>
+        <a href="./donations.html" class="btn-action btn-donate">💰 Donate Now</a>
+        <a href="./prize-store.html" class="btn-action btn-store">🏆 Prize Store </a>
       </div>
 
       <div class="gridCards">
@@ -68,6 +50,27 @@
       </div>
     </section>
 
+    <section class="leaderboard-panel">
+      <div id="leaderboard"></div>
+    </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     <!-- Permissions panel (kept as-is, currently hidden in your build) -->
@@ -80,7 +83,6 @@
       <div class="isHidden chips" id="awardChips" aria-label="Award homerooms list"></div>
       <div class="isHidden tinyNote">Later, the Award page will use this list to allow “Option B: award by homeroom”.</div>
     </section>
-
     <section class="isHidden panel">
       <div class="isHidden sectionHead">
         <h2 class="isHidden h2">Quick Links</h2>
@@ -91,14 +93,12 @@
         <a class="isHidden btnBig" href="./index.html">🏠 Home</a>
       </div>
     </section>
-
     <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
       <div class="loadingCard">
         <div class="spinner" aria-hidden="true"></div>
         <div class="loadingText" id="loadingText">Loading…</div>
       </div>
     </div>
-
     <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
   </main>
 
