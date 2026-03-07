@@ -4,7 +4,7 @@ import {
   auth,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
-} from ".firebase.js";
+} from "./firebase.js";
 
 import {
   ABS,
