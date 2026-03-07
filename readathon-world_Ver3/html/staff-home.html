@@ -22,11 +22,29 @@
   <main class="wrap" id="pageWrap">
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
-        <div><h1 class="h1" data-title>Readathon World</h1><p class="sub" data-subtitle></p></div>
+        <div>
+          <h1 class="h1" data-title>Readathon World</h1>
+          <p class="sub" data-subtitle></p>
+        </div>
+      </div>
+
       <div class="gridButtons">
-        <a class="btnBig" href="./staff-minutes-submit.html">🎁 Submit Minutes</a>
-        <a href="./donations.html" class="btn-action btn-donate">💰 Donate Now</a>
-        <a href="./prize-store.html" class="btn-action btn-store">🏆 Prize Store </a>
+        <div class="hero-actions">
+          <a href="./staff-minutes-submit.html"
+             class="btn-action btn-submit-minutes btn-action--large">
+            Submit Minutes
+          </a>
+
+          <a href="./prize-store.html"
+             class="btn-action btn-store btn-action--large">
+            Prize Store
+          </a>
+
+          <a href="./donate.html"
+             class="btn-action btn-donate btn-action--large">
+            Donate
+          </a>
+        </div>
       </div>
 
       <div class="gridCards">
@@ -34,15 +52,18 @@
           <div class="cardStat__label">Your Minutes</div>
           <div class="cardStat__value" id="minutesTotal">—</div>
         </div>
+
         <div class="cardStat">
           <div class="cardStat__label">Your Pending</div>
           <div class="cardStat__value" id="minutesPending">—</div>
         </div>
+
         <div class="cardStat">
           <div class="cardStat__label">Your Rubies</div>
           <div class="cardStat__value" id="rubiesBalance">—</div>
           <div class="cardStat__sub" id="rubiesLifetime">—</div>
         </div>
+
         <div class="cardStat">
           <div class="cardStat__label">Your Money</div>
           <div class="cardStat__value" id="moneyRaised">—</div>
@@ -54,7 +75,7 @@
       <div id="leaderboard"></div>
     </section>
 
-
+<section id="avatarWorldMount"></section>
 
 
 
