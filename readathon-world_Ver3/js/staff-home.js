@@ -1,5 +1,9 @@
 // /readathon-world_Ver2/js/staff-home.js
-import { auth, getSchoolId, DEFAULT_SCHOOL_ID, userDocRef } from "/readathon-world_Ver2/js/firebase.js";
+import { 
+  auth, 
+  getSchoolId, 
+  DEFAULT_SCHOOL_ID, 
+  userDocRef } from "./firebase.js";
 
 import {
   ABS,
@@ -13,10 +17,10 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-  getEquippedLocal,
-  setEquippedLocal,
-  pickSlotForItem,
 } from "./app.js";
+
+import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
+import { renderLeaderboard } from "./leaderboard.js";
 
 import { getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 

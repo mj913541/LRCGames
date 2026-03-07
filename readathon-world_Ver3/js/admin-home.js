@@ -11,10 +11,15 @@ import {
   guardRoleOrRedirect,
   setHeaderUser,
   wireSignOut,
+  loadSummary,
+  loadInventory,
+  fmtInt,
+  fmtMoneyCents,
   showLoading,
   hideLoading,
   normalizeError,
 } from "./app.js";
+import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
 
 import { renderLeaderboard } from "./leaderboard.js";
 

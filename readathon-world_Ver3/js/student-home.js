@@ -1,6 +1,6 @@
 // /readathon-world_Ver2/js/student-home.js
 
-import { auth, getSchoolId, DEFAULT_SCHOOL_ID } from "/readathon-world_Ver2/js/firebase.js";
+import { auth, getSchoolId, DEFAULT_SCHOOL_ID } from "./firebase.js";
 import {
   ABS,
   guardRoleOrRedirect,
@@ -16,6 +16,7 @@ import {
 } from "./app.js";
 
 import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
+import { renderLeaderboard } from "./leaderboard.js";
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
@@ -59,15 +60,12 @@ async function init() {
     subtitle: `${schoolId} • ${userId}`,
   });
 
-  // Load summary
   const summary = await loadSummary({ schoolId, userId });
   renderSummary(summary);
 
-  // Load inventory
   const inv = await loadInventory({ schoolId, userId });
   renderInventory(inv);
 
-  // Mount shared Avatar World widget (real Firestore-backed preview)
   await mountAvatarWorldWidget({
     mountEl: "#avatarWorldMount",
     role: "student",
@@ -75,6 +73,8 @@ async function init() {
     userId,
     openUrl: "../html/avatar-world.html",
   });
+
+  await renderLeaderboard("leaderboardMount");
 
   hideLoading(els.loadingOverlay);
 }

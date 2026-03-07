@@ -5,11 +5,13 @@ import {
   db,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
-} from "./firebase.js";
+} from "/readathon-world_Ver2/js/firebase.js";
 
 import {
   normalizeError,
-} from "./app.js";
+  loadSummary,
+  fmtInt,
+} from "/readathon-world_Ver2/js/app.js";
 
 import {
   doc,
@@ -34,9 +36,7 @@ export async function mountAvatarWorldWidget(opts = {}) {
     return;
   }
 
-  const openUrl =
-    opts.openUrl || "../html/avatar-world.html";
-
+  const openUrl = opts.openUrl || "/readathon-world_Ver2/html/avatar-world.html";
   const role = opts.role || "student";
   const schoolId = opts.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
   const userId = opts.userId || auth.currentUser?.uid;
@@ -49,17 +49,21 @@ export async function mountAvatarWorldWidget(opts = {}) {
   try {
     mountEl.innerHTML = renderLoading();
 
-    const [roomState, catalogById] = await Promise.all([
+    const [roomState, catalogById, summary] = await Promise.all([
       loadRoomState(schoolId, userId),
       loadCatalogMap(schoolId),
+      loadSummary({ schoolId, userId }),
     ]);
+
+    const preview = buildPreviewModel(roomState, catalogById);
 
     mountEl.innerHTML = renderWidget({
       role,
-      previewUrl: getPreviewUrl(roomState, catalogById),
+      preview,
       hasRoom: !!roomState,
       openUrl,
       showAdminTools: role === "admin",
+      rubiesBalance: summary?.rubiesBalance ?? 0,
     });
 
     wireWidget(mountEl, { openUrl });
@@ -102,6 +106,7 @@ async function loadRoomState(schoolId, userId) {
   if (!snap.exists()) return null;
 
   const d = snap.data() || {};
+
   return {
     equipped: {
       base: null,
@@ -123,9 +128,11 @@ async function loadRoomState(schoolId, userId) {
 }
 
 async function loadCatalogMap(schoolId) {
-  const snap = await getDocs(query(catalogColRef(schoolId), orderBy("__name__")));
-  const items = [];
+  const snap = await getDocs(
+    query(catalogColRef(schoolId), orderBy("__name__"))
+  );
 
+  const items = [];
   snap.forEach((d) => {
     const x = d.data() || {};
     if (x.enabled === false) return;
@@ -139,15 +146,28 @@ async function loadCatalogMap(schoolId) {
 }
 
 /* ----------------------------
-  Preview logic
+  Preview model
 ---------------------------- */
-function getPreviewUrl(roomState, catalogById) {
-  const fallback = "../img/bg/index.png";
+function buildPreviewModel(roomState, catalogById) {
+  const fallbackBg = "/readathon-world_Ver2/img/bg/index.png";
 
-  if (!roomState?.equipped?.background) return fallback;
+  const equipped = roomState?.equipped || {};
 
-  const bgItem = catalogById.get(roomState.equipped.background);
-  return bgItem?.imagePath || fallback;
+  const bgItem = equipped.background ? catalogById.get(equipped.background) : null;
+  const baseItem = equipped.base ? catalogById.get(equipped.base) : null;
+  const headItem = equipped.head ? catalogById.get(equipped.head) : null;
+  const bodyItem = equipped.body ? catalogById.get(equipped.body) : null;
+  const accItem = equipped.accessory ? catalogById.get(equipped.accessory) : null;
+  const petItem = equipped.pet ? catalogById.get(equipped.pet) : null;
+
+  return {
+    backgroundUrl: bgItem?.imagePath || fallbackBg,
+    baseUrl: baseItem?.imagePath || "",
+    headUrl: headItem?.imagePath || "",
+    bodyUrl: bodyItem?.imagePath || "",
+    accessoryUrl: accItem?.imagePath || "",
+    petUrl: petItem?.imagePath || "",
+  };
 }
 
 /* ----------------------------
@@ -167,24 +187,41 @@ function renderError(msg) {
     <div class="awWidget">
       <div class="awWidgetTitle">Avatar World</div>
       <div style="margin-top:8px;">Could not load Avatar World.</div>
-      <div style="margin-top:8px; opacity:.8;">${escapeHtml(msg)}</div>
+      <div class="awWidgetError">${escapeHtml(msg)}</div>
     </div>
   `;
 }
 
-function renderWidget({ role, previewUrl, hasRoom, openUrl, showAdminTools }) {
+function renderWidget({
+  role,
+  preview,
+  hasRoom,
+  openUrl,
+  showAdminTools,
+  rubiesBalance,
+}) {
   return `
     <div class="awWidget">
       <div class="awWidgetHeader">
         <div class="awWidgetTitle">Avatar World</div>
-        <div>${escapeHtml(role)}</div>
+        <div class="awWidgetRole">${escapeHtml(role)}</div>
       </div>
 
-      <div class="awWidgetPreview">
-        <img src="${escapeAttr(previewUrl)}" alt="Avatar World room preview" />
+      <div class="awWidgetPreview" aria-label="Avatar World preview">
+        <img src="${escapeAttr(preview.backgroundUrl)}" alt="Avatar World room background preview" />
+
+        ${preview.baseUrl ? `<img class="awWidgetPreviewLayer" src="${escapeAttr(preview.baseUrl)}" alt="" />` : ""}
+        ${preview.bodyUrl ? `<img class="awWidgetPreviewLayer" src="${escapeAttr(preview.bodyUrl)}" alt="" />` : ""}
+        ${preview.headUrl ? `<img class="awWidgetPreviewLayer" src="${escapeAttr(preview.headUrl)}" alt="" />` : ""}
+        ${preview.accessoryUrl ? `<img class="awWidgetPreviewLayer" src="${escapeAttr(preview.accessoryUrl)}" alt="" />` : ""}
+        ${preview.petUrl ? `<img class="awWidgetPreviewLayer" src="${escapeAttr(preview.petUrl)}" alt="" />` : ""}
       </div>
 
-      <div style="margin-bottom:12px;">
+      <div class="awWidgetMeta">
+        💎 Rubies: ${fmtInt(rubiesBalance)}
+      </div>
+
+      <div class="awWidgetText">
         ${hasRoom ? "Open your room and keep decorating!" : "Open Avatar World to start building your room!"}
       </div>
 
@@ -214,7 +251,7 @@ function wireWidget(mountEl, { openUrl }) {
   });
 
   adminBtn?.addEventListener("click", () => {
-    window.location.href = "../html/avatar-catalog-admin.html";
+    window.location.href = "/readathon-world_Ver2/html/avatar-catalog-admin.html";
   });
 }
 
