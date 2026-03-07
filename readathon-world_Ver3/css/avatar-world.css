@@ -1,0 +1,166 @@
+:root{
+  --bg:#1a1307;
+  --panel:rgba(40,24,8,0.80);
+  --accent:#ffcf5b;
+
+  --radius:20px;
+
+  --avatar-w:240px;
+  --avatar-h:360px;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:var(--bg);
+  color:white;
+  font-family:system-ui,Segoe UI,Roboto;
+}
+
+/* HEADER */
+
+.aw-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 20px;
+  background:rgba(0,0,0,.35);
+}
+
+.aw-header button{
+  padding:8px 14px;
+  border-radius:12px;
+  border:none;
+  background:var(--accent);
+  font-weight:600;
+  cursor:pointer;
+}
+
+/* MAIN */
+
+.aw-main{
+  display:grid;
+  grid-template-columns:2fr 1fr;
+  gap:20px;
+  padding:20px;
+}
+
+/* ROOM */
+
+.aw-room{
+  position:relative;
+  width:100%;
+  aspect-ratio:1/1;
+  border-radius:var(--radius);
+  overflow:hidden;
+  background:#000;
+}
+
+/* BACKGROUND */
+
+.aw-room-bg{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+}
+
+/* ROOM LAYERS */
+
+.aw-room-layer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+
+/* AVATAR */
+
+.aw-room-layer.avatar img{
+  position:absolute;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%);
+  width:var(--avatar-w);
+}
+
+/* PET */
+
+.aw-room-layer.pet img{
+  position:absolute;
+  bottom:30px;
+  right:40px;
+  width:120px;
+}
+
+/* WALL ITEMS */
+
+.aw-room-layer.wall img{
+  position:absolute;
+  top:100px;
+  left:60px;
+  width:160px;
+}
+
+/* FLOOR ITEMS */
+
+.aw-room-layer.floor img{
+  position:absolute;
+  bottom:40px;
+  left:80px;
+  width:140px;
+}
+
+/* INVENTORY */
+
+.aw-inventory{
+  background:var(--panel);
+  border-radius:var(--radius);
+  padding:14px;
+  display:flex;
+  flex-direction:column;
+}
+
+/* TABS */
+
+.aw-tabs{
+  display:flex;
+  gap:6px;
+  margin-bottom:12px;
+}
+
+.aw-tabs button{
+  flex:1;
+  border:none;
+  border-radius:12px;
+  padding:8px;
+  cursor:pointer;
+  background:#3a2b12;
+  color:white;
+}
+
+.aw-tabs .active{
+  background:var(--accent);
+  color:black;
+}
+
+/* GRID */
+
+.aw-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(70px,1fr));
+  gap:10px;
+  overflow:auto;
+}
+
+.aw-item{
+  background:#2d1f0a;
+  border-radius:12px;
+  padding:6px;
+  cursor:pointer;
+}
+
+.aw-item img{
+  width:100%;
+  display:block;
+}
