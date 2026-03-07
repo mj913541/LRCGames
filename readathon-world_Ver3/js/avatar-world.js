@@ -1,18 +1,26 @@
+// /readathon-world_Ver2/js/avatar-world.js
+
 import {
   auth,
+  db,
   getSchoolId,
+  DEFAULT_SCHOOL_ID,
   waitForAuthReady,
 } from "./firebase.js";
 
 import {
-  db,
-} from "./firebase.js";
+  ABS,
+  guardRoleOrRedirect,
+  normalizeError,
+} from "./app.js";
 
 import {
   collection,
   doc,
   getDoc,
   getDocs,
+  orderBy,
+  query,
   serverTimestamp,
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -48,18 +56,21 @@ const els = {
 --------------------------------------- */
 
 const state = {
-  schoolId: null,
-  user: null,
+  schoolId: DEFAULT_SCHOOL_ID,
+  userId: "",
+  role: "",
 
-  inventory: [],
-  inventoryById: new Map(),
+  catalog: [],
+  catalogById: new Map(),
+  ownedIds: new Set(),
+  ownedItems: [],
 
   tab: "wearables",
 
   room: makeDefaultRoomState(),
   savedRoomSnapshot: null,
 
-  selectedPlacement: null, // { kind: "wall"|"floor"|"pet", index: number }
+  selectedPlacement: null, // { kind, index }
   drag: null, // { kind, index, pointerId }
 };
 
@@ -68,31 +79,34 @@ const state = {
 --------------------------------------- */
 
 init().catch((err) => {
-  console.error(err);
+  console.error("avatar-world init failed:", err);
   setStatus(normalizeError(err), true);
 });
 
 async function init() {
   wireUI();
 
+  const claims = await guardRoleOrRedirect(
+    ["student", "staff", "admin"],
+    ABS.index || "../html/index.html"
+  );
+  if (!claims) return;
+
   await waitForAuthReady();
 
-  const user = auth.currentUser;
-  if (!user) {
-    window.location.href = "../index.html";
+  if (!auth.currentUser) {
+    window.location.href = ABS.index || "../html/index.html";
     return;
   }
 
-  state.user = user;
-  state.schoolId = await getSchoolId();
+  state.schoolId = getSchoolId() || claims.schoolId || DEFAULT_SCHOOL_ID;
+  state.userId = String(claims.userId || auth.currentUser.uid || "").toLowerCase();
+  state.role = String(claims.role || "").toLowerCase();
 
   renderHeaderUser();
+  setStatus("Loading Avatar World…");
 
-  setStatus("Loading inventory…");
-  await loadInventory();
-
-  setStatus("Loading room…");
-  await loadRoom();
+  await loadAllData();
 
   renderAll();
   setStatus("Room loaded.");
@@ -107,18 +121,18 @@ function makeDefaultRoomState() {
     backgroundId: null,
     avatarBaseId: null,
     wearableIds: [],
-    petPlacement: null, // { itemId, x, y, scale, z }
-    wallPlacements: [], // [{ itemId, x, y, scale, z }]
-    floorPlacements: [], // [{ itemId, x, y, scale, z }]
+    petPlacement: null,
+    wallPlacements: [],
+    floorPlacements: [],
   };
 }
 
-function deepClone(obj) {
-  return JSON.parse(JSON.stringify(obj));
+function deepClone(value) {
+  return JSON.parse(JSON.stringify(value));
 }
 
 /* ---------------------------------------
-   UI Wiring
+   Wiring
 --------------------------------------- */
 
 function wireUI() {
@@ -127,7 +141,7 @@ function wireUI() {
       window.history.back();
       return;
     }
-    window.location.href = "../index.html";
+    window.location.href = "./avatar-shop.html";
   });
 
   els.btnSave?.addEventListener("click", saveRoom);
@@ -137,11 +151,12 @@ function wireUI() {
 
   els.tabs.forEach((btn) => {
     btn.addEventListener("click", () => {
-      state.tab = btn.dataset.tab || "wearables";
+      state.tab = String(btn.dataset.tab || "wearables");
       els.tabs.forEach((b) => b.classList.remove("active"));
       btn.classList.add("active");
+      clearSelection({ rerender: false });
       renderInventory();
-      clearSelection();
+      renderRoom();
     });
   });
 
@@ -149,60 +164,95 @@ function wireUI() {
   els.roomCanvas?.addEventListener("pointerup", onPointerUp);
   els.roomCanvas?.addEventListener("pointercancel", onPointerUp);
   els.roomCanvas?.addEventListener("click", (e) => {
-    if (e.target === els.roomCanvas) clearSelection();
+    if (e.target === els.roomCanvas) {
+      clearSelection();
+    }
   });
 }
 
 /* ---------------------------------------
-   Firestore Loads
+   Loaders
 --------------------------------------- */
 
-async function loadInventory() {
-  const ref = collection(
-    db,
-    `readathonV2_schools/${state.schoolId}/userInventory/${state.user.uid}/items`
+async function loadAllData() {
+  const [catalog, ownedInventory, room] = await Promise.all([
+    loadCatalog(state.schoolId),
+    loadOwnedInventory(state.schoolId, state.userId),
+    loadRoomState(state.schoolId, state.userId),
+  ]);
+
+  state.catalog = catalog;
+  state.catalogById = new Map(catalog.map((item) => [item.id, item]));
+
+  state.ownedIds = new Set(
+    ownedInventory.map((row) => String(row.itemId || "").trim()).filter(Boolean)
   );
 
-  const snap = await getDocs(ref);
+  state.ownedItems = catalog.filter((item) => state.ownedIds.has(item.id));
 
-  const items = snap.docs
-    .map((d) => normalizeInventoryItem(d.id, d.data()))
-    .filter(Boolean);
+  state.room = room ? normalizeRoomState(room) : makeDefaultRoomState();
 
-  state.inventory = items;
-  state.inventoryById = new Map(items.map((item) => [item.id, item]));
-}
+  reconcileRoomAgainstOwnedItems();
 
-async function loadRoom() {
-  const ref = doc(
-    db,
-    `readathonV2_schools/${state.schoolId}/userRoomState/${state.user.uid}`
-  );
-
-  const snap = await getDoc(ref);
-
-  if (!snap.exists()) {
-    const fallback = makeDefaultRoomState();
-
-    const firstBase = state.inventory.find((i) => i.group === "wearables" && i.wearableClass === "base");
-    const firstBg = state.inventory.find((i) => i.group === "background");
-
-    if (firstBase) fallback.avatarBaseId = firstBase.id;
-    if (firstBg) fallback.backgroundId = firstBg.id;
-
-    state.room = fallback;
-    state.savedRoomSnapshot = deepClone(fallback);
-    return;
-  }
-
-  const data = snap.data() || {};
-  state.room = normalizeRoomState(data);
-  reconcileRoomAgainstInventory();
   state.savedRoomSnapshot = deepClone(state.room);
 }
 
+async function loadCatalog(schoolId) {
+  const colRef = collection(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "avatarCatalog",
+    "catalog",
+    "items"
+  );
+
+  const qRef = query(colRef, orderBy("__name__"));
+  const snap = await getDocs(qRef);
+
+  return snap.docs
+    .map((d) => normalizeCatalogItem(d.id, d.data()))
+    .filter(Boolean)
+    .filter((item) => item.active !== false)
+    .sort(compareItems);
+}
+
+async function loadOwnedInventory(schoolId, userId) {
+  const invCol = collection(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "users",
+    userId,
+    "readathon",
+    "summary",
+    "inventory"
+  );
+
+  const qRef = query(invCol, orderBy("__name__"));
+  const snap = await getDocs(qRef);
+
+  return snap.docs.map((d) => ({
+    itemId: d.id,
+    ...d.data(),
+  }));
+}
+
+async function loadRoomState(schoolId, userId) {
+  const ref = doc(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "userRoomState",
+    userId
+  );
+
+  const snap = await getDoc(ref);
+  return snap.exists() ? (snap.data() || {}) : null;
+}
+
 /* ---------------------------------------
-   Firestore Save
+   Save
 --------------------------------------- */
 
 async function saveRoom() {
@@ -212,16 +262,25 @@ async function saveRoom() {
     const payload = {
       backgroundId: state.room.backgroundId || null,
       avatarBaseId: state.room.avatarBaseId || null,
-      wearableIds: Array.isArray(state.room.wearableIds) ? state.room.wearableIds : [],
+      wearableIds: Array.isArray(state.room.wearableIds)
+        ? state.room.wearableIds.filter(Boolean)
+        : [],
       petPlacement: state.room.petPlacement || null,
-      wallPlacements: Array.isArray(state.room.wallPlacements) ? state.room.wallPlacements : [],
-      floorPlacements: Array.isArray(state.room.floorPlacements) ? state.room.floorPlacements : [],
+      wallPlacements: Array.isArray(state.room.wallPlacements)
+        ? state.room.wallPlacements
+        : [],
+      floorPlacements: Array.isArray(state.room.floorPlacements)
+        ? state.room.floorPlacements
+        : [],
       updatedAt: serverTimestamp(),
     };
 
     const ref = doc(
       db,
-      `readathonV2_schools/${state.schoolId}/userRoomState/${state.user.uid}`
+      "readathonV2_schools",
+      state.schoolId,
+      "userRoomState",
+      state.userId
     );
 
     await setDoc(ref, payload, { merge: true });
@@ -229,7 +288,7 @@ async function saveRoom() {
     state.savedRoomSnapshot = deepClone(state.room);
     setStatus("Room saved!");
   } catch (err) {
-    console.error(err);
+    console.error("saveRoom failed:", err);
     setStatus(normalizeError(err), true);
   }
 }
@@ -238,7 +297,7 @@ async function saveRoom() {
    Normalizers
 --------------------------------------- */
 
-function normalizeInventoryItem(id, raw = {}) {
+function normalizeCatalogItem(id, raw = {}) {
   const imageUrl =
     raw.imageUrl ||
     raw.assetUrl ||
@@ -251,32 +310,33 @@ function normalizeInventoryItem(id, raw = {}) {
 
   if (!imageUrl) return null;
 
-  const rawSlot = String(raw.slot || raw.category || raw.type || raw.itemType || "").trim().toLowerCase();
-  const rawSubslot = String(raw.subslot || raw.layer || raw.equipLayer || raw.wearableType || "").trim().toLowerCase();
-  const rawName = String(raw.name || raw.title || raw.label || id).trim();
+  const slotRaw = String(
+    raw.slot || raw.category || raw.type || raw.itemType || raw.kind || ""
+  ).trim().toLowerCase();
 
-  const group = normalizeGroup(rawSlot, rawSubslot, raw);
-  const wearableClass = normalizeWearableClass(rawSlot, rawSubslot, raw);
-  const layerOrder = normalizeLayerOrder(raw, wearableClass);
+  const subslotRaw = String(
+    raw.subslot || raw.layer || raw.equipLayer || raw.wearableType || ""
+  ).trim().toLowerCase();
+
+  const group = normalizeGroup(slotRaw, subslotRaw, raw);
+  const wearableClass = normalizeWearableClass(slotRaw, subslotRaw, raw);
 
   return {
     id,
-    name: rawName,
+    name: String(raw.name || raw.title || raw.label || id).trim(),
     imageUrl,
     thumbUrl: raw.thumbnailUrl || raw.thumbUrl || imageUrl,
     group,
-    slot: rawSlot,
     wearableClass,
-    layerOrder,
     sortOrder: Number(raw.sortOrder ?? raw.displayOrder ?? 9999),
-    rarity: raw.rarity || "",
-    price: Number(raw.price ?? raw.cost ?? 0),
-    owned: raw.owned !== false,
+    layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
+    rarity: String(raw.rarity || "").trim().toLowerCase(),
+    active: raw.active !== false,
     raw,
   };
 }
 
-function normalizeGroup(slot, subslot, raw) {
+function normalizeGroup(slot, subslot, raw = {}) {
   const s = `${slot} ${subslot} ${String(raw.roomLayer || "").toLowerCase()} ${String(raw.kind || "").toLowerCase()}`;
 
   if (s.includes("background")) return "background";
@@ -298,7 +358,7 @@ function normalizeGroup(slot, subslot, raw) {
   return "wearables";
 }
 
-function normalizeWearableClass(slot, subslot, raw) {
+function normalizeWearableClass(slot, subslot, raw = {}) {
   const s = `${slot} ${subslot} ${String(raw.kind || "").toLowerCase()}`;
 
   if (s.includes("base") || s.includes("avatar") || s.includes("body")) return "base";
@@ -309,14 +369,17 @@ function normalizeWearableClass(slot, subslot, raw) {
   return null;
 }
 
-function normalizeLayerOrder(raw, wearableClass) {
-  if (Number.isFinite(Number(raw.layerOrder))) return Number(raw.layerOrder);
-  if (Number.isFinite(Number(raw.zIndex))) return Number(raw.zIndex);
-
+function defaultLayerOrderFor(wearableClass) {
   if (wearableClass === "base") return 10;
   if (wearableClass === "head") return 30;
   if (wearableClass === "accessory") return 40;
   return 50;
+}
+
+function compareItems(a, b) {
+  if (a.group !== b.group) return a.group.localeCompare(b.group);
+  if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
+  return a.name.localeCompare(b.name);
 }
 
 function normalizeRoomState(raw = {}) {
@@ -324,6 +387,7 @@ function normalizeRoomState(raw = {}) {
 
   room.backgroundId = raw.backgroundId || raw.background || raw.bgId || null;
   room.avatarBaseId = raw.avatarBaseId || raw.baseId || raw.avatarId || raw.bodyId || null;
+
   room.wearableIds = Array.isArray(raw.wearableIds)
     ? raw.wearableIds.filter(Boolean)
     : Array.isArray(raw.equippedWearableIds)
@@ -343,13 +407,13 @@ function normalizeRoomState(raw = {}) {
   return room;
 }
 
-function normalizePlacement(raw, group) {
+function normalizePlacement(raw, kind) {
   if (!raw) return null;
 
   const itemId = raw.itemId || raw.id || null;
   if (!itemId) return null;
 
-  const defaults = defaultPlacementForGroup(group);
+  const defaults = defaultPlacementForGroup(kind);
 
   return {
     itemId,
@@ -360,31 +424,35 @@ function normalizePlacement(raw, group) {
   };
 }
 
-function reconcileRoomAgainstInventory() {
-  if (state.room.backgroundId && !state.inventoryById.has(state.room.backgroundId)) {
+function reconcileRoomAgainstOwnedItems() {
+  const hasOwned = (id) => !!id && state.ownedIds.has(id);
+
+  if (state.room.backgroundId && !hasOwned(state.room.backgroundId)) {
     state.room.backgroundId = null;
   }
 
-  if (state.room.avatarBaseId && !state.inventoryById.has(state.room.avatarBaseId)) {
+  if (state.room.avatarBaseId && !hasOwned(state.room.avatarBaseId)) {
     state.room.avatarBaseId = null;
   }
 
-  state.room.wearableIds = state.room.wearableIds.filter((id) => state.inventoryById.has(id));
+  state.room.wearableIds = state.room.wearableIds.filter((id) => hasOwned(id));
 
-  if (state.room.petPlacement && !state.inventoryById.has(state.room.petPlacement.itemId)) {
+  if (state.room.petPlacement && !hasOwned(state.room.petPlacement.itemId)) {
     state.room.petPlacement = null;
   }
 
-  state.room.wallPlacements = state.room.wallPlacements.filter((p) => state.inventoryById.has(p.itemId));
-  state.room.floorPlacements = state.room.floorPlacements.filter((p) => state.inventoryById.has(p.itemId));
+  state.room.wallPlacements = state.room.wallPlacements.filter((p) => hasOwned(p.itemId));
+  state.room.floorPlacements = state.room.floorPlacements.filter((p) => hasOwned(p.itemId));
 
   if (!state.room.avatarBaseId) {
-    const firstBase = state.inventory.find((i) => i.group === "wearables" && i.wearableClass === "base");
+    const firstBase = state.ownedItems.find(
+      (item) => item.group === "wearables" && item.wearableClass === "base"
+    );
     if (firstBase) state.room.avatarBaseId = firstBase.id;
   }
 
   if (!state.room.backgroundId) {
-    const firstBg = state.inventory.find((i) => i.group === "background");
+    const firstBg = state.ownedItems.find((item) => item.group === "background");
     if (firstBg) state.room.backgroundId = firstBg.id;
   }
 }
@@ -400,12 +468,15 @@ function renderAll() {
 }
 
 function renderHeaderUser() {
+  if (!els.headerUser) return;
+
   const label =
-    state.user?.displayName ||
-    state.user?.email ||
+    auth.currentUser?.displayName ||
+    auth.currentUser?.email ||
+    state.userId ||
     "Signed in";
 
-  els.headerUser.textContent = `${label}`;
+  els.headerUser.textContent = label;
 }
 
 function renderRoom() {
@@ -417,15 +488,17 @@ function renderRoom() {
 }
 
 function renderBackground() {
-  const bgItem = getItem(state.room.backgroundId);
-  els.roomBackground.style.backgroundImage = bgItem ? `url("${bgItem.imageUrl}")` : "none";
+  const bgItem = getOwnedItem(state.room.backgroundId);
+  els.roomBackground.style.backgroundImage = bgItem
+    ? `url("${bgItem.imageUrl}")`
+    : "none";
 }
 
 function renderAvatar() {
-  const base = getItem(state.room.avatarBaseId);
+  const base = getOwnedItem(state.room.avatarBaseId);
 
   const wearables = state.room.wearableIds
-    .map(getItem)
+    .map(getOwnedItem)
     .filter(Boolean)
     .sort((a, b) => a.layerOrder - b.layerOrder);
 
@@ -441,7 +514,11 @@ function renderAvatar() {
 
   wearables.forEach((item) => {
     pieces.push(`
-      <div class="aw-avatar-piece" data-piece="${escapeHtml(item.wearableClass || "wearable")}" style="z-index:${item.layerOrder};">
+      <div
+        class="aw-avatar-piece"
+        data-piece="${escapeHtml(item.wearableClass || "wearable")}"
+        style="z-index:${item.layerOrder};"
+      >
         <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}">
       </div>
     `);
@@ -460,7 +537,7 @@ function renderPet() {
   const pet = state.room.petPlacement;
   if (!pet) return;
 
-  const item = getItem(pet.itemId);
+  const item = getOwnedItem(pet.itemId);
   if (!item) return;
 
   const selected = isSelected("pet", 0) ? " is-selected" : "";
@@ -491,10 +568,11 @@ function renderPlacedObjects(kind) {
   layer.innerHTML = "";
 
   list.forEach((placement, index) => {
-    const item = getItem(placement.itemId);
+    const item = getOwnedItem(placement.itemId);
     if (!item) return;
 
     const selected = isSelected(kind, index) ? " is-selected" : "";
+
     const el = document.createElement("button");
     el.type = "button";
     el.className = `aw-room-object${selected}`;
@@ -517,21 +595,20 @@ function renderPlacedObjects(kind) {
 }
 
 function renderInventory() {
-  const items = state.inventory
-    .filter((item) => item.group === state.tab)
-    .sort((a, b) => {
-      if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
-      return a.name.localeCompare(b.name);
-    });
+  if (!els.inventoryGrid) return;
 
-  const count = items.length;
-  els.inventorySummary.textContent =
-    count === 0
-      ? `No ${state.tab} in inventory yet.`
-      : `${count} ${state.tab} item${count === 1 ? "" : "s"} available.`;
+  const items = state.ownedItems
+    .filter((item) => item.group === state.tab)
+    .sort(compareItems);
+
+  if (els.inventorySummary) {
+    els.inventorySummary.textContent = items.length
+      ? `${items.length} ${state.tab} item${items.length === 1 ? "" : "s"} available.`
+      : `No ${state.tab} items owned yet.`;
+  }
 
   if (!items.length) {
-    els.inventoryGrid.innerHTML = `<div class="aw-empty">Nothing in this tab yet.</div>`;
+    els.inventoryGrid.innerHTML = `<div class="aw-empty">Nothing owned in this tab yet.</div>`;
     return;
   }
 
@@ -552,10 +629,7 @@ function renderInventory() {
       </div>
     `;
 
-    card.addEventListener("click", () => {
-      onInventoryItemClick(item);
-    });
-
+    card.addEventListener("click", () => onInventoryItemClick(item));
     els.inventoryGrid.appendChild(card);
   });
 }
@@ -570,18 +644,22 @@ function onInventoryItemClick(item) {
   switch (item.group) {
     case "background":
       state.room.backgroundId = item.id;
-      clearSelection();
+      clearSelection({ rerender: false });
+      setStatus(`${item.name} equipped.`);
       break;
 
     case "pets":
       if (state.room.petPlacement?.itemId === item.id) {
         state.room.petPlacement = null;
+        clearSelection({ rerender: false });
+        setStatus(`${item.name} unequipped.`);
       } else {
         state.room.petPlacement = {
           itemId: item.id,
           ...defaultPlacementForGroup("pets"),
         };
-        setSelection("pet", 0);
+        setSelection("pet", 0, false);
+        setStatus(`${item.name} equipped. Drag your pet to place it.`);
       }
       break;
 
@@ -591,7 +669,8 @@ function onInventoryItemClick(item) {
         ...defaultPlacementForGroup("wall"),
         z: 10 + state.room.wallPlacements.length,
       });
-      setSelection("wall", state.room.wallPlacements.length - 1);
+      setSelection("wall", state.room.wallPlacements.length - 1, false);
+      setStatus(`${item.name} added. Drag it where you want it.`);
       break;
 
     case "floor":
@@ -600,21 +679,22 @@ function onInventoryItemClick(item) {
         ...defaultPlacementForGroup("floor"),
         z: 40 + state.room.floorPlacements.length,
       });
-      setSelection("floor", state.room.floorPlacements.length - 1);
+      setSelection("floor", state.room.floorPlacements.length - 1, false);
+      setStatus(`${item.name} added. Drag it where you want it.`);
       break;
 
     case "wearables":
     default:
-      equipWearableItem(item);
-      clearSelection();
+      equipWearable(item);
+      clearSelection({ rerender: false });
+      setStatus(`${item.name} equipped.`);
       break;
   }
 
   renderAll();
-  setStatus(statusMessageForEquip(item));
 }
 
-function equipWearableItem(item) {
+function equipWearable(item) {
   if (item.wearableClass === "base") {
     state.room.avatarBaseId = item.id;
     return;
@@ -627,11 +707,10 @@ function equipWearableItem(item) {
   }
 
   if (item.wearableClass === "head") {
-    const existingHeadIds = state.room.wearableIds.filter((id) => {
-      const it = getItem(id);
-      return it?.wearableClass === "head";
+    state.room.wearableIds = state.room.wearableIds.filter((id) => {
+      const it = getOwnedItem(id);
+      return it?.wearableClass !== "head";
     });
-    state.room.wearableIds = state.room.wearableIds.filter((id) => !existingHeadIds.includes(id));
   }
 
   state.room.wearableIds.push(item.id);
@@ -642,44 +721,38 @@ function unequipCurrentTab() {
     case "background":
       state.room.backgroundId = null;
       break;
-
     case "pets":
       state.room.petPlacement = null;
       break;
-
     case "wall":
       state.room.wallPlacements = [];
       break;
-
     case "floor":
       state.room.floorPlacements = [];
       break;
-
     case "wearables":
-    default: {
-      const base = state.inventory.find((i) => i.group === "wearables" && i.wearableClass === "base");
-      state.room.avatarBaseId = base?.id || null;
+    default:
       state.room.wearableIds = [];
       break;
-    }
   }
 
-  clearSelection();
+  clearSelection({ rerender: false });
   renderAll();
   setStatus(`Cleared ${state.tab}.`);
 }
 
 /* ---------------------------------------
-   Placement Selection / Delete
+   Selection / Delete
 --------------------------------------- */
 
-function setSelection(kind, index) {
+function setSelection(kind, index, rerender = true) {
   state.selectedPlacement = { kind, index };
+  if (rerender) renderRoom();
 }
 
-function clearSelection() {
+function clearSelection({ rerender = true } = {}) {
   state.selectedPlacement = null;
-  renderRoom();
+  if (rerender) renderRoom();
 }
 
 function isSelected(kind, index) {
@@ -691,6 +764,7 @@ function isSelected(kind, index) {
 
 function deleteSelectedPlacement() {
   const sel = state.selectedPlacement;
+
   if (!sel) {
     setStatus("Select a pet, wall item, or floor item first.");
     return;
@@ -704,7 +778,7 @@ function deleteSelectedPlacement() {
     state.room.floorPlacements.splice(sel.index, 1);
   }
 
-  clearSelection();
+  clearSelection({ rerender: false });
   renderAll();
   setStatus("Selected item removed.");
 }
@@ -717,7 +791,6 @@ function wirePlacementElement(el, kind, index) {
   el.addEventListener("click", (e) => {
     e.stopPropagation();
     setSelection(kind, index);
-    renderRoom();
   });
 
   el.addEventListener("pointerdown", (e) => {
@@ -725,7 +798,6 @@ function wirePlacementElement(el, kind, index) {
     e.stopPropagation();
 
     setSelection(kind, index);
-    renderRoom();
 
     try {
       el.setPointerCapture(e.pointerId);
@@ -740,7 +812,7 @@ function wirePlacementElement(el, kind, index) {
 }
 
 function onPointerMove(e) {
-  if (!state.drag || e.pointerId !== state.drag.pointerId) return;
+  if (!state.drag || e.pointerId !== state.drag.pointerId || !els.roomCanvas) return;
 
   const rect = els.roomCanvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
@@ -752,6 +824,7 @@ function onPointerMove(e) {
   if (!placement) return;
 
   const bounds = movementBoundsForKind(state.drag.kind);
+
   placement.x = clamp(xPct, bounds.minX, bounds.maxX);
   placement.y = clamp(yPct, bounds.minY, bounds.maxY);
 
@@ -759,27 +832,9 @@ function onPointerMove(e) {
 }
 
 function onPointerUp(e) {
-  if (!state.drag) return;
-  if (e.pointerId !== state.drag.pointerId) return;
-
+  if (!state.drag || e.pointerId !== state.drag.pointerId) return;
   state.drag = null;
   setStatus("Position updated. Save when you're ready.");
-}
-
-function movementBoundsForKind(kind) {
-  if (kind === "wall") {
-    return { minX: 8, maxX: 92, minY: 12, maxY: 52 };
-  }
-
-  if (kind === "floor") {
-    return { minX: 8, maxX: 92, minY: 56, maxY: 92 };
-  }
-
-  if (kind === "pet") {
-    return { minX: 8, maxX: 92, minY: 50, maxY: 92 };
-  }
-
-  return { minX: 0, maxX: 100, minY: 0, maxY: 100 };
 }
 
 function getPlacementRef(kind, index) {
@@ -789,10 +844,17 @@ function getPlacementRef(kind, index) {
   return null;
 }
 
-function defaultPlacementForGroup(group) {
-  if (group === "wall") return { x: 26, y: 30, scale: 1, z: 12 };
-  if (group === "floor") return { x: 26, y: 78, scale: 1, z: 42 };
-  if (group === "pets") return { x: 77, y: 78, scale: 1, z: 32 };
+function movementBoundsForKind(kind) {
+  if (kind === "wall") return { minX: 8, maxX: 92, minY: 12, maxY: 52 };
+  if (kind === "floor") return { minX: 8, maxX: 92, minY: 56, maxY: 92 };
+  if (kind === "pet") return { minX: 8, maxX: 92, minY: 50, maxY: 92 };
+  return { minX: 0, maxX: 100, minY: 0, maxY: 100 };
+}
+
+function defaultPlacementForGroup(kind) {
+  if (kind === "wall") return { x: 26, y: 30, scale: 1, z: 12 };
+  if (kind === "floor") return { x: 26, y: 78, scale: 1, z: 42 };
+  if (kind === "pets") return { x: 77, y: 78, scale: 1, z: 32 };
   return { x: 50, y: 50, scale: 1, z: 10 };
 }
 
@@ -807,7 +869,7 @@ function resetRoomToLastSave() {
   }
 
   state.room = deepClone(state.savedRoomSnapshot);
-  clearSelection();
+  clearSelection({ rerender: false });
   renderAll();
   setStatus("Reset to last saved room.");
 }
@@ -816,9 +878,10 @@ function resetRoomToLastSave() {
    Helpers
 --------------------------------------- */
 
-function getItem(id) {
+function getOwnedItem(id) {
   if (!id) return null;
-  return state.inventoryById.get(id) || null;
+  if (!state.ownedIds.has(id)) return null;
+  return state.catalogById.get(id) || null;
 }
 
 function isEquippedInCurrentState(item) {
@@ -828,6 +891,7 @@ function isEquippedInCurrentState(item) {
   if (item.group === "pets") return state.room.petPlacement?.itemId === item.id;
   if (item.group === "wall") return state.room.wallPlacements.some((p) => p.itemId === item.id);
   if (item.group === "floor") return state.room.floorPlacements.some((p) => p.itemId === item.id);
+
   if (item.group === "wearables") {
     if (item.wearableClass === "base") return state.room.avatarBaseId === item.id;
     return state.room.wearableIds.includes(item.id);
@@ -845,17 +909,9 @@ function formatInventorySub(item) {
   return item.group;
 }
 
-function statusMessageForEquip(item) {
-  if (item.group === "wall" || item.group === "floor") {
-    return `${item.name} added. Drag it where you want it.`;
-  }
-  if (item.group === "pets") {
-    return `${item.name} equipped. Drag your pet to place it.`;
-  }
-  return `${item.name} equipped.`;
-}
-
 function setStatus(message, isError = false) {
+  if (!els.statusText) return;
+
   els.statusText.textContent = message || "";
   els.statusText.style.color = isError ? "#ffd7d7" : "";
   els.statusText.style.borderColor = isError
@@ -864,10 +920,6 @@ function setStatus(message, isError = false) {
   els.statusText.style.background = isError
     ? "rgba(255, 124, 124, 0.10)"
     : "rgba(255,255,255,0.06)";
-}
-
-function normalizeError(err) {
-  return err?.message || "Something went wrong.";
 }
 
 function clamp(value, min, max) {
