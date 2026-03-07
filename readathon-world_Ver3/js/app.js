@@ -27,7 +27,7 @@ export const ABS = {
   staffLogin: "../html/staff-login.html",
   adminLogin: "../html/admin-login.html",
 
-  studentHome: "..2/html/student-home.html",
+  studentHome: "../html/student-home.html",
   staffHome: "../html/staff-home.html",
   adminHome: "../html/admin-home.html",
 
