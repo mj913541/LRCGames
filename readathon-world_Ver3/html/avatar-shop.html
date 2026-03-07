@@ -7,27 +7,34 @@
   <link rel="stylesheet" href="../css/avatar-shop.css" />
 </head>
 <body>
-  <div class="shopPage">
-    <!-- Top Bar -->
-    <header class="shopTopbar">
-      <div class="shopTopbarLeft">
-        <button id="btnBack" class="shopBtn shopBtnSecondary" type="button">
-          ← Back
-        </button>
-      </div>
+<div class="shopPage">
 
-      <div id="hdr" class="shopTopbarCenter">
-        <h1 class="shopTitle" data-title>Avatar Shop</h1>
-        <div class="shopSubtitle" data-subtitle>Loading…</div>
-      </div>
+  <!-- Top Bar -->
+  <header class="shopTopbar">
 
-      <div class="shopTopbarRight">
-        <a href="./avatar-world.html" class="shopBtn shopBtnSecondary">Avatar World</a>
-        <button id="btnSignOut" class="shopBtn shopBtnPrimary" type="button">
-          Sign Out
-        </button>
-      </div>
-    </header>
+    <div class="shopTopbarLeft">
+      <button id="btnBack" class="shopBtn shopBtnSecondary" type="button">
+        ← Back
+      </button>
+    </div>
+
+    <!-- REQUIRED HEADER ELEMENT FOR setHeaderUser() -->
+    <div id="hdr" class="shopTopbarCenter">
+      <h1 class="shopTitle" data-title>Avatar Shop</h1>
+      <div class="shopSubtitle" data-subtitle>Loading…</div>
+    </div>
+
+    <div class="shopTopbarRight">
+      <a href="./avatar-world.html" class="shopBtn shopBtnSecondary">
+        Avatar World
+      </a>
+
+      <button id="btnSignOut" class="shopBtn shopBtnPrimary" type="button">
+        Sign Out
+      </button>
+    </div>
+
+  </header>
 
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="shopLoadingOverlay isHidden" aria-live="polite" aria-busy="true">
