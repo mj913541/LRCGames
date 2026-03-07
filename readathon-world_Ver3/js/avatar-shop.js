@@ -271,6 +271,7 @@ async function loadCatalog({ schoolId }) {
 function normalizeCatalogItem(id, raw = {}) {
   const imageUrl =
     raw.imageUrl ||
+    raw.imagePath ||
     raw.assetUrl ||
     raw.previewUrl ||
     raw.thumbUrl ||
@@ -282,16 +283,12 @@ function normalizeCatalogItem(id, raw = {}) {
   if (!imageUrl) return null;
 
   const slotRaw = String(
-    raw.slot || raw.category || raw.type || raw.itemType || raw.kind || ""
-  )
-    .trim()
-    .toLowerCase();
+    raw.slot || raw.type || raw.category || raw.itemType || raw.kind || ""
+  ).trim().toLowerCase();
 
   const subslotRaw = String(
     raw.subslot || raw.layer || raw.equipLayer || raw.wearableType || ""
-  )
-    .trim()
-    .toLowerCase();
+  ).trim().toLowerCase();
 
   const name = String(raw.name || raw.title || raw.label || id).trim();
 
@@ -302,23 +299,26 @@ function normalizeCatalogItem(id, raw = {}) {
     id,
     name,
     imageUrl,
-    thumbUrl: raw.thumbnailUrl || raw.thumbUrl || imageUrl,
+    thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
     slotRaw,
     subslotRaw,
     group,
     wearableClass,
 
-    active: raw.active !== false,
+    active: raw.active === false ? false : raw.enabled === false ? false : true,
     price: Number(raw.price ?? raw.cost ?? 0),
     rarity: String(raw.rarity || "").trim().toLowerCase(),
-    sortOrder: Number(raw.sortOrder ?? raw.displayOrder ?? 9999),
+    sortOrder: Number(raw.sortOrder ?? raw.sort ?? raw.displayOrder ?? 9999),
     layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
     description: String(raw.description || raw.desc || "").trim(),
+
+    previewScale: Number(raw.previewScale ?? 1),
+    previewOffsetJson: raw.previewOffsetJson || "{}",
+    maxQty: Number(raw.maxQty ?? 1),
 
     raw,
   };
 }
-
 function normalizeGroup(slot, subslot, raw = {}) {
   const s = `${slot} ${subslot} ${String(raw.roomLayer || "").toLowerCase()}`;
 

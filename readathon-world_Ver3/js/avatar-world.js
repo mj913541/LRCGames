@@ -300,6 +300,7 @@ async function saveRoom() {
 function normalizeCatalogItem(id, raw = {}) {
   const imageUrl =
     raw.imageUrl ||
+    raw.imagePath ||
     raw.assetUrl ||
     raw.previewUrl ||
     raw.thumbUrl ||
@@ -311,7 +312,7 @@ function normalizeCatalogItem(id, raw = {}) {
   if (!imageUrl) return null;
 
   const slotRaw = String(
-    raw.slot || raw.category || raw.type || raw.itemType || raw.kind || ""
+    raw.slot || raw.type || raw.category || raw.itemType || raw.kind || ""
   ).trim().toLowerCase();
 
   const subslotRaw = String(
@@ -325,13 +326,13 @@ function normalizeCatalogItem(id, raw = {}) {
     id,
     name: String(raw.name || raw.title || raw.label || id).trim(),
     imageUrl,
-    thumbUrl: raw.thumbnailUrl || raw.thumbUrl || imageUrl,
+    thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
     group,
     wearableClass,
-    sortOrder: Number(raw.sortOrder ?? raw.displayOrder ?? 9999),
+    sortOrder: Number(raw.sortOrder ?? raw.sort ?? raw.displayOrder ?? 9999),
     layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
     rarity: String(raw.rarity || "").trim().toLowerCase(),
-    active: raw.active !== false,
+    active: raw.active === false ? false : raw.enabled === false ? false : true,
     raw,
   };
 }
