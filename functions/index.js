@@ -823,6 +823,15 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
  * Callable: buyAvatarItem({ schoolId, itemId })
  */
 exports.buyAvatarItem = functions.https.onCall(async (data, context) => {
+  console.log("buyAvatarItem HIT", {
+    hasAuth: !!context.auth,
+    uid: context.auth?.uid,
+    tokenUserId: context.auth?.token?.userId,
+    tokenRole: context.auth?.token?.role,
+    tokenSchoolId: context.auth?.token?.schoolId,
+    data,
+  });
+
   const auth = requireAuth(context);
   const claims = auth.token || {};
   return buyAvatarItemCore(data, claims, auth.uid);
