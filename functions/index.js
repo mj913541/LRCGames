@@ -2,6 +2,7 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const bcrypt = require("bcryptjs");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
 
 // ✅ CORS for HTTP endpoints (does NOT affect onCall functions)
 const cors = require("cors")({ origin: true });
@@ -29,7 +30,9 @@ function inferRole(userId, userDocRole) {
 }
 
 function requireAuth(ctx) {
-  if (!ctx.auth) throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+  if (!ctx.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "Sign in required.");
+  }
   return ctx.auth;
 }
 
@@ -70,7 +73,9 @@ async function getCanAwardHomerooms({ schoolId, staffId }) {
 async function verifyBearerToken(req) {
   const h = req.headers.authorization || "";
   const m = h.match(/^Bearer (.+)$/);
-  if (!m) throw new functions.https.HttpsError("unauthenticated", "Missing Bearer token.");
+  if (!m) {
+    throw new functions.https.HttpsError("unauthenticated", "Missing Bearer token.");
+  }
   const decoded = await admin.auth().verifyIdToken(m[1], true);
   return decoded; // includes custom claims too
 }
@@ -85,6 +90,7 @@ function httpsErrorToStatus(err) {
   if (code === "not-found") return 404;
   if (code === "invalid-argument") return 400;
   if (code === "failed-precondition") return 412;
+  if (code === "already-exists") return 409;
   return 500;
 }
 
@@ -114,6 +120,51 @@ function toPublicName(displayName) {
   const last = parts[parts.length - 1];
   const initial = last[0] ? `${last[0].toUpperCase()}.` : "";
   return initial ? `${first} ${initial}` : first;
+}
+
+function defaultSummary() {
+  return {
+    minutesTotal: 0,
+    minutesPendingTotal: 0,
+    moneyRaisedCents: 0,
+    rubiesBalance: 0,
+    rubiesLifetimeEarned: 0,
+    rubiesLifetimeSpent: 0,
+  };
+}
+
+function normalizeCatalogSlot(raw = {}) {
+  const slot = String(
+    raw.slot || raw.category || raw.type || raw.itemType || raw.kind || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const subslot = String(
+    raw.subslot || raw.layer || raw.equipLayer || raw.wearableType || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const s = `${slot} ${subslot} ${String(raw.roomLayer || "").toLowerCase()}`;
+
+  if (s.includes("background")) return "background";
+  if (s.includes("pet")) return "pet";
+  if (s.includes("wall")) return "wall";
+  if (s.includes("floor")) return "floor";
+  if (s.includes("base")) return "base";
+  if (s.includes("body")) return "base";
+  if (s.includes("avatar")) return "base";
+  if (s.includes("head")) return "head";
+  if (s.includes("hair")) return "head";
+  if (s.includes("hat")) return "head";
+  if (s.includes("face")) return "head";
+  if (s.includes("accessory")) return "accessory";
+  if (s.includes("glasses")) return "accessory";
+  if (s.includes("prop")) return "accessory";
+  if (s.includes("wearable")) return "accessory";
+
+  return slot || "accessory";
 }
 
 /* --------------------------------------------------
@@ -147,20 +198,15 @@ async function submitTransactionCore(data, claims, authUid) {
       throw new functions.https.HttpsError("permission-denied", "Students can submit for self only.");
     }
   } else if (role === "staff") {
-    // ✅ NEW STAFF RULES:
-    // Staff can submit pending minutes for themselves OR any student.
-    // Staff cannot submit rubies or money, and cannot use other action types.
-
+    // ✅ Staff can submit pending minutes for themselves OR any student.
     if (actionType !== "MINUTES_SUBMIT_PENDING") {
       throw new functions.https.HttpsError("permission-denied", "Staff can only submit pending minutes.");
     }
 
-    // Disallow any rubies/money deltas for staff
     if (Number(deltaRubies) !== 0 || Number(deltaMoneyRaisedCents) !== 0) {
       throw new functions.https.HttpsError("permission-denied", "Staff cannot submit rubies or money.");
     }
 
-    // Require positive, reasonable minutes
     if (!Number.isFinite(deltaMinutes) || deltaMinutes <= 0 || deltaMinutes > 600) {
       throw new functions.https.HttpsError("invalid-argument", "Minutes must be between 1 and 600.");
     }
@@ -175,23 +221,17 @@ async function submitTransactionCore(data, claims, authUid) {
   const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
 
   await db.runTransaction(async (t) => {
-    // Ensure user exists & active
     const userRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}`);
     const userSnap = await t.get(userRef);
-    if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "Target user not found.");
-    if (userSnap.data()?.active !== true) throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
+    if (!userSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Target user not found.");
+    }
+    if (userSnap.data()?.active !== true) {
+      throw new functions.https.HttpsError("failed-precondition", "Target inactive.");
+    }
 
     const sumSnap = await t.get(summaryRef);
-    const sum = sumSnap.exists
-      ? sumSnap.data()
-      : {
-          minutesTotal: 0,
-          minutesPendingTotal: 0,
-          moneyRaisedCents: 0,
-          rubiesBalance: 0,
-          rubiesLifetimeEarned: 0,
-          rubiesLifetimeSpent: 0,
-        };
+    const sum = sumSnap.exists ? sumSnap.data() : defaultSummary();
 
     const txData = {
       timestamp: admin.firestore.FieldValue.serverTimestamp(),
@@ -218,6 +258,7 @@ async function submitTransactionCore(data, claims, authUid) {
         sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
         sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + deltaRubies;
       }
+
       if (actionType === "RUBIES_SPEND" && deltaRubies < 0) {
         sum.rubiesBalance = Number(sum.rubiesBalance || 0) + deltaRubies;
         sum.rubiesLifetimeSpent = Number(sum.rubiesLifetimeSpent || 0) + Math.abs(deltaRubies);
@@ -252,7 +293,9 @@ async function awardHomeroomCore(data, claims, authUid) {
   const note = (data?.note || "").toString().slice(0, 300);
   const dateKey = (data?.dateKey || todayDateKey()).toString();
 
-  if (!homeroomId) throw new functions.https.HttpsError("invalid-argument", "Missing homeroomId.");
+  if (!homeroomId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing homeroomId.");
+  }
   if (!Number.isFinite(deltaMinutes) || !Number.isFinite(deltaRubies)) {
     throw new functions.https.HttpsError("invalid-argument", "Invalid numeric delta.");
   }
@@ -262,7 +305,6 @@ async function awardHomeroomCore(data, claims, authUid) {
 
   const actorId = String(claims.userId || authUid || "").toLowerCase();
 
-  // Staff permission: canAwardHomerooms must contain homeroomId or be ALL
   if (role === "staff") {
     const can = await getCanAwardHomerooms({ schoolId, staffId: actorId });
 
@@ -270,10 +312,11 @@ async function awardHomeroomCore(data, claims, authUid) {
     if (typeof can === "string" && can.toUpperCase() === "ALL") ok = true;
     if (Array.isArray(can) && can.includes(homeroomId)) ok = true;
 
-    if (!ok) throw new functions.https.HttpsError("permission-denied", "Not allowed to award that homeroom.");
+    if (!ok) {
+      throw new functions.https.HttpsError("permission-denied", "Not allowed to award that homeroom.");
+    }
   }
 
-  // Query active students in that homeroom
   const pubCol = db.collection(`${schoolRoot(schoolId)}/publicStudents`);
   const snap = await pubCol.where("homeroomId", "==", homeroomId).where("active", "==", true).get();
 
@@ -319,7 +362,11 @@ async function awardHomeroomCore(data, claims, authUid) {
           { merge: true }
         );
 
-        batch.set(summaryRef, { minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes) }, { merge: true });
+        batch.set(
+          summaryRef,
+          { minutesPendingTotal: admin.firestore.FieldValue.increment(deltaMinutes) },
+          { merge: true }
+        );
       }
 
       if (deltaRubies > 0) {
@@ -368,10 +415,14 @@ async function approvePendingMinutesCore(data, claims, authUid) {
   requireSchoolMatch(schoolId, claims);
 
   const role = String(claims.role || "").toLowerCase();
-  if (role !== "admin") throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  if (role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
 
   const txId = String(data?.txId ?? "").trim();
-  if (!txId) throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
+  if (!txId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
+  }
 
   const pendingRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
   const approvedByUserId = String(claims.userId || authUid || "").toLowerCase();
@@ -380,7 +431,9 @@ async function approvePendingMinutesCore(data, claims, authUid) {
 
   await db.runTransaction(async (t) => {
     const pendingSnap = await t.get(pendingRef);
-    if (!pendingSnap.exists) throw new functions.https.HttpsError("not-found", "Pending tx not found.");
+    if (!pendingSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Pending tx not found.");
+    }
 
     const pending = pendingSnap.data() || {};
     if (pending.actionType !== "MINUTES_SUBMIT_PENDING") {
@@ -398,18 +451,8 @@ async function approvePendingMinutesCore(data, claims, authUid) {
 
     const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
     const sumSnap = await t.get(summaryRef);
-    const sum = sumSnap.exists
-      ? sumSnap.data()
-      : {
-          minutesTotal: 0,
-          minutesPendingTotal: 0,
-          moneyRaisedCents: 0,
-          rubiesBalance: 0,
-          rubiesLifetimeEarned: 0,
-          rubiesLifetimeSpent: 0,
-        };
+    const sum = sumSnap.exists ? sumSnap.data() : defaultSummary();
 
-    // Update pending tx => APPROVED
     t.set(
       pendingRef,
       {
@@ -420,7 +463,6 @@ async function approvePendingMinutesCore(data, claims, authUid) {
       { merge: true }
     );
 
-    // Create approval tx record (audit trail)
     approvalTxId = db.collection(`${schoolRoot(schoolId)}/transactions`).doc().id;
     const approvalRef = db.doc(`${schoolRoot(schoolId)}/transactions/${approvalTxId}`);
 
@@ -443,10 +485,8 @@ async function approvePendingMinutesCore(data, claims, authUid) {
       { merge: true }
     );
 
-    // Move summary totals
     sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
     sum.minutesTotal = Number(sum.minutesTotal || 0) + minutes;
-
     sum.rubiesBalance = Number(sum.rubiesBalance || 0) + minutes;
     sum.rubiesLifetimeEarned = Number(sum.rubiesLifetimeEarned || 0) + minutes;
 
@@ -454,6 +494,150 @@ async function approvePendingMinutesCore(data, claims, authUid) {
   });
 
   return { ok: true, approvalTxId };
+}
+
+/* --------------------------------------------------
+   Shared Core: buyAvatarItem
+-------------------------------------------------- */
+
+async function buyAvatarItemCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId ?? "").trim();
+  requireSchoolMatch(schoolId, claims);
+
+  const userId = String(claims.userId || authUid || "").trim().toLowerCase();
+  const role = String(claims.role || "").toLowerCase();
+  const itemId = String(data?.itemId ?? "").trim();
+
+  if (!userId) {
+    throw new functions.https.HttpsError("failed-precondition", "Missing userId.");
+  }
+  if (!itemId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing itemId.");
+  }
+
+  if (!["student", "staff", "admin"].includes(role)) {
+    throw new functions.https.HttpsError("permission-denied", "Invalid role.");
+  }
+
+  const userRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}`);
+  const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${userId}/readathon/summary`);
+  const inventoryRef = db.doc(
+    `${schoolRoot(schoolId)}/users/${userId}/readathon/summary/inventory/${itemId}`
+  );
+  const catalogRef = db.doc(`${schoolRoot(schoolId)}/avatarCatalog/catalog/items/${itemId}`);
+  const txRef = db.collection(`${schoolRoot(schoolId)}/transactions`).doc();
+
+  let itemDataOut = null;
+
+  await db.runTransaction(async (t) => {
+    const [userSnap, summarySnap, inventorySnap, catalogSnap] = await Promise.all([
+      t.get(userRef),
+      t.get(summaryRef),
+      t.get(inventoryRef),
+      t.get(catalogRef),
+    ]);
+
+    if (!userSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "User not found.");
+    }
+
+    if (userSnap.data()?.active !== true) {
+      throw new functions.https.HttpsError("failed-precondition", "User inactive.");
+    }
+
+    if (!catalogSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Catalog item not found.");
+    }
+
+    if (inventorySnap.exists) {
+      throw new functions.https.HttpsError("already-exists", "Item already owned.");
+    }
+
+    const item = catalogSnap.data() || {};
+    itemDataOut = item;
+
+    if (item.active === false) {
+      throw new functions.https.HttpsError("failed-precondition", "Item is inactive.");
+    }
+
+    const price = Number(item.price ?? item.cost ?? 0);
+    if (!Number.isFinite(price) || price < 0) {
+      throw new functions.https.HttpsError("failed-precondition", "Invalid item price.");
+    }
+
+    const slot = normalizeCatalogSlot(item);
+    const allowedSlots = new Set([
+      "background",
+      "pet",
+      "wall",
+      "floor",
+      "base",
+      "head",
+      "accessory",
+    ]);
+
+    if (!allowedSlots.has(slot)) {
+      throw new functions.https.HttpsError("failed-precondition", "Item slot is not purchasable.");
+    }
+
+    const summary = summarySnap.exists ? summarySnap.data() : defaultSummary();
+    const rubiesBalance = Number(summary.rubiesBalance || 0);
+
+    if (rubiesBalance < price) {
+      throw new functions.https.HttpsError("failed-precondition", "Not enough rubies.");
+    }
+
+    summary.rubiesBalance = rubiesBalance - price;
+    summary.rubiesLifetimeSpent = Number(summary.rubiesLifetimeSpent || 0) + price;
+
+    t.set(
+      summaryRef,
+      {
+        rubiesBalance: summary.rubiesBalance,
+        rubiesLifetimeSpent: summary.rubiesLifetimeSpent,
+      },
+      { merge: true }
+    );
+
+    t.set(
+      inventoryRef,
+      {
+        owned: true,
+        itemId,
+        slot,
+        source: "shop",
+        pricePaid: price,
+        purchasedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    t.set(
+      txRef,
+      {
+        timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        dateKey: todayDateKey(),
+        targetUserId: userId,
+        submittedByUserId: userId,
+        actionType: "RUBIES_SPEND",
+        deltaMinutes: 0,
+        deltaRubies: -price,
+        deltaMoneyRaisedCents: 0,
+        note: `Bought avatar item ${itemId}`.slice(0, 300),
+        source: "avatar_shop",
+        status: "POSTED",
+        avatarItemId: itemId,
+        avatarItemSlot: slot,
+      },
+      { merge: true }
+    );
+  });
+
+  return {
+    ok: true,
+    itemId,
+    slot: normalizeCatalogSlot(itemDataOut || {}),
+  };
 }
 
 /* --------------------------------------------------
@@ -530,7 +714,7 @@ exports.approvePendingMinutesHttp = functions.https.onRequest(async (req, res) =
 });
 
 /* --------------------------------------------------
-   Callable Functions (kept)
+   Callable Functions
 -------------------------------------------------- */
 
 /**
@@ -569,7 +753,9 @@ exports.verifyPin = functions.https.onCall(async (data, context) => {
     if (!userSnap.exists) throw new functions.https.HttpsError("not-found", "User not found.");
 
     const userData = userSnap.data() || {};
-    if (userData.active !== true) throw new functions.https.HttpsError("failed-precondition", "User inactive.");
+    if (userData.active !== true) {
+      throw new functions.https.HttpsError("failed-precondition", "User inactive.");
+    }
 
     // ✅ PIN hashes stored here:
     // readathonV2_schools/{schoolId}/secrets/{userId}
@@ -633,6 +819,15 @@ exports.approvePendingMinutes = functions.https.onCall(async (data, context) => 
   return approvePendingMinutesCore(data, claims, auth.uid);
 });
 
+/**
+ * Callable: buyAvatarItem({ schoolId, itemId })
+ */
+exports.buyAvatarItem = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  return buyAvatarItemCore(data, claims, auth.uid);
+});
+
 /* --------------------------------------------------
    PUBLIC LEADERBOARD (AUTO)
    Sources:
@@ -661,9 +856,9 @@ async function rebuildPublicLeaderboardCore(schoolId) {
     db.doc(`${schoolRoot(schoolId)}/users/${s.uid}/readathon/summary`)
   );
 
-  const homeroomTotals = new Map(); // homeroomId -> minutes
-  const gradeTotals = new Map();    // grade (string) -> minutes
-  const students = [];              // for top 5
+  const homeroomTotals = new Map();
+  const gradeTotals = new Map();
+  const students = [];
 
   const refChunks = chunkArray(summaryRefs, 300);
 
@@ -671,7 +866,6 @@ async function rebuildPublicLeaderboardCore(schoolId) {
     const snaps = await db.getAll(...refs);
 
     for (const sumSnap of snaps) {
-      // Extract uid from doc path: .../users/{uid}/readathon/summary
       const m = sumSnap.ref.path.match(/\/users\/([^/]+)\/readathon\/summary$/);
       const uid = m ? m[1] : null;
       if (!uid) continue;
@@ -681,7 +875,6 @@ async function rebuildPublicLeaderboardCore(schoolId) {
 
       const minutesTotal = Number(sumSnap.get("minutesTotal") || 0);
 
-      // Student top list
       students.push({
         userId: uid,
         displayNamePublic: toPublicName(pub.displayName) || uid,
@@ -690,12 +883,10 @@ async function rebuildPublicLeaderboardCore(schoolId) {
         minutes: minutesTotal,
       });
 
-      // Homeroom totals
       if (pub.homeroomId) {
         homeroomTotals.set(pub.homeroomId, (homeroomTotals.get(pub.homeroomId) || 0) + minutesTotal);
       }
 
-      // Grade totals
       const gKey = pub.grade === 0 || pub.grade ? String(pub.grade) : "";
       if (gKey !== "") {
         gradeTotals.set(gKey, (gradeTotals.get(gKey) || 0) + minutesTotal);
@@ -712,7 +903,10 @@ async function rebuildPublicLeaderboardCore(schoolId) {
     .slice(0, 5);
 
   const topGrades = Array.from(gradeTotals.entries())
-    .map(([grade, minutes]) => ({ grade: Number.isFinite(Number(grade)) ? Number(grade) : grade, minutes }))
+    .map(([grade, minutes]) => ({
+      grade: Number.isFinite(Number(grade)) ? Number(grade) : grade,
+      minutes,
+    }))
     .sort((a, b) => b.minutes - a.minutes);
 
   const outRef = db.doc(`${schoolRoot(schoolId)}/leaderboards/public`);
@@ -739,11 +933,8 @@ async function rebuildPublicLeaderboardCore(schoolId) {
 }
 
 /**
- * ✅ Automatic rebuild every 15 minutes (adjust if you want).
- * Note: uses Cloud Scheduler (PubSub) behind the scenes.
+ * ✅ Automatic rebuild every 15 minutes
  */
-const { onSchedule } = require("firebase-functions/v2/scheduler");
-
 exports.rebuildPublicLeaderboardScheduled = onSchedule(
   { schedule: "every 15 minutes", timeZone: "America/Chicago" },
   async () => {
@@ -755,13 +946,14 @@ exports.rebuildPublicLeaderboardScheduled = onSchedule(
 );
 
 /**
- * Optional: manual callable (great for testing)
+ * Optional: manual callable
  * rebuildPublicLeaderboard({ schoolId })
  */
 exports.rebuildPublicLeaderboard = functions.https.onCall(async (data, context) => {
   const auth = requireAuth(context);
   const claims = auth.token || {};
   const role = String(claims.role || "").toLowerCase();
+
   if (role !== "admin" && role !== "staff") {
     throw new functions.https.HttpsError("permission-denied", "Staff/Admin only.");
   }
