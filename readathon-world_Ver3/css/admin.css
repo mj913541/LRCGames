@@ -11,6 +11,8 @@
 
   --radius: 26px;
   --accent: #ffcf5b;
+  --bad: #ff5f87;
+  --tap: 56px;
 
   --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
 }
@@ -135,10 +137,98 @@ body {
   line-height: 1.05;
 }
 
+.h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
 .sub {
   margin: 8px 0 14px;
   color: var(--muted);
   font-size: 15px;
+}
+
+/* =========================
+   Login / form styles
+========================= */
+.form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: block;
+}
+
+.field__label {
+  display: block;
+  font-weight: 1100;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  min-height: 54px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: var(--ring);
+  border-color: rgba(255, 207, 91, 0.55);
+}
+
+.pin {
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 10px;
+}
+
+.btnPrimary {
+  min-height: var(--tap);
+  padding: 14px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 207, 91, 0.55);
+  background: rgba(255, 207, 91, 0.20);
+  color: var(--text);
+  font-weight: 1200;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.btnPrimary:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow), var(--ring);
+}
+
+.helper {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btnGhost {
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 1100;
+}
+
+.btnGhost:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
 }
 
 .msg {
@@ -152,6 +242,12 @@ body {
 .msg--error {
   border-color: rgba(255, 95, 135, 0.55);
   background: rgba(255, 95, 135, 0.12);
+  color: var(--text);
+}
+
+.msg--ok {
+  border-color: rgba(255, 207, 91, 0.55);
+  background: rgba(255, 207, 91, 0.12);
   color: var(--text);
 }
 
@@ -192,11 +288,28 @@ body {
   font-weight: 1100;
 }
 
+.footer {
+  text-align: center;
+  padding-bottom: 6px;
+}
+
+.footer__chip {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .isHidden {
   display: none !important;
 }
 
-/* Admin home hero layout */
+/* =========================
+   Admin home hero layout
+========================= */
 .heroRow {
   display: flex;
   justify-content: center;
@@ -278,6 +391,124 @@ body {
   box-shadow: 0 10px 22px rgba(124, 58, 237, 0.4);
 }
 
+/* =========================
+   Approve Minutes page
+========================= */
+.approveBar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.approveBar__meta {
+  color: var(--muted);
+  font-weight: 1000;
+}
+
+.filterRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.field--inline {
+  margin: 0;
+}
+
+.input--small {
+  min-height: 44px;
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rowCard {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rowCard__left {
+  flex: 1 1 260px;
+}
+
+.rowCard__who {
+  font-weight: 1200;
+  font-size: 16px;
+}
+
+.rowCard__meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.rowCard__note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.rowCard__right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.rowCard__minutes {
+  font-weight: 1200;
+  font-size: 16px;
+}
+
+.btnApprove {
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 207, 91, 0.55);
+  background: rgba(255, 207, 91, 0.20);
+  color: var(--text);
+  font-weight: 1300;
+  cursor: pointer;
+}
+
+.btnApprove:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.btnApprove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emptyNote {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.20);
+  color: var(--muted);
+  font-weight: 1000;
+}
+
 @media (max-width: 768px) {
   .topbar {
     grid-template-columns: 1fr;
@@ -292,6 +523,15 @@ body {
   .hero-actions .btn-action {
     width: 100%;
     max-width: 320px;
+  }
+
+  .rowCard__right {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .btnApprove {
+    width: 100%;
   }
 }
 
