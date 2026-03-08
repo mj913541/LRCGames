@@ -247,7 +247,8 @@ a {
   display: block;
   width: 100%;
   height: auto;
-  background: transparent !important;
+  background: none !important;
+  border: none;
   mix-blend-mode: normal;
   image-rendering: auto;
   -webkit-user-drag: none;

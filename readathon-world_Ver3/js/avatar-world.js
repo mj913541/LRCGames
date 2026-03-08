@@ -142,7 +142,7 @@ function wireUI() {
       window.history.back();
       return;
     }
-    window.location.href = "./avatar-shop.html";
+    window.location.href = "../html/avatar-shop.html";
   });
 
   els.btnSave?.addEventListener("click", saveRoom);
