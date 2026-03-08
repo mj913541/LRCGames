@@ -302,9 +302,6 @@ function normalizeCatalogItem(id, raw = {}) {
     raw.imageUrl ||
     raw.imagePath ||
     raw.assetUrl ||
-    raw.previewUrl ||
-    raw.thumbUrl ||
-    raw.thumbnailUrl ||
     raw.pngUrl ||
     raw.url ||
     "";
