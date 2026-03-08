@@ -300,7 +300,6 @@ a {
   -webkit-user-drag: none;
   user-select: none;
   pointer-events: none;
-    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
 }
 
 .aw-avatar-stack {

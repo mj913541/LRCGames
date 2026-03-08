@@ -319,6 +319,7 @@ function normalizeCatalogItem(id, raw = {}) {
     raw,
   };
 }
+
 function normalizeGroup(slot, subslot, raw = {}) {
   const s = `${slot} ${subslot} ${String(raw.roomLayer || "").toLowerCase()}`;
 
@@ -420,16 +421,6 @@ function renderGrid() {
       await handleBuy(itemId);
     });
   });
-
-  const previewButtons = Array.from(els.shopGrid.querySelectorAll("[data-preview-item-id]"));
-  previewButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const itemId = String(btn.dataset.previewItemId || "").trim();
-      const item = state.catalog.find((x) => x.id === itemId);
-      if (!item) return;
-      showTransientMessage(`${item.name} • ${labelForItem(item)}`);
-    });
-  });
 }
 
 function renderShopCard(item) {
@@ -492,14 +483,6 @@ function renderShopCard(item) {
             ${ctaDisabled ? "disabled" : ""}
           >
             ${escapeHtml(ctaText)}
-          </button>
-
-          <button
-            type="button"
-            class="shopPreviewBtn"
-            data-preview-item-id="${escapeHtml(item.id)}"
-          >
-            Preview
           </button>
         </div>
       </div>
@@ -614,6 +597,7 @@ async function handleBuy(itemId) {
     renderAll();
   }
 }
+
 async function refreshAfterPurchase() {
   const [summary, inventoryDocs] = await Promise.all([
     loadSummary({
