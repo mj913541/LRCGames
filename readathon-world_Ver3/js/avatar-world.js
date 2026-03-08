@@ -640,6 +640,49 @@ function renderPlacedObjects(kind) {
 /* ---------------------------------------
    Inventory Actions
 --------------------------------------- */
+function renderInventory() {
+  if (!els.inventoryGrid) return;
+
+  const items = state.ownedItems
+    .filter((item) => item.group === state.tab)
+    .sort(compareItems);
+
+  if (els.inventorySummary) {
+    els.inventorySummary.textContent = items.length
+      ? `${items.length} ${state.tab} item${items.length === 1 ? "" : "s"} available.`
+      : `No ${state.tab} items owned yet.`;
+  }
+
+  if (!items.length) {
+    els.inventoryGrid.innerHTML = `<div class="aw-empty">Nothing owned in this tab yet.</div>`;
+    return;
+  }
+
+  els.inventoryGrid.innerHTML = "";
+
+  items.forEach((item) => {
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = `aw-inventory-item${isEquippedInCurrentState(item) ? " is-equipped" : ""}`;
+
+    card.innerHTML = `
+      <div class="aw-inventory-thumb">
+        <img
+          src="${escapeHtml(item.thumbUrl || item.imageUrl)}"
+          alt="${escapeHtml(item.name)}"
+          draggable="false"
+        >
+      </div>
+      <div class="aw-inventory-meta">
+        <div class="aw-inventory-name">${escapeHtml(item.name)}</div>
+        <div class="aw-inventory-sub">${escapeHtml(formatInventorySub(item))}</div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => onInventoryItemClick(item));
+    els.inventoryGrid.appendChild(card);
+  });
+}
 
 function onInventoryItemClick(item) {
   if (!item) return;
