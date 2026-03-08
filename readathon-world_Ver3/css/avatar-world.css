@@ -285,15 +285,6 @@ a {
 .aw-layer-pet .aw-room-object {
   transform: translate(-50%, -100%);
 }
-.aw-room-object.is-selected {
-  filter: drop-shadow(0 0 0.35rem rgba(255, 207, 91, 0.65));
-}
-
-.aw-room-object.is-selected img {
-  outline: 3px solid rgba(255, 207, 91, 0.72);
-  outline-offset: 4px;
-  border-radius: 14px;
-}
 
 .aw-room-object:active {
   cursor: grabbing;
@@ -342,10 +333,6 @@ a {
 .aw-status {
   min-height: 24px;
   padding: 12px 14px;
-  border-radius: 14px;
-  color: var(--aw-muted);
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .aw-tabs {
@@ -392,16 +379,6 @@ a {
   overflow: hidden;
   cursor: pointer;
   transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
-}
-
-.aw-inventory-item:hover {
-  transform: translateY(-2px);
-  border-color: rgba(255, 207, 91, 0.36);
-}
-
-.aw-inventory-item.is-equipped {
-  border-color: rgba(103, 216, 137, 0.65);
-  box-shadow: 0 0 0 2px rgba(103, 216, 137, 0.18);
 }
 
 .aw-inventory-thumb {
