@@ -30,7 +30,9 @@
   --aw-floor-w: 170px;
 }
 
-
+* {
+  box-sizing: border-box;
+}
 
 html,
 body {
@@ -153,6 +155,10 @@ a {
 
 .aw-room-card,
 .aw-inventory-card {
+  border: 1px solid var(--aw-line);
+  border-radius: var(--aw-radius-xl);
+  background: linear-gradient(180deg, var(--aw-panel-strong), var(--aw-panel));
+  box-shadow: var(--aw-shadow-lg);
   overflow: hidden;
 }
 
@@ -274,6 +280,7 @@ a {
   padding: 0;
   outline: none;
 }
+
 .aw-layer-wall .aw-room-object {
   transform: translate(-50%, -10%);
 }
@@ -298,6 +305,7 @@ a {
   -webkit-user-drag: none;
   user-select: none;
   pointer-events: none;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
 }
 
 .aw-avatar-stack {
@@ -330,6 +338,10 @@ a {
 .aw-status {
   min-height: 24px;
   padding: 12px 14px;
+  border-radius: 14px;
+  color: var(--aw-muted);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .aw-tabs {
@@ -376,6 +388,16 @@ a {
   overflow: hidden;
   cursor: pointer;
   transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.aw-inventory-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 207, 91, 0.36);
+}
+
+.aw-inventory-item.is-equipped {
+  border-color: rgba(103, 216, 137, 0.65);
+  box-shadow: 0 0 0 2px rgba(103, 216, 137, 0.18);
 }
 
 .aw-inventory-thumb {
