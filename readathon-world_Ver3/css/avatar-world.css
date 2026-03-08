@@ -153,10 +153,6 @@ a {
 
 .aw-room-card,
 .aw-inventory-card {
-  border: 1px solid var(--aw-line);
-  border-radius: var(--aw-radius-xl);
-  background: linear-gradient(180deg, var(--aw-panel-strong), var(--aw-panel));
-  box-shadow: var(--aw-shadow-lg);
   overflow: hidden;
 }
 
