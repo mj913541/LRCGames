@@ -5,13 +5,13 @@ import {
   db,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 import {
   normalizeError,
   loadSummary,
   fmtInt,
-} from "/readathon-world_Ver2/js/app.js";
+} from "./app.js";
 
 import {
   doc,
@@ -149,7 +149,7 @@ async function loadCatalogMap(schoolId) {
   Preview model
 ---------------------------- */
 function buildPreviewModel(roomState, catalogById) {
-  const fallbackBg = "/readathon-world_Ver2/img/bg/index.png";
+  const fallbackBg = "../img/bg/index.png";
 
   const equipped = roomState?.equipped || {};
 
@@ -251,7 +251,7 @@ function wireWidget(mountEl, { openUrl }) {
   });
 
   adminBtn?.addEventListener("click", () => {
-    window.location.href = "/readathon-world_Ver2/html/avatar-catalog-admin.html";
+    window.location.href = "../html/avatar-catalog-admin.html";
   });
 }
 

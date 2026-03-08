@@ -55,8 +55,6 @@ const els = {
    State
 --------------------------------------- */
 
-const DEBUG_DRAG_ZONES = true;
-
 const state = {
   schoolId: DEFAULT_SCHOOL_ID,
   userId: "",
@@ -123,6 +121,7 @@ function makeDefaultRoomState() {
     backgroundId: null,
     avatarBaseId: null,
     wearableIds: [],
+    avatarPlacement: defaultPlacementForGroup("avatar"),
     petPlacement: null,
     wallPlacements: [],
     floorPlacements: [],
@@ -168,9 +167,7 @@ function wireUI() {
 
   els.roomCanvas?.addEventListener("click", (e) => {
     const clickedObject = e.target.closest(".aw-room-object");
-    if (!clickedObject) {
-      clearSelection();
-    }
+    if (!clickedObject) clearSelection();
   });
 
   els.roomCanvas?.addEventListener("dragstart", (e) => {
@@ -273,6 +270,7 @@ async function saveRoom() {
       wearableIds: Array.isArray(state.room.wearableIds)
         ? state.room.wearableIds.filter(Boolean)
         : [],
+      avatarPlacement: state.room.avatarPlacement || defaultPlacementForGroup("avatar"),
       petPlacement: state.room.petPlacement || null,
       wallPlacements: Array.isArray(state.room.wallPlacements)
         ? state.room.wallPlacements
@@ -310,6 +308,9 @@ function normalizeCatalogItem(id, raw = {}) {
     raw.imageUrl ||
     raw.imagePath ||
     raw.assetUrl ||
+    raw.previewUrl ||
+    raw.thumbUrl ||
+    raw.thumbnailUrl ||
     raw.pngUrl ||
     raw.url ||
     "";
@@ -400,6 +401,10 @@ function normalizeRoomState(raw = {}) {
     ? raw.equippedWearableIds.filter(Boolean)
     : [];
 
+  room.avatarPlacement =
+    normalizeFreePlacement(raw.avatarPlacement || raw.avatar || null, "avatar") ||
+    defaultPlacementForGroup("avatar");
+
   room.petPlacement = normalizePlacement(raw.petPlacement || raw.pet || null, "pets");
 
   room.wallPlacements = Array.isArray(raw.wallPlacements)
@@ -411,6 +416,17 @@ function normalizeRoomState(raw = {}) {
     : [];
 
   return room;
+}
+
+function normalizeFreePlacement(raw, kind) {
+  const defaults = defaultPlacementForGroup(kind);
+
+  return {
+    x: clampNumber(raw?.x, 0, 100, defaults.x),
+    y: clampNumber(raw?.y, 0, 100, defaults.y),
+    scale: clampNumber(raw?.scale, 0.2, 3, defaults.scale),
+    z: Number.isFinite(Number(raw?.z)) ? Number(raw.z) : defaults.z,
+  };
 }
 
 function normalizePlacement(raw, kind) {
@@ -450,6 +466,8 @@ function reconcileRoomAgainstOwnedItems() {
   state.room.wallPlacements = state.room.wallPlacements.filter((p) => hasOwned(p.itemId));
   state.room.floorPlacements = state.room.floorPlacements.filter((p) => hasOwned(p.itemId));
 
+  state.room.avatarPlacement = normalizeFreePlacement(state.room.avatarPlacement, "avatar");
+
   if (!state.room.avatarBaseId) {
     const firstBase = state.ownedItems.find(
       (item) => item.group === "wearables" && item.wearableClass === "base"
@@ -487,16 +505,10 @@ function renderHeaderUser() {
 
 function renderRoom() {
   renderBackground();
+  renderPlacedObjects("wall");
   renderAvatar();
   renderPet();
-  renderPlacedObjects("wall");
   renderPlacedObjects("floor");
-
-  if (DEBUG_DRAG_ZONES) {
-    renderDebugZones();
-  } else {
-    removeDebugZones();
-  }
 }
 
 function renderBackground() {
@@ -507,7 +519,10 @@ function renderBackground() {
 }
 
 function renderAvatar() {
+  els.avatarLayer.innerHTML = "";
+
   const base = getOwnedItem(state.room.avatarBaseId);
+  const avatarPlacement = state.room.avatarPlacement || defaultPlacementForGroup("avatar");
 
   const wearables = state.room.wearableIds
     .map(getOwnedItem)
@@ -536,11 +551,27 @@ function renderAvatar() {
     `);
   });
 
-  els.avatarLayer.innerHTML = `
+  const selected = isSelected("avatar", 0) ? " is-selected" : "";
+
+  const el = document.createElement("button");
+  el.type = "button";
+  el.className = `aw-room-object aw-avatar-object${selected}`;
+  el.dataset.kind = "avatar";
+  el.dataset.index = "0";
+
+  el.style.left = `${avatarPlacement.x}%`;
+  el.style.top = `${avatarPlacement.y}%`;
+  el.style.width = `${Math.round(240 * avatarPlacement.scale)}px`;
+  el.style.zIndex = String(avatarPlacement.z ?? 25);
+
+  el.innerHTML = `
     <div class="aw-avatar-stack">
       ${pieces.join("")}
     </div>
   `;
+
+  wirePlacementElement(el, "avatar", 0);
+  els.avatarLayer.appendChild(el);
 }
 
 function renderPet() {
@@ -556,7 +587,7 @@ function renderPet() {
 
   const el = document.createElement("button");
   el.type = "button";
-  el.className = `aw-room-object${selected}`;
+  el.className = `aw-room-object aw-pet-object${selected}`;
   el.dataset.kind = "pet";
   el.dataset.index = "0";
 
@@ -565,7 +596,7 @@ function renderPet() {
   el.style.left = `${pet.x}%`;
   el.style.top = `${pet.y}%`;
   el.style.width = `${widthPx}px`;
-  el.style.zIndex = String(pet.z ?? 30);
+  el.style.zIndex = String(pet.z ?? 32);
 
   el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">`;
 
@@ -607,104 +638,6 @@ function renderPlacedObjects(kind) {
 }
 
 /* ---------------------------------------
-   Debug Zones
---------------------------------------- */
-
-function removeDebugZones() {
-  const old = document.getElementById("awDebugZones");
-  if (old) old.remove();
-}
-
-function renderDebugZones() {
-  removeDebugZones();
-  if (!els.roomCanvas) return;
-
-  const wrap = document.createElement("div");
-  wrap.id = "awDebugZones";
-  wrap.style.position = "absolute";
-  wrap.style.inset = "0";
-  wrap.style.pointerEvents = "none";
-  wrap.style.zIndex = "5";
-
-  const zones = [
-    { left: 8, top: 12, width: 84, height: 40, label: "WALL ZONE" },
-    { left: 8, top: 56, width: 84, height: 36, label: "FLOOR ZONE" },
-    { left: 8, top: 50, width: 84, height: 42, label: "PET ZONE" },
-  ];
-
-  zones.forEach((z) => {
-    const box = document.createElement("div");
-    box.style.position = "absolute";
-    box.style.left = `${z.left}%`;
-    box.style.top = `${z.top}%`;
-    box.style.width = `${z.width}%`;
-    box.style.height = `${z.height}%`;
-    box.style.boxSizing = "border-box";
-    box.style.border = "2px dashed rgba(255,255,255,0.65)";
-    box.style.background = "rgba(255,255,255,0.06)";
-    box.style.borderRadius = "12px";
-
-    const label = document.createElement("div");
-    label.textContent = z.label;
-    label.style.position = "absolute";
-    label.style.left = "8px";
-    label.style.top = "8px";
-    label.style.fontSize = "11px";
-    label.style.fontWeight = "700";
-    label.style.lineHeight = "1";
-    label.style.padding = "4px 6px";
-    label.style.borderRadius = "999px";
-    label.style.background = "rgba(0,0,0,0.45)";
-    label.style.color = "#fff";
-
-    box.appendChild(label);
-    wrap.appendChild(box);
-  });
-
-  els.roomCanvas.appendChild(wrap);
-}
-
-function renderInventory() {
-  if (!els.inventoryGrid) return;
-
-  const items = state.ownedItems
-    .filter((item) => item.group === state.tab)
-    .sort(compareItems);
-
-  if (els.inventorySummary) {
-    els.inventorySummary.textContent = items.length
-      ? `${items.length} ${state.tab} item${items.length === 1 ? "" : "s"} available.`
-      : `No ${state.tab} items owned yet.`;
-  }
-
-  if (!items.length) {
-    els.inventoryGrid.innerHTML = `<div class="aw-empty">Nothing owned in this tab yet.</div>`;
-    return;
-  }
-
-  els.inventoryGrid.innerHTML = "";
-
-  items.forEach((item) => {
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = `aw-inventory-item${isEquippedInCurrentState(item) ? " is-equipped" : ""}`;
-
-    card.innerHTML = `
-      <div class="aw-inventory-thumb">
-        <img src="${escapeHtml(item.thumbUrl || item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
-      </div>
-      <div class="aw-inventory-meta">
-        <div class="aw-inventory-name">${escapeHtml(item.name)}</div>
-        <div class="aw-inventory-sub">${escapeHtml(formatInventorySub(item))}</div>
-      </div>
-    `;
-
-    card.addEventListener("click", () => onInventoryItemClick(item));
-    els.inventoryGrid.appendChild(card);
-  });
-}
-
-/* ---------------------------------------
    Inventory Actions
 --------------------------------------- */
 
@@ -729,7 +662,7 @@ function onInventoryItemClick(item) {
           ...defaultPlacementForGroup("pets"),
         };
         setSelection("pet", 0, false);
-        setStatus(`${item.name} equipped. Drag your pet to place it.`);
+        setStatus(`${item.name} equipped. Drag your pet anywhere in the room.`);
       }
       break;
 
@@ -740,7 +673,7 @@ function onInventoryItemClick(item) {
         z: 10 + state.room.wallPlacements.length,
       });
       setSelection("wall", state.room.wallPlacements.length - 1, false);
-      setStatus(`${item.name} added. Drag it where you want it.`);
+      setStatus(`${item.name} added. Drag it anywhere in the room.`);
       break;
 
     case "floor":
@@ -750,14 +683,14 @@ function onInventoryItemClick(item) {
         z: 40 + state.room.floorPlacements.length,
       });
       setSelection("floor", state.room.floorPlacements.length - 1, false);
-      setStatus(`${item.name} added. Drag it where you want it.`);
+      setStatus(`${item.name} added. Drag it anywhere in the room.`);
       break;
 
     case "wearables":
     default:
       equipWearable(item);
       clearSelection({ rerender: false });
-      setStatus(`${item.name} equipped.`);
+      setStatus(`${item.name} equipped. Drag your avatar to reposition it.`);
       break;
   }
 
@@ -836,7 +769,15 @@ function deleteSelectedPlacement() {
   const sel = state.selectedPlacement;
 
   if (!sel) {
-    setStatus("Select a pet, wall item, or floor item first.");
+    setStatus("Select the avatar, pet, wall item, or floor item first.");
+    return;
+  }
+
+  if (sel.kind === "avatar") {
+    state.room.avatarPlacement = defaultPlacementForGroup("avatar");
+    clearSelection({ rerender: false });
+    renderAll();
+    setStatus("Avatar position reset.");
     return;
   }
 
@@ -903,22 +844,13 @@ function onPointerMove(e) {
   const placement = getPlacementRef(state.drag.kind, state.drag.index);
   if (!placement) return;
 
-  const bounds = movementBoundsForKind(state.drag.kind);
+  const bounds = movementBoundsForKind();
 
   const rawXPct = ((e.clientX - rect.left) / rect.width) * 100;
   const rawYPct = ((e.clientY - rect.top) / rect.height) * 100;
 
-  placement.x = clamp(
-    rawXPct - state.drag.offsetXPct,
-    bounds.minX,
-    bounds.maxX
-  );
-
-  placement.y = clamp(
-    rawYPct - state.drag.offsetYPct,
-    bounds.minY,
-    bounds.maxY
-  );
+  placement.x = clamp(rawXPct - state.drag.offsetXPct, bounds.minX, bounds.maxX);
+  placement.y = clamp(rawYPct - state.drag.offsetYPct, bounds.minY, bounds.maxY);
 
   renderRoom();
 }
@@ -930,20 +862,19 @@ function onPointerUp(e) {
 }
 
 function getPlacementRef(kind, index) {
+  if (kind === "avatar") return state.room.avatarPlacement;
   if (kind === "pet") return state.room.petPlacement;
   if (kind === "wall") return state.room.wallPlacements[index] || null;
   if (kind === "floor") return state.room.floorPlacements[index] || null;
   return null;
 }
 
-function movementBoundsForKind(kind) {
-  if (kind === "wall") return { minX: 8, maxX: 92, minY: 12, maxY: 52 };
-  if (kind === "floor") return { minX: 8, maxX: 92, minY: 56, maxY: 92 };
-  if (kind === "pet") return { minX: 8, maxX: 92, minY: 50, maxY: 92 };
-  return { minX: 0, maxX: 100, minY: 0, maxY: 100 };
+function movementBoundsForKind() {
+  return { minX: 5, maxX: 95, minY: 5, maxY: 95 };
 }
 
 function defaultPlacementForGroup(kind) {
+  if (kind === "avatar") return { x: 50, y: 78, scale: 1, z: 25 };
   if (kind === "wall") return { x: 26, y: 30, scale: 1, z: 12 };
   if (kind === "floor") return { x: 26, y: 78, scale: 1, z: 42 };
   if (kind === "pets") return { x: 77, y: 78, scale: 1, z: 32 };

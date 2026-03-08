@@ -24,10 +24,6 @@
   --aw-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
 
   --aw-room-max: 1024px;
-  --aw-avatar-w: clamp(220px, 29vw, 320px);
-  --aw-pet-w: 128px;
-  --aw-wall-w: 190px;
-  --aw-floor-w: 170px;
 }
 
 * {
@@ -223,6 +219,7 @@ a {
 .aw-layer {
   position: absolute;
   inset: 0;
+  pointer-events: none;
 }
 
 .aw-layer-wall { z-index: 10; }
@@ -230,65 +227,16 @@ a {
 .aw-layer-pet { z-index: 30; }
 .aw-layer-floor { z-index: 40; }
 
-.aw-room-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.aw-wall-zone-label,
-.aw-floor-zone-label {
-  position: absolute;
-  left: 14px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: rgba(32, 18, 3, 0.9);
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(6px);
-}
-
-.aw-wall-zone-label {
-  top: 12px;
-}
-
-.aw-floor-zone-label {
-  bottom: 12px;
-}
-
-.aw-room-canvas::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 42% 0;
-  border-bottom: 2px dashed rgba(255, 255, 255, 0.16);
-  z-index: 4;
-  pointer-events: none;
-}
-
 .aw-room-object {
   position: absolute;
-  transform: translate(-50%, -50%);
   transform-origin: center center;
   cursor: grab;
   touch-action: none;
   pointer-events: auto;
-
   background: none;
   border: none;
   padding: 0;
   outline: none;
-}
-
-.aw-layer-wall .aw-room-object {
-  transform: translate(-50%, -10%);
-}
-.aw-layer-floor .aw-room-object {
-  transform: translate(-50%, -100%);
-}
-.aw-layer-pet .aw-room-object {
-  transform: translate(-50%, -100%);
 }
 
 .aw-room-object:active {
@@ -305,17 +253,21 @@ a {
   -webkit-user-drag: none;
   user-select: none;
   pointer-events: none;
-    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+}
+
+.aw-room-object.is-selected {
+  filter: drop-shadow(0 0 0 3px rgba(255, 207, 91, 0.45));
+}
+
+.aw-avatar-object {
+  transform: translate(-50%, -100%);
 }
 
 .aw-avatar-stack {
-  position: absolute;
-  left: 50%;
-  bottom: 6%;
-  width: var(--aw-avatar-w);
+  position: relative;
+  width: 100%;
   aspect-ratio: 2 / 3;
-  transform: translateX(-50%);
-  z-index: 20;
   pointer-events: none;
 }
 
@@ -329,6 +281,18 @@ a {
   height: 100%;
   object-fit: contain;
   display: block;
+}
+
+.aw-pet-object {
+  transform: translate(-50%, -100%);
+}
+
+.aw-layer-wall .aw-room-object {
+  transform: translate(-50%, -12%);
+}
+
+.aw-layer-floor .aw-room-object {
+  transform: translate(-50%, -100%);
 }
 
 .aw-status-row {

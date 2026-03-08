@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>Avatar World</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="../css/avatar-world.css" />
+  <link rel="stylesheet" href="./css/avatar-world.css" />
 </head>
 <body>
 
@@ -17,7 +17,6 @@
       </button>
     </div>
 
-    <!-- HEADER (required by setHeaderUser) -->
     <div id="hdr" class="aw-topbar-center">
       <h1 class="aw-title" data-title>Avatar World</h1>
       <div class="aw-subtitle" data-subtitle>Loading your room…</div>
@@ -32,66 +31,61 @@
 
   </header>
 
-    <main class="aw-main">
-      <section class="aw-room-card">
-        <div class="aw-card-head">
-          <div>
-            <h2>Your Room</h2>
-            <p>Tap an item to equip it. Drag pets, wall items, and floor items to position them.</p>
-          </div>
-
-          <div class="aw-room-actions">
-            <button id="btnReset" class="aw-btn aw-btn-secondary" type="button">Reset</button>
-            <button id="btnDeleteSelected" class="aw-btn aw-btn-danger" type="button">Delete Selected</button>
-          </div>
+  <main class="aw-main">
+    <section class="aw-room-card">
+      <div class="aw-card-head">
+        <div>
+          <h2>Your Room</h2>
+          <p>Tap an item to equip it. Drag the avatar, pets, wall items, and floor items anywhere in the room.</p>
         </div>
 
-        <div class="aw-room-wrap">
-          <div id="roomCanvas" class="aw-room-canvas" aria-label="Avatar room editor">
-            <div id="roomBackground" class="aw-room-background"></div>
+        <div class="aw-room-actions">
+          <button id="btnReset" class="aw-btn aw-btn-secondary" type="button">Reset</button>
+          <button id="btnDeleteSelected" class="aw-btn aw-btn-danger" type="button">Delete Selected</button>
+        </div>
+      </div>
 
-            <div id="wallLayer" class="aw-layer aw-layer-wall"></div>
-            <div id="avatarLayer" class="aw-layer aw-layer-avatar"></div>
-            <div id="petLayer" class="aw-layer aw-layer-pet"></div>
-            <div id="floorLayer" class="aw-layer aw-layer-floor"></div>
+      <div class="aw-room-wrap">
+        <div id="roomCanvas" class="aw-room-canvas" aria-label="Avatar room editor">
+          <div id="roomBackground" class="aw-room-background"></div>
 
-            <div class="aw-room-overlay">
-              <div class="aw-wall-zone-label">Wall zone</div>
-              <div class="aw-floor-zone-label">Floor zone</div>
-            </div>
-          </div>
+          <div id="wallLayer" class="aw-layer aw-layer-wall"></div>
+          <div id="avatarLayer" class="aw-layer aw-layer-avatar"></div>
+          <div id="petLayer" class="aw-layer aw-layer-pet"></div>
+          <div id="floorLayer" class="aw-layer aw-layer-floor"></div>
+        </div>
+      </div>
+
+      <div class="aw-status-row">
+        <div id="statusText" class="aw-status">Loading…</div>
+      </div>
+    </section>
+
+    <aside class="aw-inventory-card">
+      <div class="aw-card-head aw-card-head-inventory">
+        <div>
+          <h2>Inventory</h2>
+          <p>Select a tab, then click an item to equip or place it.</p>
         </div>
 
-        <div class="aw-status-row">
-          <div id="statusText" class="aw-status">Loading…</div>
-        </div>
-      </section>
+        <button id="btnUnequipTab" class="aw-btn aw-btn-secondary" type="button">Unequip Tab</button>
+      </div>
 
-      <aside class="aw-inventory-card">
-        <div class="aw-card-head aw-card-head-inventory">
-          <div>
-            <h2>Inventory</h2>
-            <p>Select a tab, then click an item to equip or place it.</p>
-          </div>
+      <div class="aw-tabs" role="tablist" aria-label="Inventory categories">
+        <button class="aw-tab active" data-tab="wearables" type="button">Wearables</button>
+        <button class="aw-tab" data-tab="pets" type="button">Pets</button>
+        <button class="aw-tab" data-tab="wall" type="button">Wall</button>
+        <button class="aw-tab" data-tab="floor" type="button">Floor</button>
+        <button class="aw-tab" data-tab="background" type="button">Backgrounds</button>
+      </div>
 
-          <button id="btnUnequipTab" class="aw-btn aw-btn-secondary" type="button">Unequip Tab</button>
-        </div>
+      <div id="inventorySummary" class="aw-inventory-summary">Loading inventory…</div>
 
-        <div class="aw-tabs" role="tablist" aria-label="Inventory categories">
-          <button class="aw-tab active" data-tab="wearables" type="button">Wearables</button>
-          <button class="aw-tab" data-tab="pets" type="button">Pets</button>
-          <button class="aw-tab" data-tab="wall" type="button">Wall</button>
-          <button class="aw-tab" data-tab="floor" type="button">Floor</button>
-          <button class="aw-tab" data-tab="background" type="button">Backgrounds</button>
-        </div>
+      <div id="inventoryGrid" class="aw-inventory-grid" aria-live="polite"></div>
+    </aside>
+  </main>
+</div>
 
-        <div id="inventorySummary" class="aw-inventory-summary">Loading inventory…</div>
-
-        <div id="inventoryGrid" class="aw-inventory-grid" aria-live="polite"></div>
-      </aside>
-    </main>
-  </div>
-
-  <script type="module" src="../js/avatar-world.js"></script>
+<script type="module" src="./js/avatar-world.js"></script>
 </body>
 </html>
