@@ -160,11 +160,13 @@ function wireUI() {
     });
   });
 
-  els.roomCanvas?.addEventListener("pointermove", onPointerMove);
-  els.roomCanvas?.addEventListener("pointerup", onPointerUp);
-  els.roomCanvas?.addEventListener("pointercancel", onPointerUp);
+  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointerup", onPointerUp);
+  window.addEventListener("pointercancel", onPointerUp);
+
   els.roomCanvas?.addEventListener("click", (e) => {
-    if (e.target === els.roomCanvas) {
+    const clickedObject = e.target.closest(".aw-room-object");
+    if (!clickedObject) {
       clearSelection();
     }
   });
@@ -795,17 +797,15 @@ function wirePlacementElement(el, kind, index) {
     e.preventDefault();
     e.stopPropagation();
 
-    setSelection(kind, index);
-
-    try {
-      el.setPointerCapture(e.pointerId);
-    } catch {}
+    setSelection(kind, index, false);
 
     state.drag = {
       kind,
       index,
       pointerId: e.pointerId,
     };
+
+    setStatus("Dragging…");
   });
 }
 
@@ -815,13 +815,13 @@ function onPointerMove(e) {
   const rect = els.roomCanvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
 
-  const xPct = ((e.clientX - rect.left) / rect.width) * 100;
-  const yPct = ((e.clientY - rect.top) / rect.height) * 100;
-
   const placement = getPlacementRef(state.drag.kind, state.drag.index);
   if (!placement) return;
 
   const bounds = movementBoundsForKind(state.drag.kind);
+
+  const xPct = ((e.clientX - rect.left) / rect.width) * 100;
+  const yPct = ((e.clientY - rect.top) / rect.height) * 100;
 
   placement.x = clamp(xPct, bounds.minX, bounds.maxX);
   placement.y = clamp(yPct, bounds.minY, bounds.maxY);
