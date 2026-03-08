@@ -55,6 +55,8 @@ const els = {
    State
 --------------------------------------- */
 
+const DEBUG_DRAG_ZONES = true;
+
 const state = {
   schoolId: DEFAULT_SCHOOL_ID,
   userId: "",
@@ -71,7 +73,7 @@ const state = {
   savedRoomSnapshot: null,
 
   selectedPlacement: null, // { kind, index }
-  drag: null, // { kind, index, pointerId }
+  drag: null, // { kind, index, pointerId, offsetXPct, offsetYPct }
 };
 
 /* ---------------------------------------
@@ -160,7 +162,7 @@ function wireUI() {
     });
   });
 
-  window.addEventListener("pointermove", onPointerMove);
+  window.addEventListener("pointermove", onPointerMove, { passive: false });
   window.addEventListener("pointerup", onPointerUp);
   window.addEventListener("pointercancel", onPointerUp);
 
@@ -169,6 +171,10 @@ function wireUI() {
     if (!clickedObject) {
       clearSelection();
     }
+  });
+
+  els.roomCanvas?.addEventListener("dragstart", (e) => {
+    e.preventDefault();
   });
 }
 
@@ -485,6 +491,12 @@ function renderRoom() {
   renderPet();
   renderPlacedObjects("wall");
   renderPlacedObjects("floor");
+
+  if (DEBUG_DRAG_ZONES) {
+    renderDebugZones();
+  } else {
+    removeDebugZones();
+  }
 }
 
 function renderBackground() {
@@ -507,7 +519,7 @@ function renderAvatar() {
   if (base) {
     pieces.push(`
       <div class="aw-avatar-piece" data-piece="base" style="z-index:${base.layerOrder};">
-        <img src="${escapeHtml(base.imageUrl)}" alt="${escapeHtml(base.name)}">
+        <img src="${escapeHtml(base.imageUrl)}" alt="${escapeHtml(base.name)}" draggable="false">
       </div>
     `);
   }
@@ -519,7 +531,7 @@ function renderAvatar() {
         data-piece="${escapeHtml(item.wearableClass || "wearable")}"
         style="z-index:${item.layerOrder};"
       >
-        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}">
+        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
       </div>
     `);
   });
@@ -555,7 +567,7 @@ function renderPet() {
   el.style.width = `${widthPx}px`;
   el.style.zIndex = String(pet.z ?? 30);
 
-  el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}">`;
+  el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">`;
 
   wirePlacementElement(el, "pet", 0);
   els.petLayer.appendChild(el);
@@ -587,11 +599,69 @@ function renderPlacedObjects(kind) {
     el.style.width = `${widthPx}px`;
     el.style.zIndex = String(placement.z ?? (kind === "wall" ? 12 + index : 42 + index));
 
-    el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}">`;
+    el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">`;
 
     wirePlacementElement(el, kind, index);
     layer.appendChild(el);
   });
+}
+
+/* ---------------------------------------
+   Debug Zones
+--------------------------------------- */
+
+function removeDebugZones() {
+  const old = document.getElementById("awDebugZones");
+  if (old) old.remove();
+}
+
+function renderDebugZones() {
+  removeDebugZones();
+  if (!els.roomCanvas) return;
+
+  const wrap = document.createElement("div");
+  wrap.id = "awDebugZones";
+  wrap.style.position = "absolute";
+  wrap.style.inset = "0";
+  wrap.style.pointerEvents = "none";
+  wrap.style.zIndex = "5";
+
+  const zones = [
+    { left: 8, top: 12, width: 84, height: 40, label: "WALL ZONE" },
+    { left: 8, top: 56, width: 84, height: 36, label: "FLOOR ZONE" },
+    { left: 8, top: 50, width: 84, height: 42, label: "PET ZONE" },
+  ];
+
+  zones.forEach((z) => {
+    const box = document.createElement("div");
+    box.style.position = "absolute";
+    box.style.left = `${z.left}%`;
+    box.style.top = `${z.top}%`;
+    box.style.width = `${z.width}%`;
+    box.style.height = `${z.height}%`;
+    box.style.boxSizing = "border-box";
+    box.style.border = "2px dashed rgba(255,255,255,0.65)";
+    box.style.background = "rgba(255,255,255,0.06)";
+    box.style.borderRadius = "12px";
+
+    const label = document.createElement("div");
+    label.textContent = z.label;
+    label.style.position = "absolute";
+    label.style.left = "8px";
+    label.style.top = "8px";
+    label.style.fontSize = "11px";
+    label.style.fontWeight = "700";
+    label.style.lineHeight = "1";
+    label.style.padding = "4px 6px";
+    label.style.borderRadius = "999px";
+    label.style.background = "rgba(0,0,0,0.45)";
+    label.style.color = "#fff";
+
+    box.appendChild(label);
+    wrap.appendChild(box);
+  });
+
+  els.roomCanvas.appendChild(wrap);
 }
 
 function renderInventory() {
@@ -621,7 +691,7 @@ function renderInventory() {
 
     card.innerHTML = `
       <div class="aw-inventory-thumb">
-        <img src="${escapeHtml(item.thumbUrl || item.imageUrl)}" alt="${escapeHtml(item.name)}">
+        <img src="${escapeHtml(item.thumbUrl || item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
       </div>
       <div class="aw-inventory-meta">
         <div class="aw-inventory-name">${escapeHtml(item.name)}</div>
@@ -794,15 +864,28 @@ function wirePlacementElement(el, kind, index) {
   });
 
   el.addEventListener("pointerdown", (e) => {
+    if (!els.roomCanvas) return;
+
     e.preventDefault();
     e.stopPropagation();
 
+    const placement = getPlacementRef(kind, index);
+    if (!placement) return;
+
     setSelection(kind, index, false);
+
+    const roomRect = els.roomCanvas.getBoundingClientRect();
+    if (!roomRect.width || !roomRect.height) return;
+
+    const pointerXPct = ((e.clientX - roomRect.left) / roomRect.width) * 100;
+    const pointerYPct = ((e.clientY - roomRect.top) / roomRect.height) * 100;
 
     state.drag = {
       kind,
       index,
       pointerId: e.pointerId,
+      offsetXPct: pointerXPct - placement.x,
+      offsetYPct: pointerYPct - placement.y,
     };
 
     setStatus("Dragging…");
@@ -812,6 +895,8 @@ function wirePlacementElement(el, kind, index) {
 function onPointerMove(e) {
   if (!state.drag || e.pointerId !== state.drag.pointerId || !els.roomCanvas) return;
 
+  e.preventDefault();
+
   const rect = els.roomCanvas.getBoundingClientRect();
   if (!rect.width || !rect.height) return;
 
@@ -820,11 +905,20 @@ function onPointerMove(e) {
 
   const bounds = movementBoundsForKind(state.drag.kind);
 
-  const xPct = ((e.clientX - rect.left) / rect.width) * 100;
-  const yPct = ((e.clientY - rect.top) / rect.height) * 100;
+  const rawXPct = ((e.clientX - rect.left) / rect.width) * 100;
+  const rawYPct = ((e.clientY - rect.top) / rect.height) * 100;
 
-  placement.x = clamp(xPct, bounds.minX, bounds.maxX);
-  placement.y = clamp(yPct, bounds.minY, bounds.maxY);
+  placement.x = clamp(
+    rawXPct - state.drag.offsetXPct,
+    bounds.minX,
+    bounds.maxX
+  );
+
+  placement.y = clamp(
+    rawYPct - state.drag.offsetYPct,
+    bounds.minY,
+    bounds.maxY
+  );
 
   renderRoom();
 }
