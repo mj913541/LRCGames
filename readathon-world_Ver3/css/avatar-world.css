@@ -274,8 +274,17 @@ a {
   cursor: grab;
   touch-action: none;
   pointer-events: auto;
+  background: transparent;
 }
-
+.aw-layer-wall .aw-room-object {
+  transform: translate(-50%, -10%);
+}
+.aw-layer-floor .aw-room-object {
+  transform: translate(-50%, -100%);
+}
+.aw-layer-pet .aw-room-object {
+  transform: translate(-50%, -100%);
+}
 .aw-room-object.is-selected {
   filter: drop-shadow(0 0 0.35rem rgba(255, 207, 91, 0.65));
 }
@@ -294,9 +303,13 @@ a {
   display: block;
   width: 100%;
   height: auto;
+  background: transparent !important;
+  mix-blend-mode: normal;
+  image-rendering: auto;
   -webkit-user-drag: none;
   user-select: none;
   pointer-events: none;
+    filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
 }
 
 .aw-avatar-stack {
