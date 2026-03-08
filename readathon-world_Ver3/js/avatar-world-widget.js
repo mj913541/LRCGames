@@ -36,7 +36,7 @@ export async function mountAvatarWorldWidget(opts = {}) {
     return;
   }
 
-  const openUrl = opts.openUrl || "/readathon-world_Ver2/html/avatar-world.html";
+  const openUrl = opts.openUrl || "../html/avatar-world.html";
   const role = opts.role || "student";
   const schoolId = opts.schoolId || getSchoolId() || DEFAULT_SCHOOL_ID;
   const userId = opts.userId || auth.currentUser?.uid;
