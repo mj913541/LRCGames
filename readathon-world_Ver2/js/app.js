@@ -7,7 +7,7 @@ import {
   signOutUser,
   userSummaryRef,
   db,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 import {
   doc,
@@ -21,19 +21,19 @@ import {
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 export const ABS = {
-  index: "/readathon-world_Ver2/html/index.html",
+  index: "../html/index.html",
 
-  studentLogin: "/readathon-world_Ver2/html/student-login.html",
-  staffLogin: "/readathon-world_Ver2/html/staff-login.html",
-  adminLogin: "/readathon-world_Ver2/html/admin-login.html",
+  studentLogin: "../html/student-login.html",
+  staffLogin: "../html/staff-login.html",
+  adminLogin: "../html/admin-login.html",
 
-  studentHome: "/readathon-world_Ver2/html/student-home.html",
-  staffHome: "/readathon-world_Ver2/html/staff-home.html",
-  adminHome: "/readathon-world_Ver2/html/admin-home.html",
+  studentHome: "../html/student-home.html",
+  staffHome: "../html/staff-home.html",
+  adminHome: "../html/admin-home.html",
 
-  studentMinutesSubmit: "/readathon-world_Ver2/html/student-minutes-submit.html",
-  staffMinutesSubmit: "/readathon-world_Ver2/html/staff-minutes-submit.html",
-  adminMinutesApprove: "/readathon-world_Ver2/html/admin-minutes-approve.html",
+  studentMinutesSubmit: "../html/student-minutes-submit.html",
+  staffMinutesSubmit: "../html/staff-minutes-submit.html",
+  adminMinutesApprove: "../html/admin-minutes-approve.html",
 };
 
 /* --------------------------------------------------

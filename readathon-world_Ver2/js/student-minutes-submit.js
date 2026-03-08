@@ -5,7 +5,7 @@ import {
   getSchoolId,
   DEFAULT_SCHOOL_ID,
   waitForAuthReady,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 import {
   ABS,
@@ -15,7 +15,7 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-} from "/readathon-world_Ver2/js/app.js";
+} from "./app.js";
 
 console.log("✅ LOADED student-minutes-submit.js (HTTP)");
 

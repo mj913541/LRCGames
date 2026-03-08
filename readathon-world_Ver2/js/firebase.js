@@ -31,7 +31,7 @@ import {
   httpsCallable,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-functions.js";
 
-console.log("✅ LOADED firebase.js: V2 /readathon-world_Ver2/js/firebase.js");
+console.log("✅ LOADED firebase.js: V2 ./firebase.js");
 
 /* --------------------------------------------------
    Firebase Config
@@ -133,7 +133,7 @@ export function watchAuth(callback) {
 -------------------------------------------------- */
 
 export async function requireSignedIn({
-  redirectTo = "/readathon-world_Ver2/html/index.html",
+  redirectTo = "../index.html",
 } = {}) {
   if (!auth.currentUser) {
     window.location.href = redirectTo;
@@ -144,7 +144,7 @@ export async function requireSignedIn({
 
 export async function requireRole(
   allowedRoles = [],
-  { redirectTo = "/readathon-world_Ver2/html/index.html" } = {}
+  { redirectTo = "../html/index.html" } = {}
 ) {
   const ok = await requireSignedIn({ redirectTo });
   if (!ok) return false;

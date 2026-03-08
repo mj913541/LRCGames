@@ -6,11 +6,11 @@ import {
   fnVerifyPin,
   signInWithToken,
   fetchActivePublicStudentsByGrade,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 const ABS = {
-  studentHome: "/readathon-world_Ver2/html/student-home.html",
-  index: "/readathon-world_Ver2/html/index.html",
+  studentHome: "../html/student-home.html",
+  index: "../html/index.html",
 };
 
 const els = {
@@ -46,7 +46,7 @@ const els = {
 
 // Grade icon mapping (PLACEHOLDER naming convention).
 // Swap these filenames to match your actual PNG names.
-const gradeIconPath = (gradeNum) => `/readathon-world_Ver2/img/grades/grade_${gradeNum}.png`;
+const gradeIconPath = (gradeNum) => `../img/grades/grade_${gradeNum}.png`;
 // If you have Kindergarten as a different filename, we can map it later.
 
 const gradeLabels = {
@@ -69,7 +69,7 @@ function homeroomPhotoPath(homeroomId) {
 }
 
 // Fallback image if one is missing
-const DEFAULT_TEACHER_PHOTO = "/readathon-world_Ver2/img/default.png";
+const DEFAULT_TEACHER_PHOTO = "../img/default.png";
 
 let state = {
   schoolId: getSchoolId(),

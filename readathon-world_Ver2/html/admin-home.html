@@ -4,87 +4,83 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Home • Readathon World</title>
-  <link rel="stylesheet" href="/readathon-world_Ver2/css/admin.css" />
-  <link rel="stylesheet" href="/readathon-world_Ver2/css/leaderboard.css" />
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/leaderboard.css" />
+  <link rel="stylesheet" href="../css/avatar-world-widget.css" />
 </head>
 
 <body class="page page--admin-home">
   <div class="bg bg--home" aria-hidden="true"></div>
 
   <header class="topbar">
-    <a class="topbar__back" href="/readathon-world_Ver2/html/admin-login.html" aria-label="Back to login">
-      ← Login
-    </a>
-
-    <div class="topbar__title">
-      <div class="pill">🛠️ Admin Home</div>
-    </div>
-
+    <a class="topbar__back" href="./admin-login.html" aria-label="Back to login">← Login</a>
+    <div class="topbar__title"><div class="pill">Admin Home</div></div>
     <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
   </header>
 
-  <main class="wrap">
+  <main class="wrap" id="pageWrap">
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
         <div>
           <h1 class="h1" data-title>Readathon World</h1>
           <p class="sub" data-subtitle></p>
         </div>
-        <a class="btnBig btnBig--primary" href="/readathon-world_Ver2/html/admin-minutes-approve.html">
-          ✅ Approve Pending Minutes
-        </a>
       </div>
 
       <div class="gridButtons">
-        <a class="btnBig" href="/readathon-world_Ver2/html/staff-minutes-submit.html">🎁 Submit / Award (Admin)</a>
-        <a class="btnBig" href="/readathon-world_Ver2/html/admin-minutes-approve.html">✅ Approve Pending</a>
-      </div>
-    </section>
+        <div class="hero-actions">
+          <a href="./staff-minutes-submit.html"
+             class="btn-action btn-submit-minutes btn-action--large">
+            Submit Minutes
+          </a>
 
-<section class="leaderboard-panel">
-  <div id="leaderboard"></div>
-</section>
+          <a href="./prize-store.html"
+             class="btn-action btn-store btn-action--large">
+            Prize Store
+          </a>
 
-    <section class="panel">
-      <div class="sectionHead">
-        <h2 class="h2">🧍 Avatar Space</h2>
-        <p class="sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
-      </div>
+          <a href="./donations.html"
+             class="btn-action btn-donate btn-action--large">
+            Donate
+          </a>
 
-      <div class="avatarArea">
-        <div class="avatarStage" aria-label="Avatar preview area">
-          <div class="avatarStage__bg" id="roomBgLabel">Room: (none)</div>
-          <div class="avatarStage__body">
-            <div class="avatarDoll" id="avatarDoll">
-              <div class="avatarTag" id="equipHead">Head: (none)</div>
-              <div class="avatarTag" id="equipBody">Body: (none)</div>
-              <div class="avatarTag" id="equipAcc">Accessory: (none)</div>
-              <div class="avatarTag" id="equipPet">Pet: (none)</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="inventoryBox">
-          <div class="inventoryHead">
-            <h3 class="h3">🎒 Your Items</h3>
-            <p class="tiny">Tap an item to “equip” (preview only).</p>
-          </div>
-          <div class="inventoryList" id="inventoryList" aria-label="Inventory list"></div>
+          <a href="./admin-minutes-approve.html"
+             class="btn-action btn-approve-minutes btn-action--large">
+            Approve Minutes
+          </a>
         </div>
       </div>
+
+      <div class="gridCards">
+        <div class="cardStat">
+          <div class="cardStat__label">Your Minutes</div>
+          <div class="cardStat__value" id="minutesTotal">—</div>
+        </div>
+
+        <div class="cardStat">
+          <div class="cardStat__label">Your Pending</div>
+          <div class="cardStat__value" id="minutesPending">—</div>
+        </div>
+
+        <div class="cardStat">
+          <div class="cardStat__label">Your Rubies</div>
+          <div class="cardStat__value" id="rubiesBalance">—</div>
+          <div class="cardStat__sub" id="rubiesLifetime">—</div>
+        </div>
+
+        <div class="cardStat">
+          <div class="cardStat__label">Your Money</div>
+          <div class="cardStat__value" id="moneyRaised">—</div>
+        </div>
+      </div>
     </section>
 
-    <section class="panel">
-      <div class="sectionHead">
-        <h2 class="h2">Admin Tools</h2>
-        <p class="sub">Coming next: search any user, view inventory, edit balances, group awards.</p>
-      </div>
+<section id="leaderboardMount"></section>
 
-      <div class="gridButtons">
-        <a class="btnBig" href="/readathon-world_Ver2/html/index.html">🏠 Home</a>
-      </div>
-    </section>
+<section id="avatarWorldMount"></section>
 
+    <!-- Permissions panel (kept as-is, currently hidden in your build) -->
     <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
       <div class="loadingCard">
         <div class="spinner" aria-hidden="true"></div>
@@ -95,6 +91,6 @@
     <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
   </main>
 
-  <script type="module" src="/readathon-world_Ver2/js/admin-home.js"></script>
+  <script type="module" src="../js/admin-home.js"></script>
 </body>
 </html>

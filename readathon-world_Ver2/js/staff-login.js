@@ -5,11 +5,11 @@ import {
   setSchoolId,
   fnVerifyPin,
   signInWithToken,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 const ABS = {
-  staffHome: "/readathon-world_Ver2/html/staff-home.html",
-  index: "/readathon-world_Ver2/html/index.html",
+  staffHome: "../html/staff-home.html",
+  index: "../html/index.html",
 };
 
 const els = {

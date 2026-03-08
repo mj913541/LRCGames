@@ -1,10 +1,10 @@
-/* ==============================
-   READATHON ACTION BUTTONS
-   Donation + Prize Store
-============================== */
-
+/* ================================
+   Base Action Button
+================================ */
 .btn-action {
-  display: inline-block;
+  display: flex;
+  align-items: center;        /* vertical center text */
+  justify-content: center;    /* horizontal center text */
   padding: 14px 26px;
   border-radius: 14px;
   font-size: 1.1rem;
@@ -12,35 +12,104 @@
   text-decoration: none;
   letter-spacing: 0.5px;
   transition: all 0.25s ease;
-  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
   border: none;
   cursor: pointer;
+  text-align: center;
+  min-width: 190px;
+  color: white;
 }
 
-/* 💰 Donation Button */
+/* ================================
+   Donation Button
+================================ */
 .btn-donate {
   background: linear-gradient(135deg, #16a34a, #15803d);
-  color: white;
 }
 
 .btn-donate:hover {
   transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.4);
+  box-shadow: 0 10px 22px rgba(22,163,74,0.4);
 }
 
-/* 🏆 Prize Store Button */
+/* ================================
+   Prize Store Button
+================================ */
 .btn-store {
   background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
 }
 
 .btn-store:hover {
   transform: translateY(-3px) scale(1.04);
-  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.4);
+  box-shadow: 0 10px 22px rgba(245,158,11,0.4);
 }
 
-/* Optional: big hero version */
+/* ================================
+   Submit Minutes Button
+================================ */
+.btn-submit-minutes {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.btn-submit-minutes:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(37,99,235,0.4);
+}
+
+/* ================================
+   Approve Minutes Button
+================================ */
+.btn-approve-minutes {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+.btn-approve-minutes:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(124,58,237,0.4);
+}
+
+/* ================================
+   Larger Hero Version
+================================ */
 .btn-action--large {
   font-size: 1.25rem;
   padding: 18px 34px;
+}
+
+/* ================================
+   Button Row Layout
+================================ */
+.hero-actions {
+  display: flex;
+  justify-content: center;   /* centers the row */
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;           /* wraps on small screens */
+  margin: 20px auto;
+}
+
+/* ================================
+   Optional wrapper
+================================ */
+.hero-buttons-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* ================================
+   Tablet / Mobile Layout
+================================ */
+@media (max-width: 768px) {
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-actions .btn-action {
+    width: 100%;
+    max-width: 320px;
+  }
+
 }

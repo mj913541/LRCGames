@@ -1,15 +1,15 @@
-// /readathon-world_Ver2/js/admin-login.js
+
 import {
   DEFAULT_SCHOOL_ID,
   getSchoolId,
   setSchoolId,
   fnVerifyPin,
   signInWithToken,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 const ABS = {
-  adminHome: "/readathon-world_Ver2/html/admin-home.html",
-  index: "/readathon-world_Ver2/html/index.html",
+  adminHome: "../html/admin-home.html",
+  index: "../html/index.html",
 };
 
 const DEFAULT_ADMIN_ID = "admin_malbrecht";

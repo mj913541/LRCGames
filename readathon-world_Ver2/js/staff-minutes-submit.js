@@ -6,7 +6,7 @@ import {
   waitForAuthReady,
   fetchActivePublicStudentsByGrade,
   fetchActivePublicStudentsByHouse, // ✅ NEW (you will add this in firebase.js next step)
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 import {
   ABS,
@@ -16,7 +16,7 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-} from "/readathon-world_Ver2/js/app.js";
+} from "./app.js";
 
 const ENDPOINTS = {
   submitTransactionHttp:

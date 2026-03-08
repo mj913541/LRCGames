@@ -1,6 +1,6 @@
 // /readathon-world_Ver2/js/student-home.js
 
-import { auth, getSchoolId, DEFAULT_SCHOOL_ID } from "/readathon-world_Ver2/js/firebase.js";
+import { auth, getSchoolId, DEFAULT_SCHOOL_ID } from "./firebase.js";
 import {
   ABS,
   guardRoleOrRedirect,
@@ -13,9 +13,10 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-} from "/readathon-world_Ver2/js/app.js";
+} from "./app.js";
 
-import { mountAvatarWorldWidget } from "/readathon-world_Ver2/js/avatar-world-widget.js";
+import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
+import { renderLeaderboard } from "./leaderboard.js";
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
@@ -59,22 +60,21 @@ async function init() {
     subtitle: `${schoolId} • ${userId}`,
   });
 
-  // Load summary
   const summary = await loadSummary({ schoolId, userId });
   renderSummary(summary);
 
-  // Load inventory
   const inv = await loadInventory({ schoolId, userId });
   renderInventory(inv);
 
-  // Mount shared Avatar World widget (real Firestore-backed preview)
   await mountAvatarWorldWidget({
     mountEl: "#avatarWorldMount",
     role: "student",
     schoolId,
     userId,
-    openUrl: "/readathon-world_Ver2/html/avatar-world.html",
+    openUrl: "../html/avatar-world.html",
   });
+
+  await renderLeaderboard("leaderboardMount");
 
   hideLoading(els.loadingOverlay);
 }
@@ -95,7 +95,7 @@ function wireAvatarWorldEmbed() {
 
     if (main) main.setAttribute("inert", "");
 
-    els.awEmbedFrame.src = "/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student";
+    els.awEmbedFrame.src = "../html/avatar-world.html?embed=1&from=student";
 
     requestAnimationFrame(() => els.btnCloseAvatarWorld.focus());
   };

@@ -1,11 +1,11 @@
-// /readathon-world_Ver2/js/admin-minutes-approve.js
+
 
 import {
   auth,
   getSchoolId,
   DEFAULT_SCHOOL_ID,
   waitForAuthReady,
-} from "/readathon-world_Ver2/js/firebase.js";
+} from "./firebase.js";
 
 import {
   ABS,
@@ -15,7 +15,7 @@ import {
   showLoading,
   hideLoading,
   normalizeError,
-} from "/readathon-world_Ver2/js/app.js";
+} from "./app.js";
 
 import {
   collection,
@@ -28,7 +28,7 @@ import {
   getDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import { db } from "/readathon-world_Ver2/js/firebase.js";
+import { db } from "./firebase.js";
 
 console.log("✅ LOADED admin-minutes-approve.js (HTTP)");
 
