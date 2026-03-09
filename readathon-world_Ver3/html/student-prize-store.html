@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Page identity -->
+  <title>Prize Store | Readathon World V2</title>
+  <meta name="page-name" content="student-prize-store" />
+  <meta name="page-title" content="Prize Store" />
+  <meta name="page-subtitle" content="Use 20% of your donations as prize credit." />
+
+  <!-- Shared styles -->
+  <link rel="stylesheet" href="../css/prize-store.css" />
+</head>
+<body
+  class="rw-page rw-student-page rw-prize-store-page"
+  data-page="student-prize-store"
+  data-page-title="Prize Store"
+  data-page-subtitle="Use 20% of your donations as prize credit."
+>
+  <!-- ======================================================
+       PAGE HEADER
+       Keep this structure consistent across your pages
+  ======================================================= -->
+  <header class="rw-page-header" id="pageHeader">
+    <div class="rw-page-header__inner">
+      <div class="rw-page-header__copy">
+        <p class="rw-page-kicker">Readathon World V2</p>
+        <h1 class="rw-page-title" id="pageTitle">Prize Store</h1>
+        <p class="rw-page-subtitle" id="pageSubtitle">
+          Use 20% of your donations as prize credit.
+        </p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================
+       MAIN CONTENT
+  ======================================================= -->
+  <main class="rw-page-main" id="pageMain">
+    <!-- How it works -->
+    <section class="rw-info-banner" id="prizeCreditInfo">
+      <p>
+        <strong>How Prize Credit Works:</strong>
+        For every <strong>$1.00</strong> you raise in donations, you earn
+        <strong>$0.20</strong> in Prize Store credit.
+      </p>
+      <p>
+        Example:
+        if a prize costs <strong>$1.00</strong> in credit, you must raise at least
+        <strong>$5.00</strong> in donations to afford it.
+      </p>
+    </section>
+
+    <!-- Wallet summary -->
+    <section class="rw-summary-grid" id="studentPrizeWalletSummary" aria-label="Prize credit summary">
+      <article class="rw-summary-card">
+        <span class="rw-summary-card__label">Total Raised</span>
+        <span class="rw-summary-card__value" id="donationsRaisedValue">$0.00</span>
+      </article>
+
+      <article class="rw-summary-card">
+        <span class="rw-summary-card__label">Credit Earned</span>
+        <span class="rw-summary-card__value" id="creditEarnedValue">$0.00</span>
+      </article>
+
+      <article class="rw-summary-card">
+        <span class="rw-summary-card__label">Credit Spent</span>
+        <span class="rw-summary-card__value" id="creditSpentValue">$0.00</span>
+      </article>
+
+      <article class="rw-summary-card">
+        <span class="rw-summary-card__label">Credit Remaining</span>
+        <span class="rw-summary-card__value" id="creditRemainingValue">$0.00</span>
+      </article>
+    </section>
+
+    <!-- Filters -->
+    <section class="rw-toolbar-card" id="prizeStoreToolbar" aria-label="Prize store filters">
+      <div class="rw-toolbar-field">
+        <label for="categoryFilter" class="rw-toolbar-label">Category</label>
+        <select id="categoryFilter" class="rw-toolbar-input">
+          <option value="all">All</option>
+          <option value="small">Small Prizes</option>
+          <option value="school">School Supplies</option>
+          <option value="plush">Plush</option>
+          <option value="toys">Toys</option>
+          <option value="electronics">Electronics</option>
+        </select>
+      </div>
+
+      <div class="rw-toolbar-field">
+        <label for="prizeSearchInput" class="rw-toolbar-label">Search</label>
+        <input
+          id="prizeSearchInput"
+          class="rw-toolbar-input"
+          type="text"
+          placeholder="Search prizes..."
+        />
+      </div>
+    </section>
+
+    <!-- Prize grid -->
+    <section class="rw-section" id="prizeStoreSection">
+      <div class="rw-section-heading">
+        <h2 class="rw-section-title">Available Prizes</h2>
+        <p class="rw-section-subtitle">
+          Each prize shows both the credit cost and the total donations needed to earn it.
+        </p>
+      </div>
+
+      <div class="rw-prize-grid" id="prizeGrid">
+        <!-- JS will render real prize cards here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ======================================================
+       REDEEM MODAL
+  ======================================================= -->
+  <div class="rw-modal-backdrop is-hidden" id="redeemModal" aria-hidden="true">
+    <div class="rw-modal" role="dialog" aria-modal="true" aria-labelledby="redeemModalTitle">
+      <h2 class="rw-modal-title" id="redeemModalTitle">Redeem Prize</h2>
+
+      <div class="rw-modal-body" id="redeemModalBody">
+        <p id="redeemModalMessage">
+          Prize details will appear here.
+        </p>
+      </div>
+
+      <div class="rw-modal-actions">
+        <button type="button" class="rw-btn rw-btn-secondary" id="cancelRedeemBtn">
+          Cancel
+        </button>
+        <button type="button" class="rw-btn rw-btn-primary" id="confirmRedeemBtn">
+          Redeem Prize
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="rw-toast is-hidden" id="pageToast" aria-live="polite"></div>
+
+  <!-- Page script -->
+  <script type="module" src="../js/student-prize-store.js"></script>
+</body>
+</html>
