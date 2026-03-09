@@ -495,7 +495,81 @@ async function approvePendingMinutesCore(data, claims, authUid) {
 
   return { ok: true, approvalTxId };
 }
+async function rejectPendingMinutesCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId ?? "").trim();
+  requireSchoolMatch(schoolId, claims);
 
+  const role = String(claims.role || "").toLowerCase();
+  if (role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
+
+  const txId = String(data?.txId ?? "").trim();
+  const reason = String(data?.reason || "").trim().slice(0, 200);
+
+  if (!txId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing txId.");
+  }
+
+  const pendingRef = db.doc(`${schoolRoot(schoolId)}/transactions/${txId}`);
+  const rejectedByUserId = String(claims.userId || authUid || "").toLowerCase();
+
+  await db.runTransaction(async (t) => {
+    const pendingSnap = await t.get(pendingRef);
+    if (!pendingSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Pending tx not found.");
+    }
+
+    const pending = pendingSnap.data() || {};
+
+    if (pending.actionType !== "MINUTES_SUBMIT_PENDING") {
+      throw new functions.https.HttpsError("failed-precondition", "Not a pending minutes tx.");
+    }
+
+    if (pending.status !== "PENDING") {
+      throw new functions.https.HttpsError("failed-precondition", "Already processed.");
+    }
+
+    const targetUserId = String(pending.targetUserId || "").toLowerCase();
+    const minutes = Number(pending.deltaMinutes || 0);
+
+    if (!targetUserId || minutes <= 0) {
+      throw new functions.https.HttpsError("failed-precondition", "Invalid pending tx data.");
+    }
+
+    const summaryRef = db.doc(`${schoolRoot(schoolId)}/users/${targetUserId}/readathon/summary`);
+    const sumSnap = await t.get(summaryRef);
+    const sum = sumSnap.exists
+      ? sumSnap.data()
+      : {
+          minutesTotal: 0,
+          minutesPendingTotal: 0,
+          moneyRaisedCents: 0,
+          rubiesBalance: 0,
+          rubiesLifetimeEarned: 0,
+          rubiesLifetimeSpent: 0,
+        };
+
+    // Mark rejected
+    t.set(
+      pendingRef,
+      {
+        status: "REJECTED",
+        rejectedAt: admin.firestore.FieldValue.serverTimestamp(),
+        rejectedByUserId,
+        rejectReason: reason || "",
+      },
+      { merge: true }
+    );
+
+    // Remove from pending total
+    sum.minutesPendingTotal = Math.max(0, Number(sum.minutesPendingTotal || 0) - minutes);
+
+    t.set(summaryRef, sum, { merge: true });
+  });
+
+  return { ok: true };
+}
 /* --------------------------------------------------
    Shared Core: buyAvatarItem
 -------------------------------------------------- */
@@ -712,7 +786,33 @@ exports.approvePendingMinutesHttp = functions.https.onRequest(async (req, res) =
     }
   });
 });
+exports.rejectPendingMinutesHttp = functions.https.onRequest(async (req, res) => {
+  return cors(req, res, async () => {
+    try {
+      if (req.method !== "POST") return res.status(405).send("POST only");
 
+      const claims = await verifyBearerToken(req);
+
+      console.log("rejectPendingMinutesHttp HIT", {
+        uid: claims.user_id || claims.sub,
+        role: claims.role,
+        schoolId: claims.schoolId,
+      });
+
+      const result = await rejectPendingMinutesCore(
+        req.body || {},
+        claims,
+        claims.user_id || claims.sub
+      );
+
+      return res.status(200).json(result);
+    } catch (err) {
+      console.error("rejectPendingMinutesHttp error:", err);
+      const status = err instanceof functions.https.HttpsError ? httpsErrorToStatus(err) : 500;
+      return res.status(status).json({ error: err?.message || "Error" });
+    }
+  });
+});
 /* --------------------------------------------------
    Callable Functions
 -------------------------------------------------- */
