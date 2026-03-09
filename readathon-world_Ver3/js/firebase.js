@@ -78,6 +78,7 @@ export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingM
 
 // Avatar World (Option 1 rules: function-owned summary + inventory)
 export const fnBuyAvatarItem = httpsCallable(functions, "buyAvatarItem");
+export const fnRedeemPrizeCredit = httpsCallable(functions, "redeemPrizeCredit");
 
 /* --------------------------------------------------
    School ID Helpers

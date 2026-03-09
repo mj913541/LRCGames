@@ -1082,3 +1082,156 @@ exports.rebuildPublicLeaderboard = functions.https.onCall(async (data, context) 
 
   return rebuildPublicLeaderboardCore(schoolId);
 });
+
+exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "You must be signed in.");
+  }
+
+  const uid = context.auth.uid;
+  const token = context.auth.token || {};
+  const schoolId = String(token.schoolId || "").trim();
+  const role = String(token.role || "").trim();
+
+  if (!schoolId) {
+    throw new functions.https.HttpsError("failed-precondition", "Missing schoolId claim.");
+  }
+
+  if (role !== "student") {
+    throw new functions.https.HttpsError("permission-denied", "Only students can redeem prizes.");
+  }
+
+  const prizeId = String(data?.prizeId || "").trim();
+  if (!prizeId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing prizeId.");
+  }
+
+  const schoolRoot = `readathonV2_schools/${schoolId}`;
+  const userRef = db.doc(`${schoolRoot}/users/${uid}`);
+  const prizeRef = db.doc(`${schoolRoot}/prizeCatalog/${prizeId}`);
+  const redemptionsCol = db.collection(`${schoolRoot}/prizeRedemptions`);
+
+  const CREDIT_RATE = 0.20;
+
+  function getDonationTotal(userData = {}) {
+    const candidates = [
+      "donationsTotal",
+      "fundraisingTotal",
+      "amountRaised",
+      "raisedTotal",
+      "donationTotal",
+    ];
+
+    for (const field of candidates) {
+      const val = Number(userData[field]);
+      if (!Number.isNaN(val) && val >= 0) return val;
+    }
+
+    return 0;
+  }
+
+  function getPrizeCreditSpent(userData = {}) {
+    const val = Number(userData.prizeCreditSpent);
+    if (!Number.isNaN(val) && val >= 0) return val;
+    return 0;
+  }
+
+  return await db.runTransaction(async (tx) => {
+    const [userSnap, prizeSnap] = await Promise.all([
+      tx.get(userRef),
+      tx.get(prizeRef),
+    ]);
+
+    if (!userSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Student record not found.");
+    }
+
+    if (!prizeSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Prize not found.");
+    }
+
+    const userData = userSnap.data() || {};
+    const prizeData = prizeSnap.data() || {};
+
+    const donationsTotal = getDonationTotal(userData);
+    const prizeCreditSpent = getPrizeCreditSpent(userData);
+
+    const price = Number(prizeData.price || 0);
+    const stock = Number(prizeData.stock || 0);
+    const active = prizeData.active !== false;
+
+    if (!active) {
+      throw new functions.https.HttpsError("failed-precondition", "This prize is not active.");
+    }
+
+    if (stock <= 0) {
+      throw new functions.https.HttpsError("failed-precondition", "This prize is out of stock.");
+    }
+
+    if (!(price > 0)) {
+      throw new functions.https.HttpsError("failed-precondition", "Prize price is invalid.");
+    }
+
+    const prizeCreditEarned = Number((donationsTotal * CREDIT_RATE).toFixed(2));
+    const prizeCreditRemaining = Number(Math.max(0, prizeCreditEarned - prizeCreditSpent).toFixed(2));
+    const minimumDonationsNeeded = Number((price / CREDIT_RATE).toFixed(2));
+
+    if (prizeCreditRemaining < price) {
+      throw new functions.https.HttpsError(
+        "failed-precondition",
+        `You need more prize credit to redeem this item.`
+      );
+    }
+
+    const nextPrizeCreditSpent = Number((prizeCreditSpent + price).toFixed(2));
+
+    tx.update(userRef, {
+      prizeCreditSpent: nextPrizeCreditSpent,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    tx.update(prizeRef, {
+      stock: stock - 1,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    const redemptionRef = redemptionsCol.doc();
+
+    tx.set(redemptionRef, {
+      userId: uid,
+      schoolId,
+      prizeId,
+      prizeName: String(prizeData.name || ""),
+      price,
+      minimumDonationsNeeded,
+      donationsTotalAtRedemption: donationsTotal,
+      prizeCreditEarnedAtRedemption: prizeCreditEarned,
+      prizeCreditSpentBeforeRedemption: prizeCreditSpent,
+      prizeCreditSpentAfterRedemption: nextPrizeCreditSpent,
+      prizeCreditRemainingAfterRedemption: Number(
+        Math.max(0, prizeCreditEarned - nextPrizeCreditSpent).toFixed(2)
+      ),
+      studentDisplayName: String(
+        userData.displayName || userData.name || userData.firstName || ""
+      ),
+      status: "pending",
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return {
+      ok: true,
+      prizeId,
+      prizeName: String(prizeData.name || ""),
+      price,
+      donationsTotal,
+      prizeCreditEarned,
+      prizeCreditSpent: nextPrizeCreditSpent,
+      prizeCreditRemaining: Number(
+        Math.max(0, prizeCreditEarned - nextPrizeCreditSpent).toFixed(2)
+      ),
+      minimumDonationsNeeded,
+      stockRemaining: stock - 1,
+    };
+  });
+});
