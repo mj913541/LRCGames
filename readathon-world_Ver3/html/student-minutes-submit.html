@@ -69,7 +69,6 @@
         </button>
 
         <div class="msg msg--error isHidden" id="errorBox" role="alert"></div>
-        <div class="msg msg--ok isHidden" id="okBox" role="status"></div>
       </form>
     </section>
 
@@ -80,6 +79,28 @@
       </div>
     </div>
   </main>
+
+  <!-- Success Modal -->
+  <dialog class="dialog" id="successDialog" aria-labelledby="successTitle">
+    <div class="dialog__panel dialog__panel--success">
+      <h2 class="h2" id="successTitle">✅ Minutes Submitted!</h2>
+      <p class="sub successText">
+        Your reading minutes were sent successfully.
+      </p>
+      <p class="sub successText">
+        Please go back to your dashboard and wait for Mrs. A to approve minutes.
+      </p>
+
+      <div class="row row--stack">
+        <a class="btnPrimary successBtn" id="btnBackToDashboard" href="./student-home.html">
+          Back to Dashboard &amp; Wait for Mrs. A to Approve Minutes
+        </a>
+        <button class="btnGhost" id="btnCloseSuccess" type="button">
+          Stay on This Page
+        </button>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module" src="../js/student-minutes-submit.js"></script>
 </body>

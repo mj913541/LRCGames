@@ -671,3 +671,31 @@ body{
   border: 0;
   background: transparent;
 }
+
+/* Student submit success modal */
+.dialog__panel--success{
+  width:min(560px, 92vw);
+  text-align:center;
+  padding: 24px 20px;
+}
+
+.successText{
+  margin: 10px 0;
+  font-size: 16px;
+}
+
+.row--stack{
+  display:flex;
+  flex-direction:column;
+  gap: 12px;
+  align-items:stretch;
+  margin-top: 18px;
+}
+
+.successBtn{
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}

@@ -29,10 +29,13 @@ const els = {
   btnSubmit: document.getElementById("btnSubmit"),
 
   errorBox: document.getElementById("errorBox"),
-  okBox: document.getElementById("okBox"),
 
   loadingOverlay: document.getElementById("loadingOverlay"),
   loadingText: document.getElementById("loadingText"),
+
+  successDialog: document.getElementById("successDialog"),
+  btnCloseSuccess: document.getElementById("btnCloseSuccess"),
+  btnBackToDashboard: document.getElementById("btnBackToDashboard"),
 };
 
 let current = { schoolId: null, userId: null };
@@ -45,7 +48,7 @@ async function ensureAuthedOrBounce() {
     window.location.href = ABS.studentLogin;
     return null;
   }
-  await user.getIdToken(true); // refresh token/claims
+  await user.getIdToken(true);
   return user;
 }
 
@@ -73,6 +76,7 @@ async function init() {
   });
 
   wireMinutesForm();
+  wireSuccessModal();
 
   hideLoading(els.loadingOverlay);
 }
@@ -134,10 +138,11 @@ function wireMinutesForm() {
       }
 
       hideLoading(els.loadingOverlay);
-      showOk("Submitted! ✅ Waiting for approval.");
 
-      els.minutesInput.value = "0";
+      els.minutesInput.value = "";
       els.noteInput.value = "";
+
+      showSuccessModal();
     } catch (err) {
       hideLoading(els.loadingOverlay);
       showError(normalizeError(err));
@@ -145,6 +150,41 @@ function wireMinutesForm() {
       els.btnSubmit.disabled = false;
     }
   });
+}
+
+function wireSuccessModal() {
+  if (els.btnCloseSuccess) {
+    els.btnCloseSuccess.addEventListener("click", () => {
+      closeSuccessModal();
+    });
+  }
+
+  if (els.successDialog) {
+    els.successDialog.addEventListener("cancel", (e) => {
+      e.preventDefault();
+      closeSuccessModal();
+    });
+  }
+}
+
+function showSuccessModal() {
+  if (!els.successDialog) return;
+
+  if (typeof els.successDialog.showModal === "function") {
+    els.successDialog.showModal();
+  } else {
+    els.successDialog.setAttribute("open", "open");
+  }
+}
+
+function closeSuccessModal() {
+  if (!els.successDialog) return;
+
+  if (typeof els.successDialog.close === "function") {
+    els.successDialog.close();
+  } else {
+    els.successDialog.removeAttribute("open");
+  }
 }
 
 function todayDateKey() {
@@ -160,20 +200,10 @@ function hideMsgs() {
     els.errorBox.classList.add("isHidden");
     els.errorBox.textContent = "";
   }
-  if (els.okBox) {
-    els.okBox.classList.add("isHidden");
-    els.okBox.textContent = "";
-  }
 }
 
 function showError(msg) {
   if (!els.errorBox) return;
   els.errorBox.textContent = msg;
   els.errorBox.classList.remove("isHidden");
-}
-
-function showOk(msg) {
-  if (!els.okBox) return;
-  els.okBox.textContent = msg;
-  els.okBox.classList.remove("isHidden");
 }

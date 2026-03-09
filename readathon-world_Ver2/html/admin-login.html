@@ -34,13 +34,16 @@
       <form class="form" id="loginForm">
         <label class="field">
           <span class="field__label">Admin User ID</span>
-          <input
-            class="input"
-            id="userIdInput"
-            autocomplete="username"
-            spellcheck="false"
-            placeholder="admin_malbrecht"
-          />
+        <input
+  type="password"
+  class="input pin"
+  id="pinInput"
+  inputmode="numeric"
+  autocomplete="one-time-code"
+  pattern="[0-9]*"
+  maxlength="4"
+  placeholder="••••"
+        />
         </label>
 
         <label class="field">
