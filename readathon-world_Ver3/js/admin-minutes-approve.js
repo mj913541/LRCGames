@@ -63,6 +63,7 @@ let ctx = {
   rows: [],
   nameMapStudents: {},
   nameMapUsers: {},
+  collapsedStudents: new Set(),
 };
 
 init().catch((e) => showError(normalizeError(e)));
@@ -120,7 +121,6 @@ async function init() {
 function injectApproveAllButton() {
   const bar = els.hdr?.querySelector?.(".approveBar");
   if (!bar) return;
-
   if (bar.querySelector("#btnApproveAll")) return;
 
   const btn = document.createElement("button");
@@ -159,10 +159,10 @@ async function refreshPending() {
     const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
     ctx.rows = rows;
-
     ctx.nameMapStudents = await buildStudentNameMap(schoolId, rows);
     ctx.nameMapUsers = await buildUserNameMap(schoolId, rows);
 
+    syncCollapsedStateWithRows(rows);
     applyClientFilterAndRender();
 
     hideLoading(els.loadingOverlay);
@@ -170,6 +170,17 @@ async function refreshPending() {
     hideLoading(els.loadingOverlay);
     showError(normalizeError(err));
   }
+}
+
+function syncCollapsedStateWithRows(rows) {
+  const validIds = new Set(rows.map((r) => safeText(r.targetUserId)).filter(Boolean));
+  const next = new Set();
+
+  for (const id of ctx.collapsedStudents) {
+    if (validIds.has(id)) next.add(id);
+  }
+
+  ctx.collapsedStudents = next;
 }
 
 function applyClientFilterAndRender() {
@@ -182,12 +193,14 @@ function applyClientFilterAndRender() {
         const studentName = String(ctx.nameMapStudents[r.targetUserId] || "").toLowerCase();
         const requesterId = String(r.submittedByUserId || "").toLowerCase();
         const requesterName = String(ctx.nameMapUsers[r.submittedByUserId] || "").toLowerCase();
+        const note = String(r.note || "").toLowerCase();
 
         return (
           studentId.includes(q) ||
           studentName.includes(q) ||
           requesterId.includes(q) ||
-          requesterName.includes(q)
+          requesterName.includes(q) ||
+          note.includes(q)
         );
       });
 
@@ -211,7 +224,6 @@ function setCountLabel(shownCount, totalCount) {
 
 function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
   if (!els.list) return;
-
   els.list.innerHTML = "";
 
   if (!rows.length) {
@@ -225,10 +237,7 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
     const studentId = safeText(tx.targetUserId || "");
     if (!studentId) continue;
 
-    if (!groups.has(studentId)) {
-      groups.set(studentId, []);
-    }
-
+    if (!groups.has(studentId)) groups.set(studentId, []);
     groups.get(studentId).push(tx);
   }
 
@@ -242,42 +251,68 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
     const studentName = safeText(studentNameMap[studentId] || studentId);
     const txs = groups.get(studentId) || [];
 
-    txs.sort((a, b) => {
-      return safeText(b.dateKey || "").localeCompare(safeText(a.dateKey || ""));
-    });
+    txs.sort((a, b) =>
+      safeText(b.dateKey || "").localeCompare(safeText(a.dateKey || ""))
+    );
 
     const totalMinutes = txs.reduce((sum, tx) => sum + Number(tx.deltaMinutes || 0), 0);
+    const isCollapsed = ctx.collapsedStudents.has(studentId);
+
+    const groupWrap = document.createElement("div");
+    groupWrap.className = "pendingGroupWrap";
 
     const head = document.createElement("div");
-    head.className = "panel";
+    head.className = "panel pendingGroupHead";
     head.innerHTML = `
-      <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-        <div>
-          <div style="font-weight:900;font-size:1.08em;">${escapeHtml(studentName)}</div>
-          <div style="opacity:0.82;font-size:0.95em;">
-            <span style="font-family:monospace;">${escapeHtml(studentId)}</span>
-            • ${txs.length} request(s)
-            • ${totalMinutes} min total
+      <div class="pendingGroupHead__row">
+        <button
+          type="button"
+          class="pendingGroupHead__toggle"
+          data-toggle-student="${escapeAttr(studentId)}"
+          aria-expanded="${isCollapsed ? "false" : "true"}"
+          title="${isCollapsed ? "Expand group" : "Collapse group"}"
+        >
+          ${isCollapsed ? "▶" : "▼"}
+        </button>
+
+        <div class="pendingGroupHead__main">
+          <div class="pendingGroupHead__name">${escapeHtml(studentName)}</div>
+          <div class="pendingGroupHead__meta">
+            <span class="pendingPill pendingPill--id">${escapeHtml(studentId)}</span>
+            <span class="pendingPill">${txs.length} request(s)</span>
+            <span class="pendingPill pendingPill--minutes">${totalMinutes} min total</span>
           </div>
         </div>
-        <button class="btn" data-approve-student="${escapeAttr(studentId)}">
-          Approve All for Student ✅✅
-        </button>
+
+        <div class="pendingGroupHead__actions">
+          <button
+            class="btn pendingGroupHead__btn"
+            data-toggle-label="${escapeAttr(studentId)}"
+            type="button"
+          >
+            ${isCollapsed ? "Expand" : "Collapse"}
+          </button>
+
+          <button
+            class="btn pendingGroupHead__btn"
+            data-approve-student="${escapeAttr(studentId)}"
+            type="button"
+          >
+            Approve All for Student ✅✅
+          </button>
+        </div>
       </div>
     `;
 
-    els.list.appendChild(head);
+    groupWrap.appendChild(head);
 
-    const approveStudentBtn = head.querySelector(
-      `[data-approve-student="${escapeAttr(studentId)}"]`
-    );
-    if (approveStudentBtn) {
-      approveStudentBtn.addEventListener("click", () => approveAllForStudent(txs));
-    }
+    const body = document.createElement("div");
+    body.className = `pendingGroupBody${isCollapsed ? " isHidden" : ""}`;
+    body.setAttribute("data-student-body", studentId);
 
     for (const tx of txs) {
       const div = document.createElement("div");
-      div.className = "panel";
+      div.className = "panel pendingChildRow";
 
       const mins = Number(tx.deltaMinutes || 0);
       const note = safeText(tx.note || "");
@@ -288,22 +323,26 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
         : "";
 
       div.innerHTML = `
-        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
-          <div>
-            <div style="font-weight:800;">${mins} min</div>
-            <div style="opacity:0.85;font-size:0.95em;">
-              ${escapeHtml(dateKey)}
-              ${note ? ` • ${escapeHtml(note)}` : ""}
-              ${requesterNice ? ` • Requested by ${escapeHtml(requesterNice)}` : ""}
+        <div class="pendingChildRow__wrap">
+          <div class="pendingChildRow__left">
+            <div class="pendingChildRow__mins">${mins} min</div>
+
+            <div class="pendingChildRow__meta">
+              <span>${escapeHtml(dateKey)}</span>
+              ${note ? `<span>• ${escapeHtml(note)}</span>` : ""}
+              ${requesterNice ? `<span>• Requested by ${escapeHtml(requesterNice)}</span>` : ""}
             </div>
-            <div style="opacity:0.75;font-size:0.9em;margin-top:6px;">
-              ${requesterId ? `<span style="font-family:monospace;">${escapeHtml(requesterId)}</span>` : ""}
-            </div>
+
+            ${
+              requesterId
+                ? `<div class="pendingChildRow__id">${escapeHtml(requesterId)}</div>`
+                : ""
+            }
           </div>
 
-          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-            <button class="btn" data-approve="${tx.id}">Approve ✅</button>
-            <button class="btn" data-reject="${tx.id}">Reject ❌</button>
+          <div class="pendingChildRow__actions">
+            <button class="btn" data-approve="${tx.id}" type="button">Approve ✅</button>
+            <button class="btn" data-reject="${tx.id}" type="button">Reject ❌</button>
           </div>
         </div>
       `;
@@ -314,9 +353,42 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
       if (approveBtn) approveBtn.addEventListener("click", () => approveTx(tx.id));
       if (rejectBtn) rejectBtn.addEventListener("click", () => rejectTx(tx.id));
 
-      els.list.appendChild(div);
+      body.appendChild(div);
+    }
+
+    groupWrap.appendChild(body);
+    els.list.appendChild(groupWrap);
+
+    const toggleBtn = head.querySelector(`[data-toggle-student="${escapeAttr(studentId)}"]`);
+    const toggleLabelBtn = head.querySelector(`[data-toggle-label="${escapeAttr(studentId)}"]`);
+    const approveStudentBtn = head.querySelector(
+      `[data-approve-student="${escapeAttr(studentId)}"]`
+    );
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener("click", () => toggleStudentGroup(studentId));
+    }
+
+    if (toggleLabelBtn) {
+      toggleLabelBtn.addEventListener("click", () => toggleStudentGroup(studentId));
+    }
+
+    if (approveStudentBtn) {
+      approveStudentBtn.addEventListener("click", () => approveAllForStudent(txs));
     }
   }
+}
+
+function toggleStudentGroup(studentId) {
+  if (!studentId) return;
+
+  if (ctx.collapsedStudents.has(studentId)) {
+    ctx.collapsedStudents.delete(studentId);
+  } else {
+    ctx.collapsedStudents.add(studentId);
+  }
+
+  applyClientFilterAndRender();
 }
 
 /* =========================
@@ -391,7 +463,7 @@ async function approveAllShown() {
   hideMsgs();
 
   const approveButtons = Array.from(
-    els.list?.querySelectorAll?.("button[data-approve]") || []
+    els.list?.querySelectorAll?.(".pendingGroupBody:not(.isHidden) button[data-approve], .pendingChildRow button[data-approve]") || []
   );
 
   const ids = approveButtons
@@ -422,9 +494,7 @@ async function approveAllShown() {
         body: JSON.stringify({ schoolId: ctx.schoolId, txId }),
       });
 
-      if (!resp.ok) {
-        throw new Error(await readHttpError(resp));
-      }
+      if (!resp.ok) throw new Error(await readHttpError(resp));
 
       okCount += 1;
       showLoading(els.loadingOverlay, els.loadingText, `Approving… (${okCount}/${ids.length})`);
@@ -466,9 +536,7 @@ async function approveAllForStudent(txs) {
         }),
       });
 
-      if (!resp.ok) {
-        throw new Error(await readHttpError(resp));
-      }
+      if (!resp.ok) throw new Error(await readHttpError(resp));
 
       okCount += 1;
       showLoading(

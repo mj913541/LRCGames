@@ -755,3 +755,163 @@ body{
     transition:none;
   }
 }
+
+/* =========================
+   Pending Minutes Grouped View
+========================= */
+
+.pendingGroupWrap {
+  margin-bottom: 14px;
+}
+
+.pendingGroupHead {
+  border: 3px solid rgba(255, 255, 255, 0.28);
+  border-radius: 22px;
+  padding: 18px 20px;
+  margin-bottom: 8px;
+  background:
+    linear-gradient(135deg, rgba(255, 221, 87, 0.22), rgba(255, 255, 255, 0.08)),
+    rgba(255, 255, 255, 0.10);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.pendingGroupHead__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.pendingGroupHead__toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.pendingGroupHead__main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.pendingGroupHead__name {
+  font-size: 1.2rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+}
+
+.pendingGroupHead__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pendingPill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.pendingPill--minutes {
+  background: rgba(86, 214, 110, 0.22);
+}
+
+.pendingPill--id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.86rem;
+}
+
+.pendingGroupHead__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.pendingGroupHead__btn {
+  white-space: nowrap;
+}
+
+.pendingGroupBody {
+  margin-top: 2px;
+}
+
+.pendingChildRow {
+  margin-left: 26px;
+  margin-bottom: 10px;
+  border-radius: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.pendingChildRow__wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.pendingChildRow__left {
+  min-width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pendingChildRow__mins {
+  font-size: 1.05rem;
+  font-weight: 850;
+}
+
+.pendingChildRow__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  opacity: 0.9;
+  font-size: 0.95rem;
+}
+
+.pendingChildRow__id {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  opacity: 0.72;
+}
+
+.pendingChildRow__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .pendingGroupHead__row {
+    grid-template-columns: 1fr;
+  }
+
+  .pendingChildRow {
+    margin-left: 0;
+  }
+
+  .pendingGroupHead__actions,
+  .pendingChildRow__actions {
+    width: 100%;
+  }
+
+  .pendingGroupHead__btn,
+  .pendingChildRow__actions .btn {
+    width: 100%;
+  }
+}
