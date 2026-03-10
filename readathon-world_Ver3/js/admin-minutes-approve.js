@@ -1,5 +1,3 @@
-
-
 import {
   auth,
   getSchoolId,
@@ -32,13 +30,10 @@ import { db } from "./firebase.js";
 
 console.log("✅ LOADED admin-minutes-approve.js (HTTP)");
 
-// Existing endpoint (already in your project)
 const ENDPOINTS = {
   approvePendingMinutesHttp:
     "https://us-central1-lrcquest-3039e.cloudfunctions.net/approvePendingMinutesHttp",
 
-  // NEW endpoint you will add next (Cloud Function)
-  // JS will show a clear error until it exists.
   rejectPendingMinutesHttp:
     "https://us-central1-lrcquest-3039e.cloudfunctions.net/rejectPendingMinutesHttp",
 };
@@ -105,14 +100,16 @@ async function init() {
     subtitle: `${schoolId} • ${adminId}`,
   });
 
-  // Wire controls
   if (els.btnRefresh) els.btnRefresh.addEventListener("click", refreshPending);
   if (els.limitSelect) els.limitSelect.addEventListener("change", refreshPending);
+
   if (els.searchInput) {
-    els.searchInput.addEventListener("input", debounce(() => applyClientFilterAndRender(), 200));
+    els.searchInput.addEventListener(
+      "input",
+      debounce(() => applyClientFilterAndRender(), 200)
+    );
   }
 
-  // Add an "Approve All" button into the approve bar (no HTML edit needed)
   injectApproveAllButton();
 
   await refreshPending();
@@ -124,7 +121,6 @@ function injectApproveAllButton() {
   const bar = els.hdr?.querySelector?.(".approveBar");
   if (!bar) return;
 
-  // avoid duplicates
   if (bar.querySelector("#btnApproveAll")) return;
 
   const btn = document.createElement("button");
@@ -132,10 +128,8 @@ function injectApproveAllButton() {
   btn.id = "btnApproveAll";
   btn.className = "btnBig btnBig--primary";
   btn.textContent = "✅✅ Approve All (shown)";
-
   btn.addEventListener("click", approveAllShown);
 
-  // Put it right after Refresh
   const refreshBtn = bar.querySelector("#btnRefresh");
   if (refreshBtn?.nextSibling) {
     bar.insertBefore(btn, refreshBtn.nextSibling);
@@ -150,10 +144,8 @@ async function refreshPending() {
 
   try {
     const schoolId = ctx.schoolId;
-
     const lim = parseInt(els.limitSelect?.value || "50", 10) || 50;
 
-    // Pull pending tx's
     const txCol = collection(db, `readathonV2_schools/${schoolId}/transactions`);
     const qRef = query(
       txCol,
@@ -168,7 +160,6 @@ async function refreshPending() {
 
     ctx.rows = rows;
 
-    // Build name maps (only for the ids we need)
     ctx.nameMapStudents = await buildStudentNameMap(schoolId, rows);
     ctx.nameMapUsers = await buildUserNameMap(schoolId, rows);
 
@@ -186,9 +177,21 @@ function applyClientFilterAndRender() {
 
   const filtered = !q
     ? ctx.rows
-    : ctx.rows.filter((r) => String(r.targetUserId || "").toLowerCase().includes(q));
+    : ctx.rows.filter((r) => {
+        const studentId = String(r.targetUserId || "").toLowerCase();
+        const studentName = String(ctx.nameMapStudents[r.targetUserId] || "").toLowerCase();
+        const requesterId = String(r.submittedByUserId || "").toLowerCase();
+        const requesterName = String(ctx.nameMapUsers[r.submittedByUserId] || "").toLowerCase();
 
-  renderPending(filtered, ctx.nameMapStudents, ctx.nameMapUsers);
+        return (
+          studentId.includes(q) ||
+          studentName.includes(q) ||
+          requesterId.includes(q) ||
+          requesterName.includes(q)
+        );
+      });
+
+  renderPendingGrouped(filtered, ctx.nameMapStudents, ctx.nameMapUsers);
   setCountLabel(filtered.length, ctx.rows.length);
 }
 
@@ -206,59 +209,113 @@ function setCountLabel(shownCount, totalCount) {
   }
 }
 
-function renderPending(rows, studentNameMap = {}, userNameMap = {}) {
+function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
   if (!els.list) return;
 
   els.list.innerHTML = "";
 
   if (!rows.length) {
-    // keep emptyNote handling, but also show a tiny list message
     els.list.innerHTML = `<div class="panel">No pending minutes 🎉</div>`;
     return;
   }
 
+  const groups = new Map();
+
   for (const tx of rows) {
-    const div = document.createElement("div");
-    div.className = "panel";
+    const studentId = safeText(tx.targetUserId || "");
+    if (!studentId) continue;
 
-    const studentId = safeText(tx.targetUserId);
-    const who = safeText(studentNameMap[studentId] || studentId);
+    if (!groups.has(studentId)) {
+      groups.set(studentId, []);
+    }
 
-    const mins = Number(tx.deltaMinutes || 0);
-    const note = safeText(tx.note || "");
-    const dateKey = safeText(tx.dateKey || "");
+    groups.get(studentId).push(tx);
+  }
 
-    const requesterId = safeText(tx.submittedByUserId || "");
-    const requesterNice = requesterId
-      ? safeText(userNameMap[requesterId] || requesterId)
-      : "";
+  const sortedStudentIds = Array.from(groups.keys()).sort((a, b) => {
+    const nameA = safeText(studentNameMap[a] || a).toLowerCase();
+    const nameB = safeText(studentNameMap[b] || b).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 
-    div.innerHTML = `
+  for (const studentId of sortedStudentIds) {
+    const studentName = safeText(studentNameMap[studentId] || studentId);
+    const txs = groups.get(studentId) || [];
+
+    txs.sort((a, b) => {
+      return safeText(b.dateKey || "").localeCompare(safeText(a.dateKey || ""));
+    });
+
+    const totalMinutes = txs.reduce((sum, tx) => sum + Number(tx.deltaMinutes || 0), 0);
+
+    const head = document.createElement("div");
+    head.className = "panel";
+    head.innerHTML = `
       <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
         <div>
-          <div style="font-weight:800;">${escapeHtml(who)} • ${mins} min</div>
-          <div style="opacity:0.85;font-size:0.95em;">
-            ${escapeHtml(dateKey)}
-            ${note ? ` • ${escapeHtml(note)}` : ""}
-            ${requesterNice ? ` • Requested by ${escapeHtml(requesterNice)}` : ""}
-          </div>
-          <div style="opacity:0.75;font-size:0.9em;margin-top:6px;">
+          <div style="font-weight:900;font-size:1.08em;">${escapeHtml(studentName)}</div>
+          <div style="opacity:0.82;font-size:0.95em;">
             <span style="font-family:monospace;">${escapeHtml(studentId)}</span>
-            ${requesterId ? ` • <span style="font-family:monospace;">${escapeHtml(requesterId)}</span>` : ""}
+            • ${txs.length} request(s)
+            • ${totalMinutes} min total
           </div>
         </div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
-          <button class="btn" data-approve="${tx.id}">Approve ✅</button>
-          <button class="btn" data-reject="${tx.id}">Reject ❌</button>
-        </div>
+        <button class="btn" data-approve-student="${escapeAttr(studentId)}">
+          Approve All for Student ✅✅
+        </button>
       </div>
     `;
 
-    div.querySelector(`[data-approve="${tx.id}"]`).addEventListener("click", () => approveTx(tx.id));
-    div.querySelector(`[data-reject="${tx.id}"]`).addEventListener("click", () => rejectTx(tx.id));
+    els.list.appendChild(head);
 
-    els.list.appendChild(div);
+    const approveStudentBtn = head.querySelector(
+      `[data-approve-student="${escapeAttr(studentId)}"]`
+    );
+    if (approveStudentBtn) {
+      approveStudentBtn.addEventListener("click", () => approveAllForStudent(txs));
+    }
+
+    for (const tx of txs) {
+      const div = document.createElement("div");
+      div.className = "panel";
+
+      const mins = Number(tx.deltaMinutes || 0);
+      const note = safeText(tx.note || "");
+      const dateKey = safeText(tx.dateKey || "");
+      const requesterId = safeText(tx.submittedByUserId || "");
+      const requesterNice = requesterId
+        ? safeText(userNameMap[requesterId] || requesterId)
+        : "";
+
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;">
+          <div>
+            <div style="font-weight:800;">${mins} min</div>
+            <div style="opacity:0.85;font-size:0.95em;">
+              ${escapeHtml(dateKey)}
+              ${note ? ` • ${escapeHtml(note)}` : ""}
+              ${requesterNice ? ` • Requested by ${escapeHtml(requesterNice)}` : ""}
+            </div>
+            <div style="opacity:0.75;font-size:0.9em;margin-top:6px;">
+              ${requesterId ? `<span style="font-family:monospace;">${escapeHtml(requesterId)}</span>` : ""}
+            </div>
+          </div>
+
+          <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;">
+            <button class="btn" data-approve="${tx.id}">Approve ✅</button>
+            <button class="btn" data-reject="${tx.id}">Reject ❌</button>
+          </div>
+        </div>
+      `;
+
+      const approveBtn = div.querySelector(`[data-approve="${tx.id}"]`);
+      const rejectBtn = div.querySelector(`[data-reject="${tx.id}"]`);
+
+      if (approveBtn) approveBtn.addEventListener("click", () => approveTx(tx.id));
+      if (rejectBtn) rejectBtn.addEventListener("click", () => rejectTx(tx.id));
+
+      els.list.appendChild(div);
+    }
   }
 }
 
@@ -299,7 +356,6 @@ async function approveTx(txId) {
 async function rejectTx(txId) {
   hideMsgs();
 
-  // Optional reason prompt (simple + fast). Cancel = do nothing.
   const reason = window.prompt("Reject reason (optional):", "");
   if (reason === null) return;
 
@@ -327,18 +383,17 @@ async function rejectTx(txId) {
     await refreshPending();
   } catch (err) {
     hideLoading(els.loadingOverlay);
-    showError(
-      normalizeError(err) +
-        " (If you haven't added rejectPendingMinutesHttp yet, that's expected — tell me and I'll give you the exact Cloud Function.)"
-    );
+    showError(normalizeError(err));
   }
 }
 
 async function approveAllShown() {
   hideMsgs();
 
-  // Approve whatever is currently rendered (filtered + limited)
-  const approveButtons = Array.from(els.list?.querySelectorAll?.("button[data-approve]") || []);
+  const approveButtons = Array.from(
+    els.list?.querySelectorAll?.("button[data-approve]") || []
+  );
+
   const ids = approveButtons
     .map((b) => b.getAttribute("data-approve"))
     .filter(Boolean);
@@ -356,17 +411,18 @@ async function approveAllShown() {
 
     const token = await user.getIdToken(true);
 
-    // Run sequentially to be gentle + easy to debug
     let okCount = 0;
     for (const txId of ids) {
       const resp = await fetch(ENDPOINTS.approvePendingMinutesHttp, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ schoolId: ctx.schoolId, txId }),
       });
 
       if (!resp.ok) {
-        // stop on first failure, show the error (prevents half-mystery states)
         throw new Error(await readHttpError(resp));
       }
 
@@ -376,6 +432,54 @@ async function approveAllShown() {
 
     hideLoading(els.loadingOverlay);
     showOk(`Approved ${okCount} item(s)! ✅✅`);
+    await refreshPending();
+  } catch (err) {
+    hideLoading(els.loadingOverlay);
+    showError(normalizeError(err));
+  }
+}
+
+async function approveAllForStudent(txs) {
+  if (!Array.isArray(txs) || !txs.length) return;
+
+  hideMsgs();
+  showLoading(els.loadingOverlay, els.loadingText, "Approving this student's requests…");
+
+  try {
+    const user = await ensureAuthedOrBounce();
+    if (!user) return;
+
+    const token = await user.getIdToken(true);
+
+    let okCount = 0;
+
+    for (const tx of txs) {
+      const resp = await fetch(ENDPOINTS.approvePendingMinutesHttp, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          schoolId: ctx.schoolId,
+          txId: tx.id,
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(await readHttpError(resp));
+      }
+
+      okCount += 1;
+      showLoading(
+        els.loadingOverlay,
+        els.loadingText,
+        `Approving this student's requests… (${okCount}/${txs.length})`
+      );
+    }
+
+    hideLoading(els.loadingOverlay);
+    showOk(`Approved ${okCount} request(s) for this student ✅✅`);
     await refreshPending();
   } catch (err) {
     hideLoading(els.loadingOverlay);
@@ -419,7 +523,6 @@ async function buildUserNameMap(schoolId, rows) {
         const s = await getDoc(ref);
         const d = s.exists() ? s.data() : null;
 
-        // Try common fields; fall back to userId
         map[id] =
           d?.displayName ||
           d?.name ||
@@ -464,6 +567,10 @@ function escapeHtml(s) {
     .replaceAll("'", "&#039;");
 }
 
+function escapeAttr(s) {
+  return escapeHtml(s).replaceAll("`", "&#096;");
+}
+
 function hideMsgs() {
   if (els.errorBox) {
     els.errorBox.classList.add("isHidden");
@@ -497,12 +604,15 @@ function debounce(fn, ms = 200) {
 
 async function runPool(tasks, concurrency = 8) {
   const queue = tasks.slice();
-  const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
-    while (queue.length) {
-      const task = queue.shift();
-      if (!task) return;
-      await task();
+  const workers = Array.from(
+    { length: Math.min(concurrency, queue.length) },
+    async () => {
+      while (queue.length) {
+        const task = queue.shift();
+        if (!task) return;
+        await task();
+      }
     }
-  });
+  );
   await Promise.all(workers);
 }
