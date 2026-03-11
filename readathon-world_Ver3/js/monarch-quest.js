@@ -1,4 +1,3 @@
-// /readathon-world_Ver3/js/monarch/monarch-quest.js
 
 import {
   getCurrentUserId,
@@ -11,8 +10,9 @@ import {
   ensureUserMonarchSummary,
   isTaskUnlocked,
   applyMonarchPageHeader
-} from "/readathon-world_Ver3/js/monarch/monarch-firebase.js";
+} from "./monarch-firebase.js";
 
+import { waitForAuthReady } from "./firebase.js";
 /* =========================================================
    PAGE ELEMENTS
 ========================================================= */
@@ -63,6 +63,10 @@ init();
 
 async function init() {
   try {
+
+    // wait for Firebase to restore login session
+    await waitForAuthReady();
+
     state.schoolId = getCurrentSchoolId();
     state.userId = getCurrentUserId();
 
