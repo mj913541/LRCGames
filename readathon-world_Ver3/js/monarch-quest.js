@@ -1,7 +1,7 @@
+// /readathon-world_Ver3/js/monarch.js
 
 import {
-  getCurrentUserId,
-  getCurrentSchoolId,
+  requireMonarchSession,
   fetchMonarchConfig,
   fetchMonarchTasks,
   fetchMonarchRewards,
@@ -9,10 +9,9 @@ import {
   fetchUserMonarchSummary,
   ensureUserMonarchSummary,
   isTaskUnlocked,
-  applyMonarchPageHeader
-} from "./monarch-firebase.js";
+  applyMonarchPageHeader,
+} from "./firebase.js";
 
-import { waitForAuthReady } from "./firebase.js";
 /* =========================================================
    PAGE ELEMENTS
 ========================================================= */
@@ -63,20 +62,13 @@ init();
 
 async function init() {
   try {
+    const session = await requireMonarchSession({
+      redirectTo: "../html/index.html",
+      allowedRoles: ["student", "staff", "admin"],
+    });
 
-    // wait for Firebase to restore login session
-    await waitForAuthReady();
-
-    state.schoolId = getCurrentSchoolId();
-    state.userId = getCurrentUserId();
-
-    if (!state.schoolId) {
-      throw new Error("Missing schoolId.");
-    }
-
-    if (!state.userId) {
-      throw new Error("No signed-in user found.");
-    }
+    state.schoolId = session.schoolId;
+    state.userId = session.userId;
 
     await loadAllData();
     renderPage();
@@ -100,7 +92,9 @@ async function loadAllData() {
   state.nominees = Array.isArray(nominees) ? nominees : [];
 
   const existingSummary = await fetchUserMonarchSummary(state.schoolId, state.userId);
-  state.summary = existingSummary || await ensureUserMonarchSummary(state.schoolId, state.userId);
+  state.summary =
+    existingSummary ||
+    (await ensureUserMonarchSummary(state.schoolId, state.userId));
 }
 
 /* =========================================================
@@ -136,33 +130,49 @@ function renderProgress() {
     ? state.summary.completedTaskIds
     : [];
 
-  const completedTaskCount = Number(state.summary?.completedTaskCount || completedTaskIds.length || 0);
+  const completedTaskCount = Number(
+    state.summary?.completedTaskCount || completedTaskIds.length || 0
+  );
+
   const rewardKeysEarned = Array.isArray(state.summary?.rewardKeysEarned)
     ? state.summary.rewardKeysEarned
     : [];
 
-  const completionPercent =
-    Number(state.summary?.completionPercent || 0);
+  const completionPercent = Number(state.summary?.completionPercent || 0);
 
-  els.completedCount.textContent = String(completedTaskCount);
-  els.requiredCount.textContent = String(requiredTaskCount);
-  els.rewardsEarnedCount.textContent = String(rewardKeysEarned.length);
+  if (els.completedCount) els.completedCount.textContent = String(completedTaskCount);
+  if (els.requiredCount) els.requiredCount.textContent = String(requiredTaskCount);
+  if (els.rewardsEarnedCount) {
+    els.rewardsEarnedCount.textContent = String(rewardKeysEarned.length);
+  }
 
-  els.progressLabel.textContent = `${completionPercent}% Complete`;
-  els.progressMiniLabel.textContent = `${completedTaskCount} / ${requiredTaskCount} Tasks`;
-  els.progressFill.style.width = `${completionPercent}%`;
+  if (els.progressLabel) {
+    els.progressLabel.textContent = `${completionPercent}% Complete`;
+  }
+
+  if (els.progressMiniLabel) {
+    els.progressMiniLabel.textContent = `${completedTaskCount} / ${requiredTaskCount} Tasks`;
+  }
+
+  if (els.progressFill) {
+    els.progressFill.style.width = `${completionPercent}%`;
+  }
 
   const displayStatus = formatDisplayStatus(state.summary?.displayStatus || "NOT_STARTED");
-  els.displayStatus.textContent = displayStatus;
+  if (els.displayStatus) {
+    els.displayStatus.textContent = displayStatus;
+  }
 
   const nextReward = getNextReward(
     state.rewards,
     Number(state.summary?.requiredCompletedTaskCount || 0)
   );
 
-  els.nextMilestoneText.textContent = nextReward
-    ? `Next reward: ${nextReward.title} at ${nextReward.milestoneCount} completed task${nextReward.milestoneCount === 1 ? "" : "s"}.`
-    : "You have reached the final reward milestone!";
+  if (els.nextMilestoneText) {
+    els.nextMilestoneText.textContent = nextReward
+      ? `Next reward: ${nextReward.title} at ${nextReward.milestoneCount} completed task${nextReward.milestoneCount === 1 ? "" : "s"}.`
+      : "You have reached the final reward milestone!";
+  }
 }
 
 /* =========================================================
@@ -215,7 +225,10 @@ function normalizeRewards(rewards) {
 }
 
 function getNextReward(rewards, completedRequiredCount) {
-  return rewards.find((reward) => Number(reward.milestoneCount || 0) > completedRequiredCount) || null;
+  return (
+    rewards.find((reward) => Number(reward.milestoneCount || 0) > completedRequiredCount) ||
+    null
+  );
 }
 
 /* =========================================================
@@ -228,11 +241,11 @@ function renderQuestBoard() {
   els.questBoard.innerHTML = "";
 
   if (!state.tasks.length) {
-    els.questBoardEmpty.hidden = false;
+    if (els.questBoardEmpty) els.questBoardEmpty.hidden = false;
     return;
   }
 
-  els.questBoardEmpty.hidden = true;
+  if (els.questBoardEmpty) els.questBoardEmpty.hidden = true;
 
   const completedTaskIds = Array.isArray(state.summary?.completedTaskIds)
     ? state.summary.completedTaskIds
@@ -266,7 +279,9 @@ function renderQuestBoard() {
         nomineeTitles.length
           ? `
             <div class="monarch-quest-card__books">
-              ${nomineeTitles.map((title) => `<span class="monarch-quest-card__book">${escapeHtml(title)}</span>`).join("")}
+              ${nomineeTitles
+                .map((title) => `<span class="monarch-quest-card__book">${escapeHtml(title)}</span>`)
+                .join("")}
             </div>
           `
           : ""
@@ -285,12 +300,14 @@ function renderQuestBoard() {
       card.addEventListener("click", () => {
         goToTask(task.taskId);
       });
+
       card.addEventListener("keypress", (event) => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
           goToTask(task.taskId);
         }
       });
+
       card.tabIndex = 0;
     } else {
       card.tabIndex = -1;
@@ -302,10 +319,8 @@ function renderQuestBoard() {
 
 function buildTaskCardClassName({ unlocked, completed }) {
   let className = "monarch-quest-card";
-
   if (!unlocked) className += " monarch-card-locked";
   if (completed) className += " monarch-card-complete";
-
   return className;
 }
 
@@ -326,7 +341,7 @@ function getTaskNomineeTitles(task) {
 }
 
 function goToTask(taskId) {
-  window.location.href = `/readathon-world_Ver3/html/monarch-task.html?taskId=${encodeURIComponent(taskId)}`;
+  window.location.href = `../html/monarch-task.html?taskId=${encodeURIComponent(taskId)}`;
 }
 
 /* =========================================================
@@ -353,9 +368,15 @@ function renderCelebrationBanner() {
     return;
   }
 
-  els.celebrationTitle.textContent = reward.title || "Reward Unlocked!";
-  els.celebrationText.textContent =
-    reward.subtitle || "You unlocked a special Monarch Quest reward.";
+  if (els.celebrationTitle) {
+    els.celebrationTitle.textContent = reward.title || "Reward Unlocked!";
+  }
+
+  if (els.celebrationText) {
+    els.celebrationText.textContent =
+      reward.subtitle || "You unlocked a special Monarch Quest reward.";
+  }
+
   els.celebrationBanner.hidden = false;
 }
 
