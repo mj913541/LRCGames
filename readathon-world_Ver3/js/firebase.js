@@ -319,64 +319,40 @@ export async function requireMonarchSession({
    MONARCH PATH HELPERS
 -------------------------------------------------- */
 
+export function monarchEventPath(schoolId) {
+  return `${schoolRoot(schoolId)}/monarchQuest/${MONARCH_EVENT_ID}`;
+}
+
 export function monarchRoot(schoolId) {
-  return `${schoolRoot(schoolId)}/monarchQuest`;
+  return monarchEventPath(schoolId);
 }
 
 export function monarchConfigPath(schoolId) {
-  return `${monarchRoot(schoolId)}/config`;
+  return monarchEventPath(schoolId);
 }
 
 export function monarchNomineesPath(schoolId) {
-  return `${monarchRoot(schoolId)}/nominees`;
+  return `${monarchEventPath(schoolId)}/nominees`;
 }
 
 export function monarchNomineePath(schoolId, nomineeId) {
-  return `${monarchRoot(schoolId)}/nominees/${nomineeId}`;
+  return `${monarchEventPath(schoolId)}/nominees/${nomineeId}`;
 }
 
 export function monarchTasksPath(schoolId) {
-  return `${monarchRoot(schoolId)}/tasks`;
+  return `${monarchEventPath(schoolId)}/tasks`;
 }
 
 export function monarchTaskPath(schoolId, taskId) {
-  return `${monarchRoot(schoolId)}/tasks/${taskId}`;
+  return `${monarchEventPath(schoolId)}/tasks/${taskId}`;
 }
 
 export function monarchRewardsPath(schoolId) {
-  return `${monarchRoot(schoolId)}/rewards`;
+  return `${monarchEventPath(schoolId)}/rewards`;
 }
 
 export function monarchRewardPath(schoolId, rewardKey) {
-  return `${monarchRoot(schoolId)}/rewards/${rewardKey}`;
-}
-
-export function userMonarchRoot(schoolId, userId) {
-  return `${schoolRoot(schoolId)}/users/${userId}/monarchQuest`;
-}
-
-export function userMonarchSummaryPath(schoolId, userId) {
-  return `${userMonarchRoot(schoolId, userId)}/summary`;
-}
-
-export function userMonarchTaskProgressPath(schoolId, userId, taskId) {
-  return `${userMonarchRoot(schoolId, userId)}/taskProgress/${taskId}`;
-}
-
-export function userMonarchVotesPath(schoolId, userId) {
-  return `${userMonarchRoot(schoolId, userId)}/votes`;
-}
-
-export function userMonarchVotePath(schoolId, userId, matchupId) {
-  return `${userMonarchRoot(schoolId, userId)}/votes/${matchupId}`;
-}
-
-export function userMonarchRewardFlagsPath(schoolId, userId) {
-  return `${userMonarchRoot(schoolId, userId)}/rewardFlags`;
-}
-
-export function userMonarchRewardFlagPath(schoolId, userId, rewardKey) {
-  return `${userMonarchRoot(schoolId, userId)}/rewardFlags/${rewardKey}`;
+  return `${monarchEventPath(schoolId)}/rewards/${rewardKey}`;
 }
 
 /* --------------------------------------------------
