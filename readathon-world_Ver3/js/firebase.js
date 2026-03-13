@@ -483,24 +483,6 @@ export async function fetchUserTaskProgress(schoolId, userId, taskId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-export async function ensureUserTaskProgress(
-  schoolId,
-  userId,
-  taskId,
-  type = MONARCH_TASK_TYPES.LISTEN
-) {
-  const ref = doc(db, userMonarchTaskProgressPath(schoolId, userId, taskId));
-  const snap = await getDoc(ref);
-
-  if (snap.exists()) {
-    return { id: snap.id, ...snap.data() };
-  }
-
-  const starter = buildDefaultTaskProgress(taskId, type);
-  await setDoc(ref, starter, { merge: true });
-  return starter;
-}
-
 export async function fetchUserVote(schoolId, userId, matchupId) {
   const ref = doc(db, userMonarchVotePath(schoolId, userId, matchupId));
   const snap = await getDoc(ref);
