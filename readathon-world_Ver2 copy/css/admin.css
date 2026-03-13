@@ -1,0 +1,542 @@
+/* /css/admin.css */
+:root {
+  --bg: #1a1307;
+  --panel: rgba(40, 24, 8, 0.70);
+  --panel-strong: rgba(40, 24, 8, 0.86);
+  --text: #fff8e8;
+  --muted: rgba(255, 248, 232, 0.82);
+
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+  --ring: 0 0 0 4px rgba(255, 255, 255, 0.16);
+
+  --radius: 26px;
+  --accent: #ffcf5b;
+  --bad: #ff5f87;
+  --tap: 56px;
+
+  --font: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg);
+}
+
+.page {
+  position: relative;
+  min-height: 100%;
+  overflow-x: hidden;
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.62)),
+    url("../img/bg/admin-login.png") center / cover no-repeat;
+  z-index: -1;
+}
+
+.bg--home {
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.62)),
+    url("../img/bg/admin-login.png") center / cover no-repeat;
+  z-index: -1;
+}
+
+.topbar {
+  width: min(1100px, 96vw);
+  margin: 10px auto 0;
+  display: grid;
+  grid-template-columns: 110px 1fr 110px;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar__back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 950;
+}
+
+.topbar__back:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.topbar__title {
+  display: flex;
+  justify-content: center;
+}
+
+.topbar__btn {
+  height: 44px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--text);
+  font-weight: 1100;
+  cursor: pointer;
+}
+
+.topbar__btn:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.pill {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(255, 207, 91, 0.18);
+  border: 1px solid rgba(255, 207, 91, 0.48);
+  font-weight: 1100;
+}
+
+.wrap {
+  width: min(1100px, 96vw);
+  margin: 10px auto 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.panel {
+  position: relative;
+  padding: 16px;
+  background: var(--panel);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.panel--hero {
+  padding: 18px;
+}
+
+.h1 {
+  margin: 0;
+  font-size: clamp(26px, 3.6vw, 40px);
+  line-height: 1.05;
+}
+
+.h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.sub {
+  margin: 8px 0 14px;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+/* =========================
+   Login / form styles
+========================= */
+.form {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.field {
+  display: block;
+}
+
+.field__label {
+  display: block;
+  font-weight: 1100;
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  min-height: 54px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--text);
+  font-size: 16px;
+}
+
+.input:focus {
+  outline: none;
+  box-shadow: var(--ring);
+  border-color: rgba(255, 207, 91, 0.55);
+}
+
+.pin {
+  font-size: 24px;
+  text-align: center;
+  letter-spacing: 10px;
+}
+
+.btnPrimary {
+  min-height: var(--tap);
+  padding: 14px 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 207, 91, 0.55);
+  background: rgba(255, 207, 91, 0.20);
+  color: var(--text);
+  font-weight: 1200;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.btnPrimary:focus-visible {
+  outline: none;
+  box-shadow: var(--shadow), var(--ring);
+}
+
+.helper {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btnGhost {
+  min-height: 46px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 1100;
+}
+
+.btnGhost:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.msg {
+  margin-top: 6px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.msg--error {
+  border-color: rgba(255, 95, 135, 0.55);
+  background: rgba(255, 95, 135, 0.12);
+  color: var(--text);
+}
+
+.msg--ok {
+  border-color: rgba(255, 207, 91, 0.55);
+  background: rgba(255, 207, 91, 0.12);
+  color: var(--text);
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius);
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.loadingCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(36, 22, 8, 0.90);
+  box-shadow: var(--shadow);
+}
+
+.spinner {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 3px solid rgba(255, 255, 255, 0.22);
+  border-top-color: rgba(255, 207, 91, 0.95);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  font-weight: 1100;
+}
+
+.footer {
+  text-align: center;
+  padding-bottom: 6px;
+}
+
+.footer__chip {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.isHidden {
+  display: none !important;
+}
+
+/* =========================
+   Admin home hero layout
+========================= */
+.heroRow {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.gridButtons {
+  margin-bottom: 18px;
+}
+
+.hero-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 20px auto;
+}
+
+/* Action buttons */
+.btn-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 26px;
+  border-radius: 14px;
+  min-width: 190px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  letter-spacing: 0.5px;
+  transition: all 0.25s ease;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+  border: none;
+  cursor: pointer;
+  color: white;
+}
+
+.btn-action--large {
+  font-size: 1.25rem;
+  padding: 18px 34px;
+}
+
+.btn-donate {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.btn-donate:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(22, 163, 74, 0.4);
+}
+
+.btn-store {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.btn-store:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.4);
+}
+
+.btn-submit-minutes {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+}
+
+.btn-submit-minutes:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.4);
+}
+
+.btn-approve-minutes {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+}
+
+.btn-approve-minutes:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(124, 58, 237, 0.4);
+}
+
+/* =========================
+   Approve Minutes page
+========================= */
+.approveBar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.approveBar__meta {
+  color: var(--muted);
+  font-weight: 1000;
+}
+
+.filterRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.field--inline {
+  margin: 0;
+}
+
+.input--small {
+  min-height: 44px;
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rowCard {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  padding: 12px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.rowCard__left {
+  flex: 1 1 260px;
+}
+
+.rowCard__who {
+  font-weight: 1200;
+  font-size: 16px;
+}
+
+.rowCard__meta {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.rowCard__note {
+  margin-top: 6px;
+  color: var(--muted);
+  font-weight: 900;
+  font-size: 12px;
+}
+
+.rowCard__right {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+
+.rowCard__minutes {
+  font-weight: 1200;
+  font-size: 16px;
+}
+
+.btnApprove {
+  min-height: 52px;
+  padding: 12px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 207, 91, 0.55);
+  background: rgba(255, 207, 91, 0.20);
+  color: var(--text);
+  font-weight: 1300;
+  cursor: pointer;
+}
+
+.btnApprove:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.btnApprove:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.emptyNote {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.20);
+  color: var(--muted);
+  font-weight: 1000;
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .hero-actions .btn-action {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .rowCard__right {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .btnApprove {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+}
