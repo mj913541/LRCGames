@@ -30,6 +30,9 @@ import { db } from "./firebase.js";
 
 console.log("✅ LOADED admin-minutes-approve.js (HTTP)");
 
+const LARGE_MINUTES_THRESHOLD = 120;
+const MULTI_REQUEST_DAY_THRESHOLD = 3;
+
 const ENDPOINTS = {
   approvePendingMinutesHttp:
     "https://us-central1-lrcquest-3039e.cloudfunctions.net/approvePendingMinutesHttp",
@@ -46,9 +49,12 @@ const els = {
   emptyNote: document.getElementById("emptyNote"),
 
   btnRefresh: document.getElementById("btnRefresh"),
+  btnApproveSafeOnly: document.getElementById("btnApproveSafeOnly"),
   countLabel: document.getElementById("countLabel"),
   limitSelect: document.getElementById("limitSelect"),
   searchInput: document.getElementById("searchInput"),
+  suspiciousOnly: document.getElementById("suspiciousOnly"),
+  summaryCards: document.getElementById("summaryCards"),
 
   errorBox: document.getElementById("errorBox"),
   okBox: document.getElementById("okBox"),
@@ -103,6 +109,8 @@ async function init() {
 
   if (els.btnRefresh) els.btnRefresh.addEventListener("click", refreshPending);
   if (els.limitSelect) els.limitSelect.addEventListener("change", refreshPending);
+  if (els.suspiciousOnly) els.suspiciousOnly.addEventListener("change", applyClientFilterAndRender);
+  if (els.btnApproveSafeOnly) els.btnApproveSafeOnly.addEventListener("click", approveAllSafeShown);
 
   if (els.searchInput) {
     els.searchInput.addEventListener(
@@ -185,35 +193,74 @@ function syncCollapsedStateWithRows(rows) {
 
 function applyClientFilterAndRender() {
   const q = (els.searchInput?.value || "").trim().toLowerCase();
+  const suspiciousOnly = Boolean(els.suspiciousOnly?.checked);
+  const analyzed = analyzeRows(ctx.rows);
 
-  const filtered = !q
-    ? ctx.rows
-    : ctx.rows.filter((r) => {
-        const studentId = String(r.targetUserId || "").toLowerCase();
-        const studentName = String(ctx.nameMapStudents[r.targetUserId] || "").toLowerCase();
-        const requesterId = String(r.submittedByUserId || "").toLowerCase();
-        const requesterName = String(ctx.nameMapUsers[r.submittedByUserId] || "").toLowerCase();
-        const note = String(r.note || "").toLowerCase();
+  const filtered = analyzed.filter(({ tx, flags }) => {
+    const studentId = String(tx.targetUserId || "").toLowerCase();
+    const studentName = String(ctx.nameMapStudents[tx.targetUserId] || "").toLowerCase();
+    const requesterId = String(tx.submittedByUserId || "").toLowerCase();
+    const requesterName = String(ctx.nameMapUsers[tx.submittedByUserId] || "").toLowerCase();
+    const note = String(tx.note || "").toLowerCase();
 
-        return (
-          studentId.includes(q) ||
-          studentName.includes(q) ||
-          requesterId.includes(q) ||
-          requesterName.includes(q) ||
-          note.includes(q)
-        );
-      });
+    const matchesSearch = !q || (
+      studentId.includes(q) ||
+      studentName.includes(q) ||
+      requesterId.includes(q) ||
+      requesterName.includes(q) ||
+      note.includes(q)
+    );
 
+    const matchesSuspicious = !suspiciousOnly || flags.length > 0;
+    return matchesSearch && matchesSuspicious;
+  });
+
+  renderSummaryCards(filtered, analyzed);
   renderPendingGrouped(filtered, ctx.nameMapStudents, ctx.nameMapUsers);
-  setCountLabel(filtered.length, ctx.rows.length);
+  setCountLabel(filtered.length, ctx.rows.length, suspiciousOnly);
 }
 
-function setCountLabel(shownCount, totalCount) {
+function renderSummaryCards(filteredRows, allRows) {
+  if (!els.summaryCards) return;
+
+  const totalShown = filteredRows.length;
+  const suspiciousShown = filteredRows.filter((r) => r.flags.length).length;
+  const safeShown = filteredRows.filter((r) => !r.flags.length).length;
+  const largeEntries = allRows.filter((r) => r.flags.some((f) => f.code === "large_minutes")).length;
+  const missingContext = allRows.filter((r) => r.flags.some((f) => f.code === "missing_context")).length;
+  const multiSameDay = allRows.filter((r) => r.flags.some((f) => f.code === "multi_same_day")).length;
+
+  els.summaryCards.innerHTML = `
+    <div class="panel" style="padding:12px;">
+      <div class="sub"><strong>${totalShown}</strong> shown right now</div>
+    </div>
+    <div class="panel" style="padding:12px;">
+      <div class="sub"><strong>${suspiciousShown}</strong> need review</div>
+    </div>
+    <div class="panel" style="padding:12px;">
+      <div class="sub"><strong>${safeShown}</strong> look safe</div>
+    </div>
+    <div class="panel" style="padding:12px;">
+      <div class="sub">⚠ ${largeEntries} large entries</div>
+    </div>
+    <div class="panel" style="padding:12px;">
+      <div class="sub">📝 ${missingContext} missing context</div>
+    </div>
+    <div class="panel" style="padding:12px;">
+      <div class="sub">📅 ${multiSameDay} repeat same-day logs</div>
+    </div>
+  `;
+}
+
+function setCountLabel(shownCount, totalCount, suspiciousOnly) {
   if (els.countLabel) {
     const q = (els.searchInput?.value || "").trim();
-    els.countLabel.textContent = q
+    let text = q
       ? `Showing ${shownCount} of ${totalCount} (filtered)`
       : `Showing ${shownCount}`;
+
+    if (suspiciousOnly) text += " • suspicious only";
+    els.countLabel.textContent = text;
   }
 
   if (els.emptyNote) {
@@ -222,23 +269,67 @@ function setCountLabel(shownCount, totalCount) {
   }
 }
 
-function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
+function analyzeRows(rows) {
+  const perStudentDateCounts = new Map();
+
+  for (const tx of rows) {
+    const studentId = safeText(tx.targetUserId || "");
+    const dateKey = safeText(tx.dateKey || "");
+    const k = `${studentId}__${dateKey}`;
+    perStudentDateCounts.set(k, (perStudentDateCounts.get(k) || 0) + 1);
+  }
+
+  return rows.map((tx) => {
+    const parsed = parseStructuredNote(tx.note || "");
+    const flags = [];
+    const minutes = Number(tx.deltaMinutes || 0);
+    const studentId = safeText(tx.targetUserId || "");
+    const dateKey = safeText(tx.dateKey || "");
+    const sameDayCount = perStudentDateCounts.get(`${studentId}__${dateKey}`) || 0;
+
+    if (minutes > LARGE_MINUTES_THRESHOLD) {
+      flags.push({ code: "large_minutes", label: `Large Entry (${minutes} min)` });
+    }
+
+    if (sameDayCount >= MULTI_REQUEST_DAY_THRESHOLD) {
+      flags.push({ code: "multi_same_day", label: `${sameDayCount} Entries Same Day` });
+    }
+
+    const hasContext = Boolean(parsed.type || parsed.book || parsed.note || parsed.reflection || (tx.note || "").trim());
+    if (!hasContext) {
+      flags.push({ code: "missing_context", label: "No Note / Context" });
+    }
+
+    if (parsed.type === "Chapter Book") {
+      if (!parsed.book) {
+        flags.push({ code: "missing_book", label: "Chapter Book Missing Title" });
+      }
+      if (!(parsed.pages && parsed.pagesRead !== "")) {
+        flags.push({ code: "missing_pages", label: "Chapter Book Missing Pages" });
+      }
+    }
+
+    return { tx, flags, parsed, sameDayCount };
+  });
+}
+
+function renderPendingGrouped(analyzedRows, studentNameMap = {}, userNameMap = {}) {
   if (!els.list) return;
   els.list.innerHTML = "";
 
-  if (!rows.length) {
+  if (!analyzedRows.length) {
     els.list.innerHTML = `<div class="panel">No pending minutes 🎉</div>`;
     return;
   }
 
   const groups = new Map();
 
-  for (const tx of rows) {
-    const studentId = safeText(tx.targetUserId || "");
+  for (const row of analyzedRows) {
+    const studentId = safeText(row.tx.targetUserId || "");
     if (!studentId) continue;
 
     if (!groups.has(studentId)) groups.set(studentId, []);
-    groups.get(studentId).push(tx);
+    groups.get(studentId).push(row);
   }
 
   const sortedStudentIds = Array.from(groups.keys()).sort((a, b) => {
@@ -251,11 +342,11 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
     const studentName = safeText(studentNameMap[studentId] || studentId);
     const txs = groups.get(studentId) || [];
 
-    txs.sort((a, b) =>
-      safeText(b.dateKey || "").localeCompare(safeText(a.dateKey || ""))
-    );
+    txs.sort((a, b) => safeText(b.tx.dateKey || "").localeCompare(safeText(a.tx.dateKey || "")));
 
-    const totalMinutes = txs.reduce((sum, tx) => sum + Number(tx.deltaMinutes || 0), 0);
+    const totalMinutes = txs.reduce((sum, row) => sum + Number(row.tx.deltaMinutes || 0), 0);
+    const totalFlags = txs.reduce((sum, row) => sum + row.flags.length, 0);
+    const suspiciousCount = txs.filter((row) => row.flags.length).length;
     const isCollapsed = ctx.collapsedStudents.has(studentId);
 
     const groupWrap = document.createElement("div");
@@ -281,23 +372,21 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
             <span class="pendingPill pendingPill--id">${escapeHtml(studentId)}</span>
             <span class="pendingPill">${txs.length} request(s)</span>
             <span class="pendingPill pendingPill--minutes">${totalMinutes} min total</span>
+            ${suspiciousCount ? `<span class="pendingPill">⚠ ${suspiciousCount} suspicious</span>` : `<span class="pendingPill">✅ looks normal</span>`}
+            ${totalFlags ? `<span class="pendingPill">${totalFlags} flag(s)</span>` : ""}
           </div>
         </div>
 
         <div class="pendingGroupHead__actions">
-          <button
-            class="btn pendingGroupHead__btn"
-            data-toggle-label="${escapeAttr(studentId)}"
-            type="button"
-          >
+          <button class="btn pendingGroupHead__btn" data-toggle-label="${escapeAttr(studentId)}" type="button">
             ${isCollapsed ? "Expand" : "Collapse"}
           </button>
 
-          <button
-            class="btn pendingGroupHead__btn"
-            data-approve-student="${escapeAttr(studentId)}"
-            type="button"
-          >
+          <button class="btn pendingGroupHead__btn" data-approve-safe-student="${escapeAttr(studentId)}" type="button">
+            Approve Safe Only ✅
+          </button>
+
+          <button class="btn pendingGroupHead__btn" data-approve-student="${escapeAttr(studentId)}" type="button">
             Approve All for Student ✅✅
           </button>
         </div>
@@ -310,34 +399,42 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
     body.className = `pendingGroupBody${isCollapsed ? " isHidden" : ""}`;
     body.setAttribute("data-student-body", studentId);
 
-    for (const tx of txs) {
+    for (const row of txs) {
+      const { tx, flags, parsed, sameDayCount } = row;
       const div = document.createElement("div");
       div.className = "panel pendingChildRow";
 
       const mins = Number(tx.deltaMinutes || 0);
-      const note = safeText(tx.note || "");
       const dateKey = safeText(tx.dateKey || "");
       const requesterId = safeText(tx.submittedByUserId || "");
-      const requesterNice = requesterId
-        ? safeText(userNameMap[requesterId] || requesterId)
-        : "";
+      const requesterNice = requesterId ? safeText(userNameMap[requesterId] || requesterId) : "";
+      const safeStatus = flags.length ? "needs-review" : "safe";
+
+      const detailBits = [];
+      if (parsed.type) detailBits.push(`Type: ${parsed.type}`);
+      if (parsed.book) detailBits.push(`Book: ${parsed.book}`);
+      if (parsed.pages) detailBits.push(`Pages: ${parsed.pages}`);
+      if (parsed.pagesRead !== "") detailBits.push(`Pages Read: ${parsed.pagesRead}`);
+      if (parsed.note) detailBits.push(`Note: ${parsed.note}`);
+      if (parsed.reflection) detailBits.push(`Reflection: ${parsed.reflection}`);
+      if (!detailBits.length && tx.note) detailBits.push(tx.note);
 
       div.innerHTML = `
-        <div class="pendingChildRow__wrap">
+        <div class="pendingChildRow__wrap" data-safe-status="${safeStatus}">
           <div class="pendingChildRow__left">
             <div class="pendingChildRow__mins">${mins} min</div>
 
             <div class="pendingChildRow__meta">
               <span>${escapeHtml(dateKey)}</span>
-              ${note ? `<span>• ${escapeHtml(note)}</span>` : ""}
+              ${sameDayCount >= MULTI_REQUEST_DAY_THRESHOLD ? `<span>• ${sameDayCount} request(s) this day</span>` : ""}
               ${requesterNice ? `<span>• Requested by ${escapeHtml(requesterNice)}</span>` : ""}
             </div>
 
-            ${
-              requesterId
-                ? `<div class="pendingChildRow__id">${escapeHtml(requesterId)}</div>`
-                : ""
-            }
+            ${requesterId ? `<div class="pendingChildRow__id">${escapeHtml(requesterId)}</div>` : ""}
+
+            ${flags.length ? `<div class="pendingChildRow__meta" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">${flags.map((f) => `<span class="pendingPill">⚠ ${escapeHtml(f.label)}</span>`).join("")}</div>` : `<div class="pendingChildRow__meta" style="margin-top:8px;"><span class="pendingPill">✅ Safe-looking entry</span></div>`}
+
+            ${detailBits.length ? `<div class="pendingChildRow__meta" style="margin-top:8px; display:block; line-height:1.5;">${detailBits.map((bit) => `<div>${escapeHtml(bit)}</div>`).join("")}</div>` : ""}
           </div>
 
           <div class="pendingChildRow__actions">
@@ -361,39 +458,24 @@ function renderPendingGrouped(rows, studentNameMap = {}, userNameMap = {}) {
 
     const toggleBtn = head.querySelector(`[data-toggle-student="${escapeAttr(studentId)}"]`);
     const toggleLabelBtn = head.querySelector(`[data-toggle-label="${escapeAttr(studentId)}"]`);
-    const approveStudentBtn = head.querySelector(
-      `[data-approve-student="${escapeAttr(studentId)}"]`
-    );
+    const approveStudentBtn = head.querySelector(`[data-approve-student="${escapeAttr(studentId)}"]`);
+    const approveSafeStudentBtn = head.querySelector(`[data-approve-safe-student="${escapeAttr(studentId)}"]`);
 
-    if (toggleBtn) {
-      toggleBtn.addEventListener("click", () => toggleStudentGroup(studentId));
-    }
-
-    if (toggleLabelBtn) {
-      toggleLabelBtn.addEventListener("click", () => toggleStudentGroup(studentId));
-    }
-
-    if (approveStudentBtn) {
-      approveStudentBtn.addEventListener("click", () => approveAllForStudent(txs));
-    }
+    if (toggleBtn) toggleBtn.addEventListener("click", () => toggleStudentGroup(studentId));
+    if (toggleLabelBtn) toggleLabelBtn.addEventListener("click", () => toggleStudentGroup(studentId));
+    if (approveStudentBtn) approveStudentBtn.addEventListener("click", () => approveAllForStudent(txs.map((r) => r.tx)));
+    if (approveSafeStudentBtn) approveSafeStudentBtn.addEventListener("click", () => approveSafeForStudent(txs));
   }
 }
 
 function toggleStudentGroup(studentId) {
   if (!studentId) return;
 
-  if (ctx.collapsedStudents.has(studentId)) {
-    ctx.collapsedStudents.delete(studentId);
-  } else {
-    ctx.collapsedStudents.add(studentId);
-  }
+  if (ctx.collapsedStudents.has(studentId)) ctx.collapsedStudents.delete(studentId);
+  else ctx.collapsedStudents.add(studentId);
 
   applyClientFilterAndRender();
 }
-
-/* =========================
-   Approve / Reject / Approve All
-========================= */
 
 async function approveTx(txId) {
   hideMsgs();
@@ -462,11 +544,7 @@ async function rejectTx(txId) {
 async function approveAllShown() {
   hideMsgs();
 
-  const approveButtons = Array.from(
-    els.list?.querySelectorAll?.(".pendingGroupBody:not(.isHidden) button[data-approve], .pendingChildRow button[data-approve]") || []
-  );
-
-  const ids = approveButtons
+  const ids = Array.from(els.list?.querySelectorAll?.("button[data-approve]") || [])
     .map((b) => b.getAttribute("data-approve"))
     .filter(Boolean);
 
@@ -475,7 +553,43 @@ async function approveAllShown() {
     return;
   }
 
-  showLoading(els.loadingOverlay, els.loadingText, `Approving ${ids.length} item(s)…`);
+  await approveBatchByIds(ids, `Approving ${ids.length} shown item(s)…`, `Approved ${ids.length} item(s)! ✅✅`);
+}
+
+async function approveAllSafeShown() {
+  hideMsgs();
+
+  const ids = Array.from(els.list?.querySelectorAll?.('[data-safe-status="safe"] button[data-approve]') || [])
+    .map((b) => b.getAttribute("data-approve"))
+    .filter(Boolean);
+
+  if (!ids.length) {
+    showOk("No safe-looking entries are showing right now.");
+    return;
+  }
+
+  await approveBatchByIds(ids, `Approving ${ids.length} safe-looking item(s)…`, `Approved ${ids.length} safe-looking item(s)! ✅`);
+}
+
+async function approveAllForStudent(txs) {
+  if (!Array.isArray(txs) || !txs.length) return;
+  const ids = txs.map((tx) => tx.id).filter(Boolean);
+  await approveBatchByIds(ids, "Approving this student's requests…", `Approved ${ids.length} request(s) for this student ✅✅`);
+}
+
+async function approveSafeForStudent(rows) {
+  const ids = rows.filter((row) => !row.flags.length).map((row) => row.tx.id).filter(Boolean);
+  if (!ids.length) {
+    showOk("This student does not have any safe-looking entries to auto-approve.");
+    return;
+  }
+  await approveBatchByIds(ids, "Approving this student's safe-looking requests…", `Approved ${ids.length} safe-looking request(s) ✅`);
+}
+
+async function approveBatchByIds(ids, loadingText, successText) {
+  if (!ids.length) return;
+
+  showLoading(els.loadingOverlay, els.loadingText, loadingText);
 
   try {
     const user = await ensureAuthedOrBounce();
@@ -497,67 +611,17 @@ async function approveAllShown() {
       if (!resp.ok) throw new Error(await readHttpError(resp));
 
       okCount += 1;
-      showLoading(els.loadingOverlay, els.loadingText, `Approving… (${okCount}/${ids.length})`);
+      showLoading(els.loadingOverlay, els.loadingText, `${loadingText} (${okCount}/${ids.length})`);
     }
 
     hideLoading(els.loadingOverlay);
-    showOk(`Approved ${okCount} item(s)! ✅✅`);
+    showOk(successText);
     await refreshPending();
   } catch (err) {
     hideLoading(els.loadingOverlay);
     showError(normalizeError(err));
   }
 }
-
-async function approveAllForStudent(txs) {
-  if (!Array.isArray(txs) || !txs.length) return;
-
-  hideMsgs();
-  showLoading(els.loadingOverlay, els.loadingText, "Approving this student's requests…");
-
-  try {
-    const user = await ensureAuthedOrBounce();
-    if (!user) return;
-
-    const token = await user.getIdToken(true);
-
-    let okCount = 0;
-
-    for (const tx of txs) {
-      const resp = await fetch(ENDPOINTS.approvePendingMinutesHttp, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          schoolId: ctx.schoolId,
-          txId: tx.id,
-        }),
-      });
-
-      if (!resp.ok) throw new Error(await readHttpError(resp));
-
-      okCount += 1;
-      showLoading(
-        els.loadingOverlay,
-        els.loadingText,
-        `Approving this student's requests… (${okCount}/${txs.length})`
-      );
-    }
-
-    hideLoading(els.loadingOverlay);
-    showOk(`Approved ${okCount} request(s) for this student ✅✅`);
-    await refreshPending();
-  } catch (err) {
-    hideLoading(els.loadingOverlay);
-    showError(normalizeError(err));
-  }
-}
-
-/* =========================
-   Name lookups
-========================= */
 
 async function buildStudentNameMap(schoolId, rows) {
   const ids = Array.from(new Set(rows.map((r) => r.targetUserId).filter(Boolean)));
@@ -591,12 +655,7 @@ async function buildUserNameMap(schoolId, rows) {
         const s = await getDoc(ref);
         const d = s.exists() ? s.data() : null;
 
-        map[id] =
-          d?.displayName ||
-          d?.name ||
-          d?.fullName ||
-          d?.email ||
-          id;
+        map[id] = d?.displayName || d?.name || d?.fullName || d?.email || id;
       } catch {
         map[id] = id;
       }
@@ -607,9 +666,37 @@ async function buildUserNameMap(schoolId, rows) {
   return map;
 }
 
-/* =========================
-   Helpers
-========================= */
+function parseStructuredNote(note) {
+  const result = {
+    type: "",
+    book: "",
+    pages: "",
+    pagesRead: "",
+    note: "",
+    reflection: "",
+  };
+
+  const raw = safeText(note);
+  if (!raw) return result;
+
+  const pieces = raw.split("|").map((part) => part.trim()).filter(Boolean);
+  for (const piece of pieces) {
+    const idx = piece.indexOf(":");
+    if (idx === -1) continue;
+
+    const key = piece.slice(0, idx).trim().toLowerCase();
+    const value = piece.slice(idx + 1).trim();
+
+    if (key === "type") result.type = value;
+    else if (key === "book") result.book = value;
+    else if (key === "pages") result.pages = value;
+    else if (key === "pages read") result.pagesRead = value;
+    else if (key === "note") result.note = value;
+    else if (key === "reflection") result.reflection = value;
+  }
+
+  return result;
+}
 
 async function readHttpError(resp) {
   let msg = `HTTP ${resp.status}`;

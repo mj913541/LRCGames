@@ -29,6 +29,7 @@
 
       <div class="approveBar">
         <button class="btnBig btnBig--primary" id="btnRefresh" type="button">🔄 Refresh</button>
+        <button class="btnBig" id="btnApproveSafeOnly" type="button">✅ Approve Safe Only</button>
         <div class="approveBar__meta" id="countLabel">Loading…</div>
       </div>
 
@@ -43,16 +44,26 @@
         </label>
 
         <label class="field field--inline">
-          <span class="field__label">Search userId</span>
-          <input class="input input--small" id="searchInput" placeholder="student_10293" />
+          <span class="field__label">Search</span>
+          <input class="input input--small" id="searchInput" placeholder="student, userId, book, note" />
+        </label>
+
+        <label class="field field--inline">
+          <span class="field__label">Review mode</span>
+          <label class="pill" style="display:inline-flex; align-items:center; gap:8px; padding:10px 14px;">
+            <input id="suspiciousOnly" type="checkbox" />
+            Suspicious only
+          </label>
         </label>
       </div>
+
+      <div id="summaryCards" class="filterRow" style="margin-top:12px;"></div>
     </section>
 
     <section class="panel">
       <div class="sectionHead">
         <h2 class="h2">Requests</h2>
-        <p class="sub">Approving moves minutes from <strong>Pending</strong> → <strong>Total</strong> and awards <strong>Rubies 1:1</strong>.</p>
+        <p class="sub">Grouped by student, with quick review flags for large entries, missing context, repeat same-day logs, and chapter-book page tracking.</p>
       </div>
 
       <div class="list" id="pendingList" aria-label="Pending minutes list"></div>
