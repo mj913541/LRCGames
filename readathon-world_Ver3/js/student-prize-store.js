@@ -190,19 +190,41 @@ function escapeHtml(value) {
 ====================================================== */
 
 function getUserDocRef(schoolId, uid) {
-  return doc(db, `${getSchoolRoot(schoolId)}/${CONFIG.usersCollection}/${uid}`);
+  return doc(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "users",
+    uid
+  );
 }
 
 function getPrizeCatalogCollectionRef(schoolId) {
-  return collection(db, `${getSchoolRoot(schoolId)}/${CONFIG.prizeCatalogCollection}`);
+  return collection(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "prizeCatalog"
+  );
 }
 
 function getPrizeDocRef(schoolId, prizeId) {
-  return doc(db, `${getSchoolRoot(schoolId)}/${CONFIG.prizeCatalogCollection}/${prizeId}`);
+  return doc(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "prizeCatalog",
+    prizeId
+  );
 }
 
 function getPrizeRedemptionsCollectionRef(schoolId) {
-  return collection(db, `${getSchoolRoot(schoolId)}/${CONFIG.prizeRedemptionsCollection}`);
+  return collection(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "prizeRedemptions"
+  );
 }
 
 /* ======================================================
