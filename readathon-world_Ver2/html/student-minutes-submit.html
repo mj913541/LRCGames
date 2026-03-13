@@ -35,11 +35,22 @@
 
     <section class="panel">
       <div class="sectionHead">
-        <h2 class="h2">Step 1: How many minutes did you read?</h2>
-        <p class="sub">These minutes will be <strong>pending</strong> until an admin approves them.</p>
+        <h2 class="h2">Step 1: Tell us about your reading</h2>
+        <p class="sub">These minutes will be <strong>pending</strong> until an admin approves them. To keep things fair, each entry is capped at <strong>120 minutes</strong>.</p>
       </div>
 
       <form id="minutesForm" class="formBlock">
+        <label class="field">
+          <span class="field__label">What did you read?</span>
+          <select class="input" id="readingType">
+            <option value="">Choose one…</option>
+            <option value="chapter_book">Chapter Book</option>
+            <option value="picture_book">Picture Book</option>
+            <option value="audiobook">Audiobook</option>
+          </select>
+          <span class="hint">This helps adults understand the kind of reading you did.</span>
+        </label>
+
         <label class="field">
           <span class="field__label">Minutes</span>
           <input
@@ -50,26 +61,74 @@
             placeholder="15"
             autocomplete="off"
           />
-          <span class="hint">Whole numbers only. Example: 20</span>
+          <span class="hint">Whole numbers only. Max 120 minutes per entry.</span>
         </label>
 
         <label class="field">
-          <span class="field__label">Note (optional)</span>
+          <span class="field__label">Book title or reading title</span>
+          <input
+            class="input"
+            id="bookTitleInput"
+            placeholder="Example: Dog Man"
+            autocomplete="off"
+          />
+        </label>
+
+        <div id="chapterFields" class="isHidden">
+          <div class="sectionHead" style="margin-top:12px;">
+            <h3 class="h2" style="font-size:1.1rem;">Chapter book accountability</h3>
+            <p class="sub">For chapter books, add where you started and stopped reading.</p>
+          </div>
+
+          <div class="filterRow" style="align-items:flex-end; gap:12px; flex-wrap:wrap;">
+            <label class="field field--inline" style="min-width:160px; flex:1 1 160px;">
+              <span class="field__label">Start page</span>
+              <input class="input" id="startPageInput" inputmode="numeric" pattern="[0-9]*" placeholder="40" autocomplete="off" />
+            </label>
+
+            <label class="field field--inline" style="min-width:160px; flex:1 1 160px;">
+              <span class="field__label">End page</span>
+              <input class="input" id="endPageInput" inputmode="numeric" pattern="[0-9]*" placeholder="65" autocomplete="off" />
+            </label>
+
+            <button class="btn" id="btnSuggestMinutes" type="button">Use Pages Read as Minutes</button>
+          </div>
+        </div>
+
+        <label class="field">
+          <span class="field__label">Short reflection (optional)</span>
+          <input
+            class="input"
+            id="reflectionInput"
+            maxlength="180"
+            placeholder="What happened in your reading today?"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="field">
+          <span class="field__label">Extra note (optional)</span>
           <input
             class="input"
             id="noteInput"
-            placeholder="Book title or reading note"
+            placeholder="Example: Read at home with mom"
             autocomplete="off"
           />
-          <span class="hint">Example: “Dog Man at home”</span>
         </label>
+
+        <div class="panel isHidden" id="accountabilityPreview" style="margin-top:8px;">
+          <div class="sectionHead">
+            <h3 class="h2" style="font-size:1.05rem;">What the admin will see</h3>
+            <p class="sub">This preview helps students double-check their log before submitting.</p>
+          </div>
+          <div class="sub" id="accountabilityText"></div>
+        </div>
 
         <button class="btnPrimary" id="btnSubmit" type="submit">
           Submit Pending Minutes
         </button>
 
         <div class="msg msg--error isHidden" id="errorBox" role="alert"></div>
-        <div class="msg msg--ok isHidden" id="okBox" role="status"></div>
       </form>
     </section>
 
@@ -80,6 +139,27 @@
       </div>
     </div>
   </main>
+
+  <dialog class="dialog" id="successDialog" aria-labelledby="successTitle">
+    <div class="dialog__panel dialog__panel--success">
+      <h2 class="h2" id="successTitle">✅ Minutes Submitted!</h2>
+      <p class="sub successText">
+        Your reading minutes were sent successfully.
+      </p>
+      <p class="sub successText">
+        Please go back to your dashboard and wait for Mrs. A to approve minutes.
+      </p>
+
+      <div class="row row--stack">
+        <a class="btnPrimary successBtn" id="btnBackToDashboard" href="./student-home.html">
+          Back to Dashboard &amp; Wait for Mrs. A to Approve Minutes
+        </a>
+        <button class="btnGhost" id="btnCloseSuccess" type="button">
+          Stay on This Page
+        </button>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module" src="../js/student-minutes-submit.js"></script>
 </body>
