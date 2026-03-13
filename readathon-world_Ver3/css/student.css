@@ -380,7 +380,7 @@ body{
   border-radius: 16px;
   border: 1px solid rgba(255,255,255,0.18);
   background: rgba(255,255,255,0.10);
-  color: var(--text);
+  color: black;
   font-size: 16px;
 }
 .input:focus{ outline:none; box-shadow: var(--ring); }
