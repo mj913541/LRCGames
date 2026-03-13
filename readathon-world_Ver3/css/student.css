@@ -383,6 +383,14 @@ body{
   color: black;
   font-size: 16px;
 }
+select.input {
+    background: rgba(255,255,255,0.95);
+    color: #222;
+}
+select.input option {
+    color: #222;
+    background: #fff;
+}
 .input:focus{ outline:none; box-shadow: var(--ring); }
 .row{ display:flex; justify-content:flex-end; gap:10px; margin-top:10px; }
 .btnSmall{
