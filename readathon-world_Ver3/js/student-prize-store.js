@@ -1,15 +1,12 @@
 import { auth, db, fnRedeemPrizeCredit } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
   getDocs,
   orderBy,
-  query,
-  runTransaction,
-  serverTimestamp
+  query
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* ======================================================
@@ -23,7 +20,6 @@ const CONFIG = {
   prizeCatalogCollection: "prizeCatalog",
   prizeRedemptionsCollection: "prizeRedemptions",
 
-  // Student donation total can live under one of these fields.
   donationFieldCandidates: [
     "donationsTotal",
     "fundraisingTotal",
@@ -65,6 +61,19 @@ const cancelRedeemBtnEl = document.getElementById("cancelRedeemBtn");
 const confirmRedeemBtnEl = document.getElementById("confirmRedeemBtn");
 
 const pageToastEl = document.getElementById("pageToast");
+
+/* =========================================
+   PROGRESS + MYSTERY CRATE ELEMENTS
+========================================= */
+
+const nextPrizeTitleEl = document.getElementById("nextPrizeTitle");
+const nextPrizeSubtitleEl = document.getElementById("nextPrizeSubtitle");
+const nextPrizeRaisedValueEl = document.getElementById("nextPrizeRaisedValue");
+const nextPrizeNeededValueEl = document.getElementById("nextPrizeNeededValue");
+const nextPrizeProgressFillEl = document.getElementById("nextPrizeProgressFill");
+const nextPrizeFooterEl = document.getElementById("nextPrizeFooter");
+
+const mysteryCrateGridEl = document.getElementById("mysteryCrateGrid");
 
 /* ======================================================
    STATE
@@ -146,10 +155,6 @@ function getSchoolId() {
   return null;
 }
 
-function getSchoolRoot(schoolId) {
-  return `readathonV2_schools/${schoolId}`;
-}
-
 function getDonationTotalFromUser(userData = {}) {
   for (const fieldName of CONFIG.donationFieldCandidates) {
     const value = Number(userData[fieldName]);
@@ -169,7 +174,9 @@ function getCreditEarned(donationsRaised) {
 }
 
 function getCreditRemaining(donationsRaised, creditSpent) {
-  return Number(Math.max(0, getCreditEarned(donationsRaised) - Number(creditSpent || 0)).toFixed(2));
+  return Number(
+    Math.max(0, getCreditEarned(donationsRaised) - Number(creditSpent || 0)).toFixed(2)
+  );
 }
 
 function getMinimumDonationsNeeded(prizePrice) {
@@ -205,25 +212,6 @@ function getPrizeCatalogCollectionRef(schoolId) {
     "readathonV2_schools",
     schoolId,
     "prizeCatalog"
-  );
-}
-
-function getPrizeDocRef(schoolId, prizeId) {
-  return doc(
-    db,
-    "readathonV2_schools",
-    schoolId,
-    "prizeCatalog",
-    prizeId
-  );
-}
-
-function getPrizeRedemptionsCollectionRef(schoolId) {
-  return collection(
-    db,
-    "readathonV2_schools",
-    schoolId,
-    "prizeRedemptions"
   );
 }
 
@@ -383,6 +371,143 @@ function renderPrizeGrid() {
 }
 
 /* ======================================================
+   PROGRESS BAR
+====================================================== */
+
+function getNextLockedPrize(prizes, donationsRaised) {
+  const sorted = [...prizes]
+    .filter((prize) => Number(prize.price || 0) > 0)
+    .sort((a, b) => {
+      const aNeed = getMinimumDonationsNeeded(a.price);
+      const bNeed = getMinimumDonationsNeeded(b.price);
+      return aNeed - bNeed;
+    });
+
+  return sorted.find((prize) => donationsRaised < getMinimumDonationsNeeded(prize.price)) || null;
+}
+
+function renderNextPrizeProgress() {
+  if (
+    !nextPrizeTitleEl ||
+    !nextPrizeSubtitleEl ||
+    !nextPrizeRaisedValueEl ||
+    !nextPrizeNeededValueEl ||
+    !nextPrizeProgressFillEl ||
+    !nextPrizeFooterEl
+  ) {
+    return;
+  }
+
+  const userData = state.userDoc || {};
+  const donationsRaised = getDonationTotalFromUser(userData);
+  const nextPrize = getNextLockedPrize(state.prizes, donationsRaised);
+
+  if (!nextPrize) {
+    nextPrizeTitleEl.textContent = "All prizes unlocked!";
+    nextPrizeSubtitleEl.textContent = "Amazing fundraising!";
+    nextPrizeRaisedValueEl.textContent = formatMoney(donationsRaised);
+    nextPrizeNeededValueEl.textContent = formatMoney(donationsRaised);
+    nextPrizeProgressFillEl.style.width = "100%";
+    nextPrizeFooterEl.textContent = "You can redeem any available prize.";
+    return;
+  }
+
+  const needed = getMinimumDonationsNeeded(nextPrize.price);
+  const remaining = Math.max(0, needed - donationsRaised);
+  const percent = Math.min(100, (donationsRaised / needed) * 100);
+
+  nextPrizeTitleEl.textContent = nextPrize.name;
+  nextPrizeSubtitleEl.textContent =
+    `This prize costs ${formatMoney(nextPrize.price)} credit`;
+  nextPrizeRaisedValueEl.textContent = formatMoney(donationsRaised);
+  nextPrizeNeededValueEl.textContent = formatMoney(needed);
+  nextPrizeProgressFillEl.style.width = `${percent}%`;
+  nextPrizeFooterEl.textContent =
+    `Raise ${formatMoney(remaining)} more to unlock this prize.`;
+}
+
+/* ======================================================
+   MYSTERY CRATES
+====================================================== */
+
+function getMysteryCrates() {
+  return [
+    {
+      id: "crate_small",
+      name: "Mini Mystery Crate",
+      price: 2,
+      description: "A surprise mix of stickers, pencils, or fidgets",
+      items: ["Stickers", "Fun Pencil", "Mini Fidget"],
+      rare: "Chance for bonus item"
+    },
+    {
+      id: "crate_medium",
+      name: "Mega Mystery Crate",
+      price: 4,
+      description: "Bigger surprise prizes",
+      items: ["Pop-It", "Journal", "Cool Pen", "Plush"],
+      rare: "Higher rare chance"
+    },
+    {
+      id: "crate_legend",
+      name: "Legend Mystery Crate",
+      price: 6,
+      description: "Top tier mystery rewards",
+      items: ["Medium Plush", "LED Toy", "Fidget Pack"],
+      rare: "Legendary prize chance"
+    }
+  ];
+}
+
+function renderMysteryCrates() {
+  if (!mysteryCrateGridEl) return;
+
+  const userData = state.userDoc || {};
+  const donationsRaised = getDonationTotalFromUser(userData);
+  const creditSpent = getPrizeCreditSpentFromUser(userData);
+  const creditRemaining = getCreditRemaining(donationsRaised, creditSpent);
+
+  const crates = getMysteryCrates();
+
+  mysteryCrateGridEl.innerHTML = crates.map((crate) => {
+    const minDonationsNeeded = getMinimumDonationsNeeded(crate.price);
+    const donationsStillNeeded = Math.max(0, minDonationsNeeded - donationsRaised);
+    const canAfford = creditRemaining >= crate.price;
+
+    return `
+      <article class="rw-mystery-card">
+        <h3>${escapeHtml(crate.name)}</h3>
+
+        <p>${escapeHtml(crate.description)}</p>
+
+        <p>
+          <strong>Possible items:</strong>
+          ${escapeHtml(crate.items.join(", "))}
+        </p>
+
+        <p>${escapeHtml(crate.rare)}</p>
+
+        <p class="rw-prize-cost">
+          Cost: ${formatMoney(crate.price)} credit
+        </p>
+
+        <p>
+          Need to raise: ${formatMoney(minDonationsNeeded)}
+        </p>
+
+        <button type="button" disabled>
+          ${
+            canAfford
+              ? "Mystery Crates Coming Soon"
+              : `Raise ${formatMoney(donationsStillNeeded)} More`
+          }
+        </button>
+      </article>
+    `;
+  }).join("");
+}
+
+/* ======================================================
    MODAL
 ====================================================== */
 
@@ -444,7 +569,6 @@ async function loadPrizeCatalog() {
 
   const catalogRef = getPrizeCatalogCollectionRef(schoolId);
   const prizeQuery = query(catalogRef, orderBy(CONFIG.prizeNameField));
-
   const snapshot = await getDocs(prizeQuery);
 
   state.prizes = snapshot.docs
@@ -468,6 +592,8 @@ async function refreshPageData() {
   await loadCurrentUserDoc();
   await loadPrizeCatalog();
   renderWalletSummary();
+  renderNextPrizeProgress();
+  renderMysteryCrates();
   renderPrizeGrid();
 }
 
@@ -476,7 +602,6 @@ async function refreshPageData() {
 ====================================================== */
 
 async function redeemSelectedPrize() {
-
   const prize = state.selectedPrize;
 
   if (!prize) {
@@ -485,21 +610,16 @@ async function redeemSelectedPrize() {
   }
 
   try {
-
     setLoading(true);
 
-    const result = await fnRedeemPrizeCredit({
+    await fnRedeemPrizeCredit({
       prizeId: prize.id
     });
 
     closeRedeemModal();
-
     await refreshPageData();
-
     showToast("Prize redeemed successfully!");
-
   } catch (error) {
-
     console.error("Redeem failed:", error);
 
     const message =
@@ -508,11 +628,8 @@ async function redeemSelectedPrize() {
       "Prize redemption failed.";
 
     showToast(message);
-
   } finally {
-
     setLoading(false);
-
   }
 }
 
@@ -543,7 +660,9 @@ async function initPageForUser(user) {
   state.schoolId = getSchoolId();
 
   if (!state.schoolId) {
-    renderEmptyState("No school ID was found. Add ?schoolId=YOUR_SCHOOL_ID to the URL or store the school ID in local/session storage.");
+    renderEmptyState(
+      "No school ID was found. Add ?schoolId=YOUR_SCHOOL_ID to the URL or store the school ID in local/session storage."
+    );
     showToast("Missing school ID.");
     return;
   }
