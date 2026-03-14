@@ -503,3 +503,140 @@ body.rw-page {
     align-items: flex-start;
   }
 }
+
+/* ========================================
+   PRIZE PROGRESS CARD
+======================================== */
+
+.rw-progress-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.rw-progress-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.rw-progress-card__eyebrow {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.rw-progress-card__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.rw-progress-card__subtitle {
+  font-size: 14px;
+  color: #555;
+}
+
+.rw-progress-card__amounts {
+  display: flex;
+  gap: 20px;
+}
+
+.rw-progress-card__amount {
+  text-align: right;
+}
+
+.rw-progress-card__amount-label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+
+.rw-progress-card__amount strong {
+  font-size: 20px;
+  color: #2a6ef2;
+}
+
+/* ========================================
+   PROGRESS BAR
+======================================== */
+
+.rw-progress-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 8px;
+  background: #e6e6e6;
+  margin: 18px 0;
+  overflow: hidden;
+}
+
+.rw-progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg,#2a6ef2,#5da9ff);
+  transition: width 0.4s ease;
+}
+
+/* ========================================
+   PROGRESS FOOTER
+======================================== */
+
+.rw-progress-card__footer {
+  font-size: 14px;
+  color: #444;
+  text-align: center;
+}
+
+/* ========================================
+   MYSTERY CRATES
+======================================== */
+
+#mysteryCratesSection .rw-prize-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 20px;
+}
+
+.rw-mystery-card {
+  background: linear-gradient(135deg,#7a3cff,#b368ff);
+  color: white;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.rw-mystery-card h3 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.rw-mystery-card p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.rw-mystery-card .rw-prize-cost {
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.rw-mystery-card button {
+  margin-top: 12px;
+  background: white;
+  color: #7a3cff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rw-mystery-card button:hover {
+  opacity: 0.9;
+}

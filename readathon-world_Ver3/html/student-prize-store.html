@@ -102,18 +102,72 @@
     </section>
 
     <!-- Prize grid -->
-    <section class="rw-section" id="prizeStoreSection">
-      <div class="rw-section-heading">
-        <h2 class="rw-section-title">Available Prizes</h2>
-        <p class="rw-section-subtitle">
-          Each prize shows both the credit cost and the total donations needed to earn it.
+<section class="rw-section" id="progressSection">
+  <div class="rw-section-heading">
+    <h2 class="rw-section-title">Your Prize Progress</h2>
+    <p class="rw-section-subtitle">
+      See how close you are to your next exciting reward.
+    </p>
+  </div>
+
+  <div class="rw-progress-card" id="nextPrizeProgressCard">
+    <div class="rw-progress-card__top">
+      <div>
+        <p class="rw-progress-card__eyebrow">Next Prize Goal</p>
+        <h3 class="rw-progress-card__title" id="nextPrizeTitle">Next prize coming soon</h3>
+        <p class="rw-progress-card__subtitle" id="nextPrizeSubtitle">
+          Keep fundraising to unlock more prizes.
         </p>
       </div>
 
-      <div class="rw-prize-grid" id="prizeGrid">
-        <!-- JS will render real prize cards here -->
+      <div class="rw-progress-card__amounts">
+        <div class="rw-progress-card__amount">
+          <span class="rw-progress-card__amount-label">Raised So Far</span>
+          <strong id="nextPrizeRaisedValue">$0.00</strong>
+        </div>
+        <div class="rw-progress-card__amount">
+          <span class="rw-progress-card__amount-label">Needed For This Prize</span>
+          <strong id="nextPrizeNeededValue">$0.00</strong>
+        </div>
       </div>
-    </section>
+    </div>
+
+    <div class="rw-progress-bar">
+      <div class="rw-progress-bar__fill" id="nextPrizeProgressFill" style="width: 0%;"></div>
+    </div>
+
+    <p class="rw-progress-card__footer" id="nextPrizeFooter">
+      Raise a little more to unlock your next prize.
+    </p>
+  </div>
+</section>
+
+<section class="rw-section" id="mysteryCratesSection">
+  <div class="rw-section-heading">
+    <h2 class="rw-section-title">Mystery Crates</h2>
+    <p class="rw-section-subtitle">
+      Surprise boxes packed with fun rewards and possible rare prizes.
+    </p>
+  </div>
+
+  <div class="rw-prize-grid" id="mysteryCrateGrid">
+    <!-- JS will render mystery crates here -->
+  </div>
+</section>
+
+<section class="rw-section" id="prizeStoreSection">
+  <div class="rw-section-heading">
+    <h2 class="rw-section-title">Available Prizes</h2>
+    <p class="rw-section-subtitle">
+      Each prize shows both the credit cost and the total donations needed to earn it.
+    </p>
+  </div>
+
+  <div class="rw-prize-grid" id="prizeGrid">
+    <!-- JS will render real prize cards here -->
+  </div>
+</section>
+
   </main>
 
   <!-- ======================================================

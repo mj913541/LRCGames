@@ -1,79 +1,127 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Avatar Layer Test</title>
+<meta charset="UTF-8" />
+<title>Avatar Layer Test</title>
 
-  <style>
-    .avatar {
-      position: relative;
-      width: 350px;   /* you can adjust */
-      height: 350px;  /* should be square */
-    }
+<style>
 
-    .avatar img {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-    }
+/* ======================================
+   AVATAR GRID CONTAINER
+====================================== */
 
-    .base {
-      z-index: 2;
-    }
-
-    .head-item {
-      z-index: 4;
-    }
-
-    .avatar-container {
-  display: flex;
-  flex-wrap: wrap;          /* allows wrapping */
-  gap: 16px;                /* space between avatars */
-  justify-content: flex-start;
-  background-color: blueviolet;
+.avatar-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px;
+  padding:20px;
+  background:blueviolet;
 }
-  </style>
+
+
+/* ======================================
+   AVATAR SIZE (Scaled Down Preview)
+   Real asset size = 640 x 960
+   Preview = 160 x 240
+====================================== */
+
+.avatar{
+  position:relative;
+  width:160px;   /* scaled preview */
+  height:240px;  /* maintain 2:3 ratio */
+}
+
+
+/* ======================================
+   AVATAR LAYERS
+====================================== */
+
+.avatar img{
+  position:absolute;
+  top:0;
+  left:0;
+
+  width:100%;
+  height:100%;
+
+  object-fit:contain;
+  pointer-events:none;
+}
+
+
+/* ======================================
+   LAYER ORDER
+====================================== */
+
+.base{
+  z-index:1;
+}
+
+.head-item{
+  z-index:4;
+}
+
+
+/* ======================================
+   OPTIONAL DEBUG OUTLINE
+   (very useful when aligning items)
+====================================== */
+
+.avatar{
+  outline:2px dashed rgba(255,255,255,.3);
+}
+
+</style>
 </head>
 
+
 <body>
-  <h2>Avatar Layer Test</h2>
+
+<h2>Avatar Layer Test</h2>
+
 <div class="avatar-container">
-  <div class="avatar">
-    <img src="./assets/avatar/base/lion-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-  <div class="avatar">
-    <img src="./assets/avatar/base/cat-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-    <div class="avatar">
-    <img src="./assets/avatar/base/dog-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-    <div class="avatar">
-    <img src="./assets/avatar/base/dragon-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-    <div class="avatar">
-    <img src="./assets/avatar/base/fox-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-      <div class="avatar">
-    <img src="./assets/avatar/base/owl-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-      <div class="avatar">
-    <img src="./assets/avatar/base/panda-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-      <div class="avatar">
-    <img src="./assets/avatar/base/turtle-base.png" class="base">
-    <img src="./assets/avatar/items/head/head_leaf_crown.png" class="head-item">
-  </div>
-  </div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-lion.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-cat.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-dog.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-dragon.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-fox.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-owl.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-panda.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+<div class="avatar">
+<img src="./readathon-world_Ver3/img/avatar-world/base/base-turtle.png" class="base">
+<img src="./readathon-world_Ver3/img/avatar-world/clothes/dragon-wings.png" class="head-item">
+</div>
+
+</div>
+
 </body>
 </html>
