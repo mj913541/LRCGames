@@ -53,7 +53,9 @@ const els = {
   searchInput: document.getElementById("searchInput"),
   rarityFilter: document.getElementById("rarityFilter"),
   ownedFilter: document.getElementById("ownedFilter"),
+  collectionFilter: document.getElementById("collectionFilter"),
 };
+
 
 /* --------------------------------------------------
    State
@@ -69,14 +71,17 @@ const state = {
 
   catalog: [],
   ownedIds: new Set(),
+  collections: [],
 
   tab: "all",
   search: "",
   rarity: "all",
   ownedFilter: "all", // all | owned | unowned
+  collection: "all",
 
   busyBuyItemId: null,
 };
+
 
 /* --------------------------------------------------
    Init
@@ -168,7 +173,15 @@ function wireFilters() {
       renderGrid();
     });
   }
+
+  if (els.collectionFilter) {
+    els.collectionFilter.addEventListener("change", () => {
+      state.collection = String(els.collectionFilter.value || "all").trim().toLowerCase();
+      renderGrid();
+    });
+  }
 }
+
 
 /* --------------------------------------------------
    Data Loads
@@ -201,7 +214,9 @@ async function loadAllData() {
   );
 
   state.catalog = catalogItems;
+  state.collections = buildCollectionList(catalogItems);
 }
+
 
 async function safeLoadInventory({ schoolId, userId }) {
   try {
@@ -295,29 +310,57 @@ function normalizeCatalogItem(id, raw = {}) {
   const group = normalizeGroup(slotRaw, subslotRaw, raw);
   const wearableClass = normalizeWearableClass(slotRaw, subslotRaw, raw);
 
-  return {
-    id,
-    name,
-    imageUrl,
-    thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
-    slotRaw,
-    subslotRaw,
-    group,
-    wearableClass,
+const collection = String(raw.collection || raw.set || raw.series || "")
+  .trim()
+  .toLowerCase();
 
-    active: raw.active === false ? false : raw.enabled === false ? false : true,
-    price: Number(raw.price ?? raw.cost ?? 0),
-    rarity: String(raw.rarity || "").trim().toLowerCase(),
-    sortOrder: Number(raw.sortOrder ?? raw.sort ?? raw.displayOrder ?? 9999),
-    layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
-    description: String(raw.description || raw.desc || "").trim(),
+const collectionItem = String(raw.collectionItem || raw.collectionKey || raw.element || "")
+  .trim()
+  .toLowerCase();
 
-    previewScale: Number(raw.previewScale ?? 1),
-    previewOffsetJson: raw.previewOffsetJson || "{}",
-    maxQty: Number(raw.maxQty ?? 1),
+const isNew =
+  raw.isNew === true ||
+  raw.new === true ||
+  String(raw.badge || "").trim().toLowerCase() === "new";
 
-    raw,
-  };
+const season = String(raw.season || raw.event || "")
+  .trim()
+  .toLowerCase();
+
+const seasonEnd = String(raw.seasonEnd || raw.eventEnd || "")
+  .trim();
+
+return {
+  id,
+  name,
+  imageUrl,
+  thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
+  slotRaw,
+  subslotRaw,
+  group,
+  wearableClass,
+
+  active: raw.active === false ? false : raw.enabled === false ? false : true,
+  price: Number(raw.price ?? raw.cost ?? 0),
+  rarity: String(raw.rarity || "").trim().toLowerCase(),
+  sortOrder: Number(raw.sortOrder ?? raw.sort ?? raw.displayOrder ?? 9999),
+  layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
+  description: String(raw.description || raw.desc || "").trim(),
+
+  collection,
+  collectionItem,
+  isNew,
+  season,
+  seasonEnd,
+
+  previewScale: Number(raw.previewScale ?? 1),
+  previewOffsetJson: raw.previewOffsetJson || "{}",
+  maxQty: Number(raw.maxQty ?? 1),
+
+  raw,
+};
+
+
 }
 
 function normalizeGroup(slot, subslot, raw = {}) {
@@ -366,6 +409,18 @@ function compareCatalogItems(a, b) {
   if (a.price !== b.price) return a.price - b.price;
   return a.name.localeCompare(b.name);
 }
+
+function buildCollectionList(items = []) {
+  const set = new Set();
+
+  items.forEach((item) => {
+    const value = String(item.collection || "").trim().toLowerCase();
+    if (value) set.add(value);
+  });
+
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
 
 /* --------------------------------------------------
    Rendering
@@ -500,9 +555,11 @@ function getFilteredItems() {
     if (!matchesSearch(item)) return false;
     if (!matchesRarity(item)) return false;
     if (!matchesOwnedFilter(item)) return false;
+    if (!matchesCollection(item)) return false;
     return true;
   });
 }
+
 
 function matchesTab(item) {
   if (state.tab === "all") return true;
@@ -517,14 +574,17 @@ function matchesTab(item) {
 function matchesSearch(item) {
   if (!state.search) return true;
 
-  const hay = [
-    item.id,
-    item.name,
-    item.group,
-    item.wearableClass,
-    item.rarity,
-    item.description,
-  ]
+const hay = [
+  item.id,
+  item.name,
+  item.group,
+  item.wearableClass,
+  item.rarity,
+  item.description,
+  item.collection,
+  item.collectionItem,
+]
+
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -541,6 +601,11 @@ function matchesOwnedFilter(item) {
   if (state.ownedFilter === "owned") return isOwned(item.id);
   if (state.ownedFilter === "unowned") return !isOwned(item.id);
   return true;
+}
+
+function matchesCollection(item) {
+  if (!state.collection || state.collection === "all") return true;
+  return String(item.collection || "").trim().toLowerCase() === state.collection;
 }
 
 /* --------------------------------------------------

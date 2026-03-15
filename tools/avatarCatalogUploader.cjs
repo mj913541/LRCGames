@@ -146,7 +146,7 @@ function normalizeRow(rowObj) {
     "background",
   ]);
 
-  const allowedRarity = new Set(["common", "rare", "epic", "legendary"]);
+  const allowedRarity = new Set(["common", "uncommon", "rare", "epic", "legendary"]);
 
   const allowedSlots = new Set([
     "base",
@@ -184,7 +184,14 @@ function normalizeRow(rowObj) {
   if (!imagePath?.startsWith("/")) throw new Error("imagePath must start with /");
   if (!imagePath.endsWith(".png")) throw new Error("imagePath must end with .png");
 
-  const slot = rowObj.slot?.trim();
+const subslot = rowObj.subslot?.trim();
+const description = rowObj.description?.trim();
+const collection = rowObj.collection?.trim().toLowerCase();
+const collectionItem = rowObj.collectionItem?.trim().toLowerCase();
+const isNew = toBool(rowObj.isNew);
+const seasonEnd = rowObj.seasonEnd?.trim();
+const sortOrder = toNum(rowObj.sortOrder);
+
   if (slot && !allowedSlots.has(slot)) throw new Error(`Invalid slot: ${slot}`);
 
   const previewScale = toNum(rowObj.previewScale);
@@ -195,24 +202,36 @@ function normalizeRow(rowObj) {
   return {
     schoolId,
     itemId,
-    doc: {
-      name,
-      itemId,
-      type,
-      price,
-      imagePath,
-      enabled,
-      rarity,
-      sort,
-      maxQty,
-      ...(slot && { slot }),
-      ...(previewScale != null && { previewScale }),
-      ...(previewOffset && { previewOffset }),
-      ...(requires && { requires }),
-      ...(rowObj.season && String(rowObj.season).trim()
-        ? { season: String(rowObj.season).trim() }
-        : {}),
-    },
+doc: {
+  name,
+  itemId,
+  type,
+  price,
+  imagePath,
+  enabled,
+  rarity,
+  sort,
+  sortOrder: sortOrder ?? sort,
+  maxQty,
+
+  ...(slot && { slot }),
+  ...(subslot && { subslot }),
+  ...(description && { description }),
+
+  ...(previewScale != null && { previewScale }),
+  ...(previewOffset != null && { previewOffsetJson: JSON.stringify(previewOffset) }),
+  ...(requires && { requires }),
+
+  ...(collection && { collection }),
+  ...(collectionItem && { collectionItem }),
+  ...(isNew != null && { isNew }),
+
+  ...(rowObj.season && String(rowObj.season).trim()
+    ? { season: String(rowObj.season).trim().toLowerCase() }
+    : {}),
+
+  ...(seasonEnd ? { seasonEnd } : {}),
+},
     createdAt: toTimestamp(rowObj.createdAt),
     updatedAt: toTimestamp(rowObj.updatedAt),
   };
