@@ -146,7 +146,13 @@ function normalizeRow(rowObj) {
     "background",
   ]);
 
-  const allowedRarity = new Set(["common", "uncommon", "rare", "epic", "legendary"]);
+  const allowedRarity = new Set([
+    "common",
+    "uncommon",
+    "rare",
+    "epic",
+    "legendary",
+  ]);
 
   const allowedSlots = new Set([
     "base",
@@ -163,11 +169,12 @@ function normalizeRow(rowObj) {
   const itemId = rowObj.itemId?.trim();
   const name = rowObj.name?.trim();
   const type = rowObj.type?.trim();
-  const rarity = rowObj.rarity?.trim() || "common";
+  const rarity = rowObj.rarity?.trim().toLowerCase() || "common";
 
   if (!schoolId) throw new Error("schoolId required");
   if (!itemId) throw new Error("itemId required");
   if (!name) throw new Error("name required");
+  if (!type) throw new Error("type required");
   if (!allowedTypes.has(type)) throw new Error(`Invalid type: ${type}`);
   if (!allowedRarity.has(rarity)) throw new Error(`Invalid rarity: ${rarity}`);
 
@@ -181,18 +188,21 @@ function normalizeRow(rowObj) {
   if (sort == null) throw new Error("sort required");
 
   const imagePath = rowObj.imagePath?.trim();
-  if (!imagePath?.startsWith("/")) throw new Error("imagePath must start with /");
+  if (!imagePath) throw new Error("imagePath required");
+  if (!imagePath.startsWith("/")) throw new Error("imagePath must start with /");
   if (!imagePath.endsWith(".png")) throw new Error("imagePath must end with .png");
 
-const subslot = rowObj.subslot?.trim();
-const description = rowObj.description?.trim();
-const collection = rowObj.collection?.trim().toLowerCase();
-const collectionItem = rowObj.collectionItem?.trim().toLowerCase();
-const isNew = toBool(rowObj.isNew);
-const seasonEnd = rowObj.seasonEnd?.trim();
-const sortOrder = toNum(rowObj.sortOrder);
-
+  const slot = rowObj.slot?.trim();
   if (slot && !allowedSlots.has(slot)) throw new Error(`Invalid slot: ${slot}`);
+
+  const subslot = rowObj.subslot?.trim();
+  const description = rowObj.description?.trim();
+  const collection = rowObj.collection?.trim().toLowerCase();
+  const collectionItem = rowObj.collectionItem?.trim().toLowerCase();
+  const isNew = toBool(rowObj.isNew);
+  const season = rowObj.season?.trim().toLowerCase();
+  const seasonEnd = rowObj.seasonEnd?.trim();
+  const sortOrder = toNum(rowObj.sortOrder);
 
   const previewScale = toNum(rowObj.previewScale);
   const previewOffset = toJson(rowObj.previewOffsetJson);
@@ -202,40 +212,37 @@ const sortOrder = toNum(rowObj.sortOrder);
   return {
     schoolId,
     itemId,
-doc: {
-  name,
-  itemId,
-  type,
-  price,
-  imagePath,
-  enabled,
-  rarity,
-  sort,
-  sortOrder: sortOrder ?? sort,
-  maxQty,
+    doc: {
+      name,
+      itemId,
+      type,
+      price,
+      imagePath,
+      enabled,
+      rarity,
+      sort,
+      sortOrder: sortOrder ?? sort,
+      maxQty,
 
-  ...(slot && { slot }),
-  ...(subslot && { subslot }),
-  ...(description && { description }),
+      ...(slot && { slot }),
+      ...(subslot && { subslot }),
+      ...(description && { description }),
 
-  ...(previewScale != null && { previewScale }),
-  ...(previewOffset != null && { previewOffsetJson: JSON.stringify(previewOffset) }),
-  ...(requires && { requires }),
+      ...(previewScale != null && { previewScale }),
+      ...(previewOffset != null && { previewOffsetJson: JSON.stringify(previewOffset) }),
+      ...(requires && { requires }),
 
-  ...(collection && { collection }),
-  ...(collectionItem && { collectionItem }),
-  ...(isNew != null && { isNew }),
-
-  ...(rowObj.season && String(rowObj.season).trim()
-    ? { season: String(rowObj.season).trim().toLowerCase() }
-    : {}),
-
-  ...(seasonEnd ? { seasonEnd } : {}),
-},
+      ...(collection && { collection }),
+      ...(collectionItem && { collectionItem }),
+      ...(isNew != null && { isNew }),
+      ...(season && { season }),
+      ...(seasonEnd && { seasonEnd }),
+    },
     createdAt: toTimestamp(rowObj.createdAt),
     updatedAt: toTimestamp(rowObj.updatedAt),
   };
 }
+
 
 /* ---------------- MAIN ---------------- */
 

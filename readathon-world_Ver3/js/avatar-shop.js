@@ -425,9 +425,24 @@ function buildCollectionList(items = []) {
 /* --------------------------------------------------
    Rendering
 -------------------------------------------------- */
+function renderCollectionFilter() {
+  if (!els.collectionFilter) return;
+
+  const current = String(state.collection || "all").trim().toLowerCase();
+  const options = [
+    `<option value="all">All collections</option>`,
+    ...state.collections.map(
+      (name) =>
+        `<option value="${escapeHtml(name)}"${name === current ? " selected" : ""}>${escapeHtml(titleCase(name))}</option>`
+    ),
+  ];
+
+  els.collectionFilter.innerHTML = options.join("");
+}
 
 function renderAll() {
   renderTopSummary();
+  renderCollectionFilter();
   renderGrid();
 }
 
