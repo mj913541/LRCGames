@@ -445,15 +445,31 @@ function renderCollectionSummary() {
   const progress = getCollectionProgress();
 
   if (!progress.length) {
-    els.collectionSummary.textContent = "No collections yet";
+    els.collectionSummary.innerHTML = `
+      <div class="shopCollectionEmpty">No collections yet</div>
+    `;
     return;
   }
 
-  const completed = progress.filter((x) => x.isComplete).length;
-  const total = progress.length;
+  els.collectionSummary.innerHTML = progress
+    .map((entry) => {
+      const icon = iconForCollection(entry.collection);
+      const name = titleCase(entry.collection);
+      const progressText = entry.isComplete
+        ? "Complete!"
+        : `${fmtInt(entry.ownedCount)}/${fmtInt(entry.totalCount)}`;
 
-  els.collectionSummary.textContent = `${completed}/${total} complete`;
+      return `
+        <div class="shopCollectionLine ${entry.isComplete ? "isComplete" : ""}">
+          <span class="shopCollectionIcon" aria-hidden="true">${icon}</span>
+          <span class="shopCollectionName">${escapeHtml(name)}</span>
+          <span class="shopCollectionProgress">${escapeHtml(progressText)}</span>
+        </div>
+      `;
+    })
+    .join("");
 }
+
 
 /* --------------------------------------------------
    Rendering
@@ -781,6 +797,22 @@ function titleCase(s) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
+
+function iconForCollection(collectionName) {
+  const key = String(collectionName || "").trim().toLowerCase();
+
+  if (key === "elementals") return "🔥";
+  if (key === "jungle") return "🌿";
+  if (key === "royal") return "👑";
+  if (key === "cosmic") return "✨";
+  if (key === "underwater") return "🌊";
+  if (key === "library") return "📚";
+  if (key === "spooky") return "🎃";
+  if (key === "spring") return "🌸";
+
+  return "⭐";
+}
+
 
 function normalizeErrorPurchase(err, item) {
   const raw =

@@ -196,6 +196,55 @@ body {
 .shopStatValueSmall {
   font-size: 16px;
 }
+.shopCollectionSummary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.shopCollectionLine {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 10px;
+  border-radius: 12px;
+
+  background: rgba(255,255,255,0.08);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.shopCollectionLine.isComplete {
+  background: rgba(125,255,156,0.18);
+  border: 1px solid rgba(125,255,156,0.35);
+}
+
+.shopCollectionIcon {
+  font-size: 16px;
+  text-align: center;
+}
+
+.shopCollectionName {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.shopCollectionProgress {
+  font-weight: 800;
+  color: var(--accent);
+}
+
+.shopCollectionLine.isComplete .shopCollectionProgress {
+  color: #7dff9c;
+}
+
+.shopCollectionEmpty {
+  color: var(--muted);
+  font-size: 14px;
+}
 
 /* ------------------------------------------------ */
 /* Filters */

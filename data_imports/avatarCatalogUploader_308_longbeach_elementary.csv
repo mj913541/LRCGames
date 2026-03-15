@@ -31,7 +31,7 @@ schoolId,itemId,name,type,price,rarity,imagePath,enabled,sort,sortOrder,slot,sub
 308_longbeach_elementary,floor_tv_01,TV,floor,170,rare,/readathon-world_Ver2/img/avatar-world/floor/floor_tv_01.png,TRUE,4254,4254,floor,floor,1,{},2026-02-28,2026-02-28,5,,,,,,,
 308_longbeach_elementary,floor_computer_01,Computer Desk,floor,200,epic,/readathon-world_Ver2/img/avatar-world/floor/floor_computer_01.png,TRUE,4500,4500,floor,floor,1,{},2026-02-28,2026-02-28,5,,,,,,,
 308_longbeach_elementary,floor_electronics_bundle_01,Electronics Bundle,floor,240,epic,/readathon-world_Ver2/img/avatar-world/floor/floor_electronics_bundle_01.png,TRUE,4501,4501,floor,floor,1,{},2026-02-28,2026-02-28,5,,,,,,,
-308_longbeach_elementary,floor_mystical_creature_01_ice,Ice Mystical Creature Statue,floor,300,legendary,/readathon-world_Ver2/img/avatar-world/floor/floor_mystical_creature_01_ice.png,TRUE,4750,4750,floor,floor,1,{},2026-02-28,2026-02-28,5,,,,,Elementals,,
+308_longbeach_elementary,floor_mystical_creature_01_ice,Ice Mystical Creature Statue,floor,300,legendary,/readathon-world_Ver2/img/avatar-world/floor/floor_mystical_creature_01_ice.png,TRUE,4750,4750,floor,floor,1,{},2026-02-28,2026-02-28,5,,,,,Elementals,Ice,TRUE
 308_longbeach_elementary,pet_gecko_01,Gecko,pet,110,common,/readathon-world_Ver2/img/avatar-world/pet/pet_gecko_01.png,TRUE,2004,2004,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
 308_longbeach_elementary,pet_hamster_01,Hamster,pet,90,common,/readathon-world_Ver2/img/avatar-world/pet/pet_hamster_01.png,TRUE,2005,2005,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
 308_longbeach_elementary,pet_alien_blob_01,Alien Blob,pet,180,rare,/readathon-world_Ver2/img/avatar-world/pet/pet_alien_blob_01.png,TRUE,2250,2250,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
@@ -45,7 +45,7 @@ schoolId,itemId,name,type,price,rarity,imagePath,enabled,sort,sortOrder,slot,sub
 308_longbeach_elementary,pet_hybrid_bunfox_01,Bun-Fox (Hybrid),pet,240,epic,/readathon-world_Ver2/img/avatar-world/pet/pet_hybrid_bunfox_01.png,TRUE,2501,2501,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
 308_longbeach_elementary,pet_merpup_01,Mer-Pup,pet,210,epic,/readathon-world_Ver2/img/avatar-world/pet/pet_merpup_01.png,TRUE,2502,2502,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
 308_longbeach_elementary,pet_robot_buddy_01,Robot Buddy,pet,220,epic,/readathon-world_Ver2/img/avatar-world/pet/pet_robot_buddy_01.png,TRUE,2503,2503,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
-308_longbeach_elementary,pet_spirit_fox_01,Spirit Fox,pet,280,epic,/readathon-world_Ver2/img/avatar-world/pet/pet_spirit_fox_01.png,TRUE,2504,2504,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,Elementals,,
+308_longbeach_elementary,pet_spirit_fox_01,Spirit Fox,pet,280,epic,/readathon-world_Ver2/img/avatar-world/pet/pet_spirit_fox_01.png,TRUE,2504,2504,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,Elementals,Spirit,TRUE
 308_longbeach_elementary,pet_tiny_dragon_01,Tiny Dragon,pet,320,legendary,/readathon-world_Ver2/img/avatar-world/pet/pet_tiny_dragon_01.png,TRUE,2750,2750,pet,pet,1,{},2026-03-01,2026-03-01,1,,,,,,,
 308_longbeach_elementary,wall_house_banner_amistad,Amistad House Banner,wall,60,common,/readathon-world_Ver2/img/avatar-world/wall/wall_house_banner_amistad.png,TRUE,3001,3001,wall,wall,1,{},,,6,,,,,,,
 308_longbeach_elementary,wall_house_banner_reveur,Reveur House Banner,wall,60,common,/readathon-world_Ver2/img/avatar-world/wall/wall_house_banner_reveur.png,TRUE,3002,3002,wall,wall,1,{},,,6,,,,,,,
