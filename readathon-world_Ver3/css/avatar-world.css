@@ -264,6 +264,52 @@ a {
 .aw-avatar-object {
   transform: translate(-50%, -100%);
 }
+.aw-room-object {
+  overflow: visible;
+}
+
+.aw-room-object.is-selected {
+  filter: drop-shadow(0 0 0 3px rgba(255, 207, 91, 0.45));
+}
+
+.aw-resize-handle {
+  position: absolute;
+  right: -10px;
+  bottom: -10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  background: linear-gradient(180deg, #ffcf5b, #ffb938);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28);
+  cursor: nwse-resize;
+  pointer-events: auto;
+  z-index: 999;
+}
+
+.aw-resize-handle::before,
+.aw-resize-handle::after {
+  content: "";
+  position: absolute;
+  background: rgba(42, 24, 3, 0.7);
+  border-radius: 999px;
+}
+
+.aw-resize-handle::before {
+  width: 10px;
+  height: 2px;
+  top: 11px;
+  left: 7px;
+  transform: rotate(45deg);
+}
+
+.aw-resize-handle::after {
+  width: 2px;
+  height: 10px;
+  top: 7px;
+  left: 11px;
+  transform: rotate(45deg);
+}
 
 .aw-avatar-stack {
   position: relative;

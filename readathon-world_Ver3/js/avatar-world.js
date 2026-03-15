@@ -71,7 +71,7 @@ const state = {
   savedRoomSnapshot: null,
 
   selectedPlacement: null, // { kind, index }
-  drag: null, // { kind, index, pointerId, offsetXPct, offsetYPct }
+  drag: null, // move or resize interaction
 };
 
 /* ---------------------------------------
@@ -122,7 +122,7 @@ function makeDefaultRoomState() {
     avatarBaseId: null,
     wearableIds: [],
     avatarPlacement: defaultPlacementForGroup("avatar"),
-    petPlacement: null,
+    petPlacements: [],
     wallPlacements: [],
     floorPlacements: [],
   };
@@ -271,7 +271,9 @@ async function saveRoom() {
         ? state.room.wearableIds.filter(Boolean)
         : [],
       avatarPlacement: state.room.avatarPlacement || defaultPlacementForGroup("avatar"),
-      petPlacement: state.room.petPlacement || null,
+      petPlacements: Array.isArray(state.room.petPlacements)
+        ? state.room.petPlacements
+        : [],
       wallPlacements: Array.isArray(state.room.wallPlacements)
         ? state.room.wallPlacements
         : [],
@@ -405,7 +407,17 @@ function normalizeRoomState(raw = {}) {
     normalizeFreePlacement(raw.avatarPlacement || raw.avatar || null, "avatar") ||
     defaultPlacementForGroup("avatar");
 
-  room.petPlacement = normalizePlacement(raw.petPlacement || raw.pet || null, "pets");
+  const rawPetPlacements = Array.isArray(raw.petPlacements)
+    ? raw.petPlacements
+    : raw.petPlacement
+    ? [raw.petPlacement]
+    : raw.pet
+    ? [raw.pet]
+    : [];
+
+  room.petPlacements = rawPetPlacements
+    .map((p) => normalizePlacement(p, "pets"))
+    .filter(Boolean);
 
   room.wallPlacements = Array.isArray(raw.wallPlacements)
     ? raw.wallPlacements.map((p) => normalizePlacement(p, "wall")).filter(Boolean)
@@ -459,10 +471,7 @@ function reconcileRoomAgainstOwnedItems() {
 
   state.room.wearableIds = state.room.wearableIds.filter((id) => hasOwned(id));
 
-  if (state.room.petPlacement && !hasOwned(state.room.petPlacement.itemId)) {
-    state.room.petPlacement = null;
-  }
-
+  state.room.petPlacements = (state.room.petPlacements || []).filter((p) => hasOwned(p.itemId));
   state.room.wallPlacements = state.room.wallPlacements.filter((p) => hasOwned(p.itemId));
   state.room.floorPlacements = state.room.floorPlacements.filter((p) => hasOwned(p.itemId));
 
@@ -507,7 +516,7 @@ function renderRoom() {
   renderBackground();
   renderPlacedObjects("wall");
   renderAvatar();
-  renderPet();
+  renderPets();
   renderPlacedObjects("floor");
 }
 
@@ -552,6 +561,7 @@ function renderAvatar() {
   });
 
   const selected = isSelected("avatar", 0) ? " is-selected" : "";
+  const showHandle = isSelected("avatar", 0);
 
   const el = document.createElement("button");
   el.type = "button";
@@ -568,40 +578,46 @@ function renderAvatar() {
     <div class="aw-avatar-stack">
       ${pieces.join("")}
     </div>
+    ${showHandle ? `<span class="aw-resize-handle" data-resize-handle="true" aria-hidden="true"></span>` : ""}
   `;
 
   wirePlacementElement(el, "avatar", 0);
   els.avatarLayer.appendChild(el);
 }
 
-function renderPet() {
+function renderPets() {
   els.petLayer.innerHTML = "";
 
-  const pet = state.room.petPlacement;
-  if (!pet) return;
+  const pets = Array.isArray(state.room.petPlacements) ? state.room.petPlacements : [];
 
-  const item = getOwnedItem(pet.itemId);
-  if (!item) return;
+  pets.forEach((pet, index) => {
+    const item = getOwnedItem(pet.itemId);
+    if (!item) return;
 
-  const selected = isSelected("pet", 0) ? " is-selected" : "";
+    const selected = isSelected("pet", index) ? " is-selected" : "";
+    const showHandle = isSelected("pet", index);
 
-  const el = document.createElement("button");
-  el.type = "button";
-  el.className = `aw-room-object aw-pet-object${selected}`;
-  el.dataset.kind = "pet";
-  el.dataset.index = "0";
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = `aw-room-object aw-pet-object${selected}`;
+    el.dataset.kind = "pet";
+    el.dataset.index = String(index);
 
-  const widthPx = Math.round(128 * pet.scale);
+    const widthPx = Math.round(128 * pet.scale);
 
-  el.style.left = `${pet.x}%`;
-  el.style.top = `${pet.y}%`;
-  el.style.width = `${widthPx}px`;
-  el.style.zIndex = String(pet.z ?? 32);
+    el.style.left = `${pet.x}%`;
+    el.style.top = `${pet.y}%`;
+    el.style.width = `${widthPx}px`;
+    el.style.zIndex = String(pet.z ?? (32 + index));
 
-  el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">`;
+    el.innerHTML = `
+      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
+      ${showHandle ? `<span class="aw-resize-handle" data-resize-handle="true" aria-hidden="true"></span>` : ""}
+    `;
 
-  wirePlacementElement(el, "pet", 0);
-  els.petLayer.appendChild(el);
+    wirePlacementElement(el, "pet", index);
+    els.petLayer.appendChild(el);
+  });
 }
 
 function renderPlacedObjects(kind) {
@@ -615,6 +631,7 @@ function renderPlacedObjects(kind) {
     if (!item) return;
 
     const selected = isSelected(kind, index) ? " is-selected" : "";
+    const showHandle = isSelected(kind, index);
 
     const el = document.createElement("button");
     el.type = "button";
@@ -630,7 +647,10 @@ function renderPlacedObjects(kind) {
     el.style.width = `${widthPx}px`;
     el.style.zIndex = String(placement.z ?? (kind === "wall" ? 12 + index : 42 + index));
 
-    el.innerHTML = `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">`;
+    el.innerHTML = `
+      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
+      ${showHandle ? `<span class="aw-resize-handle" data-resize-handle="true" aria-hidden="true"></span>` : ""}
+    `;
 
     wirePlacementElement(el, kind, index);
     layer.appendChild(el);
@@ -640,6 +660,7 @@ function renderPlacedObjects(kind) {
 /* ---------------------------------------
    Inventory Actions
 --------------------------------------- */
+
 function renderInventory() {
   if (!els.inventoryGrid) return;
 
@@ -694,20 +715,19 @@ function onInventoryItemClick(item) {
       setStatus(`${item.name} equipped.`);
       break;
 
-    case "pets":
-      if (state.room.petPlacement?.itemId === item.id) {
-        state.room.petPlacement = null;
-        clearSelection({ rerender: false });
-        setStatus(`${item.name} unequipped.`);
-      } else {
-        state.room.petPlacement = {
-          itemId: item.id,
-          ...defaultPlacementForGroup("pets"),
-        };
-        setSelection("pet", 0, false);
-        setStatus(`${item.name} equipped. Drag your pet anywhere in the room.`);
-      }
+    case "pets": {
+      const nextIndex = state.room.petPlacements.length;
+      state.room.petPlacements.push({
+        itemId: item.id,
+        ...defaultPlacementForGroup("pets"),
+        x: clamp(70 + (nextIndex % 4) * 6, 5, 95),
+        y: clamp(78 - Math.floor(nextIndex / 4) * 6, 5, 95),
+        z: 32 + nextIndex,
+      });
+      setSelection("pet", state.room.petPlacements.length - 1, false);
+      setStatus(`${item.name} added. Drag or resize your pet.`);
       break;
+    }
 
     case "wall":
       state.room.wallPlacements.push({
@@ -716,7 +736,7 @@ function onInventoryItemClick(item) {
         z: 10 + state.room.wallPlacements.length,
       });
       setSelection("wall", state.room.wallPlacements.length - 1, false);
-      setStatus(`${item.name} added. Drag it anywhere in the room.`);
+      setStatus(`${item.name} added. Drag or resize it.`);
       break;
 
     case "floor":
@@ -726,14 +746,14 @@ function onInventoryItemClick(item) {
         z: 40 + state.room.floorPlacements.length,
       });
       setSelection("floor", state.room.floorPlacements.length - 1, false);
-      setStatus(`${item.name} added. Drag it anywhere in the room.`);
+      setStatus(`${item.name} added. Drag or resize it.`);
       break;
 
     case "wearables":
     default:
       equipWearable(item);
       clearSelection({ rerender: false });
-      setStatus(`${item.name} equipped. Drag your avatar to reposition it.`);
+      setStatus(`${item.name} equipped. Drag or resize your avatar.`);
       break;
   }
 
@@ -768,7 +788,7 @@ function unequipCurrentTab() {
       state.room.backgroundId = null;
       break;
     case "pets":
-      state.room.petPlacement = null;
+      state.room.petPlacements = [];
       break;
     case "wall":
       state.room.wallPlacements = [];
@@ -825,7 +845,7 @@ function deleteSelectedPlacement() {
   }
 
   if (sel.kind === "pet") {
-    state.room.petPlacement = null;
+    state.room.petPlacements.splice(sel.index, 1);
   } else if (sel.kind === "wall") {
     state.room.wallPlacements.splice(sel.index, 1);
   } else if (sel.kind === "floor") {
@@ -838,7 +858,7 @@ function deleteSelectedPlacement() {
 }
 
 /* ---------------------------------------
-   Dragging
+   Dragging / Resizing
 --------------------------------------- */
 
 function wirePlacementElement(el, kind, index) {
@@ -847,8 +867,16 @@ function wirePlacementElement(el, kind, index) {
     setSelection(kind, index);
   });
 
+  const resizeHandle = el.querySelector("[data-resize-handle='true']");
+  if (resizeHandle) {
+    resizeHandle.addEventListener("pointerdown", (e) => {
+      startResize(e, kind, index);
+    });
+  }
+
   el.addEventListener("pointerdown", (e) => {
     if (!els.roomCanvas) return;
+    if (e.target.closest("[data-resize-handle='true']")) return;
 
     e.preventDefault();
     e.stopPropagation();
@@ -865,6 +893,7 @@ function wirePlacementElement(el, kind, index) {
     const pointerYPct = ((e.clientY - roomRect.top) / roomRect.height) * 100;
 
     state.drag = {
+      mode: "move",
       kind,
       index,
       pointerId: e.pointerId,
@@ -872,8 +901,48 @@ function wirePlacementElement(el, kind, index) {
       offsetYPct: pointerYPct - placement.y,
     };
 
+    try {
+      el.setPointerCapture?.(e.pointerId);
+    } catch {}
+
     setStatus("Dragging…");
   });
+}
+
+function startResize(e, kind, index) {
+  if (!els.roomCanvas) return;
+
+  e.preventDefault();
+  e.stopPropagation();
+
+  const placement = getPlacementRef(kind, index);
+  if (!placement) return;
+
+  setSelection(kind, index, false);
+
+  const rect = els.roomCanvas.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+
+  const center = placementCenterPx(placement, rect);
+  const startDistance = distanceBetweenPoints(
+    e.clientX,
+    e.clientY,
+    center.x,
+    center.y
+  );
+
+  state.drag = {
+    mode: "resize",
+    kind,
+    index,
+    pointerId: e.pointerId,
+    startScale: placement.scale || 1,
+    startDistance: Math.max(startDistance, 1),
+    centerX: center.x,
+    centerY: center.y,
+  };
+
+  setStatus("Resizing…");
 }
 
 function onPointerMove(e) {
@@ -887,13 +956,27 @@ function onPointerMove(e) {
   const placement = getPlacementRef(state.drag.kind, state.drag.index);
   if (!placement) return;
 
-  const bounds = movementBoundsForKind();
+  if (state.drag.mode === "move") {
+    const bounds = movementBoundsForKind(state.drag.kind);
 
-  const rawXPct = ((e.clientX - rect.left) / rect.width) * 100;
-  const rawYPct = ((e.clientY - rect.top) / rect.height) * 100;
+    const rawXPct = ((e.clientX - rect.left) / rect.width) * 100;
+    const rawYPct = ((e.clientY - rect.top) / rect.height) * 100;
 
-  placement.x = clamp(rawXPct - state.drag.offsetXPct, bounds.minX, bounds.maxX);
-  placement.y = clamp(rawYPct - state.drag.offsetYPct, bounds.minY, bounds.maxY);
+    placement.x = clamp(rawXPct - state.drag.offsetXPct, bounds.minX, bounds.maxX);
+    placement.y = clamp(rawYPct - state.drag.offsetYPct, bounds.minY, bounds.maxY);
+  }
+
+  if (state.drag.mode === "resize") {
+    const currentDistance = distanceBetweenPoints(
+      e.clientX,
+      e.clientY,
+      state.drag.centerX,
+      state.drag.centerY
+    );
+
+    const ratio = currentDistance / Math.max(state.drag.startDistance, 1);
+    placement.scale = clamp(state.drag.startScale * ratio, 0.35, 3);
+  }
 
   renderRoom();
 }
@@ -901,19 +984,35 @@ function onPointerMove(e) {
 function onPointerUp(e) {
   if (!state.drag || e.pointerId !== state.drag.pointerId) return;
   state.drag = null;
-  setStatus("Position updated. Save when you're ready.");
+  setStatus("Updated. Save when you're ready.");
 }
 
 function getPlacementRef(kind, index) {
   if (kind === "avatar") return state.room.avatarPlacement;
-  if (kind === "pet") return state.room.petPlacement;
+  if (kind === "pet") return state.room.petPlacements[index] || null;
   if (kind === "wall") return state.room.wallPlacements[index] || null;
   if (kind === "floor") return state.room.floorPlacements[index] || null;
   return null;
 }
 
-function movementBoundsForKind() {
-  return { minX: 5, maxX: 95, minY: 5, maxY: 95 };
+function movementBoundsForKind(kind) {
+  if (kind === "wall") return { minX: 5, maxX: 95, minY: 8, maxY: 55 };
+  if (kind === "floor") return { minX: 5, maxX: 95, minY: 40, maxY: 95 };
+  if (kind === "pet") return { minX: 5, maxX: 95, minY: 20, maxY: 95 };
+  return { minX: 5, maxX: 95, minY: 15, maxY: 95 };
+}
+
+function placementCenterPx(placement, rect) {
+  return {
+    x: rect.left + (placement.x / 100) * rect.width,
+    y: rect.top + (placement.y / 100) * rect.height,
+  };
+}
+
+function distanceBetweenPoints(x1, y1, x2, y2) {
+  const dx = x1 - x2;
+  const dy = y1 - y2;
+  return Math.sqrt(dx * dx + dy * dy);
 }
 
 function defaultPlacementForGroup(kind) {
@@ -954,7 +1053,7 @@ function isEquippedInCurrentState(item) {
   if (!item) return false;
 
   if (item.group === "background") return state.room.backgroundId === item.id;
-  if (item.group === "pets") return state.room.petPlacement?.itemId === item.id;
+  if (item.group === "pets") return state.room.petPlacements.some((p) => p.itemId === item.id);
   if (item.group === "wall") return state.room.wallPlacements.some((p) => p.itemId === item.id);
   if (item.group === "floor") return state.room.floorPlacements.some((p) => p.itemId === item.id);
 
