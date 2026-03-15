@@ -164,11 +164,12 @@ body {
 
 .shopSummaryRow {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 
   gap: 18px;
   padding: 24px;
 }
+
 
 .shopStatCard {
   background: var(--panel);
@@ -321,13 +322,56 @@ body {
   top: 8px;
   right: 8px;
 
-  background: var(--accent);
   color: #000;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.20);
+}
+
+.shopBadge-common {
+  background: #c9c9c9;
+  color: #1f1f1f;
+}
+
+.shopBadge-uncommon {
+  background: #7ee081;
+  color: #102814;
+}
+
+.shopBadge-rare {
+  background: #7cb7ff;
+  color: #0d2340;
+}
+
+.shopBadge-epic {
+  background: #c18cff;
+  color: #2b1340;
+}
+
+.shopBadge-legendary {
+  background: #ffd76f;
+  color: #3a2700;
+}
+.shopBadgeNew {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+
+  background: #7dff9c;
+  color: #12311b;
 
   font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+
   padding: 4px 8px;
-  border-radius: 8px;
+  border-radius: 999px;
+
+  box-shadow: 0 4px 10px rgba(0,0,0,0.20);
 }
+
 
 .shopCardBody {
   padding: 14px;

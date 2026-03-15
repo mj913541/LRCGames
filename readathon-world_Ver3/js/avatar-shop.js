@@ -44,6 +44,7 @@ const els = {
 
   rubiesBalance: document.getElementById("rubiesBalance"),
   ownedCount: document.getElementById("ownedCount"),
+  collectionSummary: document.getElementById("collectionSummary"),
   shopSummary: document.getElementById("shopSummary"),
 
   shopGrid: document.getElementById("shopGrid"),
@@ -421,6 +422,38 @@ function buildCollectionList(items = []) {
   return Array.from(set).sort((a, b) => a.localeCompare(b));
 }
 
+function getCollectionProgress() {
+  return state.collections.map((collectionName) => {
+    const itemsInCollection = state.catalog.filter(
+      (item) => String(item.collection || "").trim().toLowerCase() === collectionName
+    );
+
+    const ownedCount = itemsInCollection.filter((item) => isOwned(item.id)).length;
+
+    return {
+      collection: collectionName,
+      ownedCount,
+      totalCount: itemsInCollection.length,
+      isComplete: itemsInCollection.length > 0 && ownedCount === itemsInCollection.length,
+    };
+  });
+}
+
+function renderCollectionSummary() {
+  if (!els.collectionSummary) return;
+
+  const progress = getCollectionProgress();
+
+  if (!progress.length) {
+    els.collectionSummary.textContent = "No collections yet";
+    return;
+  }
+
+  const completed = progress.filter((x) => x.isComplete).length;
+  const total = progress.length;
+
+  els.collectionSummary.textContent = `${completed}/${total} complete`;
+}
 
 /* --------------------------------------------------
    Rendering
@@ -442,9 +475,11 @@ function renderCollectionFilter() {
 
 function renderAll() {
   renderTopSummary();
+  renderCollectionSummary();
   renderCollectionFilter();
   renderGrid();
 }
+
 
 function renderTopSummary() {
   if (els.rubiesBalance) {
@@ -455,11 +490,15 @@ function renderTopSummary() {
     els.ownedCount.textContent = fmtInt(state.ownedIds.size);
   }
 
-  if (els.shopSummary) {
-    els.shopSummary.textContent =
-      `${fmtInt(state.catalog.length)} catalog item${state.catalog.length === 1 ? "" : "s"} • ` +
-      `${fmtInt(state.ownedIds.size)} owned`;
-  }
+if (els.shopSummary) {
+  const collectionCount = state.collections.length;
+
+  els.shopSummary.textContent =
+    `${fmtInt(state.catalog.length)} catalog item${state.catalog.length === 1 ? "" : "s"} • ` +
+    `${fmtInt(state.ownedIds.size)} owned • ` +
+    `${fmtInt(collectionCount)} collection${collectionCount === 1 ? "" : "s"}`;
+}
+
 }
 
 function renderGrid() {
@@ -526,7 +565,8 @@ function renderShopCard(item) {
           loading="lazy"
           decoding="async"
         >
-        ${item.rarity ? `<span class="shopBadge">${escapeHtml(titleCase(item.rarity))}</span>` : ""}
+        ${item.isNew ? `<span class="shopBadgeNew">NEW</span>` : ""}
+        ${item.rarity ? `<span class="shopBadge shopBadge-${escapeHtml(item.rarity)}">${escapeHtml(titleCase(item.rarity))}</span>` : ""}
       </div>
 
       <div class="shopCardBody">
