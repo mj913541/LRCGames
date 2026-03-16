@@ -640,3 +640,110 @@ body.rw-page {
 .rw-mystery-card button:hover {
   opacity: 0.9;
 }
+
+
+/* ======================================================
+   TREASURE SHOP SHELVES
+====================================================== */
+
+.rw-prize-grid--shelves {
+  display: grid;
+  gap: 36px;
+}
+
+.rw-shelf-section {
+  position: relative;
+  padding: 22px 22px 32px;
+  border-radius: var(--rw-radius-xl);
+  background: linear-gradient(180deg,#fffdf7 0%,#fff7ea 100%);
+  border: 1px solid #eadfcf;
+  box-shadow: var(--rw-shadow);
+}
+
+/* shelf title */
+
+.rw-shelf-header {
+  margin-bottom: 12px;
+}
+
+.rw-shelf-header__eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  color: #9a7a45;
+}
+
+.rw-shelf-header__title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #5d3c15;
+  margin: 2px 0;
+}
+
+.rw-shelf-header__subtitle {
+  font-size: 14px;
+  color: #7b613d;
+}
+
+/* wooden shelf plank */
+
+.rw-shelf-plank {
+  height: 20px;
+  border-radius: 10px;
+  margin: 14px 0 22px;
+  background: linear-gradient(
+    180deg,
+    #a46b36 0%,
+    #8c5527 50%,
+    #6f3e13 100%
+  );
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.2),
+    inset 0 -3px 0 rgba(0,0,0,.18),
+    0 8px 14px rgba(0,0,0,.15);
+}
+
+/* items sitting on shelf */
+
+.rw-shelf-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+  gap: 22px;
+}
+
+/* shelf shadow */
+
+.rw-shelf-shadow {
+  height: 16px;
+  margin-top: 14px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,.25) 0%,
+    rgba(0,0,0,0) 70%
+  );
+}
+
+/* ======================================================
+   TREASURE BADGES
+====================================================== */
+
+.rw-prize-card__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(180deg,#ffe98f,#ffd84b);
+  color: #5b4100;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.15);
+}
+
+.rw-prize-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 18px 32px rgba(0,0,0,.18),
+    0 0 0 3px rgba(255,216,90,.25);
+}

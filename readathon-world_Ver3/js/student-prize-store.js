@@ -264,6 +264,145 @@ function getFilteredPrizes() {
   });
 }
 
+function getShelfConfig() {
+  return [
+    {
+      id: "pocket",
+      title: "🟢 Pocket Treasures",
+      subtitle: "Tiny rewards for your first bits of prize credit.",
+      min: 0,
+      max: 0.75
+    },
+    {
+      id: "toy-chest",
+      title: "🟡 Toy Chest Finds",
+      subtitle: "Fun fidgets, tiny toys, and student favorites.",
+      min: 0.76,
+      max: 3
+    },
+    {
+      id: "big-rewards",
+      title: "🟠 Big Rewards",
+      subtitle: "Exciting prizes that feel extra special.",
+      min: 3.01,
+      max: 6
+    },
+    {
+      id: "treasure-table",
+      title: "🔵 Treasure Table",
+      subtitle: "Premium prizes for strong fundraisers.",
+      min: 6.01,
+      max: 12
+    },
+    {
+      id: "legendary",
+      title: "🟣 Legendary Vault",
+      subtitle: "Epic treasure for superstar readers and fundraisers.",
+      min: 12.01,
+      max: 9999
+    }
+  ];
+}
+
+function getPrizeShelf(prize) {
+  const price = Number(prize?.price || 0);
+  return getShelfConfig().find((shelf) => price >= shelf.min && price <= shelf.max) || null;
+}
+
+function getPrizeBadge(prize) {
+  const category = normalizeText(prize.category);
+  const price = Number(prize.price || 0);
+
+  if (price <= 0.75) return "✨ Easy Win";
+  if (category.includes("fidget")) return "🔥 Popular";
+  if (category.includes("plush")) return "🧸 Cozy Pick";
+  if (category.includes("electronics")) return "⚡ Wow Prize";
+  if (price >= 10) return "💎 Rare";
+  return "⭐ Treasure";
+}
+
+function renderPrizeCard(prize, donationsRaised, creditRemaining) {
+  const prizePrice = Number(prize.price || 0);
+  const minDonationsNeeded = getMinimumDonationsNeeded(prizePrice);
+  const donationsStillNeeded = Number(
+    Math.max(0, minDonationsNeeded - donationsRaised).toFixed(2)
+  );
+
+  const canAfford = creditRemaining >= prizePrice;
+  const inStock = Number(prize.stock || 0) > 0;
+
+  const statusClass = canAfford ? "is-open" : "is-locked";
+  const statusText = canAfford
+    ? "You have enough prize credit for this treasure!"
+    : `Raise ${formatMoney(donationsStillNeeded)} more in donations to earn enough credit.`;
+
+  const buttonText = !inStock
+    ? "Out of Stock"
+    : canAfford
+      ? `Redeem for ${formatMoney(prizePrice)} credit`
+      : `Raise ${formatMoney(donationsStillNeeded)} More`;
+
+  const disabledAttr = !canAfford || !inStock ? "disabled" : "";
+  const badgeText = getPrizeBadge(prize);
+
+  return `
+    <article class="rw-prize-card rw-prize-card--treasure">
+      <div class="rw-prize-card__badge">${escapeHtml(badgeText)}</div>
+
+      <div class="rw-prize-card__image-wrap">
+        <img
+          class="rw-prize-card__image"
+          src="${escapeHtml(prize.image || "/readathon-world_Ver2/img/prizes/prize-placeholder.png")}"
+          alt="${escapeHtml(prize.name || "Prize")}"
+        />
+      </div>
+
+      <div class="rw-prize-card__body">
+        <span class="rw-prize-card__category">${escapeHtml(prize.category || "Prize")}</span>
+
+        <h3 class="rw-prize-card__title">${escapeHtml(prize.name || "Unnamed Prize")}</h3>
+
+        <p class="rw-prize-card__description">${escapeHtml(prize.description || "")}</p>
+
+        <div class="rw-prize-card__details">
+          <div class="rw-prize-card__detail-row">
+            <span>Prize Price:</span>
+            <strong>${formatMoney(prizePrice)} credit</strong>
+          </div>
+
+          <div class="rw-prize-card__detail-row">
+            <span>Donations Needed:</span>
+            <strong>${formatMoney(minDonationsNeeded)}</strong>
+          </div>
+
+          <div class="rw-prize-card__detail-row">
+            <span>Your Credit:</span>
+            <strong>${formatMoney(creditRemaining)}</strong>
+          </div>
+
+          <div class="rw-prize-card__detail-row">
+            <span>Stock:</span>
+            <strong>${inStock ? escapeHtml(String(prize.stock)) : "Out of stock"}</strong>
+          </div>
+        </div>
+
+        <div class="rw-prize-card__status ${statusClass}">
+          ${escapeHtml(statusText)}
+        </div>
+
+        <button
+          type="button"
+          class="rw-btn rw-btn-primary rw-btn-block rw-redeem-btn"
+          data-prize-id="${escapeHtml(prize.id)}"
+          ${disabledAttr}
+        >
+          ${escapeHtml(buttonText)}
+        </button>
+      </div>
+    </article>
+  `;
+}
+
 function renderPrizeGrid() {
   if (!prizeGridEl) return;
 
@@ -279,86 +418,41 @@ function renderPrizeGrid() {
     return;
   }
 
-  prizeGridEl.innerHTML = state.filteredPrizes
-    .map((prize) => {
+  const shelves = getShelfConfig().map((shelf) => {
+    const shelfPrizes = state.filteredPrizes.filter((prize) => {
       const prizePrice = Number(prize.price || 0);
-      const minDonationsNeeded = getMinimumDonationsNeeded(prizePrice);
-      const donationsStillNeeded = Number(
-        Math.max(0, minDonationsNeeded - donationsRaised).toFixed(2)
-      );
+      return prizePrice >= shelf.min && prizePrice <= shelf.max;
+    });
 
-      const canAfford = creditRemaining >= prizePrice;
-      const inStock = Number(prize.stock || 0) > 0;
+    return {
+      ...shelf,
+      prizes: shelfPrizes
+    };
+  }).filter((shelf) => shelf.prizes.length > 0);
 
-      const statusClass = canAfford ? "" : "is-locked";
-      const statusText = canAfford
-        ? "You can afford this prize right now."
-        : `Raise ${formatMoney(donationsStillNeeded)} more in donations to earn enough credit.`;
-
-      const buttonText = !inStock
-        ? "Out of Stock"
-        : canAfford
-          ? `Redeem for ${formatMoney(prizePrice)} credit`
-          : `Raise ${formatMoney(donationsStillNeeded)} More`;
-
-      const disabledAttr = !canAfford || !inStock ? "disabled" : "";
-
-      return `
-        <article class="rw-prize-card">
-          <div class="rw-prize-card__image-wrap">
-            <img
-              class="rw-prize-card__image"
-              src="${escapeHtml(prize.image || "/readathon-world_Ver2/img/prizes/prize-placeholder.png")}"
-              alt="${escapeHtml(prize.name || "Prize")}"
-            />
+  prizeGridEl.innerHTML = shelves.map((shelf) => {
+    return `
+      <section class="rw-shelf-section" data-shelf-id="${escapeHtml(shelf.id)}">
+        <div class="rw-shelf-header">
+          <div class="rw-shelf-header__copy">
+            <p class="rw-shelf-header__eyebrow">Treasure Shelf</p>
+            <h3 class="rw-shelf-header__title">${escapeHtml(shelf.title)}</h3>
+            <p class="rw-shelf-header__subtitle">${escapeHtml(shelf.subtitle)}</p>
           </div>
+        </div>
 
-          <div class="rw-prize-card__body">
-            <span class="rw-prize-card__category">${escapeHtml(prize.category || "Prize")}</span>
+        <div class="rw-shelf-plank"></div>
 
-            <h3 class="rw-prize-card__title">${escapeHtml(prize.name || "Unnamed Prize")}</h3>
+        <div class="rw-shelf-items">
+          ${shelf.prizes
+            .map((prize) => renderPrizeCard(prize, donationsRaised, creditRemaining))
+            .join("")}
+        </div>
 
-            <p class="rw-prize-card__description">${escapeHtml(prize.description || "")}</p>
-
-            <div class="rw-prize-card__details">
-              <div class="rw-prize-card__detail-row">
-                <span>Prize Price:</span>
-                <strong>${formatMoney(prizePrice)} credit</strong>
-              </div>
-
-              <div class="rw-prize-card__detail-row">
-                <span>Minimum Donations Needed:</span>
-                <strong>${formatMoney(minDonationsNeeded)}</strong>
-              </div>
-
-              <div class="rw-prize-card__detail-row">
-                <span>Your Remaining Credit:</span>
-                <strong>${formatMoney(creditRemaining)}</strong>
-              </div>
-
-              <div class="rw-prize-card__detail-row">
-                <span>Stock:</span>
-                <strong>${inStock ? escapeHtml(String(prize.stock)) : "Out of stock"}</strong>
-              </div>
-            </div>
-
-            <div class="rw-prize-card__status ${statusClass}">
-              ${escapeHtml(statusText)}
-            </div>
-
-            <button
-              type="button"
-              class="rw-btn rw-btn-primary rw-btn-block rw-redeem-btn"
-              data-prize-id="${escapeHtml(prize.id)}"
-              ${disabledAttr}
-            >
-              ${escapeHtml(buttonText)}
-            </button>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+        <div class="rw-shelf-shadow"></div>
+      </section>
+    `;
+  }).join("");
 
   prizeGridEl.querySelectorAll(".rw-redeem-btn").forEach((button) => {
     button.addEventListener("click", () => {
