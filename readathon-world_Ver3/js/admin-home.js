@@ -73,7 +73,7 @@ async function init() {
   });
 
   await renderLeaderboard("leaderboardMount");
-
+  await mountPrizeAdminDashboard({ mountEl: "#prizeAdminMount", schoolId, userId });
   hideLoading(els.loadingOverlay);
 }
 
