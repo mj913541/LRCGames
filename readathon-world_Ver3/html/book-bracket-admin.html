@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Madness Admin</title>
+
+  <link rel="stylesheet" href="../css/book-bracket.css" />
+</head>
+<body class="bbPage">
+
+  <!-- REQUIRED HEADER -->
+  <header class="bbHiddenHeader">
+    <h1 id="pageTitle">Book Madness Admin</h1>
+    <p id="pageSubtitle">Manage rounds and view results</p>
+  </header>
+
+  <main class="bbShell">
+
+    <section class="bbHero">
+      <div>
+        <h2 id="bbAdminTitle">Book Madness 2026</h2>
+        <p id="bbAdminSubtitle">Admin Dashboard</p>
+      </div>
+
+      <div class="bbHeroChips">
+        <div id="bbAdminRound" class="bbBadge bbBadgeRound">
+          Current Round
+        </div>
+      </div>
+    </section>
+
+    <!-- ACTIONS -->
+    <section class="bbMatchupPanel">
+      <h3>Controls</h3>
+
+      <div class="bbNavBar">
+        <button id="bbAdvanceRoundBtn" class="bbBtn bbBtnPrimary">
+          Advance to Next Round →
+        </button>
+
+        <button id="bbRefreshBtn" class="bbBtn bbBtnSecondary">
+          Refresh Data
+        </button>
+      </div>
+    </section>
+
+    <!-- MATCHUPS -->
+    <section class="bbMatchupPanel">
+      <h3>Current Round Matchups</h3>
+
+      <div id="bbAdminMatchups"></div>
+    </section>
+
+  </main>
+
+  <script type="module" src="../js/book-bracket-admin.js"></script>
+</body>
+</html>

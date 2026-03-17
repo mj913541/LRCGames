@@ -1083,6 +1083,10 @@ exports.rebuildPublicLeaderboard = functions.https.onCall(async (data, context) 
   return rebuildPublicLeaderboardCore(schoolId);
 });
 
+/* --------------------------------------------------
+   PRIZE STORE CALLABLES
+-------------------------------------------------- */
+
 exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
   if (!context.auth) {
     throw new functions.https.HttpsError("unauthenticated", "You must be signed in.");
@@ -1091,7 +1095,7 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
   const uid = context.auth.uid;
   const token = context.auth.token || {};
   const schoolId = String(token.schoolId || "").trim();
-  const role = String(token.role || "").trim();
+  const role = String(token.role || "").trim().toLowerCase();
 
   if (!schoolId) {
     throw new functions.https.HttpsError("failed-precondition", "Missing schoolId claim.");
@@ -1106,10 +1110,10 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
     throw new functions.https.HttpsError("invalid-argument", "Missing prizeId.");
   }
 
-  const schoolRoot = `readathonV2_schools/${schoolId}`;
-  const userRef = db.doc(`${schoolRoot}/users/${uid}`);
-  const prizeRef = db.doc(`${schoolRoot}/prizeCatalog/${prizeId}`);
-  const redemptionsCol = db.collection(`${schoolRoot}/prizeOrders`);
+  const root = `readathonV2_schools/${schoolId}`;
+  const userRef = db.doc(`${root}/users/${uid}`);
+  const prizeRef = db.doc(`${root}/prizeCatalog/${prizeId}`);
+  const ordersCol = db.collection(`${root}/prizeOrders`);
 
   const CREDIT_RATE = 0.20;
 
@@ -1136,6 +1140,24 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
     return 0;
   }
 
+  const fiveSecondsAgo = admin.firestore.Timestamp.fromDate(
+    new Date(Date.now() - 5000)
+  );
+
+  const recentOrdersSnap = await ordersCol
+    .where("userId", "==", uid)
+    .where("prizeId", "==", prizeId)
+    .where("createdAt", ">", fiveSecondsAgo)
+    .limit(1)
+    .get();
+
+  if (!recentOrdersSnap.empty) {
+    throw new functions.https.HttpsError(
+      "already-exists",
+      "Duplicate order detected. Please wait a moment before trying again."
+    );
+  }
+
   return await db.runTransaction(async (tx) => {
     const [userSnap, prizeSnap] = await Promise.all([
       tx.get(userRef),
@@ -1152,6 +1174,10 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
 
     const userData = userSnap.data() || {};
     const prizeData = prizeSnap.data() || {};
+
+    if (userData.active !== true) {
+      throw new functions.https.HttpsError("failed-precondition", "User is not active.");
+    }
 
     const donationsTotal = getDonationTotal(userData);
     const prizeCreditSpent = getPrizeCreditSpent(userData);
@@ -1173,17 +1199,20 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
     }
 
     const prizeCreditEarned = Number((donationsTotal * CREDIT_RATE).toFixed(2));
-    const prizeCreditRemaining = Number(Math.max(0, prizeCreditEarned - prizeCreditSpent).toFixed(2));
+    const prizeCreditRemaining = Number(
+      Math.max(0, prizeCreditEarned - prizeCreditSpent).toFixed(2)
+    );
     const minimumDonationsNeeded = Number((price / CREDIT_RATE).toFixed(2));
 
     if (prizeCreditRemaining < price) {
       throw new functions.https.HttpsError(
         "failed-precondition",
-        `You need more prize credit to redeem this item.`
+        "You need more prize credit to redeem this item."
       );
     }
 
     const nextPrizeCreditSpent = Number((prizeCreditSpent + price).toFixed(2));
+    const orderRef = ordersCol.doc();
 
     tx.update(userRef, {
       prizeCreditSpent: nextPrizeCreditSpent,
@@ -1195,59 +1224,50 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    const redemptionRef = redemptionsCol.doc();
+    tx.set(orderRef, {
+      orderId: orderRef.id,
+      userId: uid,
+      schoolId,
 
-const orderRef = db.collection(`${schoolRoot}/prizeOrders`).doc();
+      studentDisplayName: String(
+        userData.displayName || userData.name || userData.firstName || ""
+      ),
 
-tx.set(orderRef, {
-  // 🔑 identity
-  orderId: orderRef.id,
-  userId: uid,
-  schoolId,
+      prizeId,
+      prizeName: String(prizeData.name || ""),
+      category: String(prizeData.category || ""),
+      image: String(prizeData.image || ""),
 
-  // 👤 student info (snapshot for admin convenience)
-  studentDisplayName: String(
-    userData.displayName || userData.name || userData.firstName || ""
-  ),
+      price,
+      minimumDonationsNeeded,
 
-  // 🎁 prize info (snapshot so it never breaks later)
-  prizeId,
-  prizeName: String(prizeData.name || ""),
-  category: String(prizeData.category || ""),
-  image: String(prizeData.image || ""),
+      donationsTotalAtRedemption: donationsTotal,
+      prizeCreditEarnedAtRedemption: prizeCreditEarned,
+      prizeCreditSpentBeforeRedemption: prizeCreditSpent,
+      prizeCreditSpentAfterRedemption: nextPrizeCreditSpent,
+      prizeCreditRemainingAfterRedemption: Number(
+        Math.max(0, prizeCreditEarned - nextPrizeCreditSpent).toFixed(2)
+      ),
 
-  // 💰 pricing snapshot
-  price,
-  minimumDonationsNeeded,
+      status: "reserved",
+      fulfillmentStatus: "pending",
 
-  // 📊 financial snapshot (CRITICAL for audits)
-  donationsTotalAtRedemption: donationsTotal,
-  prizeCreditEarnedAtRedemption: prizeCreditEarned,
-  prizeCreditSpentBeforeRedemption: prizeCreditSpent,
-  prizeCreditSpentAfterRedemption: nextPrizeCreditSpent,
-  prizeCreditRemainingAfterRedemption: Number(
-    Math.max(0, prizeCreditEarned - nextPrizeCreditSpent).toFixed(2)
-  ),
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
 
-  // 📦 fulfillment lifecycle
-  status: "reserved", // 🔥 CHANGED
-  fulfillmentStatus: "pending",
-
-  // 🧾 audit trail
-  createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  requestedAt: admin.firestore.FieldValue.serverTimestamp(),
-  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-
-  // 👩‍🏫 admin actions (filled later)
-  fulfilledAt: null,
-  fulfilledBy: null,
-  deliveredAt: null,
-  cancelledAt: null,
-  cancelReason: null,
-});
+      fulfilledAt: null,
+      fulfilledBy: null,
+      deliveredAt: null,
+      deliveredBy: null,
+      cancelledAt: null,
+      cancelledBy: null,
+      cancelReason: null,
+    });
 
     return {
       ok: true,
+      orderId: orderRef.id,
       prizeId,
       prizeName: String(prizeData.name || ""),
       price,
@@ -1259,6 +1279,215 @@ tx.set(orderRef, {
       ),
       minimumDonationsNeeded,
       stockRemaining: stock - 1,
+      status: "reserved",
+      fulfillmentStatus: "pending",
+    };
+  });
+});
+
+exports.fulfillPrizeOrder = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const role = String(claims.role || "").toLowerCase();
+  const schoolId = String(data?.schoolId || claims.schoolId || "").trim();
+  const orderId = String(data?.orderId || "").trim();
+
+  if (role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
+
+  requireSchoolMatch(schoolId, claims);
+
+  if (!orderId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing orderId.");
+  }
+
+  const orderRef = db.doc(`readathonV2_schools/${schoolId}/prizeOrders/${orderId}`);
+  const adminUserId = String(claims.userId || auth.uid || "").toLowerCase();
+
+  return await db.runTransaction(async (tx) => {
+    const orderSnap = await tx.get(orderRef);
+
+    if (!orderSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Order not found.");
+    }
+
+    const order = orderSnap.data() || {};
+
+    if (order.status === "cancelled") {
+      throw new functions.https.HttpsError("failed-precondition", "Cancelled orders cannot be fulfilled.");
+    }
+
+    if (order.fulfillmentStatus === "delivered") {
+      throw new functions.https.HttpsError("failed-precondition", "Delivered orders cannot be fulfilled again.");
+    }
+
+    if (order.fulfillmentStatus === "fulfilled") {
+      return { ok: true, orderId, alreadyFulfilled: true };
+    }
+
+    tx.set(orderRef, {
+      fulfillmentStatus: "fulfilled",
+      fulfilledAt: admin.firestore.FieldValue.serverTimestamp(),
+      fulfilledBy: adminUserId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    return {
+      ok: true,
+      orderId,
+      fulfillmentStatus: "fulfilled",
+    };
+  });
+});
+
+exports.deliverPrizeOrder = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const role = String(claims.role || "").toLowerCase();
+  const schoolId = String(data?.schoolId || claims.schoolId || "").trim();
+  const orderId = String(data?.orderId || "").trim();
+
+  if (role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
+
+  requireSchoolMatch(schoolId, claims);
+
+  if (!orderId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing orderId.");
+  }
+
+  const orderRef = db.doc(`readathonV2_schools/${schoolId}/prizeOrders/${orderId}`);
+  const adminUserId = String(claims.userId || auth.uid || "").toLowerCase();
+
+  return await db.runTransaction(async (tx) => {
+    const orderSnap = await tx.get(orderRef);
+
+    if (!orderSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Order not found.");
+    }
+
+    const order = orderSnap.data() || {};
+
+    if (order.status === "cancelled") {
+      throw new functions.https.HttpsError("failed-precondition", "Cancelled orders cannot be delivered.");
+    }
+
+    if (order.fulfillmentStatus === "delivered") {
+      return { ok: true, orderId, alreadyDelivered: true };
+    }
+
+    if (order.fulfillmentStatus !== "fulfilled") {
+      throw new functions.https.HttpsError("failed-precondition", "Order must be fulfilled before delivery.");
+    }
+
+    tx.set(orderRef, {
+      fulfillmentStatus: "delivered",
+      deliveredAt: admin.firestore.FieldValue.serverTimestamp(),
+      deliveredBy: adminUserId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    return {
+      ok: true,
+      orderId,
+      fulfillmentStatus: "delivered",
+    };
+  });
+});
+
+exports.cancelPrizeOrder = functions.https.onCall(async (data, context) => {
+  const auth = requireAuth(context);
+  const claims = auth.token || {};
+  const role = String(claims.role || "").toLowerCase();
+  const schoolId = String(data?.schoolId || claims.schoolId || "").trim();
+  const orderId = String(data?.orderId || "").trim();
+  const cancelReason = String(data?.cancelReason || "Cancelled by admin.").trim().slice(0, 200);
+
+  if (role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "Admin only.");
+  }
+
+  requireSchoolMatch(schoolId, claims);
+
+  if (!orderId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing orderId.");
+  }
+
+  const root = `readathonV2_schools/${schoolId}`;
+  const orderRef = db.doc(`${root}/prizeOrders/${orderId}`);
+  const adminUserId = String(claims.userId || auth.uid || "").toLowerCase();
+
+  return await db.runTransaction(async (tx) => {
+    const orderSnap = await tx.get(orderRef);
+
+    if (!orderSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Order not found.");
+    }
+
+    const order = orderSnap.data() || {};
+
+    if (order.status === "cancelled") {
+      return { ok: true, orderId, alreadyCancelled: true };
+    }
+
+    const userId = String(order.userId || "").trim().toLowerCase();
+    const prizeId = String(order.prizeId || "").trim();
+    const price = Number(order.price || 0);
+
+    if (!userId || !prizeId || !(price > 0)) {
+      throw new functions.https.HttpsError("failed-precondition", "Order data is incomplete.");
+    }
+
+    const userRef = db.doc(`${root}/users/${userId}`);
+    const prizeRef = db.doc(`${root}/prizeCatalog/${prizeId}`);
+
+    const [userSnap, prizeSnap] = await Promise.all([
+      tx.get(userRef),
+      tx.get(prizeRef),
+    ]);
+
+    if (!userSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Student record not found.");
+    }
+
+    if (!prizeSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Prize record not found.");
+    }
+
+    const userData = userSnap.data() || {};
+    const prizeData = prizeSnap.data() || {};
+
+    const currentSpent = Number(userData.prizeCreditSpent || 0);
+    const nextSpent = Number(Math.max(0, currentSpent - price).toFixed(2));
+    const currentStock = Number(prizeData.stock || 0);
+
+    tx.set(userRef, {
+      prizeCreditSpent: nextSpent,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    tx.set(prizeRef, {
+      stock: currentStock + 1,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    tx.set(orderRef, {
+      status: "cancelled",
+      cancelReason,
+      cancelledAt: admin.firestore.FieldValue.serverTimestamp(),
+      cancelledBy: adminUserId,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+
+    return {
+      ok: true,
+      orderId,
+      status: "cancelled",
+      refundedPrice: price,
+      restoredStock: currentStock + 1,
+      prizeCreditSpent: nextSpent,
     };
   });
 });
