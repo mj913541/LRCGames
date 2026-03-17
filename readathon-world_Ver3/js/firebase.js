@@ -73,6 +73,9 @@ export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
 export const fnBuyAvatarItem = httpsCallable(functions, "buyAvatarItem");
 export const fnRedeemPrizeCredit = httpsCallable(functions, "redeemPrizeCredit");
+export const fnFulfillPrizeOrder = httpsCallable(functions, "fulfillPrizeOrder");
+export const fnDeliverPrizeOrder = httpsCallable(functions, "deliverPrizeOrder");
+export const fnCancelPrizeOrder = httpsCallable(functions, "cancelPrizeOrder");
 
 /* --------------------------------------------------
    School ID Helpers

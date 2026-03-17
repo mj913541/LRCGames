@@ -22,6 +22,7 @@ import {
 
 import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
 import { renderLeaderboard } from "./leaderboard.js";
+import { mountPrizeAdminDashboard } from "./admin-prize-panel.js";
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),

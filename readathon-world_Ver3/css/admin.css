@@ -556,3 +556,152 @@ body {
 .cardStat__label{ color: var(--muted); font-weight: 900; font-size: 13px; }
 .cardStat__value{ font-size: 28px; font-weight: 1100; margin-top: 4px; }
 .cardStat__sub{ margin-top: 4px; color: var(--muted); font-size: 12px; font-weight: 850; }
+
+/* ======================================================
+   PRIZE ADMIN PANEL
+====================================================== */
+
+.panel--prize-admin {
+  margin-top: 24px;
+}
+
+.prizeAdminHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.prizeAdminTitle {
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+
+.prizeAdminSub {
+  margin: 0;
+}
+
+.prizeAdminStats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.prizeStatCard {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.prizeStatCard__label {
+  font-size: 0.92rem;
+  color: #5b6475;
+  margin-bottom: 8px;
+}
+
+.prizeStatCard__value {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.prizeAdminList {
+  display: grid;
+  gap: 14px;
+}
+
+.prizeOrderCard {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(31, 41, 55, 0.08);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.prizeOrderCard__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.prizeOrderCard__title {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+}
+
+.prizeOrderCard__student {
+  margin: 0;
+  color: #5b6475;
+}
+
+.prizeOrderCard__status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #4338ca;
+  font-weight: 700;
+  font-size: 0.92rem;
+  white-space: nowrap;
+}
+
+.prizeOrderCard__meta {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f8fafc;
+}
+
+.prizeOrderCard__metaRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #374151;
+}
+
+.prizeOrderCard__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.prizeOrderDone {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: #ecfdf5;
+  color: #047857;
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .prizeAdminStats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .prizeAdminStats {
+    grid-template-columns: 1fr;
+  }
+
+  .prizeOrderCard__top,
+  .prizeOrderCard__metaRow,
+  .prizeOrderCard__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
