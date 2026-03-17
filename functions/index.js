@@ -93,11 +93,120 @@ function httpsErrorToStatus(err) {
   if (code === "already-exists") return 409;
   return 500;
 }
+/* --------------------------------------------------
+   BOOK BRACKET PATH HELPERS
+-------------------------------------------------- */
 
+function bookBracketEventPath(schoolId, eventId) {
+  return `${schoolRoot(schoolId)}/bookBracketEvents/${eventId}`;
+}
+
+function bookBracketBookPath(schoolId, bookId) {
+  return `${schoolRoot(schoolId)}/bookBracketBooks/${bookId}`;
+}
+
+function bookBracketMatchupPath(schoolId, matchupId) {
+  return `${schoolRoot(schoolId)}/bookBracketMatchups/${matchupId}`;
+}
+
+function bookBracketVotePath(schoolId, voteId) {
+  return `${schoolRoot(schoolId)}/bookBracketVotes/${voteId}`;
+}
+
+function bookBracketUserProgressPath(schoolId, userId) {
+  return `${schoolRoot(schoolId)}/bookBracketUserProgress/${userId}`;
+}
+
+function bookBracketUserRewardPath(schoolId, rewardId) {
+  return `${schoolRoot(schoolId)}/bookBracketUserRewards/${rewardId}`;
+}
+
+function bookBracketUserActionsColPath(schoolId) {
+  return `${schoolRoot(schoolId)}/bookBracketUserActions`;
+}
+
+function bookBracketAdminActionsColPath(schoolId) {
+  return `${schoolRoot(schoolId)}/bookBracketAdminActions`;
+}
+
+function userSummaryPath(schoolId, userId) {
+  return `${schoolRoot(schoolId)}/users/${userId}/readathon/summary`;
+}
+
+function buildBookBracketVoteId(eventId, matchupId, userId) {
+  return `${eventId}_${matchupId}_${userId}`;
+}
+
+function buildBookBracketBookRewardId(eventId, userId, bookId) {
+  return `${eventId}_${userId}_book_${bookId}`;
+}
+
+function buildBookBracketVoteRewardId(eventId, userId, matchupId) {
+  return `${eventId}_${userId}_vote_${matchupId}`;
+}
+
+function buildBookBracketMatchupRewardId(eventId, userId, matchupId) {
+  return `${eventId}_${userId}_matchup_${matchupId}`;
+}
 /* --------------------------------------------------
    Utility
 -------------------------------------------------- */
+/* --------------------------------------------------
+   BOOK BRACKET RUBY AWARD HELPER
+-------------------------------------------------- */
 
+async function grantBookBracketRubiesOnce(tx, {
+  schoolId,
+  userId,
+  rewardId,
+  rewardType,
+  eventId,
+  matchupId = null,
+  bookId = null,
+  rubyAmount = 0,
+  metadata = {},
+}) {
+  const rewardRef = db.doc(bookBracketUserRewardPath(schoolId, rewardId));
+  const rewardSnap = await tx.get(rewardRef);
+
+  if (rewardSnap.exists) {
+    return false;
+  }
+
+  const summaryRef = db.doc(userSummaryPath(schoolId, userId));
+  const summarySnap = await tx.get(summaryRef);
+  const summary = summarySnap.exists ? (summarySnap.data() || {}) : defaultSummary();
+
+  tx.set(
+    rewardRef,
+    {
+      rewardId,
+      rewardType,
+      eventId,
+      userId,
+      matchupId,
+      bookId,
+      rubyAmount,
+      granted: true,
+      metadata,
+      grantedAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  tx.set(
+    summaryRef,
+    {
+      rubiesBalance: Number(summary.rubiesBalance || 0) + rubyAmount,
+      rubiesLifetimeEarned: Number(summary.rubiesLifetimeEarned || 0) + rubyAmount,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  return true;
+}
 function chunkArray(arr, size) {
   const out = [];
   for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
@@ -167,6 +276,80 @@ function normalizeCatalogSlot(raw = {}) {
   return slot || "accessory";
 }
 
+/* --------------------------------------------------
+   BOOK BRACKET CONSTANTS
+-------------------------------------------------- */
+
+const BOOK_BRACKET_REWARDS = {
+  bookCompletion: 10,
+  voteCast: 5,
+  matchupCompletion: 5,
+};
+
+const BOOK_BRACKET_ALLOWED_ROUNDS = [1, 2, 3, 4];
+
+function requireRoleIn(claims, allowedRoles = []) {
+  const role = String(claims?.role || "").toLowerCase();
+  if (!allowedRoles.includes(role)) {
+    throw new functions.https.HttpsError(
+      "permission-denied",
+      `Requires role: ${allowedRoles.join(", ")}`
+    );
+  }
+  return role;
+}
+
+function safeLower(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function ensureObject(value, fallback = {}) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : fallback;
+}
+
+async function appendBookBracketUserAction({
+  schoolId,
+  eventId,
+  userId,
+  matchupId = null,
+  bookId = null,
+  actionType,
+  source = "callable",
+  metadata = {},
+}) {
+  await db.collection(bookBracketUserActionsColPath(schoolId)).add({
+    eventId,
+    userId,
+    matchupId,
+    bookId,
+    actionType,
+    source,
+    metadata,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
+
+async function appendBookBracketAdminAction({
+  schoolId,
+  eventId,
+  actionType,
+  performedBy,
+  performedByRole,
+  targetUserId = null,
+  matchupId = null,
+  metadata = {},
+}) {
+  await db.collection(bookBracketAdminActionsColPath(schoolId)).add({
+    eventId,
+    actionType,
+    performedBy,
+    performedByRole,
+    targetUserId,
+    matchupId,
+    metadata,
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  });
+}
 /* --------------------------------------------------
    Shared Core: submitTransaction
 -------------------------------------------------- */
@@ -1491,3 +1674,731 @@ exports.cancelPrizeOrder = functions.https.onCall(async (data, context) => {
     };
   });
 });
+
+/* --------------------------------------------------
+   BOOK BRACKET CORE: COMPLETE BOOK
+-------------------------------------------------- */
+
+async function completeBookBracketBookCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId || "").trim();
+  const eventId = String(data?.eventId || "").trim();
+  const matchupId = String(data?.matchupId || "").trim();
+  const bookId = String(data?.bookId || "").trim();
+  const watchSeconds = Number(data?.watchSeconds || 0);
+  const watchPercent = Number(data?.watchPercent || 0);
+  const maxObservedTime = Number(data?.maxObservedTime || 0);
+  const durationSeconds = Number(data?.durationSeconds || 0);
+  const suspiciousSeekCount = Number(data?.suspiciousSeekCount || 0);
+
+  requireSchoolMatch(schoolId, claims);
+
+  const userId = safeLower(claims.userId || authUid || "");
+  const role = String(claims.role || "").toLowerCase();
+
+  if (!schoolId || !eventId || !matchupId || !bookId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing schoolId/eventId/matchupId/bookId.");
+  }
+
+  if (!["student", "staff", "admin"].includes(role)) {
+    throw new functions.https.HttpsError("permission-denied", "Invalid role.");
+  }
+
+  const eventRef = db.doc(bookBracketEventPath(schoolId, eventId));
+  const matchupRef = db.doc(bookBracketMatchupPath(schoolId, matchupId));
+  const bookRef = db.doc(bookBracketBookPath(schoolId, bookId));
+  const progressRef = db.doc(bookBracketUserProgressPath(schoolId, userId));
+
+  let completedNow = false;
+  let bookRewardGranted = false;
+  let matchupRewardGranted = false;
+  let voteUnlocked = false;
+
+  await db.runTransaction(async (tx) => {
+    const [eventSnap, matchupSnap, bookSnap, progressSnap] = await Promise.all([
+      tx.get(eventRef),
+      tx.get(matchupRef),
+      tx.get(bookRef),
+      tx.get(progressRef),
+    ]);
+
+    if (!eventSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Book bracket event not found.");
+    }
+    if (!matchupSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Matchup not found.");
+    }
+    if (!bookSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Book not found.");
+    }
+
+    const eventData = eventSnap.data() || {};
+    const matchupData = matchupSnap.data() || {};
+    const bookData = bookSnap.data() || {};
+
+    if (eventData.status !== "live") {
+      throw new functions.https.HttpsError("failed-precondition", "Event is not live.");
+    }
+
+    if (matchupData.status !== "live") {
+      throw new functions.https.HttpsError("failed-precondition", "Matchup is not live.");
+    }
+
+    if (![matchupData.bookAId, matchupData.bookBId].includes(bookId)) {
+      throw new functions.https.HttpsError("invalid-argument", "Book is not part of matchup.");
+    }
+
+    const thresholdPercent = Number(bookData.completionThresholdPercent || eventData.completionThresholdPercent || 0.9);
+    const reachedThreshold =
+      durationSeconds > 0 && maxObservedTime / durationSeconds >= thresholdPercent;
+
+    if (!reachedThreshold) {
+      throw new functions.https.HttpsError("failed-precondition", "Video completion threshold not met.");
+    }
+
+    const progress = progressSnap.exists ? ensureObject(progressSnap.data(), {}) : {};
+    const bookStates = ensureObject(progress.bookStates, {});
+    const matchupStates = ensureObject(progress.matchupStates, {});
+    const completedMatchupIds = Array.isArray(progress.completedMatchupIds) ? progress.completedMatchupIds : [];
+    const votedMatchupIds = Array.isArray(progress.votedMatchupIds) ? progress.votedMatchupIds : [];
+    const teacherUnlockedMatchupIds = Array.isArray(progress.teacherUnlockedMatchupIds) ? progress.teacherUnlockedMatchupIds : [];
+
+    const existingBookState = ensureObject(bookStates[bookId], {});
+    const existingMatchupState = ensureObject(matchupStates[matchupId], {});
+
+    const alreadyCompleted = existingBookState.completed === true;
+
+    const nextBookState = {
+      ...existingBookState,
+      started: true,
+      completed: true,
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      watchSeconds: Math.floor(watchSeconds),
+      watchPercent: watchPercent,
+      maxObservedTime: maxObservedTime,
+      durationSeconds: Math.floor(durationSeconds),
+      completionMethod: "youtube_threshold",
+    };
+
+    const isBookA = matchupData.bookAId === bookId;
+    const otherBookId = isBookA ? matchupData.bookBId : matchupData.bookAId;
+    const otherBookState = ensureObject(bookStates[otherBookId], {});
+
+    const nextMatchupState = {
+      ...existingMatchupState,
+      bookACompleted: isBookA ? true : existingMatchupState.bookACompleted === true,
+      bookBCompleted: isBookA ? existingMatchupState.bookBCompleted === true : true,
+      teacherUnlocked: existingMatchupState.teacherUnlocked === true,
+      teacherUnlockedBy: existingMatchupState.teacherUnlockedBy || null,
+      teacherUnlockedAt: existingMatchupState.teacherUnlockedAt || null,
+      teacherUnlockReason: existingMatchupState.teacherUnlockReason || null,
+      voted: existingMatchupState.voted === true,
+      voteRewardAwarded: existingMatchupState.voteRewardAwarded === true,
+      matchupRewardAwarded: existingMatchupState.matchupRewardAwarded === true,
+      matchupCompleted: existingMatchupState.matchupCompleted === true,
+    };
+
+    voteUnlocked =
+      nextMatchupState.teacherUnlocked === true ||
+      (nextMatchupState.bookACompleted === true && nextMatchupState.bookBCompleted === true);
+
+    nextMatchupState.voteUnlocked = voteUnlocked;
+
+    tx.set(
+      progressRef,
+      {
+        userId,
+        schoolId,
+        eventId,
+        totalRubiesAwarded: Number(progress.totalRubiesAwarded || 0),
+        completedMatchupIds,
+        votedMatchupIds,
+        teacherUnlockedMatchupIds,
+        [`bookStates.${bookId}`]: nextBookState,
+        [`matchupStates.${matchupId}`]: nextMatchupState,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastActionAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    if (!alreadyCompleted) {
+      const rewardId = buildBookBracketBookRewardId(eventId, userId, bookId);
+      bookRewardGranted = await grantBookBracketRubiesOnce(tx, {
+        schoolId,
+        userId,
+        rewardId,
+        rewardType: "book_completion",
+        eventId,
+        matchupId,
+        bookId,
+        rubyAmount: BOOK_BRACKET_REWARDS.bookCompletion,
+        metadata: {
+          watchSeconds: Math.floor(watchSeconds),
+          watchPercent,
+          maxObservedTime,
+          durationSeconds: Math.floor(durationSeconds),
+          suspiciousSeekCount,
+        },
+      });
+      completedNow = true;
+    }
+  });
+
+  await appendBookBracketUserAction({
+    schoolId,
+    eventId,
+    userId,
+    matchupId,
+    bookId,
+    actionType: "book_completed",
+    source: "callable",
+    metadata: {
+      watchSeconds: Math.floor(watchSeconds),
+      watchPercent,
+      maxObservedTime,
+      durationSeconds: Math.floor(durationSeconds),
+      suspiciousSeekCount,
+      completedNow,
+      bookRewardGranted,
+      matchupRewardGranted,
+      voteUnlocked,
+    },
+  });
+
+  return {
+    ok: true,
+    completedNow,
+    bookRewardGranted,
+    matchupRewardGranted,
+    voteUnlocked,
+  };
+}
+
+/* --------------------------------------------------
+   BOOK BRACKET CORE: COMPLETE BOOK
+-------------------------------------------------- */
+
+async function completeBookBracketBookCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId || "").trim();
+  const eventId = String(data?.eventId || "").trim();
+  const matchupId = String(data?.matchupId || "").trim();
+  const bookId = String(data?.bookId || "").trim();
+  const watchSeconds = Number(data?.watchSeconds || 0);
+  const watchPercent = Number(data?.watchPercent || 0);
+  const maxObservedTime = Number(data?.maxObservedTime || 0);
+  const durationSeconds = Number(data?.durationSeconds || 0);
+  const suspiciousSeekCount = Number(data?.suspiciousSeekCount || 0);
+
+  requireSchoolMatch(schoolId, claims);
+
+  const userId = safeLower(claims.userId || authUid || "");
+  const role = String(claims.role || "").toLowerCase();
+
+  if (!schoolId || !eventId || !matchupId || !bookId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing schoolId/eventId/matchupId/bookId.");
+  }
+
+  if (!["student", "staff", "admin"].includes(role)) {
+    throw new functions.https.HttpsError("permission-denied", "Invalid role.");
+  }
+
+  const eventRef = db.doc(bookBracketEventPath(schoolId, eventId));
+  const matchupRef = db.doc(bookBracketMatchupPath(schoolId, matchupId));
+  const bookRef = db.doc(bookBracketBookPath(schoolId, bookId));
+  const progressRef = db.doc(bookBracketUserProgressPath(schoolId, userId));
+
+  let completedNow = false;
+  let bookRewardGranted = false;
+  let matchupRewardGranted = false;
+  let voteUnlocked = false;
+
+  await db.runTransaction(async (tx) => {
+    const [eventSnap, matchupSnap, bookSnap, progressSnap] = await Promise.all([
+      tx.get(eventRef),
+      tx.get(matchupRef),
+      tx.get(bookRef),
+      tx.get(progressRef),
+    ]);
+
+    if (!eventSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Book bracket event not found.");
+    }
+    if (!matchupSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Matchup not found.");
+    }
+    if (!bookSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Book not found.");
+    }
+
+    const eventData = eventSnap.data() || {};
+    const matchupData = matchupSnap.data() || {};
+    const bookData = bookSnap.data() || {};
+
+    if (eventData.status !== "live") {
+      throw new functions.https.HttpsError("failed-precondition", "Event is not live.");
+    }
+
+    if (matchupData.status !== "live") {
+      throw new functions.https.HttpsError("failed-precondition", "Matchup is not live.");
+    }
+
+    if (![matchupData.bookAId, matchupData.bookBId].includes(bookId)) {
+      throw new functions.https.HttpsError("invalid-argument", "Book is not part of matchup.");
+    }
+
+    const thresholdPercent = Number(bookData.completionThresholdPercent || eventData.completionThresholdPercent || 0.9);
+    const reachedThreshold =
+      durationSeconds > 0 && maxObservedTime / durationSeconds >= thresholdPercent;
+
+    if (!reachedThreshold) {
+      throw new functions.https.HttpsError("failed-precondition", "Video completion threshold not met.");
+    }
+
+    const progress = progressSnap.exists ? ensureObject(progressSnap.data(), {}) : {};
+    const bookStates = ensureObject(progress.bookStates, {});
+    const matchupStates = ensureObject(progress.matchupStates, {});
+    const completedMatchupIds = Array.isArray(progress.completedMatchupIds) ? progress.completedMatchupIds : [];
+    const votedMatchupIds = Array.isArray(progress.votedMatchupIds) ? progress.votedMatchupIds : [];
+    const teacherUnlockedMatchupIds = Array.isArray(progress.teacherUnlockedMatchupIds) ? progress.teacherUnlockedMatchupIds : [];
+
+    const existingBookState = ensureObject(bookStates[bookId], {});
+    const existingMatchupState = ensureObject(matchupStates[matchupId], {});
+
+    const alreadyCompleted = existingBookState.completed === true;
+
+    const nextBookState = {
+      ...existingBookState,
+      started: true,
+      completed: true,
+      completedAt: admin.firestore.FieldValue.serverTimestamp(),
+      watchSeconds: Math.floor(watchSeconds),
+      watchPercent: watchPercent,
+      maxObservedTime: maxObservedTime,
+      durationSeconds: Math.floor(durationSeconds),
+      completionMethod: "youtube_threshold",
+    };
+
+    const isBookA = matchupData.bookAId === bookId;
+    const otherBookId = isBookA ? matchupData.bookBId : matchupData.bookAId;
+    const otherBookState = ensureObject(bookStates[otherBookId], {});
+
+    const nextMatchupState = {
+      ...existingMatchupState,
+      bookACompleted: isBookA ? true : existingMatchupState.bookACompleted === true,
+      bookBCompleted: isBookA ? existingMatchupState.bookBCompleted === true : true,
+      teacherUnlocked: existingMatchupState.teacherUnlocked === true,
+      teacherUnlockedBy: existingMatchupState.teacherUnlockedBy || null,
+      teacherUnlockedAt: existingMatchupState.teacherUnlockedAt || null,
+      teacherUnlockReason: existingMatchupState.teacherUnlockReason || null,
+      voted: existingMatchupState.voted === true,
+      voteRewardAwarded: existingMatchupState.voteRewardAwarded === true,
+      matchupRewardAwarded: existingMatchupState.matchupRewardAwarded === true,
+      matchupCompleted: existingMatchupState.matchupCompleted === true,
+    };
+
+    voteUnlocked =
+      nextMatchupState.teacherUnlocked === true ||
+      (nextMatchupState.bookACompleted === true && nextMatchupState.bookBCompleted === true);
+
+    nextMatchupState.voteUnlocked = voteUnlocked;
+
+    tx.set(
+      progressRef,
+      {
+        userId,
+        schoolId,
+        eventId,
+        totalRubiesAwarded: Number(progress.totalRubiesAwarded || 0),
+        completedMatchupIds,
+        votedMatchupIds,
+        teacherUnlockedMatchupIds,
+        [`bookStates.${bookId}`]: nextBookState,
+        [`matchupStates.${matchupId}`]: nextMatchupState,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastActionAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    if (!alreadyCompleted) {
+      const rewardId = buildBookBracketBookRewardId(eventId, userId, bookId);
+      bookRewardGranted = await grantBookBracketRubiesOnce(tx, {
+        schoolId,
+        userId,
+        rewardId,
+        rewardType: "book_completion",
+        eventId,
+        matchupId,
+        bookId,
+        rubyAmount: BOOK_BRACKET_REWARDS.bookCompletion,
+        metadata: {
+          watchSeconds: Math.floor(watchSeconds),
+          watchPercent,
+          maxObservedTime,
+          durationSeconds: Math.floor(durationSeconds),
+          suspiciousSeekCount,
+        },
+      });
+      completedNow = true;
+    }
+  });
+
+  await appendBookBracketUserAction({
+    schoolId,
+    eventId,
+    userId,
+    matchupId,
+    bookId,
+    actionType: "book_completed",
+    source: "callable",
+    metadata: {
+      watchSeconds: Math.floor(watchSeconds),
+      watchPercent,
+      maxObservedTime,
+      durationSeconds: Math.floor(durationSeconds),
+      suspiciousSeekCount,
+      completedNow,
+      bookRewardGranted,
+      matchupRewardGranted,
+      voteUnlocked,
+    },
+  });
+
+  return {
+    ok: true,
+    completedNow,
+    bookRewardGranted,
+    matchupRewardGranted,
+    voteUnlocked,
+  };
+}
+
+/* --------------------------------------------------
+   BOOK BRACKET CORE: SUBMIT VOTE
+-------------------------------------------------- */
+
+async function submitBookBracketVoteCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId || "").trim();
+  const eventId = String(data?.eventId || "").trim();
+  const matchupId = String(data?.matchupId || "").trim();
+  const selectedBookId = String(data?.selectedBookId || "").trim();
+
+  requireSchoolMatch(schoolId, claims);
+
+  const userId = safeLower(claims.userId || authUid || "");
+  const role = String(claims.role || "").toLowerCase();
+
+  if (!schoolId || !eventId || !matchupId || !selectedBookId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing schoolId/eventId/matchupId/selectedBookId.");
+  }
+
+  if (!["student", "staff", "admin"].includes(role)) {
+    throw new functions.https.HttpsError("permission-denied", "Invalid role.");
+  }
+
+  const eventRef = db.doc(bookBracketEventPath(schoolId, eventId));
+  const matchupRef = db.doc(bookBracketMatchupPath(schoolId, matchupId));
+  const progressRef = db.doc(bookBracketUserProgressPath(schoolId, userId));
+  const voteId = buildBookBracketVoteId(eventId, matchupId, userId);
+  const voteRef = db.doc(bookBracketVotePath(schoolId, voteId));
+
+  let voteSaved = false;
+  let voteRewardGranted = false;
+  let matchupRewardGranted = false;
+  let selectedSide = null;
+
+  await db.runTransaction(async (tx) => {
+    const [eventSnap, matchupSnap, progressSnap, voteSnap] = await Promise.all([
+      tx.get(eventRef),
+      tx.get(matchupRef),
+      tx.get(progressRef),
+      tx.get(voteRef),
+    ]);
+
+    if (!eventSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Book bracket event not found.");
+    }
+    if (!matchupSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Matchup not found.");
+    }
+
+    const eventData = eventSnap.data() || {};
+    const matchupData = matchupSnap.data() || {};
+
+    if (eventData.status !== "live") {
+      throw new functions.https.HttpsError("failed-precondition", "Event is not live.");
+    }
+    if (matchupData.status !== "live") {
+      throw new functions.https.HttpsError("failed-precondition", "Matchup is not live.");
+    }
+
+    if (voteSnap.exists) {
+      throw new functions.https.HttpsError("already-exists", "Vote already submitted.");
+    }
+
+    if (selectedBookId !== matchupData.bookAId && selectedBookId !== matchupData.bookBId) {
+      throw new functions.https.HttpsError("invalid-argument", "Selected book is not in this matchup.");
+    }
+
+    selectedSide = selectedBookId === matchupData.bookAId ? "A" : "B";
+
+    const progress = progressSnap.exists ? ensureObject(progressSnap.data(), {}) : {};
+    const bookStates = ensureObject(progress.bookStates, {});
+    const matchupStates = ensureObject(progress.matchupStates, {});
+    const completedMatchupIds = Array.isArray(progress.completedMatchupIds) ? progress.completedMatchupIds : [];
+    const votedMatchupIds = Array.isArray(progress.votedMatchupIds) ? progress.votedMatchupIds : [];
+    const teacherUnlockedMatchupIds = Array.isArray(progress.teacherUnlockedMatchupIds) ? progress.teacherUnlockedMatchupIds : [];
+
+    const matchupState = ensureObject(matchupStates[matchupId], {});
+    const bookAState = ensureObject(bookStates[matchupData.bookAId], {});
+    const bookBState = ensureObject(bookStates[matchupData.bookBId], {});
+
+    const voteUnlocked =
+      matchupState.teacherUnlocked === true ||
+      (bookAState.completed === true && bookBState.completed === true);
+
+    if (!voteUnlocked) {
+      throw new functions.https.HttpsError("failed-precondition", "Vote is still locked.");
+    }
+
+    const nextMatchupState = {
+      ...matchupState,
+      voteUnlocked: true,
+      voted: true,
+      matchupCompleted: true,
+    };
+
+    tx.set(
+      voteRef,
+      {
+        voteId,
+        eventId,
+        matchupId,
+        roundNumber: Number(matchupData.roundNumber || 1),
+        userId,
+        selectedBookId,
+        selectedSide,
+        voteSource: role,
+        teacherOverrideUsed: matchupState.teacherUnlocked === true,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    tx.set(
+      matchupRef,
+      {
+        voteCountA: Number(matchupData.voteCountA || 0) + (selectedSide === "A" ? 1 : 0),
+        voteCountB: Number(matchupData.voteCountB || 0) + (selectedSide === "B" ? 1 : 0),
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    tx.set(
+      progressRef,
+      {
+        userId,
+        schoolId,
+        eventId,
+        completedMatchupIds: completedMatchupIds.includes(matchupId)
+          ? completedMatchupIds
+          : [...completedMatchupIds, matchupId],
+        votedMatchupIds: votedMatchupIds.includes(matchupId)
+          ? votedMatchupIds
+          : [...votedMatchupIds, matchupId],
+        teacherUnlockedMatchupIds,
+        [`matchupStates.${matchupId}`]: nextMatchupState,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        lastActionAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      { merge: true }
+    );
+
+    const voteRewardId = buildBookBracketVoteRewardId(eventId, userId, matchupId);
+    voteRewardGranted = await grantBookBracketRubiesOnce(tx, {
+      schoolId,
+      userId,
+      rewardId: voteRewardId,
+      rewardType: "vote_cast",
+      eventId,
+      matchupId,
+      rubyAmount: BOOK_BRACKET_REWARDS.voteCast,
+      metadata: {
+        selectedBookId,
+        selectedSide,
+      },
+    });
+
+    const matchupRewardId = buildBookBracketMatchupRewardId(eventId, userId, matchupId);
+    matchupRewardGranted = await grantBookBracketRubiesOnce(tx, {
+      schoolId,
+      userId,
+      rewardId: matchupRewardId,
+      rewardType: "matchup_completion",
+      eventId,
+      matchupId,
+      rubyAmount: BOOK_BRACKET_REWARDS.matchupCompletion,
+      metadata: {
+        selectedBookId,
+        selectedSide,
+      },
+    });
+
+    voteSaved = true;
+  });
+
+  await appendBookBracketUserAction({
+    schoolId,
+    eventId,
+    userId,
+    matchupId,
+    bookId: selectedBookId,
+    actionType: "vote_cast",
+    source: "callable",
+    metadata: {
+      selectedBookId,
+      selectedSide,
+      voteSaved,
+      voteRewardGranted,
+      matchupRewardGranted,
+    },
+  });
+
+  return {
+    ok: true,
+    voteSaved,
+    selectedSide,
+    voteRewardGranted,
+    matchupRewardGranted,
+  };
+}
+
+/* --------------------------------------------------
+   BOOK BRACKET CORE: ADVANCE ROUND
+-------------------------------------------------- */
+
+async function advanceBookBracketRoundCore(data, claims, authUid) {
+  const schoolId = String(data?.schoolId || "").trim();
+  const eventId = String(data?.eventId || "").trim();
+
+  requireSchoolMatch(schoolId, claims);
+  const role = requireRoleIn(claims, ["admin"]);
+  const performedBy = safeLower(claims.userId || authUid || "");
+
+  if (!schoolId || !eventId) {
+    throw new functions.https.HttpsError("invalid-argument", "Missing schoolId/eventId.");
+  }
+
+  const eventRef = db.doc(bookBracketEventPath(schoolId, eventId));
+  const matchupsSnap = await db
+    .collection(`${schoolRoot(schoolId)}/bookBracketMatchups`)
+    .where("eventId", "==", eventId)
+    .get();
+
+  if (matchupsSnap.empty) {
+    throw new functions.https.HttpsError("not-found", "No matchups found.");
+  }
+
+  await db.runTransaction(async (tx) => {
+    const eventSnap = await tx.get(eventRef);
+    if (!eventSnap.exists) {
+      throw new functions.https.HttpsError("not-found", "Book bracket event not found.");
+    }
+
+    const eventData = eventSnap.data() || {};
+    const currentRound = Number(eventData.activeRound || 1);
+
+    if (!BOOK_BRACKET_ALLOWED_ROUNDS.includes(currentRound)) {
+      throw new functions.https.HttpsError("failed-precondition", "Invalid current round.");
+    }
+
+    if (currentRound >= 4) {
+      throw new functions.https.HttpsError("failed-precondition", "Already at final round.");
+    }
+
+    const allMatchups = matchupsSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const currentRoundMatchups = allMatchups.filter((m) => Number(m.roundNumber) === currentRound);
+    const nextRoundMatchups = allMatchups.filter((m) => Number(m.roundNumber) === currentRound + 1);
+
+    for (const m of currentRoundMatchups) {
+      const a = Number(m.voteCountA || 0);
+      const b = Number(m.voteCountB || 0);
+
+      if (a === b) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          `Tie detected in ${m.matchupId}. Resolve tie before advancing.`
+        );
+      }
+
+      const winnerBookId = a > b ? m.bookAId : m.bookBId;
+
+      tx.set(
+        db.doc(bookBracketMatchupPath(schoolId, m.matchupId)),
+        {
+          winnerBookId,
+          winnerSource: "vote_count",
+          status: "complete",
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    for (const next of nextRoundMatchups) {
+      const sourceA = allMatchups.find((m) => m.matchupId === next.sourceMatchupAId);
+      const sourceB = allMatchups.find((m) => m.matchupId === next.sourceMatchupBId);
+
+      if (!sourceA?.winnerBookId || !sourceB?.winnerBookId) {
+        throw new functions.https.HttpsError(
+          "failed-precondition",
+          `Missing winners for next-round matchup ${next.matchupId}.`
+        );
+      }
+
+      tx.set(
+        db.doc(bookBracketMatchupPath(schoolId, next.matchupId)),
+        {
+          bookAId: sourceA.winnerBookId,
+          bookBId: sourceB.winnerBookId,
+          seedA: null,
+          seedB: null,
+          status: "live",
+          voteCountA: 0,
+          voteCountB: 0,
+          winnerBookId: null,
+          winnerSource: null,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true }
+      );
+    }
+
+    tx.set(
+      eventRef,
+      {
+        activeRound: currentRound + 1,
+        activeRoundLabel:
+          currentRound + 1 === 2 ? "Elite 8"
+          : currentRound + 1 === 3 ? "Final 4"
+          : "Championship",
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: performedBy,
+      },
+      { merge: true }
+    );
+  });
+
+  await appendBookBracketAdminAction({
+    schoolId,
+    eventId,
+    actionType: "advance_round",
+    performedBy,
+    performedByRole: role,
+    metadata: {},
+  });
+
+  return { ok: true };
+}

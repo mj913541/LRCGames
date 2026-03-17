@@ -4,6 +4,9 @@ import {
   requireRole,
   getCurrentUserId,
   getCurrentSchoolId,
+  fnCompleteBookBracketBook,
+  fnSubmitBookBracketVote,
+  fnTeacherUnlockBookBracketMatchup,
 } from "./firebase.js";
 
 import {
@@ -16,7 +19,6 @@ import {
   BOOK_BRACKET_EVENT_ID,
   BOOK_BRACKET_EVENT_TITLE,
   BOOK_BRACKET_ROUNDS,
-  BOOK_BRACKET_ACTION_TYPES,
   getBookById,
 } from "./book-bracket-config.js";
 
@@ -26,14 +28,9 @@ import {
   fetchBookBracketMatchups,
   fetchBookBracketUserProgress,
   ensureBookBracketUserProgress,
-  ensureBookBracketMatchupState,
   isMatchupVoteUnlocked,
   hasUserVotedMatchup,
   isMatchupCompleted,
-  touchBookBracketUserProgress,
-  saveBookBracketVote,
-  logBookBracketUserAction,
-  logBookBracketAdminAction,
 } from "./book-bracket-firebase.js";
 
 import {
@@ -143,10 +140,6 @@ function setDisabled(el, disabled) {
   el.disabled = !!disabled;
 }
 
-function safeArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
 function getRoleFromStorage() {
   return (
     localStorage.getItem("readathonV2_role") ||
@@ -182,10 +175,6 @@ function getProgressBookState(bookId) {
 
 function getProgressMatchupState(matchupId) {
   return state.progress?.matchupStates?.[matchupId] || null;
-}
-
-function isBookCompletedLocal(bookId) {
-  return !!getProgressBookState(bookId)?.completed;
 }
 
 function isTeacherUnlockActive(matchupId) {
@@ -483,10 +472,27 @@ async function startListeningForBook(side) {
     },
 
     onCompleted: async (playerState) => {
-      setText(els.playerStatus, "✅ Book completed!");
-      updatePlayerProgressUi(playerState);
-      await refreshProgressFromFirestore();
-      renderCurrentMatchup();
+      try {
+        setText(els.playerStatus, "✅ Book completed!");
+        updatePlayerProgressUi(playerState);
+
+        await fnCompleteBookBracketBook({
+          schoolId: state.schoolId,
+          eventId: BOOK_BRACKET_EVENT_ID,
+          matchupId: matchup.matchupId,
+          bookId,
+          watchSeconds: Math.floor(playerState.watchSeconds || 0),
+          watchPercent: Number(playerState.watchPercent || 0),
+          maxObservedTime: Number(playerState.maxObservedTime || 0),
+          durationSeconds: Math.floor(playerState.durationSeconds || 0),
+          suspiciousSeekCount: Number(playerState.suspiciousSeekCount || 0),
+        });
+
+        await refreshProgressFromFirestore();
+        renderCurrentMatchup();
+      } catch (err) {
+        showError(normalizeError(err));
+      }
     },
 
     onStateChange: (playerState) => {
@@ -548,41 +554,11 @@ async function castVoteForSide(side) {
     setDisabled(els.chooseABtn, true);
     setDisabled(els.chooseBBtn, true);
 
-    await saveBookBracketVote({
+    await fnSubmitBookBracketVote({
       schoolId: state.schoolId,
-      userId: state.userId,
+      eventId: BOOK_BRACKET_EVENT_ID,
       matchupId: matchup.matchupId,
       selectedBookId: bookId,
-      selectedSide: side,
-      eventId: BOOK_BRACKET_EVENT_ID,
-      teacherOverrideUsed: !!matchupState.teacherUnlocked,
-      voteSource: state.role === "student" ? "student" : "staff",
-    });
-
-    await touchBookBracketUserProgress(state.schoolId, state.userId, {
-      [`matchupStates.${matchup.matchupId}.voted`]: true,
-      [`matchupStates.${matchup.matchupId}.voteUnlocked`]: true,
-      [`matchupStates.${matchup.matchupId}.matchupCompleted`]: true,
-      votedMatchupIds: Array.from(
-        new Set([...(safeArray(state.progress?.votedMatchupIds)), matchup.matchupId])
-      ),
-      completedMatchupIds: Array.from(
-        new Set([...(safeArray(state.progress?.completedMatchupIds)), matchup.matchupId])
-      ),
-    });
-
-    await logBookBracketUserAction({
-      schoolId: state.schoolId,
-      userId: state.userId,
-      eventId: BOOK_BRACKET_EVENT_ID,
-      matchupId: matchup.matchupId,
-      bookId,
-      actionType: BOOK_BRACKET_ACTION_TYPES.voteCast,
-      source: "student_page",
-      metadata: {
-        selectedSide: side,
-        teacherOverrideUsed: !!matchupState.teacherUnlocked,
-      },
     });
 
     await refreshProgressFromFirestore();
@@ -614,34 +590,12 @@ async function handleTeacherUnlock() {
   try {
     setDisabled(els.teacherUnlockBtn, true);
 
-    await ensureBookBracketMatchupState({
-      schoolId: state.schoolId,
-      userId: state.userId,
-      matchupId: matchup.matchupId,
-    });
-
-    await touchBookBracketUserProgress(state.schoolId, state.userId, {
-      [`matchupStates.${matchup.matchupId}.teacherUnlocked`]: true,
-      [`matchupStates.${matchup.matchupId}.teacherUnlockedBy`]: state.userId,
-      [`matchupStates.${matchup.matchupId}.teacherUnlockedAt`]: new Date().toISOString(),
-      [`matchupStates.${matchup.matchupId}.teacherUnlockReason`]: reason,
-      [`matchupStates.${matchup.matchupId}.voteUnlocked`]: true,
-      teacherUnlockedMatchupIds: Array.from(
-        new Set([...(safeArray(state.progress?.teacherUnlockedMatchupIds)), matchup.matchupId])
-      ),
-    });
-
-    await logBookBracketAdminAction({
+    await fnTeacherUnlockBookBracketMatchup({
       schoolId: state.schoolId,
       eventId: BOOK_BRACKET_EVENT_ID,
-      actionType: "teacher_unlock_matchup",
-      performedBy: state.userId,
-      performedByRole: state.role,
-      targetUserId: state.userId,
       matchupId: matchup.matchupId,
-      metadata: {
-        reason,
-      },
+      targetUserId: state.userId,
+      reason,
     });
 
     await refreshProgressFromFirestore();

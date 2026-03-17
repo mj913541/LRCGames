@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Prize Store | Readathon World V2</title>
+  <meta name="page-name" content="student-prize-store" />
+  <meta name="page-title" content="Prize Store" />
+  <meta name="page-subtitle" content="Use 20% of your donations as prize credit." />
+
+  <link rel="stylesheet" href="../css/prize-store.css" />
+</head>
+<body
+  class="rw-page rw-student-page rw-prize-store-page"
+  data-page="student-prize-store"
+  data-page-title="Prize Store"
+  data-page-subtitle="Use 20% of your donations as prize credit."
+>
+  <header class="rw-page-header" id="pageHeader">
+    <div class="rw-page-header__inner">
+      <div class="rw-page-header__copy">
+        <p class="rw-page-kicker">Readathon World V2</p>
+        <h1 class="rw-page-title" id="pageTitle">Prize Store</h1>
+        <p class="rw-page-subtitle" id="pageSubtitle">
+          Turn your donations into treasure-shop rewards.
+        </p>
+
+        <div class="rw-hero-chips" aria-label="How the prize store works">
+          <span class="rw-hero-chip">💰 Raise donations</span>
+          <span class="rw-hero-chip">⭐ Earn 20% as prize credit</span>
+          <span class="rw-hero-chip">🛍️ Redeem real prizes</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="rw-page-main" id="pageMain">
+    <section class="rw-info-banner" id="prizeCreditInfo">
+      <p>
+        <strong>How Prize Credit Works:</strong>
+        For every <strong>$1.00</strong> you raise in donations, you earn
+        <strong>$0.20</strong> in Prize Store credit.
+      </p>
+      <p>
+        Example:
+        if a prize costs <strong>$1.00</strong> in credit, you must raise at least
+        <strong>$5.00</strong> in donations to afford it.
+      </p>
+    </section>
+
+    <section class="rw-summary-grid" id="studentPrizeWalletSummary" aria-label="Prize credit summary">
+      <article class="rw-summary-card rw-summary-card--raised">
+        <span class="rw-summary-card__label">Total Raised</span>
+        <span class="rw-summary-card__value" id="donationsRaisedValue">$0.00</span>
+      </article>
+
+      <article class="rw-summary-card rw-summary-card--earned">
+        <span class="rw-summary-card__label">Credit Earned</span>
+        <span class="rw-summary-card__value" id="creditEarnedValue">$0.00</span>
+      </article>
+
+      <article class="rw-summary-card rw-summary-card--spent">
+        <span class="rw-summary-card__label">Credit Spent</span>
+        <span class="rw-summary-card__value" id="creditSpentValue">$0.00</span>
+      </article>
+
+      <article class="rw-summary-card rw-summary-card--remaining">
+        <span class="rw-summary-card__label">Credit Remaining</span>
+        <span class="rw-summary-card__value" id="creditRemainingValue">$0.00</span>
+      </article>
+    </section>
+
+    <section class="rw-shop-at-a-glance" id="shopAtAGlanceSection" aria-label="Store quick stats">
+      <article class="rw-spotlight-card">
+        <p class="rw-spotlight-card__eyebrow">Your Shopping Power</p>
+        <h2 class="rw-spotlight-card__title" id="shopSpotlightTitle">Let’s go treasure hunting!</h2>
+        <p class="rw-spotlight-card__text" id="shopSpotlightText">
+          We’re checking which prizes you can unlock right now.
+        </p>
+      </article>
+
+      <div class="rw-stat-pills">
+        <article class="rw-stat-pill">
+          <span class="rw-stat-pill__label">Can Buy Now</span>
+          <strong class="rw-stat-pill__value" id="canBuyNowCount">0</strong>
+        </article>
+
+        <article class="rw-stat-pill">
+          <span class="rw-stat-pill__label">Almost There</span>
+          <strong class="rw-stat-pill__value" id="almostThereCount">0</strong>
+        </article>
+
+        <article class="rw-stat-pill">
+          <span class="rw-stat-pill__label">Categories</span>
+          <strong class="rw-stat-pill__value" id="categoryCount">0</strong>
+        </article>
+      </div>
+    </section>
+
+    <section class="rw-toolbar-card" id="prizeStoreToolbar" aria-label="Prize store filters">
+      <div class="rw-toolbar-field">
+        <label for="categoryFilter" class="rw-toolbar-label">Category</label>
+        <select id="categoryFilter" class="rw-toolbar-input">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+
+      <div class="rw-toolbar-field">
+        <label for="prizeSearchInput" class="rw-toolbar-label">Search</label>
+        <input
+          id="prizeSearchInput"
+          class="rw-toolbar-input"
+          type="text"
+          placeholder="Search prizes..."
+        />
+      </div>
+    </section>
+
+    <section class="rw-quick-filters" id="quickFiltersSection" aria-label="Quick filters">
+      <button type="button" class="rw-chip-btn is-active" data-quick-filter="all">All Prizes</button>
+      <button type="button" class="rw-chip-btn" data-quick-filter="affordable">Can Buy Now</button>
+      <button type="button" class="rw-chip-btn" data-quick-filter="almost">Almost There</button>
+      <button type="button" class="rw-chip-btn" data-quick-filter="dream">Dream Prizes</button>
+    </section>
+
+    <section class="rw-section" id="progressSection">
+      <div class="rw-section-heading">
+        <h2 class="rw-section-title">Your Prize Progress</h2>
+        <p class="rw-section-subtitle">
+          See how close you are to your next exciting reward.
+        </p>
+      </div>
+
+      <div class="rw-progress-card" id="nextPrizeProgressCard">
+        <div class="rw-progress-card__top">
+          <div>
+            <p class="rw-progress-card__eyebrow">Next Prize Goal</p>
+            <h3 class="rw-progress-card__title" id="nextPrizeTitle">Next prize coming soon</h3>
+            <p class="rw-progress-card__subtitle" id="nextPrizeSubtitle">
+              Keep fundraising to unlock more prizes.
+            </p>
+          </div>
+
+          <div class="rw-progress-card__amounts">
+            <div class="rw-progress-card__amount">
+              <span class="rw-progress-card__amount-label">Raised So Far</span>
+              <strong id="nextPrizeRaisedValue">$0.00</strong>
+            </div>
+            <div class="rw-progress-card__amount">
+              <span class="rw-progress-card__amount-label">Needed For This Prize</span>
+              <strong id="nextPrizeNeededValue">$0.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="rw-progress-bar">
+          <div class="rw-progress-bar__fill" id="nextPrizeProgressFill" style="width: 0%;"></div>
+        </div>
+
+        <p class="rw-progress-card__footer" id="nextPrizeFooter">
+          Raise a little more to unlock your next prize.
+        </p>
+      </div>
+    </section>
+
+    <section class="rw-section" id="mysteryCratesSection">
+      <div class="rw-section-heading">
+        <h2 class="rw-section-title">Mystery Crates</h2>
+        <p class="rw-section-subtitle">
+          Surprise boxes packed with fun rewards and possible rare prizes.
+        </p>
+      </div>
+
+      <div class="rw-prize-grid" id="mysteryCrateGrid">
+        <!-- JS will render mystery crates here -->
+      </div>
+    </section>
+
+    <section class="rw-section" id="prizeStoreSection">
+      <div class="rw-section-heading">
+        <h2 class="rw-section-title">Treasure Shop Shelves</h2>
+        <p class="rw-section-subtitle" id="shopSectionSubtitle">
+          Browse every shelf and choose any prize you have enough credit to redeem.
+        </p>
+      </div>
+
+      <nav class="rw-shelf-jump-nav is-hidden" id="shelfJumpNav" aria-label="Jump to prize shelf"></nav>
+
+      <div class="rw-prize-grid rw-prize-grid--shelves" id="prizeGrid">
+        <!-- JS will render shelf sections here -->
+      </div>
+    </section>
+  </main>
+
+  <div class="rw-modal-backdrop is-hidden" id="redeemModal" aria-hidden="true">
+    <div class="rw-modal" role="dialog" aria-modal="true" aria-labelledby="redeemModalTitle">
+      <h2 class="rw-modal-title" id="redeemModalTitle">Redeem Prize</h2>
+
+      <div class="rw-modal-body" id="redeemModalBody">
+        <p id="redeemModalMessage">
+          Prize details will appear here.
+        </p>
+      </div>
+
+      <div class="rw-modal-actions">
+        <button type="button" class="rw-btn rw-btn-secondary" id="cancelRedeemBtn">
+          Cancel
+        </button>
+        <button type="button" class="rw-btn rw-btn-primary" id="confirmRedeemBtn">
+          Redeem Prize
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="rw-toast is-hidden" id="pageToast" aria-live="polite"></div>
+
+  <script type="module" src="../js/student-prize-store.js"></script>
+</body>
+</html>
