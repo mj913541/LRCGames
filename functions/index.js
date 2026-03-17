@@ -1109,7 +1109,7 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
   const schoolRoot = `readathonV2_schools/${schoolId}`;
   const userRef = db.doc(`${schoolRoot}/users/${uid}`);
   const prizeRef = db.doc(`${schoolRoot}/prizeCatalog/${prizeId}`);
-  const redemptionsCol = db.collection(`${schoolRoot}/prizeRedemptions`);
+  const redemptionsCol = db.collection(`${schoolRoot}/prizeOrders`);
 
   const CREDIT_RATE = 0.20;
 
@@ -1197,27 +1197,54 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
 
     const redemptionRef = redemptionsCol.doc();
 
-    tx.set(redemptionRef, {
-      userId: uid,
-      schoolId,
-      prizeId,
-      prizeName: String(prizeData.name || ""),
-      price,
-      minimumDonationsNeeded,
-      donationsTotalAtRedemption: donationsTotal,
-      prizeCreditEarnedAtRedemption: prizeCreditEarned,
-      prizeCreditSpentBeforeRedemption: prizeCreditSpent,
-      prizeCreditSpentAfterRedemption: nextPrizeCreditSpent,
-      prizeCreditRemainingAfterRedemption: Number(
-        Math.max(0, prizeCreditEarned - nextPrizeCreditSpent).toFixed(2)
-      ),
-      studentDisplayName: String(
-        userData.displayName || userData.name || userData.firstName || ""
-      ),
-      status: "pending",
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      requestedAt: admin.firestore.FieldValue.serverTimestamp(),
-    });
+const orderRef = db.collection(`${schoolRoot}/prizeOrders`).doc();
+
+tx.set(orderRef, {
+  // 🔑 identity
+  orderId: orderRef.id,
+  userId: uid,
+  schoolId,
+
+  // 👤 student info (snapshot for admin convenience)
+  studentDisplayName: String(
+    userData.displayName || userData.name || userData.firstName || ""
+  ),
+
+  // 🎁 prize info (snapshot so it never breaks later)
+  prizeId,
+  prizeName: String(prizeData.name || ""),
+  category: String(prizeData.category || ""),
+  image: String(prizeData.image || ""),
+
+  // 💰 pricing snapshot
+  price,
+  minimumDonationsNeeded,
+
+  // 📊 financial snapshot (CRITICAL for audits)
+  donationsTotalAtRedemption: donationsTotal,
+  prizeCreditEarnedAtRedemption: prizeCreditEarned,
+  prizeCreditSpentBeforeRedemption: prizeCreditSpent,
+  prizeCreditSpentAfterRedemption: nextPrizeCreditSpent,
+  prizeCreditRemainingAfterRedemption: Number(
+    Math.max(0, prizeCreditEarned - nextPrizeCreditSpent).toFixed(2)
+  ),
+
+  // 📦 fulfillment lifecycle
+  status: "reserved", // 🔥 CHANGED
+  fulfillmentStatus: "pending",
+
+  // 🧾 audit trail
+  createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  requestedAt: admin.firestore.FieldValue.serverTimestamp(),
+  updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+
+  // 👩‍🏫 admin actions (filled later)
+  fulfilledAt: null,
+  fulfilledBy: null,
+  deliveredAt: null,
+  cancelledAt: null,
+  cancelReason: null,
+});
 
     return {
       ok: true,
