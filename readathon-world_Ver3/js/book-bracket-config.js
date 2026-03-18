@@ -117,7 +117,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 2,
     title: "The Couch Potato",
     author: "Jory John",
-    coverImage: "./img/book-bracket/the-couch-potato.jpg",
+    coverImage: "../img/book-bracket/the-couch-potato.jpg",
     youtubeVideoId: "qfwF75e4BYc",
     youtubeUrl: "https://youtu.be/qfwF75e4BYc",
     isActive: true
@@ -130,7 +130,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 3,
     title: "The Sour Grape",
     author: "Jory John",
-    coverImage: "/img/book-bracket/the-sour-grape.jpg",
+    coverImage: "../img/book-bracket/the-sour-grape.jpg",
     youtubeVideoId: "QZn1SCPtOw4",
     youtubeUrl: "https://youtu.be/QZn1SCPtOw4",
     isActive: true
@@ -143,7 +143,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 4,
     title: "The Big Cheese",
     author: "Jory John",
-    coverImage: "/img/book-bracket/the-big-cheese.jpg",
+    coverImage: "../img/book-bracket/the-big-cheese.jpg",
     youtubeVideoId: "8X0x7mqwJiU",
     youtubeUrl: "https://youtu.be/8X0x7mqwJiU",
     isActive: true
@@ -160,7 +160,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 1,
     title: "We Don't Eat Our Classmates",
     author: "Ryan T. Higgins",
-    coverImage: "/img/book-bracket/we-dont-eat-our-classmates.jpg",
+    coverImage: "../img/book-bracket/we-dont-eat-our-classmates.jpg",
     youtubeVideoId: "th6exRnPixg",
     youtubeUrl: "https://youtu.be/th6exRnPixg",
     isActive: true
@@ -173,7 +173,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 2,
     title: "Knight Owl",
     author: "Christopher Denise",
-    coverImage: "/img/book-bracket/knight-owl.jpg",
+    coverImage: "../img/book-bracket/knight-owl.jpg",
     youtubeVideoId: "503VhkZAEfw",
     youtubeUrl: "https://youtu.be/503VhkZAEfw",
     isActive: true
@@ -186,7 +186,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 3,
     title: "Dragons Love Tacos",
     author: "Adam Rubin",
-    coverImage: "/img/book-bracket/dragons-love-tacos.jpg",
+    coverImage: "../img/book-bracket/dragons-love-tacos.jpg",
     youtubeVideoId: "JYy9gbv44QE",
     youtubeUrl: "https://youtu.be/JYy9gbv44QE",
     isActive: true
@@ -199,7 +199,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 4,
     title: "How to Catch a Snowman",
     author: "Adam Wallace",
-    coverImage: "/img/book-bracket/how-to-catch-a-snowman.jpg",
+    coverImage: "../img/book-bracket/how-to-catch-a-snowman.jpg",
     youtubeVideoId: "Xtd-mTRcu7U",
     youtubeUrl: "https://youtu.be/Xtd-mTRcu7U",
     isActive: true
@@ -216,7 +216,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 1,
     title: "The Gym Teacher from the Black Lagoon",
     author: "Mike Thaler",
-    coverImage: "/img/book-bracket/gym-teacher-black-lagoon.jpg",
+    coverImage: "../img/book-bracket/gym-teacher-black-lagoon.jpg",
     youtubeVideoId: "AR9oL1YfpRU",
     youtubeUrl: "https://youtu.be/AR9oL1YfpRU",
     isActive: true
@@ -229,7 +229,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 2,
     title: "The Music Teacher from the Black Lagoon",
     author: "Mike Thaler",
-    coverImage: "/img/book-bracket/music-teacher-black-lagoon.jpg",
+    coverImage: "../img/book-bracket/music-teacher-black-lagoon.jpg",
     youtubeVideoId: "7-s0hcwQOaE",
     youtubeUrl: "https://youtu.be/7-s0hcwQOaE",
     isActive: true
@@ -242,7 +242,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 3,
     title: "The Librarian from the Black Lagoon",
     author: "Mike Thaler",
-    coverImage: "/img/book-bracket/librarian-black-lagoon.jpg",
+    coverImage: "../img/book-bracket/librarian-black-lagoon.jpg",
     youtubeVideoId: "ZOZ7ExGHsCw",
     youtubeUrl: "https://youtu.be/ZOZ7ExGHsCw",
     isActive: true
@@ -255,7 +255,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 4,
     title: "The Class Pet from the Black Lagoon",
     author: "Mike Thaler",
-    coverImage: "/img/book-bracket/class-pet-black-lagoon.jpg",
+    coverImage: "../img/book-bracket/class-pet-black-lagoon.jpg",
     youtubeVideoId: "r54lszFx_8g",
     youtubeUrl: "https://youtu.be/r54lszFx_8g",
     isActive: true
@@ -272,7 +272,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 1,
     title: "Pig the Star",
     author: "Aaron Blabey",
-    coverImage: "/img/book-bracket/pig-the-star.jpg",
+    coverImage: "../img/book-bracket/pig-the-star.jpg",
     youtubeVideoId: "Ic_Ar31iFwA",
     youtubeUrl: "https://youtu.be/Ic_Ar31iFwA",
     isActive: true
@@ -285,7 +285,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 2,
     title: "Pig the Stinker",
     author: "Aaron Blabey",
-    coverImage: "/img/book-bracket/pig-the-stinker.jpg",
+    coverImage: "../img/book-bracket/pig-the-stinker.jpg",
     youtubeVideoId: "OSaC4JBsOjE",
     youtubeUrl: "https://youtu.be/OSaC4JBsOjE",
     isActive: true
@@ -298,7 +298,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 3,
     title: "Pig the Winner",
     author: "Aaron Blabey",
-    coverImage: "/img/book-bracket/pig-the-winner.jpg",
+    coverImage: "../img/book-bracket/pig-the-winner.jpg",
     youtubeVideoId: "7Zhzv3RfqGM",
     youtubeUrl: "https://youtu.be/7Zhzv3RfqGM",
     isActive: true
@@ -311,7 +311,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 4,
     title: "Pig the Slob",
     author: "Aaron Blabey",
-    coverImage: "/img/book-bracket/pig-the-slob.jpg",
+    coverImage: "../img/book-bracket/pig-the-slob.jpg",
     youtubeVideoId: "S5UA0LajxOE",
     youtubeUrl: "https://youtu.be/S5UA0LajxOE",
     isActive: true
