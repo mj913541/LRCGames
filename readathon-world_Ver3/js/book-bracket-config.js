@@ -104,7 +104,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 1,
     title: "The Smart Cookie",
     author: "Jory John",
-    coverImage: "/img/book-bracket/the-smart-cookie.jpg",
+    coverImage: "../img/book-bracket/the-smart-cookie.jpg",
     youtubeVideoId: "LJq-7-wycqY",
     youtubeUrl: "https://youtu.be/LJq-7-wycqY",
     isActive: true
@@ -117,7 +117,7 @@ export const BOOK_BRACKET_BOOKS = [
     sortOrder: 2,
     title: "The Couch Potato",
     author: "Jory John",
-    coverImage: "/img/book-bracket/the-couch-potato.jpg",
+    coverImage: "./img/book-bracket/the-couch-potato.jpg",
     youtubeVideoId: "qfwF75e4BYc",
     youtubeUrl: "https://youtu.be/qfwF75e4BYc",
     isActive: true
