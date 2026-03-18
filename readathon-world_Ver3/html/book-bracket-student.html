@@ -2,23 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
-  />
-  <title>Book Madness 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Book Madness</title>
 
   <link rel="stylesheet" href="../css/book-bracket.css" />
 </head>
+
 <body class="bbPage">
 
-  <!-- REQUIRED shared JS hooks -->
-  <header class="bbHiddenHeader" aria-hidden="true">
-    <h1 id="pageTitle">Book Madness 2026</h1>
-    <p id="pageSubtitle">Listen to both books, then vote for your favorite.</p>
-  </header>
-
-  <!-- Loading -->
+  <!-- =========================
+       LOADING
+  ========================== -->
   <div id="loadingOverlay" class="bbLoadingOverlay isHidden">
     <div class="bbLoadingCard">
       <div class="bbSpinner"></div>
@@ -26,183 +20,128 @@
     </div>
   </div>
 
+  <!-- =========================
+       REQUIRED HEADER (IMPORTANT)
+  ========================== -->
+  <header style="display:none;">
+    <h1 id="pageTitle">Book Madness</h1>
+    <p id="pageSubtitle">Listen, vote, and advance!</p>
+  </header>
+
   <main class="bbShell">
 
-    <!-- HERO -->
+    <!-- =========================
+         HERO
+    ========================== -->
     <section class="bbHero">
-      <div class="bbHeroText">
-        <div class="bbEyebrow">Read • Listen • Vote</div>
+      <div>
         <h2 id="bbEventTitle">Book Madness 2026</h2>
-        <p id="bbEventSubtitle">Listen carefully, then cast your vote!</p>
+        <p id="bbEventSubtitle">Listen and Vote!</p>
       </div>
 
       <div class="bbHeroChips">
-        <div id="bbRoundBadge" class="bbBadge bbBadgeRound">Sweet 16</div>
-        <div id="bbRegionBadge" class="bbBadge">Food & Funny</div>
-        <div id="bbMatchupCounter" class="bbBadge">Matchup 1 of 8</div>
+        <div id="bbRoundLabel" class="bbBadge bbBadgeRound">
+          Round
+        </div>
       </div>
     </section>
 
-    <!-- ERROR -->
-    <section id="bookBracketError" class="bbError" style="display:none;"></section>
+    <!-- =========================
+         ERROR
+    ========================== -->
+    <section
+      id="bookBracketError"
+      class="bbMatchupPanel"
+      style="display:none; border:2px solid #d9534f;"
+    ></section>
 
-    <!-- MATCHUP -->
+    <!-- =========================
+         MATCHUP CARD
+    ========================== -->
     <section class="bbMatchupPanel">
-      <div class="bbPanelHeader">
-        <div class="bbPanelHeaderMain">
-          <h3 id="bbMatchupTitle">Book A vs Book B</h3>
-          <p id="bbMatchupSubtext">0/8 matchups completed this round</p>
-        </div>
 
-        <div class="bbPanelMeta">
-          <div id="bbProgressText" class="bbPanelNote">
-            Round progress: 0/8 completed
-          </div>
-          <div id="bbVoteUnlockText" class="bbPanelNote">
-            🔒 Finish both books to unlock voting.
-          </div>
-        </div>
-      </div>
+      <h3 id="bbMatchupTitle">Matchup</h3>
 
-      <div class="bbBracketGrid">
+      <div class="bbMatchupGrid">
 
         <!-- BOOK A -->
-        <article id="bbBookACard" class="bbBookCard">
-          <div class="bbBookTop">
-            <div id="bbBookASeed" class="bbSeedPill">Seed 1</div>
-            <div id="bbBookAStatus" class="bbStatusPill">Not started</div>
-          </div>
+        <div class="bbBookCard">
+          <img id="bbBookACover" class="bbBookCover" />
 
-          <div class="bbCoverWrap">
-            <img
-              id="bbBookACover"
-              class="bbCover"
-              src=""
-              alt="Book A cover"
-            />
-          </div>
+          <h4 id="bbBookATitle"></h4>
+          <p id="bbBookAAuthor"></p>
 
-          <div class="bbBookBody">
-            <h4 id="bbBookATitle">Book A</h4>
-            <p id="bbBookAAuthor">by Author</p>
-          </div>
+          <button id="bbListenABtn" class="bbBtn bbBtnSecondary">
+            ▶ Listen
+          </button>
 
-          <div class="bbCardActions">
-            <button id="bbListenABtn" class="bbBtn bbBtnPrimary" type="button">
-              Listen to Book A
-            </button>
-            <button id="bbChooseABtn" class="bbBtn bbBtnVote" type="button" disabled>
-              Vote for Book A
-            </button>
-          </div>
-        </article>
+          <button id="bbVoteABtn" class="bbBtn bbBtnPrimary" disabled>
+            Vote
+          </button>
 
-        <!-- VS -->
-        <div class="bbVsWrap" aria-hidden="true">
-          <div class="bbVsBubble">VS</div>
+          <div id="bbBookAStatus" class="bbStatus"></div>
         </div>
 
         <!-- BOOK B -->
-        <article id="bbBookBCard" class="bbBookCard">
-          <div class="bbBookTop">
-            <div id="bbBookBSeed" class="bbSeedPill">Seed 4</div>
-            <div id="bbBookBStatus" class="bbStatusPill">Not started</div>
-          </div>
+        <div class="bbBookCard">
+          <img id="bbBookBCover" class="bbBookCover" />
 
-          <div class="bbCoverWrap">
-            <img
-              id="bbBookBCover"
-              class="bbCover"
-              src=""
-              alt="Book B cover"
-            />
-          </div>
+          <h4 id="bbBookBTitle"></h4>
+          <p id="bbBookBAuthor"></p>
 
-          <div class="bbBookBody">
-            <h4 id="bbBookBTitle">Book B</h4>
-            <p id="bbBookBAuthor">by Author</p>
-          </div>
-
-          <div class="bbCardActions">
-            <button id="bbListenBBtn" class="bbBtn bbBtnPrimary" type="button">
-              Listen to Book B
-            </button>
-            <button id="bbChooseBBtn" class="bbBtn bbBtnVote" type="button" disabled>
-              Vote for Book B
-            </button>
-          </div>
-        </article>
-      </div>
-
-      <!-- TEACHER UNLOCK -->
-      <section id="bbTeacherUnlockWrap" class="bbTeacherPanel" style="display:none;">
-        <div class="bbTeacherText">
-          <strong>Teacher Override</strong>
-          <p>Use only if the student had a technical problem with the monitored player.</p>
-        </div>
-
-        <div class="bbTeacherActions">
-          <input
-            id="bbTeacherUnlockReason"
-            class="bbInput"
-            type="text"
-            placeholder="Reason for override"
-          />
-          <button id="bbTeacherUnlockBtn" class="bbBtn bbBtnWarn" type="button">
-            Unlock Voting for This Matchup
+          <button id="bbListenBBtn" class="bbBtn bbBtnSecondary">
+            ▶ Listen
           </button>
+
+          <button id="bbVoteBBtn" class="bbBtn bbBtnPrimary" disabled>
+            Vote
+          </button>
+
+          <div id="bbBookBStatus" class="bbStatus"></div>
         </div>
-      </section>
+
+      </div>
 
       <!-- NAV -->
       <div class="bbNavBar">
-        <button id="bbPrevBtn" class="bbBtn bbBtnSecondary" type="button">
+        <button id="bbPrevBtn" class="bbBtn bbBtnSecondary">
           ← Previous
         </button>
-        <button id="bbNextBtn" class="bbBtn bbBtnSecondary" type="button">
+
+        <button id="bbNextBtn" class="bbBtn bbBtnSecondary">
           Next →
         </button>
       </div>
+
     </section>
+
   </main>
 
-  <!-- PLAYER MODAL -->
-  <div id="bbPlayerModal" class="bbModal" style="display:none;">
-    <div class="bbModalBackdrop"></div>
+  <!-- =========================
+       PLAYER MODAL
+  ========================== -->
+  <div id="bbPlayerModal" class="bbModal isHidden">
+    <div class="bbModalContent">
 
-    <div
-      class="bbModalCard"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="bbPlayerModalTitle"
-    >
-      <div class="bbModalHeader">
-        <div>
-          <h3 id="bbPlayerModalTitle">Read Aloud</h3>
-          <p id="bbPlayerModalSubtitle">Round • Region</p>
-        </div>
+      <h3 id="bbPlayerModalTitle">Now Playing</h3>
+      <p id="bbPlayerModalSubtitle"></p>
 
-        <button
-          id="bbClosePlayerBtn"
-          class="bbIconBtn"
-          type="button"
-          aria-label="Close player"
-        >
-          ✕
-        </button>
-      </div>
+      <div id="bookBracketPlayer"></div>
 
-      <div class="bbPlayerWrap">
-        <div id="bookBracketPlayer" class="bbPlayerMount"></div>
-      </div>
+      <div id="bbPlayerStatus"></div>
+      <div id="bbPlayerProgressText"></div>
 
-      <div class="bbPlayerInfo">
-        <div id="bbPlayerStatus" class="bbPlayerStatus">Loading player...</div>
-        <div id="bbPlayerProgressText" class="bbPlayerProgressText"></div>
-      </div>
+      <button id="bbClosePlayerBtn" class="bbBtn bbBtnSecondary">
+        Close
+      </button>
+
     </div>
   </div>
 
+  <!-- =========================
+       SCRIPT
+  ========================== -->
   <script type="module" src="../js/book-bracket-student.js"></script>
+
 </body>
 </html>
