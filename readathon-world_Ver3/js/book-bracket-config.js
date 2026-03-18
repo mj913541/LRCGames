@@ -90,8 +90,6 @@ export const BOOK_BRACKET_REGION_ORDER = [
 
 /* =========================================================
    BOOKS
-   For now, keep covers + YouTube info here.
-   Later, these same values can be seeded into Firestore.
 ========================================================= */
 
 export const BOOK_BRACKET_BOOKS = [
@@ -99,55 +97,55 @@ export const BOOK_BRACKET_BOOKS = [
   // FOOD & FUNNY
   // ======================================================
   {
-    bookId: "food_01_dragons_love_tacos",
+    bookId: "food_01_the_smart_cookie",
     regionKey: "food",
     regionLabel: "Food & Funny",
     seed: 1,
     sortOrder: 1,
-    title: "Dragons Love Tacos",
-    author: "Adam Rubin",
-    coverImage: "/img/book-bracket/dragons-love-tacos.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "The Smart Cookie",
+    author: "Jory John",
+    coverImage: "/img/book-bracket/the-smart-cookie.jpg",
+    youtubeVideoId: "LJq-7-wycqY",
+    youtubeUrl: "https://youtu.be/LJq-7-wycqY",
     isActive: true
   },
   {
-    bookId: "food_02_the_bad_seed",
+    bookId: "food_02_the_couch_potato",
     regionKey: "food",
     regionLabel: "Food & Funny",
     seed: 2,
     sortOrder: 2,
-    title: "The Bad Seed",
+    title: "The Couch Potato",
     author: "Jory John",
-    coverImage: "/img/book-bracket/the-bad-seed.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    coverImage: "/img/book-bracket/the-couch-potato.jpg",
+    youtubeVideoId: "qfwF75e4BYc",
+    youtubeUrl: "https://youtu.be/qfwF75e4BYc",
     isActive: true
   },
   {
-    bookId: "food_03_the_good_egg",
+    bookId: "food_03_the_sour_grape",
     regionKey: "food",
     regionLabel: "Food & Funny",
     seed: 3,
     sortOrder: 3,
-    title: "The Good Egg",
+    title: "The Sour Grape",
     author: "Jory John",
-    coverImage: "/img/book-bracket/the-good-egg.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    coverImage: "/img/book-bracket/the-sour-grape.jpg",
+    youtubeVideoId: "QZn1SCPtOw4",
+    youtubeUrl: "https://youtu.be/QZn1SCPtOw4",
     isActive: true
   },
   {
-    bookId: "food_04_cloudy_with_a_chance_of_meatballs",
+    bookId: "food_04_the_big_cheese",
     regionKey: "food",
     regionLabel: "Food & Funny",
     seed: 4,
     sortOrder: 4,
-    title: "Cloudy with a Chance of Meatballs",
-    author: "Judi Barrett",
-    coverImage: "/img/book-bracket/cloudy-with-a-chance-of-meatballs.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "The Big Cheese",
+    author: "Jory John",
+    coverImage: "/img/book-bracket/the-big-cheese.jpg",
+    youtubeVideoId: "8X0x7mqwJiU",
+    youtubeUrl: "https://youtu.be/8X0x7mqwJiU",
     isActive: true
   },
 
@@ -163,47 +161,47 @@ export const BOOK_BRACKET_BOOKS = [
     title: "We Don't Eat Our Classmates",
     author: "Ryan T. Higgins",
     coverImage: "/img/book-bracket/we-dont-eat-our-classmates.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    youtubeVideoId: "th6exRnPixg",
+    youtubeUrl: "https://youtu.be/th6exRnPixg",
     isActive: true
   },
   {
-    bookId: "higgins_02_mother_bruce",
+    bookId: "higgins_02_knight_owl",
     regionKey: "higgins",
     regionLabel: "Higgins Hilarity",
     seed: 2,
     sortOrder: 2,
-    title: "Mother Bruce",
-    author: "Ryan T. Higgins",
-    coverImage: "/img/book-bracket/mother-bruce.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "Knight Owl",
+    author: "Christopher Denise",
+    coverImage: "/img/book-bracket/knight-owl.jpg",
+    youtubeVideoId: "503VhkZAEfw",
+    youtubeUrl: "https://youtu.be/503VhkZAEfw",
     isActive: true
   },
   {
-    bookId: "higgins_03_norman_didnt_do_it",
+    bookId: "higgins_03_dragons_love_tacos",
     regionKey: "higgins",
     regionLabel: "Higgins Hilarity",
     seed: 3,
     sortOrder: 3,
-    title: "Norman Didn't Do It! (Yes He Did)",
-    author: "Ryan T. Higgins",
-    coverImage: "/img/book-bracket/norman-didnt-do-it.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "Dragons Love Tacos",
+    author: "Adam Rubin",
+    coverImage: "/img/book-bracket/dragons-love-tacos.jpg",
+    youtubeVideoId: "JYy9gbv44QE",
+    youtubeUrl: "https://youtu.be/JYy9gbv44QE",
     isActive: true
   },
   {
-    bookId: "higgins_04_be_quiet",
+    bookId: "higgins_04_how_to_catch_a_snowman",
     regionKey: "higgins",
     regionLabel: "Higgins Hilarity",
     seed: 4,
     sortOrder: 4,
-    title: "Be Quiet!",
-    author: "Ryan T. Higgins",
-    coverImage: "/img/book-bracket/be-quiet.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "How to Catch a Snowman",
+    author: "Adam Wallace",
+    coverImage: "/img/book-bracket/how-to-catch-a-snowman.jpg",
+    youtubeVideoId: "Xtd-mTRcu7U",
+    youtubeUrl: "https://youtu.be/Xtd-mTRcu7U",
     isActive: true
   },
 
@@ -211,55 +209,55 @@ export const BOOK_BRACKET_BOOKS = [
   // KINDNESS & FEELINGS
   // ======================================================
   {
-    bookId: "feelings_01_the_day_you_begin",
+    bookId: "feelings_01_gym_teacher_black_lagoon",
     regionKey: "feelings",
     regionLabel: "Kindness & Feelings",
     seed: 1,
     sortOrder: 1,
-    title: "The Day You Begin",
-    author: "Jacqueline Woodson",
-    coverImage: "/img/book-bracket/the-day-you-begin.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "The Gym Teacher from the Black Lagoon",
+    author: "Mike Thaler",
+    coverImage: "/img/book-bracket/gym-teacher-black-lagoon.jpg",
+    youtubeVideoId: "AR9oL1YfpRU",
+    youtubeUrl: "https://youtu.be/AR9oL1YfpRU",
     isActive: true
   },
   {
-    bookId: "feelings_02_the_invisible_boy",
+    bookId: "feelings_02_music_teacher_black_lagoon",
     regionKey: "feelings",
     regionLabel: "Kindness & Feelings",
     seed: 2,
     sortOrder: 2,
-    title: "The Invisible Boy",
-    author: "Trudy Ludwig",
-    coverImage: "/img/book-bracket/the-invisible-boy.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "The Music Teacher from the Black Lagoon",
+    author: "Mike Thaler",
+    coverImage: "/img/book-bracket/music-teacher-black-lagoon.jpg",
+    youtubeVideoId: "7-s0hcwQOaE",
+    youtubeUrl: "https://youtu.be/7-s0hcwQOaE",
     isActive: true
   },
   {
-    bookId: "feelings_03_after_the_fall",
+    bookId: "feelings_03_librarian_black_lagoon",
     regionKey: "feelings",
     regionLabel: "Kindness & Feelings",
     seed: 3,
     sortOrder: 3,
-    title: "After the Fall",
-    author: "Dan Santat",
-    coverImage: "/img/book-bracket/after-the-fall.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "The Librarian from the Black Lagoon",
+    author: "Mike Thaler",
+    coverImage: "/img/book-bracket/librarian-black-lagoon.jpg",
+    youtubeVideoId: "ZOZ7ExGHsCw",
+    youtubeUrl: "https://youtu.be/ZOZ7ExGHsCw",
     isActive: true
   },
   {
-    bookId: "feelings_04_have_you_filled_a_bucket_today",
+    bookId: "feelings_04_class_pet_black_lagoon",
     regionKey: "feelings",
     regionLabel: "Kindness & Feelings",
     seed: 4,
     sortOrder: 4,
-    title: "Have You Filled a Bucket Today?",
-    author: "Carol McCloud",
-    coverImage: "/img/book-bracket/have-you-filled-a-bucket-today.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "The Class Pet from the Black Lagoon",
+    author: "Mike Thaler",
+    coverImage: "/img/book-bracket/class-pet-black-lagoon.jpg",
+    youtubeVideoId: "r54lszFx_8g",
+    youtubeUrl: "https://youtu.be/r54lszFx_8g",
     isActive: true
   },
 
@@ -267,55 +265,55 @@ export const BOOK_BRACKET_BOOKS = [
   // ANIMALS & ADVENTURE
   // ======================================================
   {
-    bookId: "animals_01_the_gruffalo",
+    bookId: "animals_01_pig_the_star",
     regionKey: "animals",
     regionLabel: "Animals & Adventure",
     seed: 1,
     sortOrder: 1,
-    title: "The Gruffalo",
-    author: "Julia Donaldson",
-    coverImage: "/img/book-bracket/the-gruffalo.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "Pig the Star",
+    author: "Aaron Blabey",
+    coverImage: "/img/book-bracket/pig-the-star.jpg",
+    youtubeVideoId: "Ic_Ar31iFwA",
+    youtubeUrl: "https://youtu.be/Ic_Ar31iFwA",
     isActive: true
   },
   {
-    bookId: "animals_02_dont_let_the_pigeon_drive_the_bus",
+    bookId: "animals_02_pig_the_stinker",
     regionKey: "animals",
     regionLabel: "Animals & Adventure",
     seed: 2,
     sortOrder: 2,
-    title: "Don't Let the Pigeon Drive the Bus!",
-    author: "Mo Willems",
-    coverImage: "/img/book-bracket/dont-let-the-pigeon-drive-the-bus.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "Pig the Stinker",
+    author: "Aaron Blabey",
+    coverImage: "/img/book-bracket/pig-the-stinker.jpg",
+    youtubeVideoId: "OSaC4JBsOjE",
+    youtubeUrl: "https://youtu.be/OSaC4JBsOjE",
     isActive: true
   },
   {
-    bookId: "animals_03_interrupting_chicken",
+    bookId: "animals_03_pig_the_winner",
     regionKey: "animals",
     regionLabel: "Animals & Adventure",
     seed: 3,
     sortOrder: 3,
-    title: "Interrupting Chicken",
-    author: "David Ezra Stein",
-    coverImage: "/img/book-bracket/interrupting-chicken.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "Pig the Winner",
+    author: "Aaron Blabey",
+    coverImage: "/img/book-bracket/pig-the-winner.jpg",
+    youtubeVideoId: "7Zhzv3RfqGM",
+    youtubeUrl: "https://youtu.be/7Zhzv3RfqGM",
     isActive: true
   },
   {
-    bookId: "animals_04_bear_came_along",
+    bookId: "animals_04_pig_the_slob",
     regionKey: "animals",
     regionLabel: "Animals & Adventure",
     seed: 4,
     sortOrder: 4,
-    title: "Bear Came Along",
-    author: "Richard T. Morris",
-    coverImage: "/img/book-bracket/bear-came-along.jpg",
-    youtubeVideoId: "",
-    youtubeUrl: "",
+    title: "Pig the Slob",
+    author: "Aaron Blabey",
+    coverImage: "/img/book-bracket/pig-the-slob.jpg",
+    youtubeVideoId: "S5UA0LajxOE",
+    youtubeUrl: "https://youtu.be/S5UA0LajxOE",
     isActive: true
   }
 ];
@@ -336,8 +334,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Food & Funny",
     matchupNumber: 1,
     sortOrder: 1,
-    bookAId: "food_01_dragons_love_tacos",
-    bookBId: "food_04_cloudy_with_a_chance_of_meatballs",
+    bookAId: "food_01_the_smart_cookie",
+    bookBId: "food_04_the_big_cheese",
     seedA: 1,
     seedB: 4,
     nextMatchupId: "r2_food_final",
@@ -351,8 +349,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Food & Funny",
     matchupNumber: 2,
     sortOrder: 2,
-    bookAId: "food_02_the_bad_seed",
-    bookBId: "food_03_the_good_egg",
+    bookAId: "food_02_the_couch_potato",
+    bookBId: "food_03_the_sour_grape",
     seedA: 2,
     seedB: 3,
     nextMatchupId: "r2_food_final",
@@ -367,7 +365,7 @@ export const BOOK_BRACKET_MATCHUPS = [
     matchupNumber: 1,
     sortOrder: 3,
     bookAId: "higgins_01_we_dont_eat_our_classmates",
-    bookBId: "higgins_04_be_quiet",
+    bookBId: "higgins_04_how_to_catch_a_snowman",
     seedA: 1,
     seedB: 4,
     nextMatchupId: "r2_higgins_final",
@@ -381,8 +379,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Higgins Hilarity",
     matchupNumber: 2,
     sortOrder: 4,
-    bookAId: "higgins_02_mother_bruce",
-    bookBId: "higgins_03_norman_didnt_do_it",
+    bookAId: "higgins_02_knight_owl",
+    bookBId: "higgins_03_dragons_love_tacos",
     seedA: 2,
     seedB: 3,
     nextMatchupId: "r2_higgins_final",
@@ -396,8 +394,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Kindness & Feelings",
     matchupNumber: 1,
     sortOrder: 5,
-    bookAId: "feelings_01_the_day_you_begin",
-    bookBId: "feelings_04_have_you_filled_a_bucket_today",
+    bookAId: "feelings_01_gym_teacher_black_lagoon",
+    bookBId: "feelings_04_class_pet_black_lagoon",
     seedA: 1,
     seedB: 4,
     nextMatchupId: "r2_feelings_final",
@@ -411,8 +409,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Kindness & Feelings",
     matchupNumber: 2,
     sortOrder: 6,
-    bookAId: "feelings_02_the_invisible_boy",
-    bookBId: "feelings_03_after_the_fall",
+    bookAId: "feelings_02_music_teacher_black_lagoon",
+    bookBId: "feelings_03_librarian_black_lagoon",
     seedA: 2,
     seedB: 3,
     nextMatchupId: "r2_feelings_final",
@@ -426,8 +424,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Animals & Adventure",
     matchupNumber: 1,
     sortOrder: 7,
-    bookAId: "animals_01_the_gruffalo",
-    bookBId: "animals_04_bear_came_along",
+    bookAId: "animals_01_pig_the_star",
+    bookBId: "animals_04_pig_the_slob",
     seedA: 1,
     seedB: 4,
     nextMatchupId: "r2_animals_final",
@@ -441,8 +439,8 @@ export const BOOK_BRACKET_MATCHUPS = [
     regionLabel: "Animals & Adventure",
     matchupNumber: 2,
     sortOrder: 8,
-    bookAId: "animals_02_dont_let_the_pigeon_drive_the_bus",
-    bookBId: "animals_03_interrupting_chicken",
+    bookAId: "animals_02_pig_the_stinker",
+    bookBId: "animals_03_pig_the_winner",
     seedA: 2,
     seedB: 3,
     nextMatchupId: "r2_animals_final",
@@ -631,19 +629,60 @@ export function createEmptyUserProgress({ schoolId = "", userId = "" } = {}) {
 ========================================================= */
 
 export function getBookById(bookId) {
-  return BOOK_BRACKET_BOOKS.find(book => book.bookId === bookId) || null;
+  return BOOK_BRACKET_BOOKS.find((book) => book.bookId === bookId) || null;
 }
 
 export function getMatchupById(matchupId) {
-  return BOOK_BRACKET_MATCHUPS.find(matchup => matchup.matchupId === matchupId) || null;
+  return BOOK_BRACKET_MATCHUPS.find((matchup) => matchup.matchupId === matchupId) || null;
 }
 
 export function getBooksByRegion(regionKey) {
-  return BOOK_BRACKET_BOOKS.filter(book => book.regionKey === regionKey)
+  return BOOK_BRACKET_BOOKS
+    .filter((book) => book.regionKey === regionKey)
     .sort((a, b) => a.seed - b.seed);
 }
 
 export function getRoundMatchups(roundNumber) {
-  return BOOK_BRACKET_MATCHUPS.filter(matchup => matchup.roundNumber === roundNumber)
+  return BOOK_BRACKET_MATCHUPS
+    .filter((matchup) => matchup.roundNumber === roundNumber)
     .sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+/* =========================================================
+   OPTIONAL VALIDATION HELPERS
+   Useful for debugging broken IDs during setup
+========================================================= */
+
+export function validateBookBracketConfig() {
+  const booksById = new Map(BOOK_BRACKET_BOOKS.map((book) => [book.bookId, book]));
+  const matchupIds = new Set(BOOK_BRACKET_MATCHUPS.map((matchup) => matchup.matchupId));
+
+  const errors = [];
+
+  for (const matchup of BOOK_BRACKET_MATCHUPS) {
+    if (matchup.bookAId && !booksById.has(matchup.bookAId)) {
+      errors.push(`Matchup ${matchup.matchupId} is missing bookAId: ${matchup.bookAId}`);
+    }
+
+    if (matchup.bookBId && !booksById.has(matchup.bookBId)) {
+      errors.push(`Matchup ${matchup.matchupId} is missing bookBId: ${matchup.bookBId}`);
+    }
+
+    if (matchup.sourceMatchupAId && !matchupIds.has(matchup.sourceMatchupAId)) {
+      errors.push(`Matchup ${matchup.matchupId} is missing sourceMatchupAId: ${matchup.sourceMatchupAId}`);
+    }
+
+    if (matchup.sourceMatchupBId && !matchupIds.has(matchup.sourceMatchupBId)) {
+      errors.push(`Matchup ${matchup.matchupId} is missing sourceMatchupBId: ${matchup.sourceMatchupBId}`);
+    }
+
+    if (matchup.nextMatchupId && !matchupIds.has(matchup.nextMatchupId)) {
+      errors.push(`Matchup ${matchup.matchupId} is missing nextMatchupId: ${matchup.nextMatchupId}`);
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 }
