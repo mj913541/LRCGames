@@ -23,6 +23,7 @@ import {
   fetchBookBracketEvent,
   fetchBookBracketMatchups,
   fetchBookBracketBooks,
+  seedEntireBookBracket,
 } from "./book-bracket-firebase.js";
 
 console.log("✅ LOADED book-bracket-admin.js");
@@ -39,6 +40,7 @@ const els = {
   adminSubtitle: document.getElementById("bbAdminSubtitle"),
   adminRound: document.getElementById("bbAdminRound"),
 
+  seedBtn: document.getElementById("bbSeedBtn"),
   advanceBtn: document.getElementById("bbAdvanceRoundBtn"),
   refreshBtn: document.getElementById("bbRefreshBtn"),
 
@@ -56,6 +58,10 @@ const state = {
 
 function setText(el, value) {
   if (el) el.textContent = value ?? "";
+}
+
+function setDisabled(el, disabled) {
+  if (el) el.disabled = !!disabled;
 }
 
 function showError(message) {
@@ -80,88 +86,180 @@ function applyPageHeader() {
 
 async function loadData() {
   state.event = await fetchBookBracketEvent(state.schoolId, BOOK_BRACKET_EVENT_ID);
+
+  if (!state.event) {
+    state.matchups = [];
+    state.books = [];
+    state.booksById = new Map();
+    return;
+  }
+
   state.matchups = await fetchBookBracketMatchups(state.schoolId, BOOK_BRACKET_EVENT_ID);
   state.books = await fetchBookBracketBooks(state.schoolId, BOOK_BRACKET_EVENT_ID);
 
   state.booksById = new Map(
-    state.books.map((b) => [b.bookId, b])
+    state.books.map((book) => [book.bookId, book])
   );
 }
 
-function render() {
-  const round = Number(state.event?.activeRound || 1);
+function buildMatchupCard(matchup) {
+  const bookA = state.booksById.get(matchup.bookAId);
+  const bookB = state.booksById.get(matchup.bookBId);
 
-  setText(els.adminTitle, state.event?.title || BOOK_BRACKET_EVENT_TITLE);
-  setText(els.adminSubtitle, "Admin Dashboard");
+  const card = document.createElement("div");
+  card.className = "bbPanelNote";
+
+  const winnerBookId = matchup.winnerBookId || null;
+  const winnerLabel =
+    winnerBookId === matchup.bookAId
+      ? `Winner: ${bookA?.title || "Book A"}`
+      : winnerBookId === matchup.bookBId
+        ? `Winner: ${bookB?.title || "Book B"}`
+        : "Winner: TBD";
+
+  card.innerHTML = `
+    <strong>${bookA?.title || "TBD"} vs ${bookB?.title || "TBD"}</strong><br/>
+    Votes A: ${Number(matchup.voteCountA || 0)} | Votes B: ${Number(matchup.voteCountB || 0)}<br/>
+    Status: ${matchup.status || "unknown"}<br/>
+    ${winnerLabel}
+  `;
+
+  return card;
+}
+
+function renderEmptyState(message) {
+  if (!els.matchupsWrap) return;
+  els.matchupsWrap.innerHTML = "";
+
+  const empty = document.createElement("div");
+  empty.className = "bbPanelNote";
+  empty.innerHTML = message;
+  els.matchupsWrap.appendChild(empty);
+}
+
+function render() {
+  if (!state.event) {
+    setText(els.adminTitle, "Book Madness Not Initialized");
+    setText(els.adminSubtitle, "Click 'Seed Book Bracket' to begin");
+    setText(els.adminRound, "-");
+
+    renderEmptyState(
+      `No event found yet. Click <strong>Seed Book Bracket</strong> to initialize the event, books, and matchups.`
+    );
+
+    setDisabled(els.advanceBtn, true);
+    return;
+  }
+
+  const round = Number(state.event.activeRound || 1);
+
+  setText(els.adminTitle, state.event.title || BOOK_BRACKET_EVENT_TITLE);
+  setText(els.adminSubtitle, `Admin Dashboard • Status: ${state.event.status || "draft"}`);
   setText(els.adminRound, BOOK_BRACKET_ROUNDS[round] || `Round ${round}`);
 
-  const roundMatchups = state.matchups.filter(
-    (m) => Number(m.roundNumber) === round
-  );
+  const roundMatchups = state.matchups
+    .filter((matchup) => Number(matchup.roundNumber) === round)
+    .sort((a, b) => Number(a.sortOrder || 0) - Number(b.sortOrder || 0));
 
   if (!els.matchupsWrap) return;
   els.matchupsWrap.innerHTML = "";
 
   if (!roundMatchups.length) {
-    const empty = document.createElement("div");
-    empty.className = "bbPanelNote";
-    empty.textContent = "No matchups found for the current round.";
-    els.matchupsWrap.appendChild(empty);
+    renderEmptyState("No matchups found for the current round.");
+    setDisabled(els.advanceBtn, false);
     return;
   }
 
-  roundMatchups.forEach((m) => {
-    const bookA = state.booksById.get(m.bookAId);
-    const bookB = state.booksById.get(m.bookBId);
-
-    const card = document.createElement("div");
-    card.className = "bbPanelNote";
-    card.innerHTML = `
-      <strong>${bookA?.title || "TBD"} vs ${bookB?.title || "TBD"}</strong><br/>
-      Votes A: ${Number(m.voteCountA || 0)} | Votes B: ${Number(m.voteCountB || 0)}<br/>
-      Status: ${m.status || "unknown"}
-    `;
-
-    els.matchupsWrap.appendChild(card);
+  roundMatchups.forEach((matchup) => {
+    els.matchupsWrap.appendChild(buildMatchupCard(matchup));
   });
+
+  setDisabled(els.advanceBtn, false);
+}
+
+async function refreshAndRender() {
+  await loadData();
+  render();
+}
+
+async function seedBracket() {
+  clearError();
+
+  try {
+    setDisabled(els.seedBtn, true);
+    setDisabled(els.refreshBtn, true);
+    setDisabled(els.advanceBtn, true);
+
+    showLoading(els.loadingOverlay, els.loadingText, "Seeding Book Madness...");
+
+    await seedEntireBookBracket(state.schoolId, {
+      actorUserId: state.userId,
+    });
+
+    await refreshAndRender();
+  } catch (err) {
+    console.error(err);
+    showError(normalizeError(err));
+  } finally {
+    setDisabled(els.seedBtn, false);
+    setDisabled(els.refreshBtn, false);
+    hideLoading(els.loadingOverlay);
+  }
 }
 
 async function advanceRound() {
   clearError();
 
   try {
-    els.advanceBtn.disabled = true;
+    setDisabled(els.advanceBtn, true);
+    setDisabled(els.seedBtn, true);
+    setDisabled(els.refreshBtn, true);
+
+    showLoading(els.loadingOverlay, els.loadingText, "Advancing round...");
 
     await fnAdvanceBookBracketRound({
       schoolId: state.schoolId,
       eventId: BOOK_BRACKET_EVENT_ID,
     });
 
-    await loadData();
-    render();
+    await refreshAndRender();
   } catch (err) {
+    console.error(err);
     showError(normalizeError(err));
   } finally {
-    els.advanceBtn.disabled = false;
+    setDisabled(els.advanceBtn, false);
+    setDisabled(els.seedBtn, false);
+    setDisabled(els.refreshBtn, false);
+    hideLoading(els.loadingOverlay);
+  }
+}
+
+async function refreshData() {
+  clearError();
+
+  try {
+    setDisabled(els.refreshBtn, true);
+    setDisabled(els.seedBtn, true);
+    setDisabled(els.advanceBtn, true);
+
+    showLoading(els.loadingOverlay, els.loadingText, "Refreshing Book Madness data...");
+
+    await refreshAndRender();
+  } catch (err) {
+    console.error(err);
+    showError(normalizeError(err));
+  } finally {
+    setDisabled(els.refreshBtn, false);
+    setDisabled(els.seedBtn, false);
+    setDisabled(els.advanceBtn, false);
+    hideLoading(els.loadingOverlay);
   }
 }
 
 function wireEvents() {
+  els.seedBtn?.addEventListener("click", seedBracket);
   els.advanceBtn?.addEventListener("click", advanceRound);
-
-  els.refreshBtn?.addEventListener("click", async () => {
-    clearError();
-
-    try {
-      els.refreshBtn.disabled = true;
-      await loadData();
-      render();
-    } catch (err) {
-      showError(normalizeError(err));
-    } finally {
-      els.refreshBtn.disabled = false;
-    }
-  });
+  els.refreshBtn?.addEventListener("click", refreshData);
 }
 
 async function init() {
@@ -171,7 +269,7 @@ async function init() {
   try {
     showLoading(els.loadingOverlay, els.loadingText, "Loading Book Madness Admin...");
 
-    const allowed = await requireRole(["admin", "staff"], {
+    const allowed = await requireRole(["admin"], {
       redirectTo: "./index.html",
     });
 
@@ -183,8 +281,7 @@ async function init() {
     if (!state.schoolId) throw new Error("Missing schoolId.");
     if (!state.userId) throw new Error("Missing userId.");
 
-    await loadData();
-    render();
+    await refreshAndRender();
     wireEvents();
   } catch (err) {
     console.error(err);
