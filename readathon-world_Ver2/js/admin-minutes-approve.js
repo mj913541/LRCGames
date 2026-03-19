@@ -69,6 +69,7 @@ let ctx = {
   rows: [],
   nameMapStudents: {},
   nameMapUsers: {},
+  roleMapUsers: {},
   collapsedStudents: new Set(),
 };
 
@@ -168,7 +169,10 @@ async function refreshPending() {
 
     ctx.rows = rows;
     ctx.nameMapStudents = await buildStudentNameMap(schoolId, rows);
-    ctx.nameMapUsers = await buildUserNameMap(schoolId, rows);
+
+    const userMeta = await buildUserMetaMap(schoolId, rows);
+    ctx.nameMapUsers = userMeta.nameMap;
+    ctx.roleMapUsers = userMeta.roleMap;
 
     syncCollapsedStateWithRows(rows);
     applyClientFilterAndRender();
@@ -285,31 +289,49 @@ function analyzeRows(rows) {
     const minutes = Number(tx.deltaMinutes || 0);
     const studentId = safeText(tx.targetUserId || "");
     const dateKey = safeText(tx.dateKey || "");
+    const submittedByUserId = safeText(tx.submittedByUserId || "");
+    const submitterRole = safeText(ctx.roleMapUsers?.[submittedByUserId] || "").toLowerCase();
+    const submittedByStaff = submitterRole === "staff";
     const sameDayCount = perStudentDateCounts.get(`${studentId}__${dateKey}`) || 0;
 
-    if (minutes > LARGE_MINUTES_THRESHOLD) {
-      flags.push({ code: "large_minutes", label: `Large Entry (${minutes} min)` });
-    }
-
-    if (sameDayCount >= MULTI_REQUEST_DAY_THRESHOLD) {
-      flags.push({ code: "multi_same_day", label: `${sameDayCount} Entries Same Day` });
-    }
-
-    const hasContext = Boolean(parsed.type || parsed.book || parsed.note || parsed.reflection || (tx.note || "").trim());
-    if (!hasContext) {
-      flags.push({ code: "missing_context", label: "No Note / Context" });
-    }
-
-    if (parsed.type === "Chapter Book") {
-      if (!parsed.book) {
-        flags.push({ code: "missing_book", label: "Chapter Book Missing Title" });
+    if (!submittedByStaff) {
+      if (minutes > LARGE_MINUTES_THRESHOLD) {
+        flags.push({ code: "large_minutes", label: `Large Entry (${minutes} min)` });
       }
-      if (!(parsed.pages && parsed.pagesRead !== "")) {
-        flags.push({ code: "missing_pages", label: "Chapter Book Missing Pages" });
+
+      if (sameDayCount >= MULTI_REQUEST_DAY_THRESHOLD) {
+        flags.push({ code: "multi_same_day", label: `${sameDayCount} Entries Same Day` });
+      }
+
+      const hasContext = Boolean(
+        parsed.type ||
+        parsed.book ||
+        parsed.note ||
+        parsed.reflection ||
+        (tx.note || "").trim()
+      );
+
+      if (!hasContext) {
+        flags.push({ code: "missing_context", label: "No Note / Context" });
+      }
+
+      if (parsed.type === "Chapter Book") {
+        if (!parsed.book) {
+          flags.push({ code: "missing_book", label: "Chapter Book Missing Title" });
+        }
+        if (!(parsed.pages && parsed.pagesRead !== "")) {
+          flags.push({ code: "missing_pages", label: "Chapter Book Missing Pages" });
+        }
       }
     }
 
-    return { tx, flags, parsed, sameDayCount };
+    return {
+      tx,
+      flags,
+      parsed,
+      sameDayCount,
+      submittedByStaff,
+    };
   });
 }
 
@@ -400,7 +422,7 @@ function renderPendingGrouped(analyzedRows, studentNameMap = {}, userNameMap = {
     body.setAttribute("data-student-body", studentId);
 
     for (const row of txs) {
-      const { tx, flags, parsed, sameDayCount } = row;
+      const { tx, flags, parsed, sameDayCount, submittedByStaff } = row;
       const div = document.createElement("div");
       div.className = "panel pendingChildRow";
 
@@ -432,7 +454,10 @@ function renderPendingGrouped(analyzedRows, studentNameMap = {}, userNameMap = {
 
             ${requesterId ? `<div class="pendingChildRow__id">${escapeHtml(requesterId)}</div>` : ""}
 
-            ${flags.length ? `<div class="pendingChildRow__meta" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">${flags.map((f) => `<span class="pendingPill">⚠ ${escapeHtml(f.label)}</span>`).join("")}</div>` : `<div class="pendingChildRow__meta" style="margin-top:8px;"><span class="pendingPill">✅ Safe-looking entry</span></div>`}
+            ${flags.length
+              ? `<div class="pendingChildRow__meta" style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">${flags.map((f) => `<span class="pendingPill">⚠ ${escapeHtml(f.label)}</span>`).join("")}</div>`
+              : `<div class="pendingChildRow__meta" style="margin-top:8px;"><span class="pendingPill">✅ ${submittedByStaff ? "Auto-safe (staff submitted)" : "Safe-looking entry"}</span></div>`
+            }
 
             ${detailBits.length ? `<div class="pendingChildRow__meta" style="margin-top:8px; display:block; line-height:1.5;">${detailBits.map((bit) => `<div>${escapeHtml(bit)}</div>`).join("")}</div>` : ""}
           </div>
@@ -644,9 +669,10 @@ async function buildStudentNameMap(schoolId, rows) {
   return map;
 }
 
-async function buildUserNameMap(schoolId, rows) {
+async function buildUserMetaMap(schoolId, rows) {
   const ids = Array.from(new Set(rows.map((r) => r.submittedByUserId).filter(Boolean)));
-  const map = {};
+  const nameMap = {};
+  const roleMap = {};
 
   await runPool(
     ids.map((id) => async () => {
@@ -655,15 +681,23 @@ async function buildUserNameMap(schoolId, rows) {
         const s = await getDoc(ref);
         const d = s.exists() ? s.data() : null;
 
-        map[id] = d?.displayName || d?.name || d?.fullName || d?.email || id;
+        nameMap[id] = d?.displayName || d?.name || d?.fullName || d?.email || id;
+
+        roleMap[id] = (
+          d?.role ||
+          d?.userType ||
+          d?.type ||
+          ""
+        ).toString().trim().toLowerCase();
       } catch {
-        map[id] = id;
+        nameMap[id] = id;
+        roleMap[id] = "";
       }
     }),
     15
   );
 
-  return map;
+  return { nameMap, roleMap };
 }
 
 function parseStructuredNote(note) {
