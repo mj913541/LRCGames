@@ -705,3 +705,73 @@ body {
     align-items: stretch;
   }
 }
+
+.btn-admin-assign {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.btn-admin-assign:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow: 0 10px 22px rgba(220, 38, 38, 0.4);
+}
+
+/* Admin Assign page */
+.assignGrid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 14px;
+}
+
+.assignCard {
+  padding: 14px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.08);
+}
+
+.assignRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.assignHint {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.assignActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.assignPreview {
+  display: grid;
+  gap: 10px;
+}
+
+.assignPreview__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.assignPreview__label {
+  color: var(--muted);
+  font-weight: 900;
+}
+
+@media (max-width: 900px) {
+  .assignGrid,
+  .assignRow {
+    grid-template-columns: 1fr;
+  }
+}
