@@ -12,17 +12,6 @@ function loadYouTubeIframeApi() {
   }
 
   youtubeApiPromise = new Promise((resolve, reject) => {
-    const existingScript = document.querySelector('script[data-book-bracket-youtube="true"]');
-
-    if (!existingScript) {
-      const script = document.createElement("script");
-      script.src = "https://www.youtube.com/iframe_api";
-      script.async = true;
-      script.dataset.bookBracketYoutube = "true";
-      script.onerror = () => reject(new Error("Failed to load YouTube Iframe API."));
-      document.head.appendChild(script);
-    }
-
     const priorReady = window.onYouTubeIframeAPIReady;
 
     window.onYouTubeIframeAPIReady = () => {
@@ -39,12 +28,20 @@ function loadYouTubeIframeApi() {
     let tries = 0;
     const timer = window.setInterval(() => {
       tries += 1;
+
       if (window.YT?.Player) {
         window.clearInterval(timer);
         resolve(window.YT);
-      } else if (tries > 200) {
+        return;
+      }
+
+      if (tries > 200) {
         window.clearInterval(timer);
-        reject(new Error("Timed out loading YouTube Iframe API."));
+        reject(
+          new Error(
+            "Timed out loading YouTube Iframe API. Make sure the page includes https://www.youtube.com/iframe_api before book-bracket-student.js."
+          )
+        );
       }
     }, 100);
   });
@@ -82,7 +79,7 @@ export async function mountBookBracketPlayer({
     throw new Error(`Player mount element not found: #${playerElementId}`);
   }
 
-  mountEl.innerHTML = "";
+  mountEl.replaceChildren();
 
   await loadYouTubeIframeApi();
 
@@ -197,6 +194,8 @@ export async function mountBookBracketPlayer({
           rel: 0,
           modestbranding: 1,
           playsinline: 1,
+          enablejsapi: 1,
+          origin: window.location.origin,
         },
         events: {
           onReady: (event) => {
@@ -209,14 +208,17 @@ export async function mountBookBracketPlayer({
               reject(err);
             }
           },
+
           onStateChange: (event) => {
             const stateCode = event.data;
 
             if (stateCode === window.YT.PlayerState.PLAYING) {
               isPlaybackActive = true;
+
               if (!durationSeconds && typeof player.getDuration === "function") {
                 durationSeconds = Number(player.getDuration() || 0);
               }
+
               startProgressTimer();
               emitStateChange();
               return;
@@ -238,7 +240,10 @@ export async function mountBookBracketPlayer({
                 durationSeconds = Number(player.getDuration() || 0);
               }
 
-              const maxTime = Math.floor(Number(player.getCurrentTime?.() || durationSeconds || 0));
+              const maxTime = Math.floor(
+                Number(player.getCurrentTime?.() || durationSeconds || 0)
+              );
+
               for (let s = 0; s <= maxTime; s += 1) {
                 seenSeconds.add(s);
               }
@@ -264,6 +269,7 @@ export async function mountBookBracketPlayer({
               emitStateChange();
             }
           },
+
           onError: (event) => {
             const err = new Error(`YouTube player error: ${event?.data ?? "unknown"}`);
             emitError(err);
@@ -296,7 +302,7 @@ export async function mountBookBracketPlayer({
       player = null;
 
       if (mountEl) {
-        mountEl.innerHTML = "";
+        mountEl.replaceChildren();
       }
     },
   };
