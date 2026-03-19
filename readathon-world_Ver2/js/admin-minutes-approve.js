@@ -291,7 +291,7 @@ function analyzeRows(rows) {
     const dateKey = safeText(tx.dateKey || "");
     const submittedByUserId = safeText(tx.submittedByUserId || "");
     const submitterRole = safeText(ctx.roleMapUsers?.[submittedByUserId] || "").toLowerCase();
-    const submittedByStaff = submitterRole === "staff";
+    const submittedByStaff = submitterRole === "staff" || submitterRole === "admin";
     const sameDayCount = perStudentDateCounts.get(`${studentId}__${dateKey}`) || 0;
 
     if (!submittedByStaff) {
