@@ -44,6 +44,7 @@ const els = {
 
   rubiesBalance: document.getElementById("rubiesBalance"),
   ownedCount: document.getElementById("ownedCount"),
+  collectionSummary: document.getElementById("collectionSummary"),
   shopSummary: document.getElementById("shopSummary"),
 
   shopGrid: document.getElementById("shopGrid"),
@@ -53,7 +54,9 @@ const els = {
   searchInput: document.getElementById("searchInput"),
   rarityFilter: document.getElementById("rarityFilter"),
   ownedFilter: document.getElementById("ownedFilter"),
+  collectionFilter: document.getElementById("collectionFilter"),
 };
+
 
 /* --------------------------------------------------
    State
@@ -69,14 +72,17 @@ const state = {
 
   catalog: [],
   ownedIds: new Set(),
+  collections: [],
 
   tab: "all",
   search: "",
   rarity: "all",
   ownedFilter: "all", // all | owned | unowned
+  collection: "all",
 
   busyBuyItemId: null,
 };
+
 
 /* --------------------------------------------------
    Init
@@ -168,7 +174,15 @@ function wireFilters() {
       renderGrid();
     });
   }
+
+  if (els.collectionFilter) {
+    els.collectionFilter.addEventListener("change", () => {
+      state.collection = String(els.collectionFilter.value || "all").trim().toLowerCase();
+      renderGrid();
+    });
+  }
 }
+
 
 /* --------------------------------------------------
    Data Loads
@@ -201,7 +215,9 @@ async function loadAllData() {
   );
 
   state.catalog = catalogItems;
+  state.collections = buildCollectionList(catalogItems);
 }
+
 
 async function safeLoadInventory({ schoolId, userId }) {
   try {
@@ -295,29 +311,57 @@ function normalizeCatalogItem(id, raw = {}) {
   const group = normalizeGroup(slotRaw, subslotRaw, raw);
   const wearableClass = normalizeWearableClass(slotRaw, subslotRaw, raw);
 
-  return {
-    id,
-    name,
-    imageUrl,
-    thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
-    slotRaw,
-    subslotRaw,
-    group,
-    wearableClass,
+const collection = String(raw.collection || raw.set || raw.series || "")
+  .trim()
+  .toLowerCase();
 
-    active: raw.active === false ? false : raw.enabled === false ? false : true,
-    price: Number(raw.price ?? raw.cost ?? 0),
-    rarity: String(raw.rarity || "").trim().toLowerCase(),
-    sortOrder: Number(raw.sortOrder ?? raw.sort ?? raw.displayOrder ?? 9999),
-    layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
-    description: String(raw.description || raw.desc || "").trim(),
+const collectionItem = String(raw.collectionItem || raw.collectionKey || raw.element || "")
+  .trim()
+  .toLowerCase();
 
-    previewScale: Number(raw.previewScale ?? 1),
-    previewOffsetJson: raw.previewOffsetJson || "{}",
-    maxQty: Number(raw.maxQty ?? 1),
+const isNew =
+  raw.isNew === true ||
+  raw.new === true ||
+  String(raw.badge || "").trim().toLowerCase() === "new";
 
-    raw,
-  };
+const season = String(raw.season || raw.event || "")
+  .trim()
+  .toLowerCase();
+
+const seasonEnd = String(raw.seasonEnd || raw.eventEnd || "")
+  .trim();
+
+return {
+  id,
+  name,
+  imageUrl,
+  thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
+  slotRaw,
+  subslotRaw,
+  group,
+  wearableClass,
+
+  active: raw.active === false ? false : raw.enabled === false ? false : true,
+  price: Number(raw.price ?? raw.cost ?? 0),
+  rarity: String(raw.rarity || "").trim().toLowerCase(),
+  sortOrder: Number(raw.sortOrder ?? raw.sort ?? raw.displayOrder ?? 9999),
+  layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
+  description: String(raw.description || raw.desc || "").trim(),
+
+  collection,
+  collectionItem,
+  isNew,
+  season,
+  seasonEnd,
+
+  previewScale: Number(raw.previewScale ?? 1),
+  previewOffsetJson: raw.previewOffsetJson || "{}",
+  maxQty: Number(raw.maxQty ?? 1),
+
+  raw,
+};
+
+
 }
 
 function normalizeGroup(slot, subslot, raw = {}) {
@@ -367,14 +411,91 @@ function compareCatalogItems(a, b) {
   return a.name.localeCompare(b.name);
 }
 
+function buildCollectionList(items = []) {
+  const set = new Set();
+
+  items.forEach((item) => {
+    const value = String(item.collection || "").trim().toLowerCase();
+    if (value) set.add(value);
+  });
+
+  return Array.from(set).sort((a, b) => a.localeCompare(b));
+}
+
+function getCollectionProgress() {
+  return state.collections.map((collectionName) => {
+    const itemsInCollection = state.catalog.filter(
+      (item) => String(item.collection || "").trim().toLowerCase() === collectionName
+    );
+
+    const ownedCount = itemsInCollection.filter((item) => isOwned(item.id)).length;
+
+    return {
+      collection: collectionName,
+      ownedCount,
+      totalCount: itemsInCollection.length,
+      isComplete: itemsInCollection.length > 0 && ownedCount === itemsInCollection.length,
+    };
+  });
+}
+
+function renderCollectionSummary() {
+  if (!els.collectionSummary) return;
+
+  const progress = getCollectionProgress();
+
+  if (!progress.length) {
+    els.collectionSummary.innerHTML = `
+      <div class="shopCollectionEmpty">No collections yet</div>
+    `;
+    return;
+  }
+
+  els.collectionSummary.innerHTML = progress
+    .map((entry) => {
+      const icon = iconForCollection(entry.collection);
+      const name = titleCase(entry.collection);
+      const progressText = entry.isComplete
+        ? "Complete!"
+        : `${fmtInt(entry.ownedCount)}/${fmtInt(entry.totalCount)}`;
+
+      return `
+        <div class="shopCollectionLine ${entry.isComplete ? "isComplete" : ""}">
+          <span class="shopCollectionIcon" aria-hidden="true">${icon}</span>
+          <span class="shopCollectionName">${escapeHtml(name)}</span>
+          <span class="shopCollectionProgress">${escapeHtml(progressText)}</span>
+        </div>
+      `;
+    })
+    .join("");
+}
+
+
 /* --------------------------------------------------
    Rendering
 -------------------------------------------------- */
+function renderCollectionFilter() {
+  if (!els.collectionFilter) return;
+
+  const current = String(state.collection || "all").trim().toLowerCase();
+  const options = [
+    `<option value="all">All collections</option>`,
+    ...state.collections.map(
+      (name) =>
+        `<option value="${escapeHtml(name)}"${name === current ? " selected" : ""}>${escapeHtml(titleCase(name))}</option>`
+    ),
+  ];
+
+  els.collectionFilter.innerHTML = options.join("");
+}
 
 function renderAll() {
   renderTopSummary();
+  renderCollectionSummary();
+  renderCollectionFilter();
   renderGrid();
 }
+
 
 function renderTopSummary() {
   if (els.rubiesBalance) {
@@ -385,11 +506,15 @@ function renderTopSummary() {
     els.ownedCount.textContent = fmtInt(state.ownedIds.size);
   }
 
-  if (els.shopSummary) {
-    els.shopSummary.textContent =
-      `${fmtInt(state.catalog.length)} catalog item${state.catalog.length === 1 ? "" : "s"} • ` +
-      `${fmtInt(state.ownedIds.size)} owned`;
-  }
+if (els.shopSummary) {
+  const collectionCount = state.collections.length;
+
+  els.shopSummary.textContent =
+    `${fmtInt(state.catalog.length)} catalog item${state.catalog.length === 1 ? "" : "s"} • ` +
+    `${fmtInt(state.ownedIds.size)} owned • ` +
+    `${fmtInt(collectionCount)} collection${collectionCount === 1 ? "" : "s"}`;
+}
+
 }
 
 function renderGrid() {
@@ -456,7 +581,8 @@ function renderShopCard(item) {
           loading="lazy"
           decoding="async"
         >
-        ${item.rarity ? `<span class="shopBadge">${escapeHtml(titleCase(item.rarity))}</span>` : ""}
+        ${item.isNew ? `<span class="shopBadgeNew">NEW</span>` : ""}
+        ${item.rarity ? `<span class="shopBadge shopBadge-${escapeHtml(item.rarity)}">${escapeHtml(titleCase(item.rarity))}</span>` : ""}
       </div>
 
       <div class="shopCardBody">
@@ -500,9 +626,11 @@ function getFilteredItems() {
     if (!matchesSearch(item)) return false;
     if (!matchesRarity(item)) return false;
     if (!matchesOwnedFilter(item)) return false;
+    if (!matchesCollection(item)) return false;
     return true;
   });
 }
+
 
 function matchesTab(item) {
   if (state.tab === "all") return true;
@@ -517,14 +645,17 @@ function matchesTab(item) {
 function matchesSearch(item) {
   if (!state.search) return true;
 
-  const hay = [
-    item.id,
-    item.name,
-    item.group,
-    item.wearableClass,
-    item.rarity,
-    item.description,
-  ]
+const hay = [
+  item.id,
+  item.name,
+  item.group,
+  item.wearableClass,
+  item.rarity,
+  item.description,
+  item.collection,
+  item.collectionItem,
+]
+
     .filter(Boolean)
     .join(" ")
     .toLowerCase();
@@ -541,6 +672,11 @@ function matchesOwnedFilter(item) {
   if (state.ownedFilter === "owned") return isOwned(item.id);
   if (state.ownedFilter === "unowned") return !isOwned(item.id);
   return true;
+}
+
+function matchesCollection(item) {
+  if (!state.collection || state.collection === "all") return true;
+  return String(item.collection || "").trim().toLowerCase() === state.collection;
 }
 
 /* --------------------------------------------------
@@ -661,6 +797,22 @@ function titleCase(s) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
+
+function iconForCollection(collectionName) {
+  const key = String(collectionName || "").trim().toLowerCase();
+
+  if (key === "elementals") return "🔥";
+  if (key === "jungle") return "🌿";
+  if (key === "royal") return "👑";
+  if (key === "cosmic") return "✨";
+  if (key === "underwater") return "🌊";
+  if (key === "library") return "📚";
+  if (key === "spooky") return "🎃";
+  if (key === "spring") return "🌸";
+
+  return "⭐";
+}
+
 
 function normalizeErrorPurchase(err, item) {
   const raw =

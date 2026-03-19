@@ -22,6 +22,7 @@ import {
 
 import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
 import { renderLeaderboard } from "./leaderboard.js";
+import { mountPrizeAdminDashboard } from "./admin-prize-panel.js";
 
 const els = {
   btnSignOut: document.getElementById("btnSignOut"),
@@ -73,7 +74,7 @@ async function init() {
   });
 
   await renderLeaderboard("leaderboardMount");
-
+  await mountPrizeAdminDashboard({ mountEl: "#prizeAdminMount", schoolId, userId });
   hideLoading(els.loadingOverlay);
 }
 

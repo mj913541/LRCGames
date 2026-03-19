@@ -48,22 +48,28 @@
     <div id="errorBox" class="shopError" hidden></div>
 
     <!-- Summary Row -->
-    <section class="shopSummaryRow">
-      <article class="shopStatCard">
-        <div class="shopStatLabel">Rubies</div>
-        <div id="rubiesBalance" class="shopStatValue">0</div>
-      </article>
+<section class="shopSummaryRow">
+  <article class="shopStatCard">
+    <div class="shopStatLabel">Rubies</div>
+    <div id="rubiesBalance" class="shopStatValue">0</div>
+  </article>
 
-      <article class="shopStatCard">
-        <div class="shopStatLabel">Owned Items</div>
-        <div id="ownedCount" class="shopStatValue">0</div>
-      </article>
+  <article class="shopStatCard">
+    <div class="shopStatLabel">Owned Items</div>
+    <div id="ownedCount" class="shopStatValue">0</div>
+  </article>
 
-      <article class="shopStatCard shopStatCardWide">
-        <div class="shopStatLabel">Shop Summary</div>
-        <div id="shopSummary" class="shopStatValue shopStatValueSmall">Loading…</div>
-      </article>
-    </section>
+  <article class="shopStatCard">
+    <div class="shopStatLabel">Collections</div>
+    <div id="collectionSummary" class="shopCollectionSummary">Loading…</div>
+  </article>
+
+  <article class="shopStatCard shopStatCardWide">
+    <div class="shopStatLabel">Shop Summary</div>
+    <div id="shopSummary" class="shopStatValue shopStatValueSmall">Loading…</div>
+  </article>
+</section>
+
 
     <!-- Filters -->
     <section class="shopFiltersCard">
@@ -85,39 +91,48 @@
         <button class="shopTab" data-shop-tab="floor" type="button">Floor</button>
       </div>
 
-      <div class="shopFiltersGrid">
-        <label class="shopField">
-          <span class="shopFieldLabel">Search</span>
-          <input
-            id="searchInput"
-            class="shopInput"
-            type="search"
-            placeholder="Search by name, rarity, or type"
-            autocomplete="off"
-          />
-        </label>
+<div class="shopFiltersGrid">
+  <label class="shopField">
+    <span class="shopFieldLabel">Search</span>
+    <input
+      id="searchInput"
+      class="shopInput"
+      type="search"
+      placeholder="Search by name, rarity, type, or collection"
+      autocomplete="off"
+    />
+  </label>
 
-        <label class="shopField">
-          <span class="shopFieldLabel">Rarity</span>
-          <select id="rarityFilter" class="shopSelect">
-            <option value="all">All rarities</option>
-            <option value="common">Common</option>
-            <option value="uncommon">Uncommon</option>
-            <option value="rare">Rare</option>
-            <option value="epic">Epic</option>
-            <option value="legendary">Legendary</option>
-          </select>
-        </label>
+  <label class="shopField">
+    <span class="shopFieldLabel">Rarity</span>
+    <select id="rarityFilter" class="shopSelect">
+      <option value="all">All rarities</option>
+      <option value="common">Common</option>
+      <option value="uncommon">Uncommon</option>
+      <option value="rare">Rare</option>
+      <option value="epic">Epic</option>
+      <option value="legendary">Legendary</option>
+    </select>
+  </label>
 
-        <label class="shopField">
-          <span class="shopFieldLabel">Ownership</span>
-          <select id="ownedFilter" class="shopSelect">
-            <option value="all">All items</option>
-            <option value="owned">Owned only</option>
-            <option value="unowned">Not owned</option>
-          </select>
-        </label>
-      </div>
+  <label class="shopField">
+    <span class="shopFieldLabel">Ownership</span>
+    <select id="ownedFilter" class="shopSelect">
+      <option value="all">All items</option>
+      <option value="owned">Owned only</option>
+      <option value="unowned">Not owned</option>
+    </select>
+  </label>
+
+  <label class="shopField">
+    <span class="shopFieldLabel">Collection</span>
+    <select id="collectionFilter" class="shopSelect">
+      <option value="all">All collections</option>
+    </select>
+  </label>
+</div>
+
+
     </section>
 
     <!-- Shop Grid -->

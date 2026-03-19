@@ -73,6 +73,13 @@ export const fnAwardHomeroom = httpsCallable(functions, "awardHomeroom");
 export const fnApprovePendingMinutes = httpsCallable(functions, "approvePendingMinutes");
 export const fnBuyAvatarItem = httpsCallable(functions, "buyAvatarItem");
 export const fnRedeemPrizeCredit = httpsCallable(functions, "redeemPrizeCredit");
+export const fnFulfillPrizeOrder = httpsCallable(functions, "fulfillPrizeOrder");
+export const fnDeliverPrizeOrder = httpsCallable(functions, "deliverPrizeOrder");
+export const fnCancelPrizeOrder = httpsCallable(functions, "cancelPrizeOrder");
+export const fnCompleteBookBracketBook = httpsCallable(functions, "completeBookBracketBook");
+export const fnSubmitBookBracketVote = httpsCallable(functions, "submitBookBracketVote");
+export const fnTeacherUnlockBookBracketMatchup = httpsCallable(functions, "teacherUnlockBookBracketMatchup");
+export const fnAdvanceBookBracketRound = httpsCallable(functions, "advanceBookBracketRound");
 
 /* --------------------------------------------------
    School ID Helpers
@@ -377,15 +384,24 @@ export function buildDefaultMonarchSummary() {
   };
 }
 
-export function buildDefaultTaskProgress(taskId, type = MONARCH_TASK_TYPES.LISTEN) {
+export function buildDefaultTaskProgress(taskId, type = MONARCH_TASK_TYPES.LISTEN, nomineeIds = []) {
+  const cleanedNomineeIds = Array.isArray(nomineeIds) ? nomineeIds.filter(Boolean) : [];
+
+  const videoCompletionMap = {};
+  for (const nomineeId of cleanedNomineeIds) {
+    videoCompletionMap[nomineeId] = false;
+  }
+
   return {
     taskId,
     type,
-    status: MONARCH_TASK_STATUS.NOT_STARTED,
-    listenOpened: false,
-    listenCompleted: false,
+    nomineeIds: cleanedNomineeIds,
+    videoCompletionMap,
+    allVideosCompleted: false,
+    voteUnlocked: false,
     voteSubmitted: false,
     selectedNomineeId: null,
+    status: MONARCH_TASK_STATUS.NOT_STARTED,
     completedAt: null,
     updatedAt: serverTimestamp(),
   };
@@ -449,30 +465,12 @@ export async function fetchUserMonarchSummary(schoolId, userId) {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
-export async function ensureUserMonarchSummary(schoolId, userId) {
-  const ref = doc(db, userMonarchSummaryPath(schoolId, userId));
-  const snap = await getDoc(ref);
-
-  if (snap.exists()) {
-    return { id: snap.id, ...snap.data() };
-  }
-
-  const starter = buildDefaultMonarchSummary();
-  await setDoc(ref, starter, { merge: true });
-  return starter;
-}
-
-export async function fetchUserTaskProgress(schoolId, userId, taskId) {
-  const ref = doc(db, userMonarchTaskProgressPath(schoolId, userId, taskId));
-  const snap = await getDoc(ref);
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
-}
-
 export async function ensureUserTaskProgress(
   schoolId,
   userId,
   taskId,
-  type = MONARCH_TASK_TYPES.LISTEN
+  type = MONARCH_TASK_TYPES.LISTEN,
+  nomineeIds = []
 ) {
   const ref = doc(db, userMonarchTaskProgressPath(schoolId, userId, taskId));
   const snap = await getDoc(ref);
@@ -481,9 +479,15 @@ export async function ensureUserTaskProgress(
     return { id: snap.id, ...snap.data() };
   }
 
-  const starter = buildDefaultTaskProgress(taskId, type);
+  const starter = buildDefaultTaskProgress(taskId, type, nomineeIds);
   await setDoc(ref, starter, { merge: true });
   return starter;
+}
+
+export async function fetchUserTaskProgress(schoolId, userId, taskId) {
+  const ref = doc(db, userMonarchTaskProgressPath(schoolId, userId, taskId));
+  const snap = await getDoc(ref);
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 }
 
 export async function fetchUserVote(schoolId, userId, matchupId) {
@@ -556,10 +560,18 @@ export async function markTaskCompleted({
   schoolId,
   userId,
   taskId,
-  type = MONARCH_TASK_TYPES.LISTEN,
+  type = MONARCH_TASK_TYPES.MATCHUP,
+  nomineeIds = [],
   selectedNomineeId = null,
   voteSubmitted = false,
 }) {
+  const cleanedNomineeIds = Array.isArray(nomineeIds) ? nomineeIds.filter(Boolean) : [];
+  const completedMap = {};
+
+  for (const nomineeId of cleanedNomineeIds) {
+    completedMap[nomineeId] = true;
+  }
+
   const ref = doc(db, userMonarchTaskProgressPath(schoolId, userId, taskId));
 
   await setDoc(
@@ -567,11 +579,13 @@ export async function markTaskCompleted({
     {
       taskId,
       type,
-      status: MONARCH_TASK_STATUS.COMPLETED,
-      listenOpened: true,
-      listenCompleted: true,
+      nomineeIds: cleanedNomineeIds,
+      videoCompletionMap: completedMap,
+      allVideosCompleted: true,
+      voteUnlocked: true,
       voteSubmitted,
       selectedNomineeId,
+      status: MONARCH_TASK_STATUS.COMPLETED,
       completedAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     },
@@ -599,7 +613,62 @@ export async function touchMonarchTaskProgress({
     { merge: true }
   );
 }
+export async function markNomineeVideoCompleted({
+  schoolId,
+  userId,
+  taskId,
+  type = MONARCH_TASK_TYPES.MATCHUP,
+  nomineeIds = [],
+  completedNomineeId,
+}) {
+  const ref = doc(db, userMonarchTaskProgressPath(schoolId, userId, taskId));
+  const snap = await getDoc(ref);
 
+  const existing = snap.exists()
+    ? snap.data()
+    : buildDefaultTaskProgress(taskId, type, nomineeIds);
+
+  const cleanedNomineeIds = Array.isArray(nomineeIds) ? nomineeIds.filter(Boolean) : [];
+  const currentMap =
+    existing && typeof existing.videoCompletionMap === "object" && existing.videoCompletionMap
+      ? { ...existing.videoCompletionMap }
+      : {};
+
+  for (const nomineeId of cleanedNomineeIds) {
+    if (typeof currentMap[nomineeId] !== "boolean") {
+      currentMap[nomineeId] = false;
+    }
+  }
+
+  if (completedNomineeId && cleanedNomineeIds.includes(completedNomineeId)) {
+    currentMap[completedNomineeId] = true;
+  }
+
+  const allVideosCompleted =
+    cleanedNomineeIds.length >= 2 &&
+    cleanedNomineeIds.every((nomineeId) => currentMap[nomineeId] === true);
+
+  const nextStatus = allVideosCompleted
+    ? MONARCH_TASK_STATUS.IN_PROGRESS
+    : existing?.status === MONARCH_TASK_STATUS.COMPLETED
+      ? MONARCH_TASK_STATUS.COMPLETED
+      : MONARCH_TASK_STATUS.IN_PROGRESS;
+
+  await setDoc(
+    ref,
+    {
+      taskId,
+      type,
+      nomineeIds: cleanedNomineeIds,
+      videoCompletionMap: currentMap,
+      allVideosCompleted,
+      voteUnlocked: allVideosCompleted,
+      status: nextStatus,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+}
 /* --------------------------------------------------
    MONARCH WRITE: VOTES
 -------------------------------------------------- */

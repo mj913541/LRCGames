@@ -503,3 +503,559 @@ body.rw-page {
     align-items: flex-start;
   }
 }
+
+/* ========================================
+   PRIZE PROGRESS CARD
+======================================== */
+
+.rw-progress-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.rw-progress-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.rw-progress-card__eyebrow {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.rw-progress-card__title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.rw-progress-card__subtitle {
+  font-size: 14px;
+  color: #555;
+}
+
+.rw-progress-card__amounts {
+  display: flex;
+  gap: 20px;
+}
+
+.rw-progress-card__amount {
+  text-align: right;
+}
+
+.rw-progress-card__amount-label {
+  display: block;
+  font-size: 12px;
+  color: #888;
+}
+
+.rw-progress-card__amount strong {
+  font-size: 20px;
+  color: #2a6ef2;
+}
+
+/* ========================================
+   PROGRESS BAR
+======================================== */
+
+.rw-progress-bar {
+  width: 100%;
+  height: 14px;
+  border-radius: 8px;
+  background: #e6e6e6;
+  margin: 18px 0;
+  overflow: hidden;
+}
+
+.rw-progress-bar__fill {
+  height: 100%;
+  background: linear-gradient(90deg,#2a6ef2,#5da9ff);
+  transition: width 0.4s ease;
+}
+
+/* ========================================
+   PROGRESS FOOTER
+======================================== */
+
+.rw-progress-card__footer {
+  font-size: 14px;
+  color: #444;
+  text-align: center;
+}
+
+/* ========================================
+   MYSTERY CRATES
+======================================== */
+
+#mysteryCratesSection .rw-prize-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+  gap: 20px;
+}
+
+.rw-mystery-card {
+  background: linear-gradient(135deg,#7a3cff,#b368ff);
+  color: white;
+  border-radius: 14px;
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+}
+
+.rw-mystery-card h3 {
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+
+.rw-mystery-card p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.rw-mystery-card .rw-prize-cost {
+  margin-top: 10px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.rw-mystery-card button {
+  margin-top: 12px;
+  background: white;
+  color: #7a3cff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.rw-mystery-card button:hover {
+  opacity: 0.9;
+}
+
+
+/* ======================================================
+   TREASURE SHOP SHELVES
+====================================================== */
+
+.rw-prize-grid--shelves {
+  display: grid;
+  gap: 36px;
+}
+
+.rw-shelf-section {
+  position: relative;
+  padding: 22px 22px 32px;
+  border-radius: var(--rw-radius-xl);
+  background: linear-gradient(180deg,#fffdf7 0%,#fff7ea 100%);
+  border: 1px solid #eadfcf;
+  box-shadow: var(--rw-shadow);
+}
+
+/* shelf title */
+
+.rw-shelf-header {
+  margin-bottom: 12px;
+}
+
+.rw-shelf-header__eyebrow {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 700;
+  color: #9a7a45;
+}
+
+.rw-shelf-header__title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #5d3c15;
+  margin: 2px 0;
+}
+
+.rw-shelf-header__subtitle {
+  font-size: 14px;
+  color: #7b613d;
+}
+
+/* wooden shelf plank */
+
+.rw-shelf-plank {
+  height: 20px;
+  border-radius: 10px;
+  margin: 14px 0 22px;
+  background: linear-gradient(
+    180deg,
+    #a46b36 0%,
+    #8c5527 50%,
+    #6f3e13 100%
+  );
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,.2),
+    inset 0 -3px 0 rgba(0,0,0,.18),
+    0 8px 14px rgba(0,0,0,.15);
+}
+
+/* items sitting on shelf */
+
+.rw-shelf-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+  gap: 22px;
+}
+
+/* shelf shadow */
+
+.rw-shelf-shadow {
+  height: 16px;
+  margin-top: 14px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0,0,0,.25) 0%,
+    rgba(0,0,0,0) 70%
+  );
+}
+
+/* ======================================================
+   TREASURE BADGES
+====================================================== */
+
+.rw-prize-card__badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: linear-gradient(180deg,#ffe98f,#ffd84b);
+  color: #5b4100;
+  font-weight: 800;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.15);
+}
+
+.rw-prize-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 18px 32px rgba(0,0,0,.18),
+    0 0 0 3px rgba(255,216,90,.25);
+}
+/* ======================================================
+   ENGAGING STOREFRONT ENHANCEMENTS
+====================================================== */
+
+.rw-page-header__inner {
+  position: relative;
+  overflow: hidden;
+}
+
+.rw-page-header__inner::after {
+  content: "";
+  position: absolute;
+  inset: auto -60px -70px auto;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  filter: blur(2px);
+}
+
+.rw-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.rw-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.16);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  backdrop-filter: blur(4px);
+}
+
+.rw-summary-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.rw-summary-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -28px -28px auto;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  opacity: 0.12;
+}
+
+.rw-summary-card--raised::after { background: #6c4cff; }
+.rw-summary-card--earned::after { background: #16a34a; }
+.rw-summary-card--spent::after { background: #ff9f1c; }
+.rw-summary-card--remaining::after { background: #0ea5e9; }
+
+.rw-shop-at-a-glance {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(320px, 1fr);
+  gap: 18px;
+}
+
+.rw-spotlight-card,
+.rw-stat-pill {
+  background: #fff;
+  border: 1px solid var(--rw-line);
+  box-shadow: var(--rw-shadow);
+}
+
+.rw-spotlight-card {
+  border-radius: var(--rw-radius-xl);
+  padding: 22px 24px;
+  background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
+}
+
+.rw-spotlight-card__eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-weight: 800;
+  font-size: .78rem;
+  color: var(--rw-primary);
+}
+
+.rw-spotlight-card__title {
+  margin: 0 0 8px;
+  font-size: clamp(1.4rem, 2vw, 2rem);
+}
+
+.rw-spotlight-card__text {
+  margin: 0;
+  color: var(--rw-muted);
+  line-height: 1.5;
+}
+
+.rw-stat-pills {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.rw-stat-pill {
+  border-radius: var(--rw-radius-lg);
+  padding: 18px 16px;
+  text-align: center;
+}
+
+.rw-stat-pill__label {
+  display: block;
+  font-size: .82rem;
+  color: var(--rw-muted);
+  font-weight: 800;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.rw-stat-pill__value {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+}
+
+.rw-quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.rw-chip-btn {
+  appearance: none;
+  border: 1px solid #d8e3fa;
+  background: #fff;
+  color: var(--rw-text);
+  border-radius: 999px;
+  padding: 10px 15px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(43, 72, 124, 0.08);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+.rw-chip-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(43, 72, 124, 0.12);
+}
+
+.rw-chip-btn.is-active {
+  background: linear-gradient(135deg, var(--rw-primary) 0%, #8b5cf6 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.rw-shelf-jump-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.rw-shelf-jump-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  color: var(--rw-text);
+  background: #fff;
+  border: 1px solid #dde7f8;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  box-shadow: 0 8px 20px rgba(43, 72, 124, 0.08);
+}
+
+.rw-shelf-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.rw-shelf-count,
+.rw-shelf-hint {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-size: .82rem;
+  font-weight: 800;
+}
+
+.rw-shelf-count {
+  background: rgba(255,255,255,.7);
+  color: #6c4a1e;
+  border: 1px solid #ecd8b7;
+}
+
+.rw-shelf-hint {
+  background: #eef6ff;
+  color: #1d4ed8;
+  border: 1px solid #cfe0ff;
+}
+
+.rw-prize-card {
+  position: relative;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.rw-prize-card--affordable {
+  border-color: #bde6c8;
+  box-shadow: 0 14px 34px rgba(22, 163, 74, 0.12);
+}
+
+.rw-prize-card--almost {
+  border-color: #ffd38d;
+}
+
+.rw-prize-card--dream {
+  border-color: #d6c8ff;
+}
+
+.rw-prize-card__image-wrap {
+  position: relative;
+}
+
+.rw-prize-card__price-bubble {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  background: rgba(255,255,255,.92);
+  color: var(--rw-text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: .88rem;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(0,0,0,.12);
+}
+
+.rw-prize-card__helper {
+  margin-top: 2px;
+  background: #f8fbff;
+  border: 1px dashed #d8e6ff;
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-size: .9rem;
+  color: #31538b;
+  line-height: 1.45;
+}
+
+.rw-prize-card__status.is-open {
+  background: #eefaf2;
+  color: #166534;
+  border-color: #cdeed8;
+}
+
+.rw-prize-card__status.is-locked {
+  background: #fff7e8;
+  color: #8a5a00;
+  border-color: #ffe0a6;
+}
+
+.rw-mystery-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.rw-mystery-card::after {
+  content: "🎁";
+  position: absolute;
+  top: -6px;
+  right: 10px;
+  font-size: 44px;
+  opacity: .18;
+}
+
+@media (max-width: 1024px) {
+  .rw-shop-at-a-glance {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 860px) {
+  .rw-stat-pills {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .rw-hero-chips,
+  .rw-quick-filters,
+  .rw-shelf-jump-nav {
+    gap: 8px;
+  }
+
+  .rw-hero-chip,
+  .rw-chip-btn,
+  .rw-shelf-jump-link {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .rw-spotlight-card,
+  .rw-stat-pill {
+    padding: 18px;
+  }
+}
