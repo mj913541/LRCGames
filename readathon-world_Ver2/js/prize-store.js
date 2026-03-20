@@ -6,7 +6,7 @@ import {
   fetchStudentProfile,
   fetchAllPrizes,
   placePrizeOrder
-} from "./prize-store-firebase.js";
+} from "./firebase.js";
 
 /* ===============================
    ELEMENTS
