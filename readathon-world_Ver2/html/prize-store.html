@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Prize Store | Readathon World </title>
+  <title>Prize Store | Readathon World V2</title>
   <meta name="page-name" content="prize-store" />
   <meta name="data-title" content="Prize Store" />
   <meta name="data-subtitle" content="Use 20% of your donations as prize credit." />
@@ -21,8 +21,8 @@
     <div class="rw-page-header__inner">
       <div class="rw-page-header__copy">
         <p class="rw-page-kicker">Readathon World V2</p>
-        <h1 class="rw-page-title" id="data-title">Prize Store</h1>
-        <p class="rw-page-subtitle" id="data-subtitle">
+        <h1 class="rw-page-title" id="dataTitle" data-title>Prize Store</h1>
+        <p class="rw-page-subtitle" id="dataSubtitle" data-subtitle>
           Turn your donations into treasure-shop rewards.
         </p>
 
@@ -43,8 +43,7 @@
         <strong>$0.20</strong> in Prize Store credit.
       </p>
       <p>
-        Example:
-        if a prize costs <strong>$1.00</strong> in credit, you must raise at least
+        Example: if a prize costs <strong>$1.00</strong> in credit, you must raise at least
         <strong>$5.00</strong> in donations to afford it.
       </p>
     </section>
@@ -164,31 +163,25 @@
       </div>
     </section>
 
-    <section class="rw-section" id="mysteryCratesSection">
-      <div class="rw-section-heading">
-        <h2 class="rw-section-title">Mystery Crates</h2>
-        <p class="rw-section-subtitle">
-          Surprise boxes packed with fun rewards and possible rare prizes.
-        </p>
-      </div>
-
-      <div class="rw-prize-grid" id="mysteryCrateGrid">
-        <!-- JS will render mystery crates here -->
-      </div>
-    </section>
-
     <section class="rw-section" id="prizeStoreSection">
       <div class="rw-section-heading">
         <h2 class="rw-section-title">Treasure Shop Shelves</h2>
         <p class="rw-section-subtitle" id="shopSectionSubtitle">
-          Browse every shelf and choose any prize you have enough credit to redeem.
+          Swipe or tap the arrows to explore each fantasy jungle shelf.
         </p>
       </div>
 
       <nav class="rw-shelf-jump-nav is-hidden" id="shelfJumpNav" aria-label="Jump to prize shelf"></nav>
 
-      <div class="rw-prize-grid rw-prize-grid--shelves" id="prizeGrid">
-        <!-- JS will render shelf sections here -->
+      <div class="rw-shelf-stage" id="shelfStage">
+        <div class="rw-shelf-stage__overlay"></div>
+        <div class="rw-shelf-list" id="prizeGrid">
+          <!-- JS renders shelf carousels here -->
+        </div>
+      </div>
+
+      <div class="rw-empty-state is-hidden" id="prizeGridEmptyState">
+        No prizes match your search right now.
       </div>
     </section>
   </main>
