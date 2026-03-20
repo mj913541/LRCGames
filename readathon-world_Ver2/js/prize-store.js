@@ -1,4 +1,4 @@
-// /js/student-prize-store.js
+// /js/prize-store.js
 
 import {
   getCurrentUserId,
