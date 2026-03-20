@@ -21,8 +21,8 @@
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
         <div>
-          <h1 class="h1" id="dataTitle">Readathon World</h1>
-          <p class="sub" id="daataSubtitle">Admin Assign</p>
+          <h1 class="h1" id="dataTitle">Admin Assign</h1>
+          <p class="sub" id="dataSubtitle"></p>
         </div>
       </div>
 
@@ -79,55 +79,6 @@
             <div class="msg msg--ok isHidden" id="okBox" aria-live="polite"></div>
           </div>
         </section>
-      <!-- Quick roster submit -->
-      <section class="panel quickSubmit">
-        <h2 class="h2">Class Minutes</h2>
-        <p class="sub">
-          Pick a grade and homeroom, check who is present, enter minutes once, submit to selected students.
-        </p>
-
-        <div class="formBlock">
-          <div>
-            <div class="field__label">1) Pick Grade</div>
-            <div id="gradeButtons" class="chipRow"></div>
-          </div>
-
-          <div>
-            <div class="field__label">2) Pick Homeroom</div>
-            <div id="homeroomButtons" class="chipRow"></div>
-          </div>
-
-          <div class="rosterTop">
-            <div id="rosterMeta" class="sub" style="margin:0;">Pick a grade to load rosters.</div>
-            <div class="rosterBtns">
-              <button id="btnSelectAll" type="button" class="btnSmall btnSmall--primary">Select all</button>
-              <button id="btnClearAll" type="button" class="btnSmall">Clear all</button>
-            </div>
-          </div>
-
-          <div id="rosterList" class="rosterList"></div>
-
-          <div class="twoCol">
-            <div class="field">
-              <label class="field__label" for="quickMinutesInput">Minutes</label>
-              <input id="quickMinutesInput" class="input" type="number" min="0" step="1" value="0" />
-              <span class="hint">Pending minutes only.</span>
-            </div>
-
-            <div class="field">
-              <label class="field__label" for="quickNoteInput">Note (optional)</label>
-              <input id="quickNoteInput" class="input" type="text" placeholder="e.g., LRC specials block" />
-            </div>
-          </div>
-
-          <button id="btnQuickSubmit" class="btnPrimary" type="button">
-            Submit pending minutes to selected ✅
-          </button>
-
-          <div id="quickErrorBox" class="msg msg--error isHidden"></div>
-          <div id="quickOkBox" class="msg msg--ok isHidden"></div>
-        </div>
-      </section>
 
         <aside class="assignCard">
           <h2 class="h2">Preview</h2>
@@ -154,6 +105,87 @@
             </div>
           </div>
         </aside>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="assignCard">
+        <h2 class="h2">Group Assign</h2>
+        <p class="sub">
+          Select a grade, then a homeroom or house, choose students, and post direct assignments in bulk.
+        </p>
+
+        <div class="form">
+          <div class="field">
+            <span class="field__label">Choose Grade or Houses</span>
+            <div id="gradeButtons" class="chipRow" aria-label="Grade buttons"></div>
+          </div>
+
+          <div class="field">
+            <span class="field__label">Choose Homeroom or House</span>
+            <div id="homeroomButtons" class="chipRow" aria-label="Homeroom or house buttons"></div>
+          </div>
+
+          <div class="field">
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Roster</span>
+              <strong id="rosterMeta">Pick a grade or house to begin.</strong>
+            </div>
+          </div>
+
+          <div class="assignActions">
+            <button class="btnGhost" id="btnSelectAll" type="button">Select All</button>
+            <button class="btnGhost" id="btnClearAll" type="button">Clear All</button>
+          </div>
+
+          <div id="rosterList" class="rosterList" aria-live="polite"></div>
+
+          <div class="assignRow">
+            <label class="field">
+              <span class="field__label">Minutes</span>
+              <input class="input" id="quickMinutesInput" type="number" min="0" step="1" value="0" />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Rubies (+ or -)</span>
+              <input class="input" id="quickRubiesInput" type="number" step="1" value="0" />
+            </label>
+          </div>
+
+          <div class="assignRow">
+            <label class="field">
+              <span class="field__label">Money Raised ($)</span>
+              <input class="input" id="quickMoneyInput" type="number" min="0" step="0.01" value="0" />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Date</span>
+              <input class="input" id="quickDateInput" type="date" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field__label">Note</span>
+            <textarea
+              class="input"
+              id="quickNoteInput"
+              rows="4"
+              placeholder="Why are you assigning this group adjustment?"
+            ></textarea>
+          </label>
+
+          <div class="assignActions">
+            <button class="btnPrimary" id="btnQuickSubmit" type="button">Assign to Selected Students</button>
+            <button class="btnGhost" id="btnQuickReset" type="button">Reset Group Assign</button>
+          </div>
+
+          <div class="assignHint">
+            This posts directly for every selected student and skips pending approval.
+          </div>
+
+          <div class="msg msg--error isHidden" id="quickErrorBox" role="alert"></div>
+          <div class="msg msg--ok isHidden" id="quickOkBox" aria-live="polite"></div>
+        </div>
       </div>
     </section>
 

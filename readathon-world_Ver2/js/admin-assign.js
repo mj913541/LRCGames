@@ -28,8 +28,8 @@ const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
 
-  pageTitle: document.getElementById("pageTitle"),
-  pageSubtitle: document.getElementById("pageSubtitle"),
+  dataTitle: document.getElementById("dataTitle"),
+  dataSubtitle: document.getElementById("dataSubtitle"),
 
   // Existing direct admin assign fields
   targetUserIdInput: document.getElementById("targetUserIdInput"),
@@ -117,9 +117,9 @@ async function init() {
     subtitle: `${current.schoolId} • ${current.adminId}`,
   });
 
-  if (els.pageTitle) els.pageTitle.textContent = "Admin Assign";
-  if (els.pageSubtitle) {
-    els.pageSubtitle.textContent =
+  if (els.dataTitle) els.dataTitle.textContent = "Admin Assign";
+  if (els.dataSubtitle) {
+    els.dataSubtitle.textContent =
       "Direct admin posting for minutes, rubies, donations, and group awards.";
   }
 
