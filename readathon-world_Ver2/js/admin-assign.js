@@ -28,8 +28,8 @@ const els = {
   btnSignOut: document.getElementById("btnSignOut"),
   hdr: document.getElementById("hdr"),
 
-  dataTitle: document.getElementById("dataTitle"),
-  dataSubtitle: document.getElementById("dataSubtitle"),
+  dataTitle: document.getElementById("data-Title"),
+  dataSubtitle: document.getElementById("data-Subtitle"),
 
   // Existing direct admin assign fields
   targetUserIdInput: document.getElementById("targetUserIdInput"),
