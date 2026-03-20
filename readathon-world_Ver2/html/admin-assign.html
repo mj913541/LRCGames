@@ -21,8 +21,8 @@
     <section class="panel panel--hero" id="hdr">
       <div class="heroRow">
         <div>
-          <h1 class="h1" id="dataTitle">Admin Assign</h1>
-          <p class="sub" id="daataSubtitle"></p>
+          <h1 class="h1" id="dataTitle">Readathon World</h1>
+          <p class="sub" id="daataSubtitle">Admin Assign</p>
         </div>
       </div>
 
@@ -79,6 +79,55 @@
             <div class="msg msg--ok isHidden" id="okBox" aria-live="polite"></div>
           </div>
         </section>
+      <!-- Quick roster submit -->
+      <section class="panel quickSubmit">
+        <h2 class="h2">Class Minutes</h2>
+        <p class="sub">
+          Pick a grade and homeroom, check who is present, enter minutes once, submit to selected students.
+        </p>
+
+        <div class="formBlock">
+          <div>
+            <div class="field__label">1) Pick Grade</div>
+            <div id="gradeButtons" class="chipRow"></div>
+          </div>
+
+          <div>
+            <div class="field__label">2) Pick Homeroom</div>
+            <div id="homeroomButtons" class="chipRow"></div>
+          </div>
+
+          <div class="rosterTop">
+            <div id="rosterMeta" class="sub" style="margin:0;">Pick a grade to load rosters.</div>
+            <div class="rosterBtns">
+              <button id="btnSelectAll" type="button" class="btnSmall btnSmall--primary">Select all</button>
+              <button id="btnClearAll" type="button" class="btnSmall">Clear all</button>
+            </div>
+          </div>
+
+          <div id="rosterList" class="rosterList"></div>
+
+          <div class="twoCol">
+            <div class="field">
+              <label class="field__label" for="quickMinutesInput">Minutes</label>
+              <input id="quickMinutesInput" class="input" type="number" min="0" step="1" value="0" />
+              <span class="hint">Pending minutes only.</span>
+            </div>
+
+            <div class="field">
+              <label class="field__label" for="quickNoteInput">Note (optional)</label>
+              <input id="quickNoteInput" class="input" type="text" placeholder="e.g., LRC specials block" />
+            </div>
+          </div>
+
+          <button id="btnQuickSubmit" class="btnPrimary" type="button">
+            Submit pending minutes to selected ✅
+          </button>
+
+          <div id="quickErrorBox" class="msg msg--error isHidden"></div>
+          <div id="quickOkBox" class="msg msg--ok isHidden"></div>
+        </div>
+      </section>
 
         <aside class="assignCard">
           <h2 class="h2">Preview</h2>
