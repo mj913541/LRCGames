@@ -44,8 +44,8 @@ console.log("✅ LOADED book-bracket-student.js");
 ========================================================= */
 
 const els = {
-  pageTitle: document.getElementById("pageTitle"),
-  pageSubtitle: document.getElementById("pageSubtitle"),
+  dataTitle: document.getElementById("dataTitle"),
+  dataSubtitle: document.getElementById("dataSubtitle"),
 
   loadingOverlay: document.getElementById("loadingOverlay"),
   loadingText: document.getElementById("loadingText"),
@@ -205,8 +205,8 @@ function clearError() {
 ========================================================= */
 
 function applyBookBracketPageHeader() {
-  setText(els.pageTitle, BOOK_BRACKET_EVENT_TITLE);
-  setText(els.pageSubtitle, "Listen to both books, then vote for your favorite.");
+  setText(els.dataTitle, BOOK_BRACKET_EVENT_TITLE);
+  setText(els.dataSubtitle, "Listen to both books, then vote for your favorite.");
 }
 
 /* =========================================================

@@ -13,8 +13,8 @@ import {
 =============================== */
 
 const els = {
-  pageTitle: document.getElementById("pageTitle"),
-  pageSubtitle: document.getElementById("pageSubtitle"),
+  dataTitle: document.getElementById("dataTitle"),
+  dataSubtitle: document.getElementById("dataSubtitle"),
 
   balanceAmount: document.getElementById("psBalanceAmount"),
   raisedAmount: document.getElementById("psRaisedAmount"),

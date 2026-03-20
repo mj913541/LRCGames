@@ -29,8 +29,8 @@ import {
 console.log("✅ LOADED book-bracket-admin.js");
 
 const els = {
-  pageTitle: document.getElementById("pageTitle"),
-  pageSubtitle: document.getElementById("pageSubtitle"),
+  dataTitle: document.getElementById("dataTitle"),
+  dataSubtitle: document.getElementById("dataSubtitle"),
 
   loadingOverlay: document.getElementById("loadingOverlay"),
   loadingText: document.getElementById("loadingText"),
@@ -80,8 +80,8 @@ function clearError() {
 }
 
 function applyPageHeader() {
-  setText(els.pageTitle, "Book Madness Admin");
-  setText(els.pageSubtitle, "Manage rounds and view results");
+  setText(els.dataTitle, "Book Madness Admin");
+  setText(els.dataSubtitle, "Manage rounds and view results");
 }
 
 async function loadData() {

@@ -810,9 +810,9 @@ export function applyMonarchPageHeader({
   title = "Monarch Quest 2026",
   subtitle = "Listen, explore, vote, and unlock special rewards!",
 } = {}) {
-  const kickerEl = document.getElementById("pageKicker");
-  const titleEl = document.getElementById("pageTitle");
-  const subtitleEl = document.getElementById("pageSubtitle");
+  const kickerEl = document.getElementById("dataKicker");
+  const titleEl = document.getElementById("dataTitle");
+  const subtitleEl = document.getElementById("dataSubtitle");
 
   if (kickerEl) kickerEl.textContent = kicker;
   if (titleEl) titleEl.textContent = title;

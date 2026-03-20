@@ -27,8 +27,8 @@ import {
 ========================================================= */
 
 const els = {
-  pageTitle: document.getElementById("pageTitle"),
-  pageSubtitle: document.getElementById("pageSubtitle"),
+  dataTitle: document.getElementById("dataTitle"),
+  dataSubtitle: document.getElementById("dataSubtitle"),
 
   backBtn: document.getElementById("mqBackToBoardBtn"),
   taskStatusPill: document.getElementById("mqTaskStatusPill"),

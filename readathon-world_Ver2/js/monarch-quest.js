@@ -17,9 +17,9 @@ import {
 ========================================================= */
 
 const els = {
-  pageKicker: document.getElementById("pageKicker"),
-  pageTitle: document.getElementById("pageTitle"),
-  pageSubtitle: document.getElementById("pageSubtitle"),
+  dataKicker: document.getElementById("dataKicker"),
+  dataTitle: document.getElementById("dataTitle"),
+  dataSubtitle: document.getElementById("dataSubtitle"),
 
   completedCount: document.getElementById("mqCompletedCount"),
   requiredCount: document.getElementById("mqRequiredCount"),
