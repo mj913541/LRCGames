@@ -262,10 +262,10 @@
         ? Number(prize.donationsNeeded)
         : Number((price * 5).toFixed(2));
 
-    const stock =
-      prize.stock == null || prize.stock === ""
-        ? Infinity
-        : Number(prize.stock);
+const stock =
+  prize.stock == null || prize.stock === ""
+    ? Infinity
+    : Number(prize.stock);
 
     return {
       ...prize,
