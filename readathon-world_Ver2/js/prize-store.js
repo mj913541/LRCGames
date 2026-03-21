@@ -1,106 +1,111 @@
 // /js/prize-store.js
-// Front-end only jungle shelf prize store
-// Keeps backend redemption flow untouched.
-// Requires:
-// - #dataTitle and #dataSubtitle in header
-// - [data-title] and [data-subtitle] attributes present
-// - existing Firebase/app bootstrapping available globally
+// Prize Store - streamlined to match prize-store.html + prize-store.css
+// Uses:
+// - #dataTitle / #dataSubtitle
+// - [data-title] / [data-subtitle]
+// - #prizeGrid shelf renderer
+// - current rw-* CSS classes
+// Keeps backend redemption flow flexible by reusing existing global functions if present.
 
 (function () {
   "use strict";
 
   const state = {
-    schoolId: null,
-    userId: null,
-    userProfile: null,
+    schoolId: "",
+    userId: "",
+    userProfile: {},
     prizes: [],
     filteredPrizes: [],
     activeQuickFilter: "all",
     activeCategory: "all",
     activeSearch: "",
-    shelfOrder: ["shelf1", "shelf2", "shelf3", "shelf4"],
     redeemingPrize: null,
   };
 
+  const SHELVES = [
+    {
+      key: "shelf1",
+      label: "Quick Finds",
+      subtitle: "Easy wins to get your treasure hunt started.",
+      donationsLabel: "$5–$25 raised",
+      min: 0,
+      max: 4.99,
+      tone: "entry",
+    },
+    {
+      key: "shelf2",
+      label: "Explorer Gear",
+      subtitle: "Fun rewards for readers building momentum.",
+      donationsLabel: "$25–$75 raised",
+      min: 5,
+      max: 14.99,
+      tone: "growth",
+    },
+    {
+      key: "shelf3",
+      label: "Treasure Picks",
+      subtitle: "Bigger rewards for strong fundraising progress.",
+      donationsLabel: "$75–$250 raised",
+      min: 15,
+      max: 39.99,
+      tone: "motivation",
+    },
+    {
+      key: "shelf4",
+      label: "Dream Prizes",
+      subtitle: "Top-tier treasure for legendary fundraisers.",
+      donationsLabel: "$200+ raised",
+      min: 40,
+      max: Infinity,
+      tone: "legend",
+    },
+  ];
+
   const els = {
+    body: document.body,
+
     dataTitle: document.getElementById("dataTitle"),
     dataSubtitle: document.getElementById("dataSubtitle"),
 
-    balanceAmount: document.getElementById("psBalanceAmount"),
-    raisedAmount: document.getElementById("psRaisedAmount"),
-    spentAmount: document.getElementById("psSpentAmount"),
-    nextGoalText: document.getElementById("psNextGoalText"),
-    nextGoalFill: document.getElementById("psNextGoalFill"),
-    nextGoalHint: document.getElementById("psNextGoalHint"),
+    donationsRaisedValue: document.getElementById("donationsRaisedValue"),
+    creditEarnedValue: document.getElementById("creditEarnedValue"),
+    creditSpentValue: document.getElementById("creditSpentValue"),
+    creditRemainingValue: document.getElementById("creditRemainingValue"),
 
-    searchInput: document.getElementById("psSearchInput"),
-    categoryFilter: document.getElementById("psCategoryFilter"),
-    quickFilterButtons: Array.from(document.querySelectorAll(".psQuickFilter")),
-    shelfJumpButtons: Array.from(document.querySelectorAll(".psShelfJump")),
+    shopSpotlightTitle: document.getElementById("shopSpotlightTitle"),
+    shopSpotlightText: document.getElementById("shopSpotlightText"),
+    canBuyNowCount: document.getElementById("canBuyNowCount"),
+    almostThereCount: document.getElementById("almostThereCount"),
+    categoryCount: document.getElementById("categoryCount"),
 
-    shelf1Track: document.getElementById("psShelf1Track"),
-    shelf2Track: document.getElementById("psShelf2Track"),
-    shelf3Track: document.getElementById("psShelf3Track"),
-    shelf4Track: document.getElementById("psShelf4Track"),
+    categoryFilter: document.getElementById("categoryFilter"),
+    searchInput: document.getElementById("prizeSearchInput"),
+    quickFilterButtons: Array.from(document.querySelectorAll("[data-quick-filter]")),
 
-    shelf1Empty: document.getElementById("psShelf1Empty"),
-    shelf2Empty: document.getElementById("psShelf2Empty"),
-    shelf3Empty: document.getElementById("psShelf3Empty"),
-    shelf4Empty: document.getElementById("psShelf4Empty"),
+    nextPrizeTitle: document.getElementById("nextPrizeTitle"),
+    nextPrizeSubtitle: document.getElementById("nextPrizeSubtitle"),
+    nextPrizeRaisedValue: document.getElementById("nextPrizeRaisedValue"),
+    nextPrizeNeededValue: document.getElementById("nextPrizeNeededValue"),
+    nextPrizeProgressFill: document.getElementById("nextPrizeProgressFill"),
+    nextPrizeFooter: document.getElementById("nextPrizeFooter"),
 
-    allShelves: Array.from(document.querySelectorAll("[data-shelf-section]")),
+    shelfJumpNav: document.getElementById("shelfJumpNav"),
+    prizeGrid: document.getElementById("prizeGrid"),
+    prizeGridEmptyState: document.getElementById("prizeGridEmptyState"),
 
-    modal: document.getElementById("psRedeemModal"),
-    modalClose: document.getElementById("psRedeemClose"),
-    modalCancel: document.getElementById("psRedeemCancel"),
-    modalConfirm: document.getElementById("psRedeemConfirm"),
-    modalName: document.getElementById("psRedeemPrizeName"),
-    modalCost: document.getElementById("psRedeemPrizeCost"),
-    modalHint: document.getElementById("psRedeemPrizeHint"),
+    modal: document.getElementById("redeemModal"),
+    modalMessage: document.getElementById("redeemModalMessage"),
+    modalCancel: document.getElementById("cancelRedeemBtn"),
+    modalConfirm: document.getElementById("confirmRedeemBtn"),
+
+    toast: document.getElementById("pageToast"),
   };
-
-  const SHELF_CONFIG = {
-    shelf1: {
-      label: "Quick Finds",
-      min: 1,
-      max: 5,
-      donationsLabel: "$5–$25 raised",
-      track: () => els.shelf1Track,
-      empty: () => els.shelf1Empty,
-    },
-    shelf2: {
-      label: "Explorer Gear",
-      min: 7.5,
-      max: 10,
-      donationsLabel: "$37.50–$50 raised",
-      track: () => els.shelf2Track,
-      empty: () => els.shelf2Empty,
-    },
-    shelf3: {
-      label: "Treasure Picks",
-      min: 15,
-      max: 20,
-      donationsLabel: "$75–$100 raised",
-      track: () => els.shelf3Track,
-      empty: () => els.shelf3Empty,
-    },
-    shelf4: {
-      label: "Legendary Rewards",
-      min: 100,
-      max: Infinity,
-      donationsLabel: "$500+ raised",
-      track: () => els.shelf4Track,
-      empty: () => els.shelf4Empty,
-    },
-  };
-
-  const PRICE_GOALS = [1, 1.5, 2.5, 5, 7.5, 10, 15, 20, 100];
 
   document.addEventListener("DOMContentLoaded", init);
 
   async function init() {
     bindUI();
-    setHeader();
+    setHeaderFromPageData();
     await loadData();
     renderAll();
   }
@@ -124,42 +129,42 @@
       btn.addEventListener("click", () => {
         els.quickFilterButtons.forEach((b) => b.classList.remove("is-active"));
         btn.classList.add("is-active");
-        state.activeQuickFilter = btn.dataset.filter || "all";
+        state.activeQuickFilter = btn.dataset.quickFilter || "all";
         renderAll();
       });
     });
 
-    els.shelfJumpButtons.forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const target = btn.dataset.target;
-        const section = document.querySelector(`[data-shelf-section="${target}"]`);
-        if (section) {
-          section.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      });
-    });
+    if (els.modalCancel) {
+      els.modalCancel.addEventListener("click", closeRedeemModal);
+    }
 
-    if (els.modalClose) els.modalClose.addEventListener("click", closeRedeemModal);
-    if (els.modalCancel) els.modalCancel.addEventListener("click", closeRedeemModal);
+    if (els.modalConfirm) {
+      els.modalConfirm.addEventListener("click", confirmRedeem);
+    }
+
     if (els.modal) {
       els.modal.addEventListener("click", (e) => {
         if (e.target === els.modal) closeRedeemModal();
       });
     }
-    if (els.modalConfirm) {
-      els.modalConfirm.addEventListener("click", confirmRedeem);
-    }
 
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && els.modal?.classList.contains("is-open")) {
+      if (e.key === "Escape" && !els.modal?.classList.contains("is-hidden")) {
         closeRedeemModal();
       }
     });
   }
 
-  function setHeader() {
-    const title = "Prize Store";
-    const subtitle = "Explore the jungle shelves and redeem your fundraising rewards.";
+  function setHeaderFromPageData() {
+    const title =
+      els.body?.dataset?.pageTitle ||
+      document.querySelector('meta[name="data-title"]')?.content ||
+      "Prize Store";
+
+    const subtitle =
+      els.body?.dataset?.pageSubtitle ||
+      document.querySelector('meta[name="data-subtitle"]')?.content ||
+      "Use 20% of your donations as prize credit.";
 
     if (els.dataTitle) els.dataTitle.textContent = title;
     if (els.dataSubtitle) els.dataSubtitle.textContent = subtitle;
@@ -167,41 +172,45 @@
     document.querySelectorAll("[data-title]").forEach((node) => {
       node.textContent = title;
     });
+
     document.querySelectorAll("[data-subtitle]").forEach((node) => {
       node.textContent = subtitle;
     });
   }
 
   async function loadData() {
-    try {
-      state.schoolId =
-        (typeof window.getCurrentSchoolId === "function" && window.getCurrentSchoolId()) ||
-        (typeof window.getSchoolId === "function" && window.getSchoolId()) ||
-        localStorage.getItem("schoolId") ||
-        "";
+    state.schoolId =
+      getValue(
+        typeof window.getCurrentSchoolId === "function" ? window.getCurrentSchoolId() : "",
+        typeof window.getSchoolId === "function" ? window.getSchoolId() : "",
+        localStorage.getItem("readathonV2_schoolId"),
+        localStorage.getItem("schoolId"),
+      ) || "";
 
-      state.userId =
-        (typeof window.getCurrentUserId === "function" && window.getCurrentUserId()) ||
-        (typeof window.getUserId === "function" && window.getUserId()) ||
-        localStorage.getItem("uid") ||
-        localStorage.getItem("userId") ||
-        "";
+    state.userId =
+      getValue(
+        typeof window.getCurrentUserId === "function" ? window.getCurrentUserId() : "",
+        typeof window.getUserId === "function" ? window.getUserId() : "",
+        localStorage.getItem("readathonV2_userId"),
+        localStorage.getItem("uid"),
+        localStorage.getItem("userId"),
+      ) || "";
 
-      state.userProfile = await fetchStudentProfileSafe(state.schoolId, state.userId);
-      state.prizes = await fetchPrizesSafe(state.schoolId);
+    state.userProfile = await fetchStudentProfileSafe(state.schoolId, state.userId);
+    state.prizes = await fetchPrizesSafe(state.schoolId);
 
-      if (!Array.isArray(state.prizes)) state.prizes = [];
-      state.prizes = state.prizes
-        .filter((p) => p && p.active !== false)
-        .map(normalizePrize);
+    if (!Array.isArray(state.prizes)) state.prizes = [];
 
-      buildCategoryFilter();
-    } catch (error) {
-      console.error("Prize store init error:", error);
-      state.userProfile = state.userProfile || {};
-      state.prizes = [];
-      buildCategoryFilter();
-    }
+    state.prizes = state.prizes
+      .filter((prize) => prize && prize.active !== false)
+      .map(normalizePrize)
+      .sort((a, b) => {
+        if (a.price !== b.price) return a.price - b.price;
+        if (a.sort !== b.sort) return a.sort - b.sort;
+        return a.name.localeCompare(b.name);
+      });
+
+    buildCategoryFilter();
   }
 
   async function fetchStudentProfileSafe(schoolId, userId) {
@@ -209,12 +218,18 @@
       if (typeof window.fetchStudentProfile === "function") {
         return (await window.fetchStudentProfile(schoolId, userId)) || {};
       }
+
       if (typeof window.getStudentProfile === "function") {
         return (await window.getStudentProfile(schoolId, userId)) || {};
       }
+
+      if (typeof window.loadSummary === "function") {
+        return (await window.loadSummary({ schoolId, userId })) || {};
+      }
+
       return {};
     } catch (error) {
-      console.warn("Could not load student profile:", error);
+      console.warn("Could not load prize store student profile:", error);
       return {};
     }
   }
@@ -224,15 +239,18 @@
       if (typeof window.fetchAllPrizes === "function") {
         return (await window.fetchAllPrizes(schoolId)) || [];
       }
+
       if (typeof window.fetchPrizeCatalog === "function") {
         return (await window.fetchPrizeCatalog(schoolId)) || [];
       }
+
       if (typeof window.getPrizeStoreItems === "function") {
         return (await window.getPrizeStoreItems(schoolId)) || [];
       }
+
       return [];
     } catch (error) {
-      console.warn("Could not load prizes:", error);
+      console.warn("Could not load prize catalog:", error);
       return [];
     }
   }
@@ -240,19 +258,27 @@
   function normalizePrize(prize) {
     const price = Number(prize.price || 0);
     const donationsNeeded =
-      prize.donationsNeeded != null ? Number(prize.donationsNeeded) : Number((price * 5).toFixed(2));
+      prize.donationsNeeded != null
+        ? Number(prize.donationsNeeded)
+        : Number((price * 5).toFixed(2));
+
+    const stock =
+      prize.stock == null || prize.stock === ""
+        ? Infinity
+        : Number(prize.stock);
 
     return {
       ...prize,
-      name: prize.name || "Prize",
+      prizeId: prize.prizeId || prize.id || prize.key || prize.name || cryptoRandomId(),
+      name: String(prize.name || "Prize"),
+      description: String(prize.description || ""),
       category: String(prize.category || "other").toLowerCase(),
-      description: prize.description || "",
-      image: prize.image || "../img/prizes/placeholder.png",
+      image: String(prize.image || "../img/prizes/placeholder.png"),
       price,
       donationsNeeded,
-      stock: prize.stock == null ? 0 : Number(prize.stock),
-      shelfKey: getShelfForPrice(price),
+      stock,
       sort: prize.sort == null ? 9999 : Number(prize.sort),
+      shelfKey: getShelfForPrice(price),
     };
   }
 
@@ -260,222 +286,351 @@
     if (!els.categoryFilter) return;
 
     const categories = Array.from(
-      new Set(state.prizes.map((p) => p.category).filter(Boolean))
+      new Set(
+        state.prizes
+          .map((prize) => prize.category)
+          .filter(Boolean)
+      )
     ).sort((a, b) => a.localeCompare(b));
 
     els.categoryFilter.innerHTML = "";
-    const allOpt = document.createElement("option");
-    allOpt.value = "all";
-    allOpt.textContent = "All Categories";
-    els.categoryFilter.appendChild(allOpt);
 
-    categories.forEach((cat) => {
-      const opt = document.createElement("option");
-      opt.value = cat;
-      opt.textContent = prettifyCategory(cat);
-      els.categoryFilter.appendChild(opt);
+    const allOption = document.createElement("option");
+    allOption.value = "all";
+    allOption.textContent = "All Categories";
+    els.categoryFilter.appendChild(allOption);
+
+    categories.forEach((category) => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = prettifyCategory(category);
+      els.categoryFilter.appendChild(option);
     });
 
     els.categoryFilter.value = state.activeCategory;
   }
 
   function renderAll() {
-    renderWallet();
     state.filteredPrizes = getFilteredPrizes();
+
+    renderWallet();
+    renderAtAGlance();
+    renderProgress();
+    renderShelfJumpNav();
     renderShelves();
   }
 
   function renderWallet() {
-    const balance =
-      Number(
-        state.userProfile?.prizeBalance ??
-          state.userProfile?.availablePrizeBalance ??
-          state.userProfile?.currentPrizeBalance ??
-          0
-      ) || 0;
+    const raised = getRaisedAmount();
+    const earned = getEarnedCreditAmount();
+    const spent = getSpentCreditAmount();
+    const remaining = getRemainingCreditAmount();
 
-    const raised =
-      Number(
-        state.userProfile?.totalDonations ??
-          state.userProfile?.donationsRaised ??
-          state.userProfile?.fundraisingTotal ??
-          0
-      ) || 0;
+    if (els.donationsRaisedValue) els.donationsRaisedValue.textContent = money(raised);
+    if (els.creditEarnedValue) els.creditEarnedValue.textContent = money(earned);
+    if (els.creditSpentValue) els.creditSpentValue.textContent = money(spent);
+    if (els.creditRemainingValue) els.creditRemainingValue.textContent = money(remaining);
+  }
 
-    const spent =
-      Number(
-        state.userProfile?.totalPrizeSpent ??
-          state.userProfile?.prizeSpent ??
-          state.userProfile?.spentPrizeBalance ??
-          0
-      ) || 0;
+  function renderAtAGlance() {
+    const remaining = getRemainingCreditAmount();
 
-    if (els.balanceAmount) els.balanceAmount.textContent = money(balance);
-    if (els.raisedAmount) els.raisedAmount.textContent = money(raised);
-    if (els.spentAmount) els.spentAmount.textContent = money(spent);
+    const canBuyNow = state.prizes.filter((prize) => isAffordable(prize, remaining) && isInStock(prize)).length;
+    const almostThere = state.prizes.filter((prize) => {
+      if (!isInStock(prize)) return false;
+      const gap = prize.price - remaining;
+      return gap > 0 && gap <= 5;
+    }).length;
 
-    const nextPriceGoal = PRICE_GOALS.find((goal) => goal > balance);
-    if (!nextPriceGoal) {
-      if (els.nextGoalText) els.nextGoalText.textContent = "You can unlock any current shelf reward!";
-      if (els.nextGoalFill) els.nextGoalFill.style.width = "100%";
-      if (els.nextGoalHint) els.nextGoalHint.textContent = "Legendary shopping power unlocked.";
+    const categoryCount = new Set(state.prizes.map((prize) => prize.category).filter(Boolean)).size;
+
+    if (els.canBuyNowCount) els.canBuyNowCount.textContent = String(canBuyNow);
+    if (els.almostThereCount) els.almostThereCount.textContent = String(almostThere);
+    if (els.categoryCount) els.categoryCount.textContent = String(categoryCount);
+
+    if (els.shopSpotlightTitle) {
+      if (canBuyNow > 0) {
+        els.shopSpotlightTitle.textContent = "You can shop right now!";
+      } else if (almostThere > 0) {
+        els.shopSpotlightTitle.textContent = "You’re so close to your next prize!";
+      } else {
+        els.shopSpotlightTitle.textContent = "Let’s go treasure hunting!";
+      }
+    }
+
+    if (els.shopSpotlightText) {
+      if (canBuyNow > 0) {
+        els.shopSpotlightText.textContent = `Amazing job — you already have enough credit for ${canBuyNow} prize${canBuyNow === 1 ? "" : "s"}.`;
+      } else if (almostThere > 0) {
+        els.shopSpotlightText.textContent = `Keep fundraising — you’re almost there for ${almostThere} prize${almostThere === 1 ? "" : "s"}.`;
+      } else {
+        els.shopSpotlightText.textContent = "Every donation helps unlock more jungle treasure.";
+      }
+    }
+  }
+
+  function renderProgress() {
+    const raised = getRaisedAmount();
+    const remaining = getRemainingCreditAmount();
+
+    const nextPrize = state.prizes
+      .filter((prize) => isInStock(prize) && prize.price > remaining)
+      .sort((a, b) => a.price - b.price)[0];
+
+    if (!nextPrize) {
+      if (els.nextPrizeTitle) els.nextPrizeTitle.textContent = "You can unlock any current prize";
+      if (els.nextPrizeSubtitle) els.nextPrizeSubtitle.textContent = "You’ve reached the top of the currently available catalog.";
+      if (els.nextPrizeRaisedValue) els.nextPrizeRaisedValue.textContent = money(raised);
+      if (els.nextPrizeNeededValue) els.nextPrizeNeededValue.textContent = money(raised);
+      if (els.nextPrizeProgressFill) els.nextPrizeProgressFill.style.width = "100%";
+      if (els.nextPrizeFooter) els.nextPrizeFooter.textContent = "Legendary shopping power unlocked!";
       return;
     }
 
-    const previousGoal = [...PRICE_GOALS].reverse().find((goal) => goal < nextPriceGoal) || 0;
-    const span = nextPriceGoal - previousGoal;
-    const progress = span > 0 ? Math.max(0, Math.min(100, ((balance - previousGoal) / span) * 100)) : 0;
-    const needed = Math.max(0, nextPriceGoal - balance);
+    const neededRaised = nextPrize.donationsNeeded;
+    const progress = neededRaised <= 0 ? 100 : clamp((raised / neededRaised) * 100, 0, 100);
+    const additionalRaisedNeeded = Math.max(0, neededRaised - raised);
+    const additionalCreditNeeded = Math.max(0, nextPrize.price - remaining);
 
-    if (els.nextGoalText) {
-      els.nextGoalText.textContent = `You’re ${money(needed)} away from the next reward tier.`;
+    if (els.nextPrizeTitle) els.nextPrizeTitle.textContent = nextPrize.name;
+    if (els.nextPrizeSubtitle) {
+      els.nextPrizeSubtitle.textContent =
+        `${prettifyCategory(nextPrize.category)} • Costs ${money(nextPrize.price)} in prize credit`;
     }
-    if (els.nextGoalFill) {
-      els.nextGoalFill.style.width = `${progress}%`;
-    }
-    if (els.nextGoalHint) {
-      const nextShelf = getShelfForPrice(nextPriceGoal);
-      const shelfLabel = SHELF_CONFIG[nextShelf]?.label || "next shelf";
-      els.nextGoalHint.textContent = `Next stop: ${shelfLabel} at ${money(nextPriceGoal)} prize balance.`;
+    if (els.nextPrizeRaisedValue) els.nextPrizeRaisedValue.textContent = money(raised);
+    if (els.nextPrizeNeededValue) els.nextPrizeNeededValue.textContent = money(neededRaised);
+    if (els.nextPrizeProgressFill) els.nextPrizeProgressFill.style.width = `${progress}%`;
+    if (els.nextPrizeFooter) {
+      els.nextPrizeFooter.textContent =
+        `You need ${money(additionalRaisedNeeded)} more in donations (${money(additionalCreditNeeded)} more in credit) to unlock this prize.`;
     }
   }
 
-  function getFilteredPrizes() {
-    const balance =
-      Number(
-        state.userProfile?.prizeBalance ??
-          state.userProfile?.availablePrizeBalance ??
-          state.userProfile?.currentPrizeBalance ??
-          0
-      ) || 0;
+  function renderShelfJumpNav() {
+    if (!els.shelfJumpNav) return;
 
-    return state.prizes
-      .filter((prize) => {
-        if (state.activeCategory !== "all" && prize.category !== state.activeCategory) {
-          return false;
-        }
+    const visibleShelves = SHELVES.filter((shelf) =>
+      state.filteredPrizes.some((prize) => prize.shelfKey === shelf.key)
+    );
 
-        if (state.activeSearch) {
-          const haystack = `${prize.name} ${prize.description} ${prize.category}`.toLowerCase();
-          if (!haystack.includes(state.activeSearch)) return false;
-        }
+    if (!visibleShelves.length) {
+      els.shelfJumpNav.innerHTML = "";
+      els.shelfJumpNav.classList.add("is-hidden");
+      return;
+    }
 
-        if (state.activeQuickFilter === "buy-now" && prize.price > balance) return false;
-        if (state.activeQuickFilter === "almost-there") {
-          const gap = prize.price - balance;
-          if (!(gap > 0 && gap <= 5)) return false;
-        }
-        if (state.activeQuickFilter === "dream" && prize.shelfKey !== "shelf4") return false;
-
-        return true;
+    els.shelfJumpNav.innerHTML = visibleShelves
+      .map((shelf) => {
+        return `
+          <a class="rw-shelf-jump-link" href="#${shelf.key}">
+            ${escapeHtml(shelf.label)}
+          </a>
+        `;
       })
-      .sort((a, b) => {
-        const affordableA = a.price <= balance ? 0 : 1;
-        const affordableB = b.price <= balance ? 0 : 1;
-        if (affordableA !== affordableB) return affordableA - affordableB;
-        if (a.shelfKey !== b.shelfKey) return state.shelfOrder.indexOf(a.shelfKey) - state.shelfOrder.indexOf(b.shelfKey);
-        if (a.sort !== b.sort) return a.sort - b.sort;
-        return a.price - b.price || a.name.localeCompare(b.name);
-      });
+      .join("");
+
+    els.shelfJumpNav.classList.remove("is-hidden");
   }
 
   function renderShelves() {
-    state.shelfOrder.forEach((shelfKey) => {
-      const config = SHELF_CONFIG[shelfKey];
-      const track = config.track();
-      const empty = config.empty();
-      const shelfPrizes = state.filteredPrizes.filter((prize) => prize.shelfKey === shelfKey);
+    if (!els.prizeGrid) return;
 
-      if (!track) return;
-      track.innerHTML = "";
+    const visibleShelves = SHELVES.map((shelf) => ({
+      ...shelf,
+      prizes: state.filteredPrizes.filter((prize) => prize.shelfKey === shelf.key),
+    })).filter((shelf) => shelf.prizes.length > 0);
 
-      if (!shelfPrizes.length) {
-        if (empty) empty.hidden = false;
-        return;
-      }
+    if (!visibleShelves.length) {
+      els.prizeGrid.innerHTML = "";
+      els.prizeGridEmptyState?.classList.remove("is-hidden");
+      return;
+    }
 
-      if (empty) empty.hidden = true;
+    els.prizeGridEmptyState?.classList.add("is-hidden");
 
-      shelfPrizes.forEach((prize) => {
-        track.appendChild(buildPrizeCard(prize));
+    els.prizeGrid.innerHTML = visibleShelves
+      .map((shelf) => renderShelfMarkup(shelf))
+      .join("");
+
+    visibleShelves.forEach((shelf) => {
+      shelf.prizes.forEach((prize) => {
+        const btn = document.querySelector(`[data-redeem-prize-id="${cssEscape(prize.prizeId)}"]`);
+        if (!btn) return;
+
+        btn.addEventListener("click", () => {
+          openRedeemModal(prize);
+        });
       });
     });
   }
 
-  function buildPrizeCard(prize) {
-    const balance =
-      Number(
-        state.userProfile?.prizeBalance ??
-          state.userProfile?.availablePrizeBalance ??
-          state.userProfile?.currentPrizeBalance ??
-          0
-      ) || 0;
+  function renderShelfMarkup(shelf) {
+    const cards = shelf.prizes.map((prize) => renderPrizeCardMarkup(prize)).join("");
 
-    const affordable = prize.price <= balance;
-    const gap = Math.max(0, prize.price - balance);
+    return `
+      <section
+        class="rw-shelf-row"
+        id="${escapeHtml(shelf.key)}"
+        data-shelf-section="${escapeHtml(shelf.key)}"
+        data-shelf-tone="${escapeHtml(shelf.tone)}"
+        aria-labelledby="${escapeHtml(shelf.key)}-title"
+      >
+        <div class="rw-section-heading">
+          <h3 class="rw-section-title" id="${escapeHtml(shelf.key)}-title">${escapeHtml(shelf.label)}</h3>
+          <p class="rw-section-subtitle">
+            ${escapeHtml(shelf.subtitle)} ${escapeHtml(shelf.donationsLabel)}
+          </p>
+        </div>
 
-    const card = document.createElement("article");
-    card.className = `psPrizeCard ${affordable ? "is-affordable" : ""}`;
-    card.innerHTML = `
-      <div class="psPrizeImageWrap">
-        <img class="psPrizeImage" src="${escapeHtml(prize.image)}" alt="${escapeHtml(prize.name)}">
-        <div class="psPrizeBadges">
-          ${affordable ? `<span class="psBadge psBadge--buy">Can Buy Now</span>` : ""}
-          ${!affordable && gap <= 5 ? `<span class="psBadge psBadge--almost">Almost There</span>` : ""}
-          ${prize.shelfKey === "shelf4" ? `<span class="psBadge psBadge--dream">Legendary</span>` : ""}
+        <div class="rw-prize-grid">
+          ${cards}
         </div>
-      </div>
-      <div class="psPrizeBody">
-        <div class="psPrizeTop">
-          <h3 class="psPrizeName">${escapeHtml(prize.name)}</h3>
-          <div class="psPrizePrice">${money(prize.price)}</div>
-        </div>
-        <div class="psPrizeMeta">
-          <span>${escapeHtml(prettifyCategory(prize.category))}</span>
-          <span>${escapeHtml(SHELF_CONFIG[prize.shelfKey].donationsLabel)}</span>
-        </div>
-        <p class="psPrizeDescription">${escapeHtml(prize.description)}</p>
-        <div class="psPrizeFooter">
-          <div class="psPrizeStatus">
-            ${
-              affordable
-                ? `Ready to redeem 🎉`
-                : `Need ${money(gap)} more`
-            }
-          </div>
-          <button class="psRedeemBtn" ${affordable ? "" : "disabled"} type="button">
-            ${affordable ? "Redeem Prize" : "Keep Going"}
-          </button>
-        </div>
-      </div>
+      </section>
     `;
+  }
 
-    const redeemBtn = card.querySelector(".psRedeemBtn");
-    if (redeemBtn && affordable) {
-      redeemBtn.addEventListener("click", () => openRedeemModal(prize));
+  function renderPrizeCardMarkup(prize) {
+    const remaining = getRemainingCreditAmount();
+    const affordable = isAffordable(prize, remaining);
+    const inStock = isInStock(prize);
+    const gap = Math.max(0, prize.price - remaining);
+
+    let statusClass = "";
+    let statusText = "";
+    let buttonLabel = "";
+    let buttonDisabled = "";
+
+    if (!inStock) {
+      statusClass = " is-oos";
+      statusText = "Out of stock right now";
+      buttonLabel = "Unavailable";
+      buttonDisabled = "disabled";
+    } else if (affordable) {
+      statusText = "Ready to redeem 🎉";
+      buttonLabel = "Redeem Prize";
+    } else {
+      statusClass = " is-locked";
+      statusText = `Need ${money(gap)} more credit`;
+      buttonLabel = "Keep Going";
+      buttonDisabled = "disabled";
     }
 
-    return card;
+    const stockText =
+      prize.stock === Infinity ? "Unlimited" : `${Math.max(0, prize.stock)} left`;
+
+    return `
+      <article class="rw-prize-card" aria-label="${escapeHtml(prize.name)}">
+        <div class="rw-prize-card__image-wrap">
+          <img
+            class="rw-prize-card__image"
+            src="${escapeAttribute(prize.image)}"
+            alt="${escapeAttribute(prize.name)}"
+            loading="lazy"
+          />
+        </div>
+
+        <div class="rw-prize-card__body">
+          <div class="rw-prize-card__meta">
+            <span class="rw-prize-card__tag">${escapeHtml(prettifyCategory(prize.category))}</span>
+            <span class="rw-prize-card__tag">${escapeHtml(stockText)}</span>
+          </div>
+
+          <h3 class="rw-prize-card__title">${escapeHtml(prize.name)}</h3>
+
+          <p class="rw-prize-card__description">
+            ${escapeHtml(prize.description || "A fun reward from the treasure shop.")}
+          </p>
+
+          <div class="rw-prize-card__details">
+            <div class="rw-prize-card__detail-row">
+              <span>Prize Credit</span>
+              <strong>${money(prize.price)}</strong>
+            </div>
+            <div class="rw-prize-card__detail-row">
+              <span>Donations Needed</span>
+              <strong>${money(prize.donationsNeeded)}</strong>
+            </div>
+          </div>
+
+          <div class="rw-prize-card__status${statusClass}">
+            ${escapeHtml(statusText)}
+          </div>
+
+          <button
+            type="button"
+            class="rw-btn rw-btn-primary rw-btn-block"
+            data-redeem-prize-id="${escapeAttribute(prize.prizeId)}"
+            ${buttonDisabled}
+          >
+            ${escapeHtml(buttonLabel)}
+          </button>
+        </div>
+      </article>
+    `;
+  }
+
+  function getFilteredPrizes() {
+    const remaining = getRemainingCreditAmount();
+
+    return state.prizes.filter((prize) => {
+      if (state.activeCategory !== "all" && prize.category !== state.activeCategory) {
+        return false;
+      }
+
+      if (state.activeSearch) {
+        const haystack = [
+          prize.name,
+          prize.description,
+          prize.category,
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        if (!haystack.includes(state.activeSearch)) {
+          return false;
+        }
+      }
+
+      if (state.activeQuickFilter === "affordable") {
+        return isInStock(prize) && isAffordable(prize, remaining);
+      }
+
+      if (state.activeQuickFilter === "almost") {
+        if (!isInStock(prize)) return false;
+        const gap = prize.price - remaining;
+        return gap > 0 && gap <= 5;
+      }
+
+      if (state.activeQuickFilter === "dream") {
+        return prize.shelfKey === "shelf4";
+      }
+
+      return true;
+    });
   }
 
   function openRedeemModal(prize) {
     state.redeemingPrize = prize;
-    if (els.modalName) els.modalName.textContent = prize.name;
-    if (els.modalCost) els.modalCost.textContent = money(prize.price);
-    if (els.modalHint) {
-      els.modalHint.textContent = `This redemption uses ${money(prize.price)} of your prize balance.`;
+
+    if (els.modalMessage) {
+      els.modalMessage.innerHTML = `
+        Redeem <strong>${escapeHtml(prize.name)}</strong> for
+        <strong>${money(prize.price)}</strong> in prize credit?
+      `;
     }
+
     if (els.modal) {
-      els.modal.classList.add("is-open");
-      els.modal.removeAttribute("hidden");
+      els.modal.classList.remove("is-hidden");
+      els.modal.setAttribute("aria-hidden", "false");
     }
   }
 
   function closeRedeemModal() {
     state.redeemingPrize = null;
+
     if (els.modal) {
-      els.modal.classList.remove("is-open");
-      els.modal.setAttribute("hidden", "hidden");
+      els.modal.classList.add("is-hidden");
+      els.modal.setAttribute("aria-hidden", "true");
     }
   }
 
@@ -493,14 +648,14 @@
       closeRedeemModal();
       await loadData();
       renderAll();
-      alert(`🎉 ${prize.name} has been redeemed!`);
+      showToast(`🎉 ${prize.name} has been redeemed!`);
     } catch (error) {
       console.error("Redeem failed:", error);
-      alert(error?.message || "Sorry, something went wrong redeeming this prize.");
+      showToast(error?.message || "Sorry, something went wrong redeeming this prize.");
     } finally {
       if (els.modalConfirm) {
         els.modalConfirm.disabled = false;
-        els.modalConfirm.textContent = "Confirm Redeem";
+        els.modalConfirm.textContent = "Redeem Prize";
       }
     }
   }
@@ -537,21 +692,106 @@
     throw new Error("No redemption function was found on the page.");
   }
 
+  function showToast(message) {
+    if (!els.toast) {
+      alert(message);
+      return;
+    }
+
+    els.toast.textContent = message;
+    els.toast.classList.remove("is-hidden");
+
+    window.clearTimeout(showToast._timer);
+    showToast._timer = window.setTimeout(() => {
+      els.toast.classList.add("is-hidden");
+    }, 2600);
+  }
+
+  function getRaisedAmount() {
+    return (
+      Number(
+        state.userProfile?.totalDonations ??
+        state.userProfile?.donationsRaised ??
+        state.userProfile?.fundraisingTotal ??
+        state.userProfile?.raised ??
+        0
+      ) || 0
+    );
+  }
+
+  function getEarnedCreditAmount() {
+    const explicit =
+      Number(
+        state.userProfile?.prizeCreditEarned ??
+        state.userProfile?.totalPrizeEarned ??
+        state.userProfile?.earnedPrizeBalance ??
+        NaN
+      );
+
+    if (!Number.isNaN(explicit)) return explicit;
+
+    return Number((getRaisedAmount() * 0.2).toFixed(2));
+  }
+
+  function getSpentCreditAmount() {
+    return (
+      Number(
+        state.userProfile?.totalPrizeSpent ??
+        state.userProfile?.prizeSpent ??
+        state.userProfile?.spentPrizeBalance ??
+        0
+      ) || 0
+    );
+  }
+
+  function getRemainingCreditAmount() {
+    const explicit =
+      Number(
+        state.userProfile?.prizeBalance ??
+        state.userProfile?.availablePrizeBalance ??
+        state.userProfile?.currentPrizeBalance ??
+        NaN
+      );
+
+    if (!Number.isNaN(explicit)) return explicit;
+
+    return Math.max(0, getEarnedCreditAmount() - getSpentCreditAmount());
+  }
+
+  function isAffordable(prize, remainingCredit) {
+    return Number(prize.price || 0) <= Number(remainingCredit || 0);
+  }
+
+  function isInStock(prize) {
+    return prize.stock === Infinity || Number(prize.stock || 0) > 0;
+  }
+
   function getShelfForPrice(price) {
-    if (price >= 100) return "shelf4";
+    if (price >= 40) return "shelf4";
     if (price >= 15) return "shelf3";
-    if (price >= 7.5) return "shelf2";
+    if (price >= 5) return "shelf2";
     return "shelf1";
   }
 
   function prettifyCategory(category) {
     return String(category || "other")
-      .replace(/_/g, " ")
+      .replace(/[_-]+/g, " ")
       .replace(/\b\w/g, (m) => m.toUpperCase());
   }
 
   function money(value) {
-    return `$${Number(value || 0).toFixed(2)}`;
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(Number(value || 0));
+  }
+
+  function getValue(...values) {
+    return values.find((value) => value !== undefined && value !== null && value !== "");
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
   }
 
   function escapeHtml(value) {
@@ -561,5 +801,20 @@
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#39;");
+  }
+
+  function escapeAttribute(value) {
+    return escapeHtml(value);
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && typeof window.CSS.escape === "function") {
+      return window.CSS.escape(String(value));
+    }
+    return String(value).replace(/"/g, '\\"');
+  }
+
+  function cryptoRandomId() {
+    return `prize_${Math.random().toString(36).slice(2, 10)}`;
   }
 })();
