@@ -1,267 +1,256 @@
 #!/usr/bin/env node
+
 /**
- * Bulk uploader for Prize Catalog Items (Readathon V2)
+ * prizeCatalogUploader.cjs
  *
- * Writes documents to:
- * readathonV2_schools/{schoolId}/prizeCatalog/{prizeId}
+ * Reads:
+ *   /data_imports/prizeCatalogUploader.csv
  *
- * SAFE DEFAULT: dry-run (no writes) unless you pass --commit
+ * Uploads to:
+ *   /readathonV2_schools/{schoolId}/prizeCatalog/{prizeId}
+ *
+ * Required CSV headings:
+ * schoolId
+ * prizeId
+ * image
+ * name
+ * price
+ * donationsNeeded
+ * shelf
+ * sort
+ * category
+ * description
+ * active
  *
  * Usage:
- * node tools/prizeCatalogUploader.cjs --csv data_imports/prizeCatalog.csv
- * node tools/prizeCatalogUploader.cjs --csv data_imports/prizeCatalog.csv --commit
+ *   node tools/prizeCatalogUploader.cjs
  *
- * Optional:
- * --schoolId 308_longbeach_elementary   (override per-row schoolId)
- * --overwrite                           (writes with merge:false; replaces docs)
+ * Requires:
+ *   GOOGLE_APPLICATION_CREDENTIALS to point to a Firebase service account json file
  */
 
 const fs = require("fs");
 const path = require("path");
 const admin = require("firebase-admin");
 
-// 🔐 YOUR SERVICE ACCOUNT
-const serviceAccount = require("C:/Users/malbr/OneDrive/Desktop/keys/lrcquest-3039e-serviceAccount.json");
+const PROJECT_ROOT = path.resolve(__dirname, "..");
+const CSV_PATH = path.join(PROJECT_ROOT, "data_imports", "prizeCatalogUploader.csv");
 
-// Initialize Firebase Admin ONCE
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    projectId: "lrcquest-3039e",
-  });
+const REQUIRED_HEADERS = [
+  "schoolId",
+  "prizeId",
+  "image",
+  "name",
+  "price",
+  "donationsNeeded",
+  "shelf",
+  "sort",
+  "category",
+  "description",
+  "active",
+];
+
+initFirebase();
+main().catch((err) => {
+  console.error("\nUpload failed.");
+  console.error(err);
+  process.exit(1);
+});
+
+function initFirebase() {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.applicationDefault(),
+    });
+  }
 }
 
-/* ---------------- ARG PARSER ---------------- */
+async function main() {
+  console.log(`\nReading CSV: ${CSV_PATH}`);
 
-function parseArgs() {
-  const args = process.argv.slice(2);
-  const out = { commit: false, overwrite: false, csv: "", schoolId: "" };
-
-  for (let i = 0; i < args.length; i++) {
-    const a = args[i];
-    if (a === "--commit") out.commit = true;
-    else if (a === "--overwrite") out.overwrite = true;
-    else if (a === "--csv") out.csv = args[++i] || "";
-    else if (a === "--schoolId") out.schoolId = args[++i] || "";
+  if (!fs.existsSync(CSV_PATH)) {
+    throw new Error(`CSV file not found at ${CSV_PATH}`);
   }
 
-  if (!out.csv) {
-    console.error("❌ Missing --csv path");
-    process.exit(1);
+  const rawCsv = fs.readFileSync(CSV_PATH, "utf8");
+  const rows = parseCsv(rawCsv);
+
+  if (!rows.length) {
+    throw new Error("CSV has no data rows.");
   }
 
-  return out;
-}
+  validateHeaders(rows[0]);
 
-/* ---------------- CSV PARSER ---------------- */
+  const db = admin.firestore();
+  const batchSize = 400;
 
-function parseCsv(text) {
-  const rows = [];
-  let row = [];
-  let cur = "";
-  let inQuotes = false;
+  let totalProcessed = 0;
+  let totalSkipped = 0;
+  let batch = db.batch();
+  let opsInBatch = 0;
 
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    const next = text[i + 1];
+  for (const row of rows) {
+    try {
+      const cleaned = normalizeRow(row);
 
-    if (inQuotes) {
-      if (ch === '"' && next === '"') {
-        cur += '"';
-        i++;
-      } else if (ch === '"') {
-        inQuotes = false;
-      } else {
-        cur += ch;
+      if (!cleaned.schoolId || !cleaned.prizeId) {
+        totalSkipped++;
+        console.warn("Skipping row because schoolId or prizeId is missing:", row);
+        continue;
       }
-      continue;
+
+      const ref = db
+        .collection("readathonV2_schools")
+        .doc(cleaned.schoolId)
+        .collection("prizeCatalog")
+        .doc(cleaned.prizeId);
+
+      batch.set(ref, cleaned.docData, { merge: true });
+      opsInBatch++;
+      totalProcessed++;
+
+      if (opsInBatch >= batchSize) {
+        await batch.commit();
+        console.log(`Committed batch of ${opsInBatch} writes...`);
+        batch = db.batch();
+        opsInBatch = 0;
+      }
+    } catch (err) {
+      totalSkipped++;
+      console.warn("Skipping invalid row:", row);
+      console.warn("Reason:", err.message);
     }
-
-    if (ch === '"') inQuotes = true;
-    else if (ch === ",") {
-      row.push(cur);
-      cur = "";
-    } else if (ch === "\n") {
-      row.push(cur);
-      rows.push(row);
-      row = [];
-      cur = "";
-    } else if (ch !== "\r") {
-      cur += ch;
-    }
   }
 
-  if (cur.length || row.length) {
-    row.push(cur);
-    rows.push(row);
+  if (opsInBatch > 0) {
+    await batch.commit();
+    console.log(`Committed final batch of ${opsInBatch} writes...`);
   }
 
-  return rows;
+  console.log("\nUpload complete.");
+  console.log(`Processed: ${totalProcessed}`);
+  console.log(`Skipped:   ${totalSkipped}`);
 }
 
-/* ---------------- HELPERS ---------------- */
+function validateHeaders(sampleRow) {
+  const foundHeaders = Object.keys(sampleRow);
+  const missing = REQUIRED_HEADERS.filter((h) => !foundHeaders.includes(h));
 
-function toBool(v) {
-  if (v === "" || v == null) return undefined;
-  const s = String(v).trim().toLowerCase();
-  if (["true", "1", "yes", "y"].includes(s)) return true;
-  if (["false", "0", "no", "n"].includes(s)) return false;
-  throw new Error(`Invalid boolean: ${v}`);
-}
-
-function toNum(v) {
-  if (v === "" || v == null) return undefined;
-  const n = Number(String(v).replace(/,/g, ""));
-  if (Number.isNaN(n)) throw new Error(`Invalid number: ${v}`);
-  return n;
-}
-
-function toTimestamp(v) {
-  if (v === "" || v == null) return undefined;
-  const d = new Date(v);
-  if (Number.isNaN(d.getTime())) throw new Error(`Invalid date: ${v}`);
-  return admin.firestore.Timestamp.fromDate(d);
-}
-
-/* ---------------- VALIDATION ---------------- */
-
-function normalizeRow(rowObj) {
-  const allowedCategories = new Set([
-    "small",
-    "school",
-    "plush",
-    "toys",
-    "electronics",
-    "books",
-    "other",
-  ]);
-
-  const schoolId = String(rowObj.schoolId || "").trim();
-  const prizeId = String(rowObj.prizeId || "").trim();
-  const name = String(rowObj.name || "").trim();
-  const category = String(rowObj.category || "other").trim().toLowerCase();
-  const description = String(rowObj.description || "").trim();
-  const image = String(rowObj.image || "").trim();
-
-  if (!schoolId) throw new Error("schoolId required");
-  if (!prizeId) throw new Error("prizeId required");
-  if (!name) throw new Error("name required");
-  if (!allowedCategories.has(category)) {
-    throw new Error(`Invalid category: ${category}`);
+  if (missing.length) {
+    throw new Error(`CSV is missing required headers: ${missing.join(", ")}`);
   }
+}
 
-  const price = toNum(rowObj.price);
-  if (price == null) throw new Error("price required");
-  if (price < 0) throw new Error("price must be >= 0");
+function normalizeRow(row) {
+  const schoolId = String(row.schoolId || "").trim();
+  const prizeId = String(row.prizeId || "").trim();
 
-  const stock = toNum(rowObj.stock);
-  if (stock == null) throw new Error("stock required");
-  if (stock < 0) throw new Error("stock must be >= 0");
+  const docData = {
+    schoolId,
+    prizeId,
+    image: String(row.image || "").trim(),
+    name: String(row.name || "").trim(),
+    price: toNumber(row.price),
+    donationsNeeded: toNumber(row.donationsNeeded),
+    shelf: String(row.shelf || "").trim(),
+    sort: toNumber(row.sort, 9999),
+    category: String(row.category || "").trim(),
+    description: String(row.description || "").trim(),
+    active: toBoolean(row.active),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  };
 
-  const active = toBool(rowObj.active);
-  if (active == null) throw new Error("active required");
-
-  const sort = toNum(rowObj.sort) ?? 9999;
-
-  const minimumDonationsNeeded = Number((price / 0.20).toFixed(2));
+  if (!docData.name) {
+    throw new Error("Missing name");
+  }
 
   return {
     schoolId,
     prizeId,
-    doc: {
-      prizeId,
-      name,
-      category,
-      description,
-      image,
-      price: Number(price.toFixed(2)),
-      stock,
-      active,
-      sort,
-      minimumDonationsNeeded,
-    },
-    createdAt: toTimestamp(rowObj.createdAt),
-    updatedAt: toTimestamp(rowObj.updatedAt),
+    docData,
   };
 }
 
-/* ---------------- MAIN ---------------- */
-
-async function main() {
-  const { commit, overwrite, csv, schoolId: override } = parseArgs();
-
-  const db = admin.firestore();
-  const FieldValue = admin.firestore.FieldValue;
-
-  const abs = path.resolve(process.cwd(), csv);
-  if (!fs.existsSync(abs)) {
-    console.error(`❌ CSV not found: ${abs}`);
-    process.exit(1);
-  }
-
-  const raw = fs.readFileSync(abs, "utf8");
-  const rows = parseCsv(raw);
-  if (!rows.length) {
-    console.error("❌ CSV appears empty");
-    process.exit(1);
-  }
-
-  const header = rows[0].map((h) => String(h || "").trim());
-
-  const data = rows
-    .slice(1)
-    .filter((r) => r.some((cell) => String(cell ?? "").trim() !== ""));
-
-  const parsed = [];
-
-  for (let i = 0; i < data.length; i++) {
-    const obj = {};
-    header.forEach((h, idx) => (obj[h] = data[i][idx]));
-    if (override) obj.schoolId = override;
-    parsed.push(normalizeRow(obj));
-  }
-
-  console.log("----- PRIZE CATALOG UPLOADER -----");
-  console.log("CSV:", abs);
-  console.log("Mode:", commit ? "COMMIT (writes enabled)" : "DRY RUN (no writes)");
-  console.log("Write style:", overwrite ? "OVERWRITE (merge:false)" : "MERGE (merge:true)");
-  console.log("Rows:", parsed.length);
-  console.log("----------------------------------\n");
-
-  const writeOpts = { merge: !overwrite };
-  const BATCH_SIZE = 450;
-
-  for (let i = 0; i < parsed.length; i += BATCH_SIZE) {
-    const batch = db.batch();
-    const chunk = parsed.slice(i, i + BATCH_SIZE);
-
-    for (const item of chunk) {
-      const ref = db
-        .collection("readathonV2_schools")
-        .doc(item.schoolId)
-        .collection("prizeCatalog")
-        .doc(item.prizeId);
-
-      const payload = {
-        ...item.doc,
-        createdAt: item.createdAt ?? FieldValue.serverTimestamp(),
-        updatedAt: item.updatedAt ?? FieldValue.serverTimestamp(),
-      };
-
-      if (commit) batch.set(ref, payload, writeOpts);
-      else console.log("[DRY]", ref.path, payload);
-    }
-
-    if (commit) {
-      await batch.commit();
-      console.log(`✅ Batch committed: ${chunk.length}`);
-    }
-  }
-
-  console.log("\n🎉 Done");
+function toNumber(value, fallback = 0) {
+  const n = Number(String(value ?? "").trim());
+  return Number.isFinite(n) ? n : fallback;
 }
 
-main().catch((err) => {
-  console.error("Uploader failed:", err);
-  process.exit(1);
-});
+function toBoolean(value) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  return ["true", "1", "yes", "y"].includes(normalized);
+}
+
+/**
+ * Minimal CSV parser with quoted field support.
+ */
+function parseCsv(csvText) {
+  const rows = [];
+  let i = 0;
+  let field = "";
+  let row = [];
+  let insideQuotes = false;
+
+  while (i < csvText.length) {
+    const char = csvText[i];
+    const next = csvText[i + 1];
+
+    if (char === '"') {
+      if (insideQuotes && next === '"') {
+        field += '"';
+        i += 2;
+        continue;
+      }
+      insideQuotes = !insideQuotes;
+      i++;
+      continue;
+    }
+
+    if (char === "," && !insideQuotes) {
+      row.push(field);
+      field = "";
+      i++;
+      continue;
+    }
+
+    if ((char === "\n" || char === "\r") && !insideQuotes) {
+      if (char === "\r" && next === "\n") {
+        i++;
+      }
+
+      row.push(field);
+      field = "";
+
+      if (row.some((cell) => String(cell).trim() !== "")) {
+        rows.push(row);
+      }
+
+      row = [];
+      i++;
+      continue;
+    }
+
+    field += char;
+    i++;
+  }
+
+  if (field.length || row.length) {
+    row.push(field);
+    if (row.some((cell) => String(cell).trim() !== "")) {
+      rows.push(row);
+    }
+  }
+
+  if (!rows.length) return [];
+
+  const headers = rows[0].map((h) => String(h).trim());
+  const dataRows = rows.slice(1);
+
+  return dataRows.map((cells) => {
+    const obj = {};
+    for (let idx = 0; idx < headers.length; idx++) {
+      obj[headers[idx]] = cells[idx] ?? "";
+    }
+    return obj;
+  });
+}
