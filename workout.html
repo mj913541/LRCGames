@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workout Tracker</title>
+  <style>
+    :root {
+      --bg1: #f7f4ff;
+      --bg2: #fffafc;
+      --card: #ffffff;
+      --text: #2d2a32;
+      --muted: #6d6780;
+      --accent: #7c5cff;
+      --accent-soft: #ece6ff;
+      --line: #e7defc;
+      --good: #39b86f;
+      --good-soft: #dff7ea;
+      --shadow: 0 10px 24px rgba(124, 92, 255, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      padding: 20px;
+    }
+
+    .wrap {
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 2rem;
+    }
+
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .mini-card {
+      background: #fff;
+      border: 2px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .mini-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+      color: var(--accent);
+    }
+
+    .big-number {
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 6px 0;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .progress-shell {
+      width: 100%;
+      height: 16px;
+      background: var(--accent-soft);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      border-radius: 999px;
+      transition: width 0.2s ease;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 18px 0 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-size: 0.98rem;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn.secondary {
+      background: white;
+      color: var(--accent);
+      border: 2px solid var(--line);
+    }
+
+    .section {
+      background: var(--card);
+      border: 2px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin-bottom: 16px;
+    }
+
+    .section h2 {
+      margin: 0 0 12px;
+      color: var(--accent);
+      font-size: 1.2rem;
+    }
+
+    .exercise {
+      padding: 12px 0 14px;
+      border-bottom: 1px solid #f0ebff;
+    }
+
+    .exercise:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .exercise-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .exercise-name {
+      font-weight: 600;
+    }
+
+    .exercise-sub {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 2px;
+    }
+
+    .counter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .counter button {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 10px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .count {
+      min-width: 42px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    .exercise-progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .exercise-progress-row .label {
+      font-size: 0.9rem;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .exercise .progress-shell {
+      height: 12px;
+      margin: 0;
+      flex: 1;
+    }
+
+    .exercise.done .exercise-name {
+      color: var(--good);
+    }
+
+    .exercise.done .progress-fill {
+      background: var(--good);
+    }
+
+    .weight-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .weight-row label {
+      font-size: 0.9rem;
+      color: var(--muted);
+    }
+
+    .weight-input {
+      width: 90px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 2px solid var(--line);
+      font-size: 0.95rem;
+    }
+
+    .tracker-days {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .day-box {
+      background: #fff;
+      border: 2px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .day-name {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .day-status {
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .day-date {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    .complete-badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--good-soft);
+      color: #217a49;
+      font-weight: 600;
+    }
+
+    .note {
+      background: #fff;
+      border: 2px dashed var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      color: var(--muted);
+      margin-top: 14px;
+    }
+
+    @media (max-width: 760px) {
+      .top-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tracker-days {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .exercise-top {
+        flex-direction: column;
+      }
+
+      .counter {
+        align-self: flex-end;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>💪 Daily Workout Tracker</h1>
+      <p class="subtitle">Track reps, weights, progress, and your streak — one day at a time.</p>
+
+      <div class="top-grid">
+        <div class="mini-card">
+          <h3>Today’s Progress</h3>
+          <div class="big-number"><span id="overall-percent">0</span>%</div>
+          <div class="muted">
+            <span id="completed-exercises">0</span> of <span id="total-exercises">11</span> exercise goals reached
+          </div>
+          <div class="progress-shell">
+            <div class="progress-fill" id="overall-progress-fill"></div>
+          </div>
+          <div id="today-complete" class="complete-badge" style="display:none;">Daily goal complete 🎉</div>
+        </div>
+
+        <div class="mini-card">
+          <h3>Current Streak</h3>
+          <div class="big-number"><span id="streak-count">0</span> 🔥</div>
+          <div class="muted">Consecutive completed days</div>
+        </div>
+
+        <div class="mini-card">
+          <h3>Daily Tracker</h3>
+          <div class="big-number"><span id="days-complete">0</span>/7</div>
+          <div class="muted">Days completed this week</div>
+        </div>
+      </div>
+
+      <div class="tracker-days" id="tracker-days"></div>
+
+      <div class="controls-row">
+        <button class="btn" onclick="resetToday()">Reset Today</button>
+        <button class="btn secondary" onclick="setAllToGoal()">Set All To Goal</button>
+      </div>
+
+      <div class="note">
+        Goal is <strong>10 reps per exercise</strong>. Add weight where it makes sense. More than 10 still counts.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Lower Body</h2>
+
+      <div class="exercise" id="exercise-squats">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Squats</div>
+            <div class="exercise-sub">Goblet squats or bodyweight</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('squats', -1)">−</button>
+            <div class="count" id="count-squats">0</div>
+            <button onclick="changeCount('squats', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-squats">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-squats"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-squats">Weight:</label>
+          <input id="weight-squats" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('squats', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-lunges">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Lunges</div>
+            <div class="exercise-sub">Alternating or per leg</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('lunges', -1)">−</button>
+            <div class="count" id="count-lunges">0</div>
+            <button onclick="changeCount('lunges', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-lunges">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-lunges"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-lunges">Weight:</label>
+          <input id="weight-lunges" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('lunges', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-bridges">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Glute Bridges</div>
+            <div class="exercise-sub">Add dumbbell if you want</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('bridges', -1)">−</button>
+            <div class="count" id="count-bridges">0</div>
+            <button onclick="changeCount('bridges', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-bridges">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-bridges"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-bridges">Weight:</label>
+          <input id="weight-bridges" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('bridges', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-rdl">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Romanian Deadlifts</div>
+            <div class="exercise-sub">Dumbbells</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('rdl', -1)">−</button>
+            <div class="count" id="count-rdl">0</div>
+            <button onclick="changeCount('rdl', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-rdl">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-rdl"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-rdl">Weight:</label>
+          <input id="weight-rdl" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('rdl', this.value)" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Upper Body</h2>
+
+      <div class="exercise" id="exercise-push">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Push-Ups / Chest Press</div>
+            <div class="exercise-sub">Wall, knees, floor, or dumbbells</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('push', -1)">−</button>
+            <div class="count" id="count-push">0</div>
+            <button onclick="changeCount('push', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-push">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-push"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-push">Weight:</label>
+          <input id="weight-push" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('push', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-rows">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Rows</div>
+            <div class="exercise-sub">Dumbbells, band, or backpack</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('rows', -1)">−</button>
+            <div class="count" id="count-rows">0</div>
+            <button onclick="changeCount('rows', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-rows">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-rows"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-rows">Weight:</label>
+          <input id="weight-rows" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('rows', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-press">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Shoulder Press</div>
+            <div class="exercise-sub">Standing or seated</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('press', -1)">−</button>
+            <div class="count" id="count-press">0</div>
+            <button onclick="changeCount('press', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-press">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-press"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-press">Weight:</label>
+          <input id="weight-press" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('press', this.value)" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Arms</h2>
+
+      <div class="exercise" id="exercise-curls">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Bicep Curls</div>
+            <div class="exercise-sub">Dumbbells</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('curls', -1)">−</button>
+            <div class="count" id="count-curls">0</div>
+            <button onclick="changeCount('curls', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-curls">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-curls"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-curls">Weight:</label>
+          <input id="weight-curls" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('curls', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-triceps">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Tricep Extensions</div>
+            <div class="exercise-sub">Overhead or kickbacks</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('triceps', -1)">−</button>
+            <div class="count" id="count-triceps">0</div>
+            <button onclick="changeCount('triceps', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-triceps">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-triceps"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-triceps">Weight:</label>
+          <input id="weight-triceps" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('triceps', this.value)" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Core</h2>
+
+      <div class="exercise" id="exercise-deadbugs">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Dead Bugs</div>
+            <div class="exercise-sub">Controlled reps</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('deadbugs', -1)">−</button>
+            <div class="count" id="count-deadbugs">0</div>
+            <button onclick="changeCount('deadbugs', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-deadbugs">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-deadbugs"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-deadbugs">Weight:</label>
+          <input id="weight-deadbugs" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('deadbugs', this.value)" />
+        </div>
+      </div>
+
+      <div class="exercise" id="exercise-birddogs">
+        <div class="exercise-top">
+          <div>
+            <div class="exercise-name">Bird Dogs / Plank</div>
+            <div class="exercise-sub">Either one counts here</div>
+          </div>
+          <div class="counter">
+            <button onclick="changeCount('birddogs', -1)">−</button>
+            <div class="count" id="count-birddogs">0</div>
+            <button onclick="changeCount('birddogs', 1)">+</button>
+          </div>
+        </div>
+        <div class="exercise-progress-row">
+          <div class="label"><span id="progress-text-birddogs">0</span>/10</div>
+          <div class="progress-shell"><div class="progress-fill" id="progress-birddogs"></div></div>
+        </div>
+        <div class="weight-row">
+          <label for="weight-birddogs">Weight:</label>
+          <input id="weight-birddogs" class="weight-input" type="number" min="0" step="1" placeholder="lbs" oninput="changeWeight('birddogs', this.value)" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GOAL = 10;
+
+    const exercises = [
+      "squats",
+      "lunges",
+      "bridges",
+      "rdl",
+      "push",
+      "rows",
+      "press",
+      "curls",
+      "triceps",
+      "deadbugs",
+      "birddogs"
+    ];
+
+    function getTodayKey() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, "0");
+      const d = String(now.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatDateKey(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return `${y}-${m}-${d}`;
+    }
+
+    function getShortDayName(index) {
+      return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][index];
+    }
+
+    function getShortDateLabel(dateString) {
+      const date = new Date(dateString + "T12:00:00");
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+
+    function loadState() {
+      const saved = localStorage.getItem("workoutTrackerState");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          return {
+            currentDate: parsed.currentDate || getTodayKey(),
+            counts: parsed.counts || {},
+            weights: parsed.weights || {},
+            completions: parsed.completions || {}
+          };
+        } catch (e) {}
+      }
+
+      return {
+        currentDate: getTodayKey(),
+        counts: {},
+        weights: {},
+        completions: {}
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem("workoutTrackerState", JSON.stringify(state));
+    }
+
+    function isDayCompleteFromCounts(countsObject) {
+      return exercises.every(id => Number(countsObject[id] || 0) >= GOAL);
+    }
+
+    function finalizePreviousDay() {
+      if (!state.currentDate) return;
+      state.completions[state.currentDate] = isDayCompleteFromCounts(state.counts);
+      pruneOldCompletions();
+    }
+
+    function pruneOldCompletions() {
+      const keys = Object.keys(state.completions).sort();
+      if (keys.length <= 60) return;
+      const removeCount = keys.length - 60;
+      for (let i = 0; i < removeCount; i++) {
+        delete state.completions[keys[i]];
+      }
+    }
+
+    function ensureToday() {
+      const today = getTodayKey();
+
+      if (state.currentDate !== today) {
+        finalizePreviousDay();
+        state.currentDate = today;
+        state.counts = {};
+        saveState();
+      }
+    }
+
+    function getCount(id) {
+      return Number(state.counts[id] || 0);
+    }
+
+    function setCount(id, value) {
+      state.counts[id] = Math.max(0, value);
+    }
+
+    function getWeight(id) {
+      return state.weights[id] || "";
+    }
+
+    function setWeight(id, value) {
+      state.weights[id] = value === "" ? "" : Math.max(0, Number(value));
+    }
+
+    function changeCount(id, delta) {
+      ensureToday();
+      setCount(id, getCount(id) + delta);
+      saveState();
+      render();
+    }
+
+    function changeWeight(id, value) {
+      ensureToday();
+      setWeight(id, value);
+      saveState();
+    }
+
+    function isTodayComplete() {
+      return isDayCompleteFromCounts(state.counts);
+    }
+
+    function resetToday() {
+      ensureToday();
+      exercises.forEach(id => {
+        state.counts[id] = 0;
+      });
+      state.completions[state.currentDate] = false;
+      saveState();
+      render();
+    }
+
+    function setAllToGoal() {
+      ensureToday();
+      exercises.forEach(id => {
+        state.counts[id] = GOAL;
+      });
+      state.completions[state.currentDate] = true;
+      saveState();
+      render();
+    }
+
+    function renderExercise(id) {
+      const count = getCount(id);
+      const progress = Math.min(100, (count / GOAL) * 100);
+
+      document.getElementById(`count-${id}`).textContent = count;
+      document.getElementById(`progress-${id}`).style.width = `${progress}%`;
+      document.getElementById(`progress-text-${id}`).textContent = Math.min(count, GOAL);
+      document.getElementById(`weight-${id}`).value = getWeight(id);
+
+      const card = document.getElementById(`exercise-${id}`);
+      if (count >= GOAL) {
+        card.classList.add("done");
+      } else {
+        card.classList.remove("done");
+      }
+    }
+
+    function renderOverallProgress() {
+      let completed = 0;
+
+      exercises.forEach(id => {
+        if (getCount(id) >= GOAL) completed++;
+      });
+
+      const percent = Math.round((completed / exercises.length) * 100);
+
+      document.getElementById("completed-exercises").textContent = completed;
+      document.getElementById("total-exercises").textContent = exercises.length;
+      document.getElementById("overall-percent").textContent = percent;
+      document.getElementById("overall-progress-fill").style.width = `${percent}%`;
+      document.getElementById("today-complete").style.display = completed === exercises.length ? "inline-block" : "none";
+    }
+
+    function getLast7Days() {
+      const days = [];
+      const today = new Date(getTodayKey() + "T12:00:00");
+
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        days.push(formatDateKey(d));
+      }
+
+      return days;
+    }
+
+    function renderTracker() {
+      const container = document.getElementById("tracker-days");
+      container.innerHTML = "";
+
+      const last7 = getLast7Days();
+      let completeCount = 0;
+
+      last7.forEach(dateString => {
+        const complete = dateString === state.currentDate
+          ? isTodayComplete()
+          : !!state.completions[dateString];
+
+        if (complete) completeCount++;
+
+        const date = new Date(dateString + "T12:00:00");
+        const box = document.createElement("div");
+        box.className = "day-box";
+        box.innerHTML = `
+          <div class="day-name">${getShortDayName(date.getDay())}</div>
+          <div class="day-status">${complete ? "✅" : "⬜"}</div>
+          <div class="day-date">${getShortDateLabel(dateString)}</div>
+        `;
+        container.appendChild(box);
+      });
+
+      document.getElementById("days-complete").textContent = completeCount;
+    }
+
+    function calculateStreak() {
+      const todayKey = getTodayKey();
+      let streak = 0;
+      let cursor = new Date(todayKey + "T12:00:00");
+
+      while (true) {
+        const key = formatDateKey(cursor);
+        const complete = key === state.currentDate
+          ? isTodayComplete()
+          : !!state.completions[key];
+
+        if (!complete) break;
+
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      return streak;
+    }
+
+    function renderStreak() {
+      document.getElementById("streak-count").textContent = calculateStreak();
+    }
+
+    function render() {
+      exercises.forEach(renderExercise);
+      renderOverallProgress();
+      renderTracker();
+      renderStreak();
+    }
+
+    let state = loadState();
+    ensureToday();
+    saveState();
+    render();
+  </script>
+</body>
+</html>
