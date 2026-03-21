@@ -708,3 +708,105 @@ button, input, select { font: inherit; }
   .rw-shelf-row__actions { width: 100%; justify-content: flex-end; }
   .rw-shelf-track { grid-auto-columns: minmax(220px, 82vw); }
 }
+
+
+/* =========================================================
+   Prize Store JS integration patch
+   Matches the streamlined rw-* shelf/card markup
+   ========================================================= */
+
+.rw-prize-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+  padding: 10px 2px 22px;
+}
+
+.rw-prize-card {
+  min-height: 100%;
+}
+
+.rw-prize-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.rw-prize-card__tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(45, 143, 91, 0.12);
+  color: var(--rw-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1;
+  text-transform: capitalize;
+}
+
+.rw-prize-card__tag:last-child {
+  background: rgba(245, 191, 66, 0.16);
+  color: #7a5400;
+}
+
+.rw-prize-card__image-wrap img {
+  width: 100%;
+}
+
+.rw-prize-card__body .rw-btn {
+  margin-top: 2px;
+}
+
+.rw-shelf-row .rw-section-heading {
+  margin-bottom: 14px;
+}
+
+.rw-shelf-row .rw-section-title {
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+}
+
+.rw-shelf-row .rw-section-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+#prizeGridEmptyState {
+  margin-top: 16px;
+  padding: 18px 20px;
+  border-radius: var(--rw-radius-lg);
+  border: 1px solid var(--rw-line);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--rw-muted);
+  box-shadow: var(--rw-shadow);
+}
+
+#shelfJumpNav {
+  margin-top: 2px;
+}
+
+#pageToast {
+  max-width: min(360px, calc(100vw - 32px));
+  line-height: 1.4;
+}
+
+@media (max-width: 780px) {
+  .rw-prize-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding-bottom: 18px;
+  }
+
+  .rw-prize-card__image-wrap {
+    min-height: 160px;
+  }
+
+  .rw-prize-card__image {
+    max-height: 130px;
+  }
+}
