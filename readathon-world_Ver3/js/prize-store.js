@@ -13,6 +13,7 @@ import {
   DEFAULT_SCHOOL_ID,
   waitForAuthReady,
   fetchUserSummary,
+  fnRedeemPrizeCredit,
 } from "./firebase.js";
 
 const els = {
@@ -21,11 +22,20 @@ const els = {
   schoolIdDisplay: document.getElementById("schoolIdDisplay"),
   currentDonationsDisplay: document.getElementById("currentDonationsDisplay"),
   availableToSpendDisplay: document.getElementById("availableToSpendDisplay"),
+  remainingAfterCartDisplay: document.getElementById("remainingAfterCartDisplay"),
   categoryFilter: document.getElementById("categoryFilter"),
   searchInput: document.getElementById("searchInput"),
   storeStatus: document.getElementById("storeStatus"),
   prizeShelfGrid: document.getElementById("prizeShelfGrid"),
   prizeCardTemplate: document.getElementById("prizeCardTemplate"),
+
+  cartList: document.getElementById("cartList"),
+  cartEmptyState: document.getElementById("cartEmptyState"),
+  cartTotalDisplay: document.getElementById("cartTotalDisplay"),
+  cartAvailableDisplay: document.getElementById("cartAvailableDisplay"),
+  cartRemainingDisplay: document.getElementById("cartRemainingDisplay"),
+  clearCartBtn: document.getElementById("clearCartBtn"),
+  submitCartBtn: document.getElementById("submitCartBtn"),
 };
 
 const state = {
@@ -36,6 +46,8 @@ const state = {
   availableToSpendCents: 0,
   allPrizes: [],
   filteredPrizes: [],
+  cart: [],
+  isSubmittingCart: false,
 };
 
 init().catch((error) => {
@@ -65,9 +77,11 @@ async function init() {
   const prizes = await loadPrizeCatalog(state.schoolId);
 
   state.allPrizes = prizes;
+  state.filteredPrizes = prizes;
 
   populateCategoryFilter(prizes);
   applyFilters();
+  renderCart();
 }
 
 function setHeader() {
@@ -77,7 +91,7 @@ function setHeader() {
 
   if (els.subtitle) {
     els.subtitle.textContent =
-      "Raise donations to unlock prize rows. You can spend 20% of what you raise in the prize store.";
+      "Raise donations to unlock prize rows. Add prizes to your cart and submit one request without going over budget.";
   }
 }
 
@@ -88,6 +102,19 @@ function bindUi() {
 
   if (els.searchInput) {
     els.searchInput.addEventListener("input", applyFilters);
+  }
+
+  if (els.clearCartBtn) {
+    els.clearCartBtn.addEventListener("click", () => {
+      state.cart = [];
+      renderCart();
+      applyFilters();
+      setStatus("Cart cleared.");
+    });
+  }
+
+  if (els.submitCartBtn) {
+    els.submitCartBtn.addEventListener("click", submitCart);
   }
 }
 
@@ -134,10 +161,30 @@ function updateSummaryDisplays() {
       state.availableToSpendCents
     );
   }
+
+  const remaining = getRemainingSpendCents();
+
+  if (els.remainingAfterCartDisplay) {
+    els.remainingAfterCartDisplay.textContent = formatMoneyCents(remaining);
+  }
+
+  if (els.cartAvailableDisplay) {
+    els.cartAvailableDisplay.textContent = formatMoneyCents(
+      state.availableToSpendCents
+    );
+  }
+
+  if (els.cartTotalDisplay) {
+    els.cartTotalDisplay.textContent = formatMoneyCents(getCartTotalCents());
+  }
+
+  if (els.cartRemainingDisplay) {
+    els.cartRemainingDisplay.textContent = formatMoneyCents(remaining);
+  }
 }
 
 async function loadPrizeCatalog(schoolId) {
-  setStatus("Loading prize catalog...");
+  setStatus("Loading prize catalog.");
 
   const prizeCatalogRef = collection(
     db,
@@ -180,7 +227,7 @@ function normalizePrize(raw) {
     category: String(raw.category || "General").trim(),
     description: String(raw.description || "").trim(),
     misc: String(raw.misc || "").trim(),
-    active: raw.active === true,
+    active: raw.active === true || raw.active === undefined,
   };
 }
 
@@ -226,6 +273,7 @@ function applyFilters() {
   });
 
   renderPrizeTiers(state.filteredPrizes);
+  updateSummaryDisplays();
 }
 
 function renderPrizeTiers(prizes) {
@@ -301,7 +349,7 @@ function buildTierRow(tier) {
   section.className = "prize-tier-row";
   section.dataset.priceTier = String(tier.priceCents);
 
-  const tierUnlocked = state.availableToSpendCents >= tier.priceCents;
+  const tierUnlocked = getRemainingSpendCents() >= tier.priceCents;
   if (tierUnlocked) {
     section.classList.add("prize-tier-row--unlocked");
   }
@@ -318,8 +366,8 @@ function buildTierRow(tier) {
   subtitle.textContent = `These prizes cost ${formatMoneyCents(
     tier.priceCents
   )} each. You currently have ${formatMoneyCents(
-    state.availableToSpendCents
-  )} available to spend.`;
+    getRemainingSpendCents()
+  )} remaining to spend.`;
 
   header.appendChild(heading);
   header.appendChild(subtitle);
@@ -355,20 +403,18 @@ function buildPrizeCard(prize) {
   const misc = tpl.querySelector(".prize-misc");
   const price = tpl.querySelector(".prize-price");
   const donations = tpl.querySelector(".prize-donations");
-
-  const actions = tpl.querySelector(".prize-actions");
   const qtyValue = tpl.querySelector(".qty-value");
   const qtyMinus = tpl.querySelector(".qty-minus");
   const qtyPlus = tpl.querySelector(".qty-plus");
   const requestBtn = tpl.querySelector(".prize-request-btn");
 
   const priceCents = normalizePriceToCents(prize.price);
-  const canAfford = state.availableToSpendCents >= priceCents;
+  const remainingSpendCents = getRemainingSpendCents();
+  const currentCartQty = getCartQuantity(prize.id);
+  const maxAddableQuantity =
+    priceCents > 0 ? Math.floor(remainingSpendCents / priceCents) : 0;
 
-  const maxQuantity =
-    priceCents > 0
-      ? Math.floor(state.availableToSpendCents / priceCents)
-      : 1;
+  let quantity = Math.max(1, Math.min(1, maxAddableQuantity || 1));
 
   if (image) {
     image.src = prize.image || "../img/prizes/placeholder-prize.png";
@@ -379,8 +425,8 @@ function buildPrizeCard(prize) {
     });
   }
 
-  if (category) category.remove();
-  if (shelf) shelf.remove();
+  if (category) category.textContent = prize.category || "";
+  if (shelf) shelf.textContent = prize.shelf || "";
   if (name) name.textContent = prize.name || "Untitled Prize";
 
   if (description) {
@@ -407,14 +453,16 @@ function buildPrizeCard(prize) {
     card.dataset.price = String(prize.price || 0);
     card.dataset.donationsNeeded = String(prize.donationsNeeded || 0);
 
-    if (canAfford) {
+    if (maxAddableQuantity > 0) {
       card.classList.add("prize-card--affordable");
     } else {
       card.classList.add("prize-card--locked");
     }
-  }
 
-  let quantity = 1;
+    if (currentCartQty > 0) {
+      card.classList.add("prize-card--in-cart");
+    }
+  }
 
   function updateQuantityUI() {
     if (qtyValue) {
@@ -426,7 +474,21 @@ function buildPrizeCard(prize) {
     }
 
     if (qtyPlus) {
-      qtyPlus.disabled = !canAfford || quantity >= maxQuantity;
+      qtyPlus.disabled = quantity >= Math.max(1, maxAddableQuantity);
+    }
+
+    if (requestBtn) {
+      if (maxAddableQuantity <= 0) {
+        requestBtn.textContent =
+          currentCartQty > 0 ? `In Cart: ${currentCartQty}` : "Not Enough Left";
+        requestBtn.disabled = true;
+      } else {
+        requestBtn.textContent =
+          currentCartQty > 0
+            ? `Add to Cart (${currentCartQty} already)`
+            : "Add to Cart";
+        requestBtn.disabled = false;
+      }
     }
   }
 
@@ -441,101 +503,302 @@ function buildPrizeCard(prize) {
 
   if (qtyPlus) {
     qtyPlus.addEventListener("click", () => {
-      if (quantity < maxQuantity) {
+      if (quantity < maxAddableQuantity) {
         quantity += 1;
         updateQuantityUI();
       }
     });
   }
 
-   if (requestBtn) {
-  requestBtn.textContent = canAfford ? "Request Prize" : "Not Yet Unlocked";
-  requestBtn.disabled = !canAfford;
+  if (requestBtn) {
+    requestBtn.addEventListener("click", () => {
+      if (maxAddableQuantity <= 0) return;
 
-  requestBtn.addEventListener("click", async () => {
-    if (!canAfford) return;
+      const addQty = Math.min(quantity, maxAddableQuantity);
+      if (addQty <= 0) return;
 
-    try {
-      requestBtn.disabled = true;
-      requestBtn.textContent = "Requesting...";
-
-      await submitPrizeRequest({
-        prize,
-        quantity,
-        priceCents,
-      });
-
-      requestBtn.textContent = "Requested!";
-      requestBtn.disabled = true;
-    } catch (error) {
-      console.error("Prize request failed:", error);
-      requestBtn.disabled = false;
-      requestBtn.textContent = "Request Prize";
-      window.alert(error?.message || "Could not submit prize request.");
-    }
-  });
-}
-
-  if (actions && !canAfford) {
-    actions.classList.add("is-locked");
+      addToCart(prize, addQty);
+      setStatus(`Added ${addQty} ${prize.name}${addQty === 1 ? "" : "s"} to your cart.`);
+    });
   }
 
   updateQuantityUI();
 
   return tpl.firstElementChild;
 }
-async function submitPrizeRequest({ prize, quantity, priceCents }) {
-  console.log("submitPrizeRequest", {
-    schoolId: state.schoolId,
-    userId: state.userId,
-    prizeId: prize.id,
-    prizeName: prize.name,
-    quantity,
-    priceCents,
-    totalPriceCents: priceCents * quantity,
+
+function addToCart(prize, quantityToAdd) {
+  const priceCents = normalizePriceToCents(prize.price);
+  if (!(priceCents > 0) || quantityToAdd <= 0) return;
+
+  const maxAddable =
+    priceCents > 0 ? Math.floor(getRemainingSpendCents() / priceCents) : 0;
+
+  const safeQty = Math.min(quantityToAdd, maxAddable);
+  if (safeQty <= 0) return;
+
+  const existing = state.cart.find((item) => item.prizeId === prize.id);
+
+  if (existing) {
+    existing.quantity += safeQty;
+  } else {
+    state.cart.push({
+      prizeId: prize.id,
+      prizeName: prize.name,
+      image: prize.image || "",
+      priceCents,
+      quantity: safeQty,
+      category: prize.category || "",
+    });
+  }
+
+  renderCart();
+  applyFilters();
+}
+
+function getCartQuantity(prizeId) {
+  const item = state.cart.find((entry) => entry.prizeId === prizeId);
+  return item ? Number(item.quantity || 0) : 0;
+}
+
+function getCartTotalCents() {
+  return state.cart.reduce((sum, item) => {
+    return sum + Number(item.priceCents || 0) * Number(item.quantity || 0);
+  }, 0);
+}
+
+function getRemainingSpendCents() {
+  return Math.max(0, state.availableToSpendCents - getCartTotalCents());
+}
+
+function renderCart() {
+  if (!els.cartList) return;
+
+  els.cartList.innerHTML = "";
+
+  if (els.cartEmptyState) {
+    els.cartEmptyState.hidden = state.cart.length > 0;
+  }
+
+  const frag = document.createDocumentFragment();
+
+  for (const item of state.cart) {
+    frag.appendChild(buildCartItem(item));
+  }
+
+  els.cartList.appendChild(frag);
+
+  if (els.submitCartBtn) {
+    els.submitCartBtn.disabled =
+      state.isSubmittingCart || state.cart.length === 0 || getCartTotalCents() <= 0;
+    els.submitCartBtn.textContent = state.isSubmittingCart
+      ? "Submitting..."
+      : "Submit Prize Request";
+  }
+
+  if (els.clearCartBtn) {
+    els.clearCartBtn.disabled = state.isSubmittingCart || state.cart.length === 0;
+  }
+
+  updateSummaryDisplays();
+}
+
+function buildCartItem(item) {
+  const row = document.createElement("div");
+  row.className = "cart-item";
+
+  const main = document.createElement("div");
+  main.className = "cart-item__main";
+
+  const title = document.createElement("p");
+  title.className = "cart-item__name";
+  title.textContent = item.prizeName;
+
+  const meta = document.createElement("div");
+  meta.className = "cart-item__meta";
+  meta.textContent = `${formatMoneyCents(item.priceCents)} each`;
+
+  main.appendChild(title);
+  main.appendChild(meta);
+
+  const right = document.createElement("div");
+  right.className = "cart-item__right";
+
+  const total = document.createElement("div");
+  total.className = "cart-item__total";
+  total.textContent = formatMoneyCents(item.priceCents * item.quantity);
+
+  const controls = document.createElement("div");
+  controls.className = "cart-item__controls";
+
+  const minusBtn = document.createElement("button");
+  minusBtn.type = "button";
+  minusBtn.className = "cart-mini-btn";
+  minusBtn.textContent = "-";
+  minusBtn.disabled = state.isSubmittingCart;
+  minusBtn.addEventListener("click", () => {
+    updateCartItemQuantity(item.prizeId, item.quantity - 1);
   });
+
+  const qty = document.createElement("span");
+  qty.className = "qty-value";
+  qty.textContent = String(item.quantity);
+
+  const plusBtn = document.createElement("button");
+  plusBtn.type = "button";
+  plusBtn.className = "cart-mini-btn";
+  plusBtn.textContent = "+";
+  plusBtn.disabled =
+    state.isSubmittingCart || getRemainingSpendCents() < item.priceCents;
+  plusBtn.addEventListener("click", () => {
+    updateCartItemQuantity(item.prizeId, item.quantity + 1);
+  });
+
+  controls.appendChild(minusBtn);
+  controls.appendChild(qty);
+  controls.appendChild(plusBtn);
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "cart-remove-btn";
+  removeBtn.textContent = "Remove";
+  removeBtn.disabled = state.isSubmittingCart;
+  removeBtn.addEventListener("click", () => {
+    removeFromCart(item.prizeId);
+  });
+
+  right.appendChild(total);
+  right.appendChild(controls);
+  right.appendChild(removeBtn);
+
+  row.appendChild(main);
+  row.appendChild(right);
+
+  return row;
+}
+
+function updateCartItemQuantity(prizeId, nextQuantity) {
+  const item = state.cart.find((entry) => entry.prizeId === prizeId);
+  if (!item) return;
+
+  if (nextQuantity <= 0) {
+    removeFromCart(prizeId);
+    return;
+  }
+
+  if (nextQuantity > item.quantity) {
+    const extraNeeded = nextQuantity - item.quantity;
+    const maxExtra =
+      item.priceCents > 0
+        ? Math.floor(getRemainingSpendCents() / item.priceCents)
+        : 0;
+
+    item.quantity += Math.min(extraNeeded, maxExtra);
+  } else {
+    item.quantity = nextQuantity;
+  }
+
+  renderCart();
+  applyFilters();
+}
+
+function removeFromCart(prizeId) {
+  state.cart = state.cart.filter((entry) => entry.prizeId !== prizeId);
+  renderCart();
+  applyFilters();
+}
+
+async function submitCart() {
+  if (state.isSubmittingCart) return;
+
+  if (!state.userId) {
+    setStatus("Please sign in first.");
+    return;
+  }
+
+  if (!state.cart.length) {
+    setStatus("Your cart is empty.");
+    return;
+  }
+
+  if (getCartTotalCents() > state.availableToSpendCents) {
+    setStatus("Your cart is over budget.");
+    return;
+  }
+
+  state.isSubmittingCart = true;
+  renderCart();
+  setStatus("Submitting your prize request...");
+
+  try {
+    for (const item of state.cart) {
+      for (let i = 0; i < item.quantity; i += 1) {
+        await fnRedeemPrizeCredit({
+          schoolId: state.schoolId,
+          prizeId: item.prizeId,
+        });
+      }
+    }
+
+    state.cart = [];
+    await loadStudentStoreSummary();
+    applyFilters();
+    renderCart();
+    setStatus("Your prize request was submitted.");
+  } catch (error) {
+    console.error("Cart submit failed:", error);
+    setStatus(normalizeError(error) || "Could not submit your prize request.");
+  } finally {
+    state.isSubmittingCart = false;
+    renderCart();
+  }
 }
 
 function renderEmpty(message) {
   if (!els.prizeShelfGrid) return;
 
-  els.prizeShelfGrid.innerHTML = `
-    <div class="empty-state">${escapeHtml(message)}</div>
-  `;
+  const empty = document.createElement("div");
+  empty.className = "empty-state";
+  empty.textContent = message || "Nothing to show right now.";
+
+  els.prizeShelfGrid.innerHTML = "";
+  els.prizeShelfGrid.appendChild(empty);
 }
 
 function setStatus(message) {
   if (els.storeStatus) {
-    els.storeStatus.textContent = message;
+    els.storeStatus.textContent = message || "";
   }
 }
 
 function normalizePriceToCents(value) {
-  const amount = Number(value || 0);
-  return Math.round(amount * 100);
-}
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return 0;
 
-function formatMoneyCents(value) {
-  const dollars = Number(value || 0) / 100;
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(dollars);
+  if (n >= 1000) return Math.round(n);
+  return Math.round(n * 100);
 }
 
 function formatMoney(value) {
+  const n = Number(value || 0);
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(Number(value || 0));
+  }).format(n);
 }
 
-function escapeHtml(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#39;");
+function formatMoneyCents(cents) {
+  const n = Number(cents || 0);
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(n / 100);
 }
 
+function normalizeError(error) {
+  return (
+    error?.message ||
+    error?.details ||
+    "Something went wrong. Please try again."
+  );
+}

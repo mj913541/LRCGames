@@ -1,0 +1,206 @@
+.school-status-widget {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.school-status-card {
+  position: relative;
+  background: #ffffff;
+  border: 3px solid #dbeafe;
+  border-radius: 22px;
+  padding: 20px 16px 18px;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 390px;
+}
+
+.school-status-card--minutes {
+  border-color: #bfdbfe;
+}
+
+.school-status-card--donations {
+  border-color: #bbf7d0;
+}
+
+.school-status-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1.2;
+  color: #1e3a8a;
+  text-align: center;
+}
+
+.school-status-card--donations .school-status-title {
+  color: #166534;
+}
+
+.school-status-subtitle {
+  margin: 6px 0 18px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #64748b;
+  text-align: center;
+}
+
+.school-status-thermo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  width: 100%;
+}
+
+.school-status-thermo-visual {
+  position: relative;
+  width: 96px;
+  height: 235px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+.school-status-thermo-track {
+  position: relative;
+  width: 38px;
+  height: 205px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  border: 3px solid #cbd5e1;
+}
+
+.school-status-thermo-fill {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 0%;
+  border-radius: 999px;
+  transition: height 700ms ease;
+}
+
+.school-status-card--minutes .school-status-thermo-fill {
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+}
+
+.school-status-card--donations .school-status-thermo-fill {
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+}
+
+.school-status-complete .school-status-thermo-fill {
+  background: linear-gradient(180deg, #facc15 0%, #f59e0b 100%);
+}
+
+.school-status-thermo-bulb {
+  position: absolute;
+  bottom: -12px;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  border: 3px solid #cbd5e1;
+  box-sizing: border-box;
+}
+
+.school-status-card--minutes .school-status-thermo-bulb {
+  background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+}
+
+.school-status-card--donations .school-status-thermo-bulb {
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+}
+
+.school-status-complete .school-status-thermo-bulb {
+  background: linear-gradient(180deg, #facc15 0%, #f59e0b 100%);
+}
+
+.school-status-percent-badge {
+  position: absolute;
+  top: 14px;
+  right: -34px;
+  min-width: 64px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 2px solid #dbeafe;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #1e293b;
+  text-align: center;
+}
+
+.school-status-card--donations .school-status-percent-badge {
+  border-color: #bbf7d0;
+}
+
+.school-status-complete .school-status-percent-badge {
+  border-color: #fde68a;
+}
+
+.school-status-stats {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.school-status-stat {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.school-status-stat-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.school-status-stat-value {
+  display: block;
+  font-size: 1.08rem;
+  font-weight: 900;
+  color: #0f172a;
+}
+
+.school-status-footer {
+  margin-top: 14px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #475569;
+  text-align: center;
+}
+
+.school-status-complete .school-status-footer {
+  color: #b45309;
+}
+
+@media (max-width: 640px) {
+  .school-status-card {
+    min-height: 360px;
+  }
+
+  .school-status-thermo-visual {
+    height: 215px;
+  }
+
+  .school-status-thermo-track {
+    height: 185px;
+  }
+
+  .school-status-percent-badge {
+    right: -20px;
+  }
+}
