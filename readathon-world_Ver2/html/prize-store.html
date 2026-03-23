@@ -8,12 +8,33 @@
 </head>
 <body class="prize-store-page">
   <main class="store-shell">
-    <section id="hdr" class="page-header">
-      <h1 data-title>Prize Store</h1>
-      <p data-subtitle>Use your fundraising progress to unlock fun prizes.</p>
+    <section id="hdr" class="page-header page-header--hero">
+      <div class="page-header__content">
+        <div class="page-header__text">
+          <h1 data-title>Prize Store</h1>
+          <p data-subtitle>Raise real money to earn fun prizes!</p>
+
+          <a class="raise-money-link" href="../html/donations.html">
+            Want to know how to raise money?
+          </a>
+        </div>
+
+        <div class="page-header__balances">
+          <div class="balance-chip balance-chip--donations">
+            <span class="chip-label">Current Donations</span>
+            <strong id="currentDonationsDisplay">$0.00</strong>
+          </div>
+
+          <div class="balance-chip balance-chip--spend">
+            <span class="chip-label">Available to Spend</span>
+            <strong id="availableToSpendDisplay">$0.00</strong>
+            <span class="chip-note">20% of donations raised</span>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="store-toolbar">
+    <section class="hidden store-toolbar">
       <div class="toolbar-left">
         <label class="toolbar-label" for="categoryFilter">Category</label>
         <select id="categoryFilter" class="toolbar-select">
@@ -34,19 +55,8 @@
 
       <div class="toolbar-right toolbar-right--stack">
         <div class="school-chip">
-          <span class="chip-label">School</span>
+          <span class="hidden chip-label">School</span>
           <strong id="schoolIdDisplay">—</strong>
-        </div>
-
-        <div class="balance-chip balance-chip--donations">
-          <span class="chip-label">Current Donations</span>
-          <strong id="currentDonationsDisplay">$0.00</strong>
-        </div>
-
-        <div class="balance-chip balance-chip--spend">
-          <span class="chip-label">Available to Spend</span>
-          <strong id="availableToSpendDisplay">$0.00</strong>
-          <span class="chip-note">20% of donations raised</span>
         </div>
       </div>
     </section>
