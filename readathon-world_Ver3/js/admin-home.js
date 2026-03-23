@@ -20,6 +20,7 @@ import {
   normalizeError,
 } from "./app.js";
 
+import { mountSchoolStatus } from "./school-status.js";
 import { mountAvatarWorldWidget } from "./avatar-world-widget.js";
 import { renderLeaderboard } from "./leaderboard.js";
 import { mountPrizeAdminDashboard } from "./admin-prize-panel.js";
@@ -74,6 +75,7 @@ async function init() {
   });
 
   await renderLeaderboard("leaderboardMount");
+  mountSchoolStatus();
   await mountPrizeAdminDashboard({ mountEl: "#prizeAdminMount", schoolId, userId });
   hideLoading(els.loadingOverlay);
 }
