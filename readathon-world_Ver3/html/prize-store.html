@@ -72,35 +72,47 @@
     </section>
   </main>
 
-  <template id="prizeCardTemplate">
-    <article class="prize-card">
-      <div class="prize-image-wrap">
-        <img class="prize-image" alt="" />
+<template id="prizeCardTemplate">
+  <article class="prize-card">
+    <div class="prize-image-wrap">
+      <img class="prize-image" alt="" />
+    </div>
+
+    <div class="prize-body">
+      <div class="prize-topline">
+        <span class="prize-category"></span>
+        <span class="prize-shelf"></span>
       </div>
 
-      <div class="prize-body">
-        <div class="prize-topline">
-          <span class="prize-category"></span>
-          <span class="prize-shelf"></span>
+      <h3 class="prize-name"></h3>
+      <p class="prize-description"></p>
+      <p class="prize-misc"></p>
+
+      <div class="prize-meta">
+        <div class="meta-pill">
+          <span class="meta-label">Price</span>
+          <strong class="prize-price"></strong>
         </div>
-
-        <h3 class="prize-name"></h3>
-        <p class="prize-description"></p>
-        <p class="prize-misc"></p>
-
-        <div class="prize-meta">
-          <div class="meta-pill">
-            <span class="meta-label">Price</span>
-            <strong class="prize-price"></strong>
-          </div>
-          <div class="meta-pill">
-            <span class="meta-label">Donations Needed</span>
-            <strong class="prize-donations"></strong>
-          </div>
+        <div class="meta-pill">
+          <span class="meta-label">Donations Needed</span>
+          <strong class="prize-donations"></strong>
         </div>
       </div>
-    </article>
-  </template>
+
+      <!-- ✅ MOVE IT HERE -->
+      <div class="prize-actions">
+        <div class="prize-qty">
+          <button type="button" class="qty-btn qty-minus">-</button>
+          <span class="qty-value">1</span>
+          <button type="button" class="qty-btn qty-plus">+</button>
+        </div>
+
+        <button type="button" class="prize-request-btn">Request Prize</button>
+      </div>
+
+    </div>
+  </article>
+</template>
 
   <script type="module" src="../js/prize-store.js"></script>
 </body>
