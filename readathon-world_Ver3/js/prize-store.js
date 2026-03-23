@@ -448,10 +448,33 @@ function buildPrizeCard(prize) {
     });
   }
 
-  if (requestBtn) {
-    requestBtn.textContent = canAfford ? "Request Prize" : "Not Yet Unlocked";
-    requestBtn.disabled = !canAfford;
-  }
+   if (requestBtn) {
+  requestBtn.textContent = canAfford ? "Request Prize" : "Not Yet Unlocked";
+  requestBtn.disabled = !canAfford;
+
+  requestBtn.addEventListener("click", async () => {
+    if (!canAfford) return;
+
+    try {
+      requestBtn.disabled = true;
+      requestBtn.textContent = "Requesting...";
+
+      await submitPrizeRequest({
+        prize,
+        quantity,
+        priceCents,
+      });
+
+      requestBtn.textContent = "Requested!";
+      requestBtn.disabled = true;
+    } catch (error) {
+      console.error("Prize request failed:", error);
+      requestBtn.disabled = false;
+      requestBtn.textContent = "Request Prize";
+      window.alert(error?.message || "Could not submit prize request.");
+    }
+  });
+}
 
   if (actions && !canAfford) {
     actions.classList.add("is-locked");
@@ -460,6 +483,17 @@ function buildPrizeCard(prize) {
   updateQuantityUI();
 
   return tpl.firstElementChild;
+}
+async function submitPrizeRequest({ prize, quantity, priceCents }) {
+  console.log("submitPrizeRequest", {
+    schoolId: state.schoolId,
+    userId: state.userId,
+    prizeId: prize.id,
+    prizeName: prize.name,
+    quantity,
+    priceCents,
+    totalPriceCents: priceCents * quantity,
+  });
 }
 
 function renderEmpty(message) {
