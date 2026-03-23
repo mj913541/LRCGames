@@ -24,9 +24,6 @@
  *
  * Usage:
  *   node tools/prizeCatalogUploader.cjs
- *
- * Requires:
- *   GOOGLE_APPLICATION_CREDENTIALS to point to a Firebase service account json file
  */
 
 const fs = require("fs");
@@ -35,6 +32,9 @@ const admin = require("firebase-admin");
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const CSV_PATH = path.join(PROJECT_ROOT, "data_imports", "prizeCatalogUploader.csv");
+
+const SERVICE_ACCOUNT_PATH =
+  "C:\\Users\\malbr\\OneDrive\\Desktop\\keys\\lrcquest-3039e-serviceAccount.json";
 
 const REQUIRED_HEADERS = [
   "schoolId",
@@ -58,9 +58,15 @@ main().catch((err) => {
 });
 
 function initFirebase() {
+  if (!fs.existsSync(SERVICE_ACCOUNT_PATH)) {
+    throw new Error(`Service account file not found at: ${SERVICE_ACCOUNT_PATH}`);
+  }
+
+  const serviceAccount = require(SERVICE_ACCOUNT_PATH);
+
   if (!admin.apps.length) {
     admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
+      credential: admin.credential.cert(serviceAccount),
     });
   }
 }
