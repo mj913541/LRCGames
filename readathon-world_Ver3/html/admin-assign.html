@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Assign • Readathon World</title>
+  <link rel="stylesheet" href="../css/admin.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+</head>
+
+<body class="page page--admin-assign">
+  <div class="bg bg--home" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="topbar__back" href="./admin-home.html" aria-label="Back to admin home">← Home</a>
+    <div class="topbar__title"><div class="pill">Admin Assign</div></div>
+    <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
+  </header>
+
+  <main class="wrap" id="pageWrap">
+    <section class="panel panel--hero" id="hdr">
+<div class="heroRow">
+  <div>
+    <h1 class="h1" data-title>Admin Assign</h1>
+    <p class="sub" data-subtitle></p>
+  </div>
+</div>
+
+      <div class="assignGrid">
+        <section class="assignCard">
+          <h2 class="h2">Direct Student Adjustment</h2>
+          <p class="sub">This page posts directly and skips pending approval.</p>
+
+          <div class="form">
+            <label class="field">
+              <span class="field__label">Student User ID</span>
+              <input class="input" id="targetUserIdInput" type="text" placeholder="student uid" />
+            </label>
+
+            <div class="assignRow">
+              <label class="field">
+                <span class="field__label">Minutes</span>
+                <input class="input" id="minutesInput" type="number" min="0" step="1" value="0" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Rubies (+ or -)</span>
+                <input class="input" id="rubiesInput" type="number" step="1" value="0" />
+              </label>
+            </div>
+
+            <div class="assignRow">
+              <label class="field">
+                <span class="field__label">Money Raised ($)</span>
+                <input class="input" id="moneyInput" type="number" min="0" step="0.01" value="0" />
+              </label>
+
+              <label class="field">
+                <span class="field__label">Date</span>
+                <input class="input" id="dateInput" type="date" />
+              </label>
+            </div>
+
+            <label class="field">
+              <span class="field__label">Note</span>
+              <textarea class="input" id="noteInput" rows="4" placeholder="Why are you assigning this?"></textarea>
+            </label>
+
+            <div class="assignActions">
+              <button class="btnPrimary" id="btnAssign" type="button">Assign Now</button>
+              <button class="btnGhost" id="btnReset" type="button">Reset</button>
+            </div>
+
+            <div class="assignHint">
+              Rubies are posted as RUBIES_AWARD or RUBIES_SPEND automatically so balances update correctly.
+            </div>
+
+            <div class="msg msg--error isHidden" id="errorBox" role="alert"></div>
+            <div class="msg msg--ok isHidden" id="okBox" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <aside class="assignCard">
+          <h2 class="h2">Preview</h2>
+          <div class="assignPreview">
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Target</span>
+              <strong id="previewTarget">—</strong>
+            </div>
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Minutes</span>
+              <strong id="previewMinutes">0</strong>
+            </div>
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Rubies</span>
+              <strong id="previewRubies">0</strong>
+            </div>
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Money</span>
+              <strong id="previewMoney">$0.00</strong>
+            </div>
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Date</span>
+              <strong id="previewDate">—</strong>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="assignCard">
+        <h2 class="h2">Group Assign</h2>
+        <p class="sub">
+          Select a grade, then a homeroom or house, choose students, and post direct assignments in bulk.
+        </p>
+
+        <div class="form">
+          <div class="field">
+            <span class="field__label">Choose Grade or Houses</span>
+            <div id="gradeButtons" class="chipRow" aria-label="Grade buttons"></div>
+          </div>
+
+          <div class="field">
+            <span class="field__label">Choose Homeroom or House</span>
+            <div id="homeroomButtons" class="chipRow" aria-label="Homeroom or house buttons"></div>
+          </div>
+
+          <div class="field">
+            <div class="assignPreview__row">
+              <span class="assignPreview__label">Roster</span>
+              <strong id="rosterMeta">Pick a grade or house to begin.</strong>
+            </div>
+          </div>
+
+          <div class="assignActions">
+            <button class="btnGhost" id="btnSelectAll" type="button">Select All</button>
+            <button class="btnGhost" id="btnClearAll" type="button">Clear All</button>
+          </div>
+
+          <div id="rosterList" class="rosterList" aria-live="polite"></div>
+
+          <div class="assignRow">
+            <label class="field">
+              <span class="field__label">Minutes</span>
+              <input class="input" id="quickMinutesInput" type="number" min="0" step="1" value="0" />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Rubies (+ or -)</span>
+              <input class="input" id="quickRubiesInput" type="number" step="1" value="0" />
+            </label>
+          </div>
+
+          <div class="assignRow">
+            <label class="field">
+              <span class="field__label">Money Raised ($)</span>
+              <input class="input" id="quickMoneyInput" type="number" min="0" step="0.01" value="0" />
+            </label>
+
+            <label class="field">
+              <span class="field__label">Date</span>
+              <input class="input" id="quickDateInput" type="date" />
+            </label>
+          </div>
+
+          <label class="field">
+            <span class="field__label">Note</span>
+            <textarea
+              class="input"
+              id="quickNoteInput"
+              rows="4"
+              placeholder="Why are you assigning this group adjustment?"
+            ></textarea>
+          </label>
+
+          <div class="assignActions">
+            <button class="btnPrimary" id="btnQuickSubmit" type="button">Assign to Selected Students</button>
+            <button class="btnGhost" id="btnQuickReset" type="button">Reset Group Assign</button>
+          </div>
+
+          <div class="assignHint">
+            This posts directly for every selected student and skips pending approval.
+          </div>
+
+          <div class="msg msg--error isHidden" id="quickErrorBox" role="alert"></div>
+          <div class="msg msg--ok isHidden" id="quickOkBox" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+      <div class="loadingCard">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loadingText" id="loadingText">Loading…</div>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../js/admin-assign.js"></script>
+</body>
+</html>
