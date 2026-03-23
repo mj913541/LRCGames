@@ -365,6 +365,11 @@ function buildPrizeCard(prize) {
   const priceCents = normalizePriceToCents(prize.price);
   const canAfford = state.availableToSpendCents >= priceCents;
 
+  const maxQuantity =
+    priceCents > 0
+      ? Math.floor(state.availableToSpendCents / priceCents)
+      : 1;
+
   if (image) {
     image.src = prize.image || "../img/prizes/placeholder-prize.png";
     image.alt = prize.name || "Prize image";
@@ -411,23 +416,35 @@ function buildPrizeCard(prize) {
 
   let quantity = 1;
 
-  if (qtyValue) {
-    qtyValue.textContent = String(quantity);
+  function updateQuantityUI() {
+    if (qtyValue) {
+      qtyValue.textContent = String(quantity);
+    }
+
+    if (qtyMinus) {
+      qtyMinus.disabled = quantity <= 1;
+    }
+
+    if (qtyPlus) {
+      qtyPlus.disabled = !canAfford || quantity >= maxQuantity;
+    }
   }
 
   if (qtyMinus) {
     qtyMinus.addEventListener("click", () => {
       if (quantity > 1) {
         quantity -= 1;
-        if (qtyValue) qtyValue.textContent = String(quantity);
+        updateQuantityUI();
       }
     });
   }
 
   if (qtyPlus) {
     qtyPlus.addEventListener("click", () => {
-      quantity += 1;
-      if (qtyValue) qtyValue.textContent = String(quantity);
+      if (quantity < maxQuantity) {
+        quantity += 1;
+        updateQuantityUI();
+      }
     });
   }
 
@@ -435,6 +452,12 @@ function buildPrizeCard(prize) {
     requestBtn.textContent = canAfford ? "Request Prize" : "Not Yet Unlocked";
     requestBtn.disabled = !canAfford;
   }
+
+  if (actions && !canAfford) {
+    actions.classList.add("is-locked");
+  }
+
+  updateQuantityUI();
 
   return tpl.firstElementChild;
 }
