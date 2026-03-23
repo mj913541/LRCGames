@@ -356,7 +356,6 @@ function buildPrizeCard(prize) {
   const price = tpl.querySelector(".prize-price");
   const donations = tpl.querySelector(".prize-donations");
 
-  // ⭐ NEW ELEMENTS
   const actions = tpl.querySelector(".prize-actions");
   const qtyValue = tpl.querySelector(".qty-value");
   const qtyMinus = tpl.querySelector(".qty-minus");
@@ -410,12 +409,28 @@ function buildPrizeCard(prize) {
     }
   }
 
-  // ⭐ NEW: Initialize quantity display
+  let quantity = 1;
+
   if (qtyValue) {
-    qtyValue.textContent = "1";
+    qtyValue.textContent = String(quantity);
   }
 
-  // ⭐ NEW: Button state
+  if (qtyMinus) {
+    qtyMinus.addEventListener("click", () => {
+      if (quantity > 1) {
+        quantity -= 1;
+        if (qtyValue) qtyValue.textContent = String(quantity);
+      }
+    });
+  }
+
+  if (qtyPlus) {
+    qtyPlus.addEventListener("click", () => {
+      quantity += 1;
+      if (qtyValue) qtyValue.textContent = String(quantity);
+    });
+  }
+
   if (requestBtn) {
     requestBtn.textContent = canAfford ? "Request Prize" : "Not Yet Unlocked";
     requestBtn.disabled = !canAfford;
