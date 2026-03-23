@@ -20,7 +20,7 @@ const els = {
   subtitle: document.querySelector("[data-subtitle]"),
   schoolIdDisplay: document.getElementById("schoolIdDisplay"),
   currentDonationsDisplay: document.getElementById("currentDonationsDisplay"),
-  currentCreditsDisplay: document.getElementById("currentCreditsDisplay"),
+  availableToSpendDisplay: document.getElementById("availableToSpendDisplay"),
   categoryFilter: document.getElementById("categoryFilter"),
   searchInput: document.getElementById("searchInput"),
   storeStatus: document.getElementById("storeStatus"),
@@ -33,7 +33,7 @@ const state = {
   userId: "",
   summary: null,
   donationsRaisedCents: 0,
-  storeCredit: 0,
+  availableToSpendCents: 0,
   allPrizes: [],
   filteredPrizes: [],
 };
@@ -77,7 +77,7 @@ function setHeader() {
 
   if (els.subtitle) {
     els.subtitle.textContent =
-      "Raise donations to unlock prize rows. Your prize store credit is 20% of what you raise.";
+      "Raise donations to unlock prize rows. You can spend 20% of what you raise in the prize store.";
   }
 }
 
@@ -100,7 +100,7 @@ async function loadStudentStoreSummary() {
 
   const user = auth.currentUser;
   if (!user) {
-    setStatus("Please sign in to view your donations and store credit.");
+    setStatus("Please sign in to view your donations and available amount.");
     updateSummaryDisplays();
     return;
   }
@@ -113,10 +113,7 @@ async function loadStudentStoreSummary() {
 
     const moneyRaisedCents = Number(summary?.moneyRaisedCents || 0);
     state.donationsRaisedCents = moneyRaisedCents;
-
-    // 20% of donations raised
-    // Example: $100 raised => 20 store credits
-    state.storeCredit = Math.floor(moneyRaisedCents / 500);
+    state.availableToSpendCents = Math.floor(moneyRaisedCents * 0.2);
 
     updateSummaryDisplays();
   } catch (error) {
@@ -132,8 +129,10 @@ function updateSummaryDisplays() {
     );
   }
 
-  if (els.currentCreditsDisplay) {
-    els.currentCreditsDisplay.textContent = formatNumber(state.storeCredit);
+  if (els.availableToSpendDisplay) {
+    els.availableToSpendDisplay.textContent = formatMoneyCents(
+      state.availableToSpendCents
+    );
   }
 }
 
@@ -180,6 +179,7 @@ function normalizePrize(raw) {
     sort: Number(raw.sort || 9999),
     category: String(raw.category || "General").trim(),
     description: String(raw.description || "").trim(),
+    misc: String(raw.misc || "").trim(),
     active: raw.active === true,
   };
 }
@@ -187,9 +187,8 @@ function normalizePrize(raw) {
 function populateCategoryFilter(prizes) {
   if (!els.categoryFilter) return;
 
-  const categories = [...new Set(prizes.map((p) => p.category).filter(Boolean))].sort(
-    (a, b) => a.localeCompare(b)
-  );
+  const categories = [...new Set(prizes.map((p) => p.category).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b));
 
   els.categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
 
@@ -212,6 +211,7 @@ function applyFilters() {
     const haystack = [
       prize.name,
       prize.description,
+      prize.misc,
       prize.category,
       prize.shelf,
       String(prize.price || ""),
@@ -252,35 +252,39 @@ function groupPrizesByPrice(prizes) {
   const map = new Map();
 
   for (const prize of prizes) {
-    const key = Number(prize.price || 0);
+    const priceCents = normalizePriceToCents(prize.price);
 
-    if (!map.has(key)) {
-      map.set(key, []);
+    if (!map.has(priceCents)) {
+      map.set(priceCents, []);
     }
 
-    map.get(key).push(prize);
+    map.get(priceCents).push({
+      ...prize,
+      priceCents,
+    });
   }
 
   return [...map.entries()]
     .sort((a, b) => a[0] - b[0])
-    .map(([price, items]) => {
+    .map(([priceCents, items]) => {
       const sortedItems = [...items].sort((a, b) => {
-        const donationDiff = Number(a.donationsNeeded || 0) - Number(b.donationsNeeded || 0);
+        const donationDiff =
+          Number(a.donationsNeeded || 0) - Number(b.donationsNeeded || 0);
         if (donationDiff !== 0) return donationDiff;
         return Number(a.sort || 9999) - Number(b.sort || 9999);
       });
 
-      const minDonationsNeeded = getTierMinDonation(sortedItems, price);
+      const minDonationsNeeded = getTierMinDonation(sortedItems, priceCents);
 
       return {
-        price,
+        priceCents,
         donationsNeeded: minDonationsNeeded,
         items: sortedItems,
       };
     });
 }
 
-function getTierMinDonation(items, price) {
+function getTierMinDonation(items, priceCents) {
   const explicit = items
     .map((item) => Number(item.donationsNeeded || 0))
     .filter((value) => value > 0);
@@ -289,29 +293,33 @@ function getTierMinDonation(items, price) {
     return Math.min(...explicit);
   }
 
-  // Fallback based on store credit rule:
-  // store credit = 20% of donations
-  // price credits -> roughly price * 5 dollars raised
-  return Number(price || 0) * 5;
+  return (Number(priceCents || 0) / 100) * 5;
 }
 
 function buildTierRow(tier) {
   const section = document.createElement("section");
   section.className = "prize-tier-row";
-  section.dataset.priceTier = String(tier.price);
+  section.dataset.priceTier = String(tier.priceCents);
+
+  const tierUnlocked = state.availableToSpendCents >= tier.priceCents;
+  if (tierUnlocked) {
+    section.classList.add("prize-tier-row--unlocked");
+  }
 
   const header = document.createElement("div");
   header.className = "prize-tier-header";
 
   const heading = document.createElement("h2");
   heading.className = "prize-tier-heading";
-  heading.textContent = `Raise $${formatNumber(tier.donationsNeeded)} to choose from this row`;
+  heading.textContent = `Raise ${formatMoney(tier.donationsNeeded)} to choose from this row`;
 
   const subtitle = document.createElement("p");
   subtitle.className = "prize-tier-subtitle";
-  subtitle.textContent = `These prizes cost ${formatNumber(tier.price)} credit${
-    tier.price === 1 ? "" : "s"
-  }. You currently have ${formatNumber(state.storeCredit)}.`;
+  subtitle.textContent = `These prizes cost ${formatMoneyCents(
+    tier.priceCents
+  )} each. You currently have ${formatMoneyCents(
+    state.availableToSpendCents
+  )} available to spend.`;
 
   header.appendChild(heading);
   header.appendChild(subtitle);
@@ -344,8 +352,12 @@ function buildPrizeCard(prize) {
   const shelf = tpl.querySelector(".prize-shelf");
   const name = tpl.querySelector(".prize-name");
   const description = tpl.querySelector(".prize-description");
+  const misc = tpl.querySelector(".prize-misc");
   const price = tpl.querySelector(".prize-price");
   const donations = tpl.querySelector(".prize-donations");
+
+  const priceCents = normalizePriceToCents(prize.price);
+  const canAfford = state.availableToSpendCents >= priceCents;
 
   if (image) {
     image.src = prize.image || "../img/prizes/placeholder-prize.png";
@@ -364,12 +376,17 @@ function buildPrizeCard(prize) {
     description.textContent = prize.description || "No description available.";
   }
 
+  if (misc) {
+    misc.textContent =
+      prize.misc || "Quantity, color, style, and exact item may vary from the picture.";
+  }
+
   if (price) {
-    price.textContent = formatNumber(prize.price);
+    price.textContent = formatMoneyCents(priceCents);
   }
 
   if (donations) {
-    donations.textContent = `$${formatNumber(prize.donationsNeeded)}`;
+    donations.textContent = formatMoney(prize.donationsNeeded);
   }
 
   if (card) {
@@ -378,6 +395,12 @@ function buildPrizeCard(prize) {
     card.dataset.shelf = prize.shelf;
     card.dataset.price = String(prize.price || 0);
     card.dataset.donationsNeeded = String(prize.donationsNeeded || 0);
+
+    if (canAfford) {
+      card.classList.add("prize-card--affordable");
+    } else {
+      card.classList.add("prize-card--locked");
+    }
   }
 
   return tpl.firstElementChild;
@@ -397,8 +420,9 @@ function setStatus(message) {
   }
 }
 
-function formatNumber(value) {
-  return new Intl.NumberFormat("en-US").format(Number(value || 0));
+function normalizePriceToCents(value) {
+  const amount = Number(value || 0);
+  return Math.round(amount * 100);
 }
 
 function formatMoneyCents(value) {
@@ -407,6 +431,13 @@ function formatMoneyCents(value) {
     style: "currency",
     currency: "USD",
   }).format(dollars);
+}
+
+function formatMoney(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(value || 0));
 }
 
 function escapeHtml(value) {

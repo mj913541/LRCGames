@@ -9,7 +9,6 @@
 
   --ps-bg-page: linear-gradient(180deg, #f8f2d8 0%, #efe1a5 100%);
   --ps-panel: rgba(255, 252, 240, 0.9);
-  --ps-panel-2: rgba(255, 248, 221, 0.92);
   --ps-text: #3c2e14;
   --ps-text-soft: #6e5c35;
   --ps-line: rgba(90, 69, 26, 0.14);
@@ -17,8 +16,6 @@
   --ps-accent: #5f8c2d;
   --ps-accent-2: #c98b25;
   --ps-accent-3: #8d5c19;
-
-  --ps-card-min: 260px;
 }
 
 * {
@@ -134,12 +131,12 @@ body.prize-store-page {
   text-align: right;
 }
 
-.balance-chip--credits {
-  background: linear-gradient(180deg, #fff6d8 0%, #f3e08a 100%);
-}
-
 .balance-chip--donations {
   background: linear-gradient(180deg, #fff9e9 0%, #f8efc2 100%);
+}
+
+.balance-chip--spend {
+  background: linear-gradient(180deg, #fff6d8 0%, #f3e08a 100%);
 }
 
 .chip-label {
@@ -209,11 +206,22 @@ body.prize-store-page {
   box-shadow: var(--ps-shadow-2);
 }
 
+.prize-tier-row.prize-tier-row--unlocked .prize-tier-header {
+  border-color: rgba(95, 140, 45, 0.35);
+  box-shadow:
+    0 0 0 3px rgba(95, 140, 45, 0.12),
+    0 8px 20px rgba(33, 25, 10, 0.12);
+}
+
 .prize-tier-heading {
   margin: 0;
   font-size: clamp(1.5rem, 3vw, 2.35rem);
   line-height: 1.05;
   color: var(--ps-accent-3);
+}
+
+.prize-tier-row.prize-tier-row--unlocked .prize-tier-heading {
+  color: #456719;
 }
 
 .prize-tier-subtitle {
@@ -245,6 +253,7 @@ body.prize-store-page {
 }
 
 .prize-card {
+  position: relative;
   display: grid;
   grid-template-rows: 200px auto;
   background: rgba(255, 253, 244, 0.94);
@@ -255,6 +264,36 @@ body.prize-store-page {
   backdrop-filter: blur(2px);
   scroll-snap-align: start;
   min-height: 100%;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, opacity 0.18s ease;
+}
+
+.prize-card.prize-card--affordable {
+  border-color: rgba(95, 140, 45, 0.55);
+  box-shadow:
+    0 0 0 3px rgba(95, 140, 45, 0.18),
+    0 0 24px rgba(95, 140, 45, 0.28),
+    0 8px 20px rgba(33, 25, 10, 0.12);
+  transform: translateY(-2px);
+}
+
+.prize-card.prize-card--affordable::after {
+  content: "Available Now";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 3;
+  background: #5f8c2d;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  box-shadow: 0 6px 16px rgba(95, 140, 45, 0.28);
+}
+
+.prize-card.prize-card--locked {
+  opacity: 0.84;
 }
 
 .prize-image-wrap {
@@ -263,7 +302,7 @@ body.prize-store-page {
   justify-content: center;
   padding: 14px;
   background:
-    radial-gradient(circle at top, rgba(255,255,255,0.75), rgba(244,231,180,0.75));
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.75), rgba(244, 231, 180, 0.75));
   border-bottom: 1px solid rgba(98, 74, 23, 0.1);
 }
 
@@ -322,6 +361,18 @@ body.prize-store-page {
   font-size: 0.95rem;
   line-height: 1.45;
   color: var(--ps-text-soft);
+}
+
+.prize-misc {
+  margin: -4px 0 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #fff8da;
+  border: 1px solid rgba(98, 74, 23, 0.1);
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--ps-text-soft);
+  font-weight: 700;
 }
 
 .prize-meta {
