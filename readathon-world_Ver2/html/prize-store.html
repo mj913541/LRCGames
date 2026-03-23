@@ -10,7 +10,7 @@
   <main class="store-shell">
     <section id="hdr" class="page-header">
       <h1 data-title>Prize Store</h1>
-      <p data-subtitle>Use your reading rewards to unlock fun prizes.</p>
+      <p data-subtitle>Use your fundraising progress to unlock fun prizes.</p>
     </section>
 
     <section class="store-toolbar">
@@ -32,10 +32,21 @@
         />
       </div>
 
-      <div class="toolbar-right">
+      <div class="toolbar-right toolbar-right--stack">
         <div class="school-chip">
           <span class="chip-label">School</span>
           <strong id="schoolIdDisplay">—</strong>
+        </div>
+
+        <div class="balance-chip balance-chip--donations">
+          <span class="chip-label">Current Donations</span>
+          <strong id="currentDonationsDisplay">$0.00</strong>
+        </div>
+
+        <div class="balance-chip balance-chip--credits">
+          <span class="chip-label">Prize Store Credit</span>
+          <strong id="currentCreditsDisplay">0</strong>
+          <span class="chip-note">20% of donations raised</span>
         </div>
       </div>
     </section>
@@ -46,7 +57,7 @@
 
     <section class="store-stage">
       <div class="store-backdrop">
-        <div id="prizeShelfGrid" class="prize-shelf-grid" aria-live="polite"></div>
+        <div id="prizeShelfGrid" class="prize-tier-list" aria-live="polite"></div>
       </div>
     </section>
   </main>

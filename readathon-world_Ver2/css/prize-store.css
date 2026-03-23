@@ -92,6 +92,10 @@ body.prize-store-page {
   justify-content: flex-end;
 }
 
+.toolbar-right--stack {
+  gap: 10px;
+}
+
 .toolbar-label {
   font-size: 0.9rem;
   font-weight: 700;
@@ -117,16 +121,25 @@ body.prize-store-page {
   box-shadow: 0 0 0 3px rgba(95, 140, 45, 0.14);
 }
 
-.school-chip {
+.school-chip,
+.balance-chip {
   display: inline-flex;
   flex-direction: column;
   gap: 4px;
-  min-width: 160px;
+  min-width: 210px;
   background: linear-gradient(180deg, #fff9df 0%, #f7edbe 100%);
   border: 1px solid rgba(103, 75, 21, 0.14);
   border-radius: 16px;
   padding: 10px 14px;
   text-align: right;
+}
+
+.balance-chip--credits {
+  background: linear-gradient(180deg, #fff6d8 0%, #f3e08a 100%);
+}
+
+.balance-chip--donations {
+  background: linear-gradient(180deg, #fff9e9 0%, #f8efc2 100%);
 }
 
 .chip-label {
@@ -135,6 +148,11 @@ body.prize-store-page {
   color: var(--ps-text-soft);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.chip-note {
+  font-size: 0.78rem;
+  color: var(--ps-text-soft);
 }
 
 .store-status-wrap {
@@ -168,11 +186,62 @@ body.prize-store-page {
   border: 1px solid rgba(103, 75, 21, 0.14);
 }
 
-.prize-shelf-grid {
+.prize-tier-list {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.prize-tier-row {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.prize-tier-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  background: rgba(255, 251, 235, 0.94);
+  border: 1px solid rgba(98, 74, 23, 0.12);
+  box-shadow: var(--ps-shadow-2);
+}
+
+.prize-tier-heading {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2.35rem);
+  line-height: 1.05;
+  color: var(--ps-accent-3);
+}
+
+.prize-tier-subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--ps-text-soft);
+  font-weight: 700;
+}
+
+.prize-carousel {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(var(--ps-card-min), 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(260px, 300px);
   gap: 18px;
-  align-items: stretch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 10px;
+  scroll-snap-type: x proximity;
+  scrollbar-width: auto;
+}
+
+.prize-carousel::-webkit-scrollbar {
+  height: 12px;
+}
+
+.prize-carousel::-webkit-scrollbar-thumb {
+  background: rgba(103, 75, 21, 0.25);
+  border-radius: 999px;
 }
 
 .prize-card {
@@ -184,6 +253,8 @@ body.prize-store-page {
   overflow: hidden;
   box-shadow: var(--ps-shadow-2);
   backdrop-filter: blur(2px);
+  scroll-snap-align: start;
+  min-height: 100%;
 }
 
 .prize-image-wrap {
@@ -285,7 +356,6 @@ body.prize-store-page {
 }
 
 .empty-state {
-  grid-column: 1 / -1;
   background: rgba(255, 253, 244, 0.95);
   border: 1px dashed rgba(98, 74, 23, 0.2);
   border-radius: 20px;
@@ -304,7 +374,8 @@ body.prize-store-page {
     align-items: stretch;
   }
 
-  .school-chip {
+  .school-chip,
+  .balance-chip {
     text-align: left;
   }
 }
@@ -332,5 +403,9 @@ body.prize-store-page {
 
   .prize-meta {
     grid-template-columns: 1fr;
+  }
+
+  .prize-carousel {
+    grid-auto-columns: minmax(240px, 86vw);
   }
 }
