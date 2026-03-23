@@ -1,30 +1,30 @@
 schoolId,prizeId,image,name,price,donationsNeeded,shelf,sort,category,description,active
-308_longbeach_elementary,bendy_pencil,../img/prizes/bendy-pencil.png,Flexible Bendy Pencil,1.00,5.00,1,101,school,Flexible bendy pencils colorful fun novelty item,TRUE
-308_longbeach_elementary,scented_pencil,../img/prizes/scented-pencil.png,Scented Pencil,1.00,5.00,1,102,school,Fruit scented pencils colorful classroom reward,TRUE
-308_longbeach_elementary,mochi_squishy,../img/prizes/mochi-squishy.png,Mini Mochi Squishy Animal,1.00,5.00,1,103,fidgets,Soft mochi squishy animals stress relief toy,TRUE
-308_longbeach_elementary,cactus_pen,../img/prizes/cactus-pen.png,Cactus Pen,1.50,7.50,1,104,school,Cute cactus shaped gel pens fun classroom prize,TRUE
-308_longbeach_elementary,block_pencil,../img/prizes/block-pencil.png,Building Block Pencil,1.50,7.50,1,105,school,Stackable building block pencils creative fun prize,TRUE
-308_longbeach_elementary,phone_eraser,../img/prizes/phone-eraser.png,Phone Eraser,1.50,7.50,1,106,school,Mini phone shaped erasers fun school supply reward,TRUE
-308_longbeach_elementary,stack_pencil,../img/prizes/stack-pencil.png,Stackable Cartoon Pencil,1.50,7.50,1,107,school,Stackable cartoon pencils fun classroom supplies,TRUE
-308_longbeach_elementary,stretchy_dino_fidget,../img/prizes/stretchy-dino-fidget.png,Stretchy Dino Fidget Toy,2.50,12.50,1,108,fidgets,Colorful stretchy sensory strings fun calming fidget toy,TRUE
-308_longbeach_elementary,game_controller_pen,../img/prizes/game-controller-pen.png,Video Game Controller Pen,2.50,12.50,1,109,gamer,Video game themed novelty pens perfect for gamers,TRUE
-308_longbeach_elementary,play_doh_mini,../img/prizes/play-doh-mini.png,Play Doh Mini,2.50,12.50,1,110,toys,Mini play dough container perfect classroom reward,TRUE
-308_longbeach_elementary,controller_keychain,../img/prizes/controller-keychain.png,Video Game Controller Keychain,2.50,12.50,1,111,gamer,Video game controller keychain toy perfect gamer prize,TRUE
+308_longbeach_elementary,bendy_pencil,../img/prizes/bendy-pencil.png,Flexible Bendy Pencil (2 Count),1.00,5.00,1,101,school,Flexible bendy pencils colorful fun novelty item,TRUE
+308_longbeach_elementary,scented_pencil,../img/prizes/scented-pencil.png,Scented Pencil  (2 Count),1.00,5.00,1,102,school,Fruit scented pencils colorful classroom reward,TRUE
+308_longbeach_elementary,mochi_squishy,../img/prizes/mochi-squishy.png,Mini Mochi Squishy Animal  (2 Count),1.00,5.00,1,103,fidgets,Soft mochi squishy animals stress relief toy,TRUE
+308_longbeach_elementary,cactus_pen,../img/prizes/cactus-pen.png,Cactus Pen (1 Count),1.50,7.50,1,104,school,Cute cactus shaped gel pens fun classroom prize,TRUE
+308_longbeach_elementary,block_pencil,../img/prizes/block-pencil.png,Building Block Pencil (1 Count),1.50,7.50,1,105,school,Stackable building block pencils creative fun prize,TRUE
+308_longbeach_elementary,phone_eraser,../img/prizes/phone-eraser.png,Phone Eraser (1 Count),1.50,7.50,1,106,school,Mini phone shaped erasers fun school supply reward,TRUE
+308_longbeach_elementary,stack_pencil,../img/prizes/stack-pencil.png,Stackable Cartoon Pencil (1 Count),1.50,7.50,1,107,school,Stackable cartoon pencils fun classroom supplies,TRUE
+308_longbeach_elementary,stretchy_dino_fidget,../img/prizes/stretchy-dino-fidget.png,Stretchy Dino Fidget Toy (2 Count),2.50,12.50,1,108,fidgets,Colorful stretchy sensory strings fun calming fidget toy,TRUE
+308_longbeach_elementary,game_controller_pen,../img/prizes/game-controller-pen.png,Video Game Controller Pen (1 Count),2.50,12.50,1,109,gamer,Video game themed novelty pens perfect for gamers,TRUE
+308_longbeach_elementary,play_doh_mini,../img/prizes/play-doh-mini.png,Play Doh Mini  (3 Count),2.50,12.50,1,110,toys,Mini play dough container perfect classroom reward,TRUE
+308_longbeach_elementary,controller_keychain,../img/prizes/controller-keychain.png,Video Game Controller Keychain (1 Count),2.50,12.50,1,111,gamer,Video game controller keychain toy perfect gamer prize,TRUE
 308_longbeach_elementary,slime_pack_small,../img/prizes/slime-pack-small.png,Slime Pack (3 Count),5.00,25.00,1,112,fidgets,Colorful mini slime pack set of 3 stretchy sensory fun,TRUE
-308_longbeach_elementary,octopus_pop,../img/prizes/octopus-pop.png,Octopus Pop Fidget Keychain,2.50,12.50,1,113,fidgets,Mini octopus pop fidget keychains fun sensory toy,TRUE
-308_longbeach_elementary,gummy_pencil,../img/prizes/gummy-pencil.png,Gummy Bear Mechanical Pencil,5.00,25.00,1,114,school,Scented gummy bear mechanical pencils fun classroom reward,TRUE
-308_longbeach_elementary,food_squishy_keychain,../img/prizes/food-squishy-keychain.png,Food Squishy Keychain,5.00,25.00,1,115,fidgets,Cute food themed squishy keychains stress relief toys,TRUE
-308_longbeach_elementary,silly_putty_pack,../img/prizes/silly-putty-pack.png,Silly Putty Egg Pack,5.00,25.00,1,116,fidgets,Classic silly putty eggs fun stretch bounce sensory toy,TRUE
-308_longbeach_elementary,transform_fidget,../img/prizes/transform-fidget.png,Transformable Fidget Toy,7.50,37.50,2,201,fidgets,Transformable cube fidget toy fun puzzle stress relief,TRUE
+308_longbeach_elementary,octopus_pop,../img/prizes/octopus-pop.png,Octopus Pop Fidget Keychain (1 Count),2.50,12.50,1,113,fidgets,Mini octopus pop fidget keychains fun sensory toy,TRUE
+308_longbeach_elementary,gummy_pencil,../img/prizes/gummy-pencil.png,Gummy Bear Mechanical Pencil (2 Count),5.00,25.00,1,114,school,Scented gummy bear mechanical pencils fun classroom reward,TRUE
+308_longbeach_elementary,food_squishy_keychain,../img/prizes/food-squishy-keychain.png,Food Squishy Keychain (2 Count),5.00,25.00,1,115,fidgets,Cute food themed squishy keychains stress relief toys,TRUE
+308_longbeach_elementary,silly_putty_pack,../img/prizes/silly-putty-pack.png,Silly Putty Egg Pack (2 Count),5.00,25.00,1,116,fidgets,Classic silly putty eggs fun stretch bounce sensory toy,TRUE
+308_longbeach_elementary,transform_fidget,../img/prizes/transform-fidget.png,Transformable Fidget Toy  (1 Count),7.50,37.50,2,201,fidgets,Transformable cube fidget toy fun puzzle stress relief,TRUE
 308_longbeach_elementary,slime_pack_large,../img/prizes/slime-pack-large.png,Mega Slime Pack (6 Count),10.00,50.00,2,202,fidgets,Large slime bundle set of 6 colorful sensory slime containers,TRUE
-308_longbeach_elementary,liquid_motion_keychain,../img/prizes/liquid-motion-keychain.png,Liquid Motion Timer Keychain,10.00,50.00,2,203,fidgets,Liquid motion timer sensory keychains calming fidget toy,TRUE
-308_longbeach_elementary,controller_stress_toy,../img/prizes/controller-stress-toy.png,Game Controller Stress Toy,10.00,50.00,2,204,fidgets,Video game controller squishy stress toys fun sensory prize,TRUE
-308_longbeach_elementary,lcd_writing_tablet,../img/prizes/lcd-writing-tablet.png,Mini LCD Writing Tablet,15.00,75.00,2,205,electronics,Small LCD writing tablet reusable drawing board for kids,TRUE
+308_longbeach_elementary,liquid_motion_keychain,../img/prizes/liquid-motion-keychain.png,Liquid Motion Timer Keychain  (1 Count),10.00,50.00,2,203,fidgets,Liquid motion timer sensory keychains calming fidget toy,TRUE
+308_longbeach_elementary,controller_stress_toy,../img/prizes/controller-stress-toy.png,Game Controller Stress Toy (1 Count),10.00,50.00,2,204,fidgets,Video game controller squishy stress toys fun sensory prize,TRUE
+308_longbeach_elementary,lcd_writing_tablet,../img/prizes/lcd-writing-tablet.png,Mini LCD Writing Tablet (1 Count),15.00,75.00,2,205,electronics,Small LCD writing tablet reusable drawing board for kids,TRUE
 308_longbeach_elementary,mega_fidget_super_pack,../img/prizes/mega-fidget-super-pack.png,Mega Fidget Super Pack (5 Misc Items),20.00,100.00,3,301,fidgets,"Huge fidget bundle with poppers, squishies, and sensory toys—each pack includes 5 surprise fidgets for maximum fun",TRUE
 308_longbeach_elementary,activity_pack,../img/prizes/activity-pack.png,Adventure Activity Pack (Backpack + Water Bottle),20.00,100.00,3,302,activity,"Perfect for outdoor fun! Includes a drawstring backpack and water bottle for sports, hiking, and everyday adventures",TRUE
 308_longbeach_elementary,unicorn_purse,../img/prizes/unicorn-purse.png,Magical Unicorn Purse (Crossbody Bag),20.00,100.00,3,303,accessory,Adorable unicorn crossbody purse perfect for carrying small treasures and showing off your style,TRUE
 308_longbeach_elementary,weighted_plush_medium,../img/prizes/weighted-plush-medium.png,Weighted Animal Plush (Medium),75.00,375.00,3,304,plush,Soft weighted comfort plush perfect for calming and hugging,TRUE
-308_longbeach_elementary,sports_ball_set,../img/prizes/sports-ball-set.png,Kids Sports Ball Set (3 Pack),100.00,500.00,4,401,sports,"Set of basketball, soccer ball, and football for outdoor play",TRUE
+308_longbeach_elementary,sports_ball_set,../img/prizes/sports-ball-set.png,Kids Sports Ball Set (3 Balls),100.00,500.00,4,401,sports,"Set of basketball, soccer ball, and football for outdoor play",TRUE
 308_longbeach_elementary,dinosaur_plush_giant,../img/prizes/dinosaur-plush-giant.png,Giant Dinosaur Plush,100.00,500.00,4,402,plush,Huge dinosaur plush epic oversized prize for top fundraisers,TRUE
 308_longbeach_elementary,unicorn_plush_giant,../img/prizes/unicorn-plush-giant.png,Giant Unicorn Plush (43 inch),100.00,500.00,4,403,plush,Huge rainbow unicorn plush magical oversized cuddle prize,TRUE
 308_longbeach_elementary,weighted_plush_giant,../img/prizes/weighted-plush-giant.png,Weighted Animal Plush (Giant),100.00,500.00,4,404,plush,Soft weighted sloth plush calming and cozy comfort prize,TRUE

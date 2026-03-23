@@ -368,8 +368,8 @@ function buildPrizeCard(prize) {
     });
   }
 
-  if (category) category.textContent = prize.category || "General";
-  if (shelf) shelf.textContent = prize.shelf || "Shelf";
+  if (category) category.remove();
+  if (shelf) shelf.remove();
   if (name) name.textContent = prize.name || "Untitled Prize";
 
   if (description) {
