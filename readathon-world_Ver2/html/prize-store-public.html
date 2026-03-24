@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prize Store</title>
+  <link rel="stylesheet" href="../css/prize-store.css" />
+</head>
+<body class="prize-store-page">
+  <main class="store-shell">
+    <section id="hdr" class="page-header page-header--hero">
+      <div class="page-header__content">
+        <div class="page-header__text">
+          <h1 data-title>Prize Store</h1>
+          <p data-subtitle>Raise real money to earn fun prizes! Raise money until March 31, 2026. Choosing prizes will take place after Spring Break.</p>
+
+          <a class="raise-money-link" href="../html/donations.html">
+            Want to know how to raise money?
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="hidden store-toolbar">
+      <div class="toolbar-left">
+        <label class="toolbar-label" for="categoryFilter">Category</label>
+        <select id="categoryFilter" class="toolbar-select">
+          <option value="all">All Categories</option>
+        </select>
+      </div>
+
+      <div class="toolbar-center">
+        <label class="toolbar-label" for="searchInput">Search</label>
+        <input
+          id="searchInput"
+          class="toolbar-input"
+          type="text"
+          placeholder="Search prizes..."
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="toolbar-right toolbar-right--stack">
+        <div class="school-chip">
+          <span class="hidden chip-label">School</span>
+          <strong id="schoolIdDisplay">—</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="store-status-wrap">
+      <div id="storeStatus" class="store-status">Loading prize catalog…</div>
+    </section>
+
+    <section class="store-stage">
+      <div class="store-backdrop">
+        <div id="prizeShelfGrid" class="prize-tier-list" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <template id="prizeCardTemplate">
+    <article class="prize-card">
+      <div class="prize-image-wrap">
+        <img class="prize-image" alt="" />
+      </div>
+
+      <div class="prize-body">
+        <div class="prize-topline">
+          <span class="prize-category"></span>
+          <span class="prize-shelf"></span>
+        </div>
+
+        <h3 class="prize-name"></h3>
+        <p class="prize-description"></p>
+        <p class="prize-misc"></p>
+
+        <div class="prize-meta">
+          <div class="meta-pill">
+            <span class="meta-label">Price</span>
+            <strong class="prize-price"></strong>
+          </div>
+          <div class="meta-pill">
+            <span class="meta-label">Donations Needed</span>
+            <strong class="prize-donations"></strong>
+          </div>
+        </div>
+      </div>
+    </article>
+  </template>
+
+<script type="module" src="../js/prize-store-public.js"></script>
+</body>
+</html>
