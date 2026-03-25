@@ -288,7 +288,7 @@ function videoLibrarySummaryPath() {
 }
 
 function videoProgressCollectionPath() {
-  return `${schoolRootPath()}/users/${userId}/videoLibrary/progress`;
+  return `${schoolRootPath()}/users/${userId}/videoProgress`;
 }
 
 function videoProgressPath(videoKey) {
