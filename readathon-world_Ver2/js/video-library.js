@@ -516,86 +516,129 @@ function updateLiveStatus() {
    MODAL
 -------------------------------------------------- */
 
-function wireModal() {
-  els.btnCloseVideoModal?.addEventListener("click", () => {
-    closeVideoModal().catch(console.error);
-  });
+/* =========================================================
+   PLAYER MODAL
+========================================================= */
 
-  els.videoModal?.addEventListener("click", (event) => {
-    if (event.target?.matches("[data-close-modal]")) {
-      closeVideoModal().catch(console.error);
-    }
-  });
-
-  window.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && els.videoModal && !els.videoModal.classList.contains("isHidden")) {
-      closeVideoModal().catch(console.error);
-    }
-  });
+function openPlayerModal({ book, matchup }) {
+  setText(els.playerModalTitle, book?.title || "Read Aloud");
+  setText(
+    els.playerModalSubtitle,
+    `${matchup?.roundLabel || ""} • ${matchup?.regionLabel || ""}`
+  );
+  setText(els.playerStatus, "Loading player...");
+  setText(els.playerProgressText, "");
+  setVisible(els.playerModal, true);
 }
 
-async function openVideoModal(item) {
-  modalLastFocus = document.activeElement;
-  activeVideo = item;
-
-  const existing = progressByVideoKey.get(item.key) || null;
-  activeVideoProgress = buildLocalProgress(item, existing);
-
-  els.videoModal?.classList.remove("isHidden");
-  els.videoModal?.setAttribute("aria-hidden", "false");
-  document.body.classList.add("modalOpen");
-
-  if (els.videoModalTitle) els.videoModalTitle.textContent = item.title;
-  if (els.videoModalMeta) els.videoModalMeta.textContent = `${item.rubies} rubies available`;
-
-  resetTrackingStateFromProgress(activeVideoProgress);
-  updateLiveStatus();
-
+async function closePlayerModal() {
   try {
-    await mountVideoPlayer(item, activeVideoProgress);
-  } catch (err) {
-    console.error("Failed to mount video player:", err);
-    if (els.currentVideoStatus) {
-      els.currentVideoStatus.textContent = "Could not load video";
+    if (state.activePlayerSession) {
+      await state.activePlayerSession.destroy();
     }
+  } catch (err) {
+    console.warn("Failed to destroy active player session:", err);
+  }
+
+  state.activePlayerSession = null;
+  state.activeListeningBookId = null;
+  state.activeListeningMatchupId = null;
+  setVisible(els.playerModal, false);
+}
+
+async function startListeningForBook(side) {
+  clearError();
+
+  const matchup = getCurrentMatchup();
+  if (!matchup) return;
+
+  const bookId = side === "A" ? matchup.bookAId : matchup.bookBId;
+  const book = getBookFromState(bookId);
+
+  if (!book?.youtubeVideoId) {
+    showError("This book does not have a YouTube video ID yet.");
     return;
   }
 
-  requestAnimationFrame(() => {
-    els.btnCloseVideoModal?.focus();
+  await closePlayerModal();
+
+  state.activeListeningBookId = bookId;
+  state.activeListeningMatchupId = matchup.matchupId;
+
+  openPlayerModal({ book, matchup });
+
+  state.activePlayerSession = await mountBookBracketPlayer({
+    schoolId: state.schoolId,
+    userId: state.userId,
+    eventId: BOOK_BRACKET_EVENT_ID,
+    matchupId: matchup.matchupId,
+    bookId,
+    youtubeVideoId: book.youtubeVideoId,
+    playerElementId: "bookBracketPlayer",
+
+    onReady: (playerState) => {
+      setText(els.playerStatus, "▶ Player ready. Start watching!");
+      updatePlayerProgressUi(playerState);
+    },
+
+    onProgress: (playerState) => {
+      updatePlayerProgressUi(playerState);
+    },
+
+    onCompleted: async (playerState) => {
+      try {
+        setText(els.playerStatus, "✅ Book completed!");
+        updatePlayerProgressUi(playerState);
+
+        await fnCompleteBookBracketBook({
+          schoolId: state.schoolId,
+          eventId: BOOK_BRACKET_EVENT_ID,
+          matchupId: matchup.matchupId,
+          bookId,
+          watchSeconds: Math.floor(playerState.watchSeconds || 0),
+          watchPercent: Number(playerState.watchPercent || 0),
+          maxObservedTime: Number(playerState.maxObservedTime || 0),
+          durationSeconds: Math.floor(playerState.durationSeconds || 0),
+          suspiciousSeekCount: Number(playerState.suspiciousSeekCount || 0),
+        });
+
+        await refreshProgressFromFirestore();
+        renderCurrentMatchup();
+      } catch (err) {
+        showError(normalizeError(err));
+      }
+    },
+
+    onStateChange: (playerState) => {
+      if (playerState?.completed) {
+        setText(els.playerStatus, "✅ Book completed!");
+      } else if (playerState?.isPlaybackActive) {
+        setText(els.playerStatus, "▶ Watching...");
+      } else {
+        setText(els.playerStatus, "⏸ Paused");
+      }
+    },
+
+    onError: (err) => {
+      showError(normalizeError(err));
+      setText(els.playerStatus, "Player error");
+    },
   });
 }
 
-async function closeVideoModal() {
-  if (isClosingModal) return;
-  isClosingModal = true;
+function updatePlayerProgressUi(playerState) {
+  const watched = Math.floor(playerState?.watchSeconds || 0);
+  const percent = Math.round(Number(playerState?.watchPercent || 0) * 100);
+  const threshold = Math.floor(playerState?.completionThresholdSeconds || 0);
+  const suspicious = Number(playerState?.suspiciousSeekCount || 0);
 
-  try {
-    stopTracking();
-    await saveActiveProgress();
-    await destroyVideoPlayer();
-
-    activeVideo = null;
-    activeVideoProgress = null;
-    duration = 0;
-    lastTime = 0;
-    watchedSeconds = new Set();
-    suspiciousSkips = 0;
-
-    els.videoModal?.classList.add("isHidden");
-    els.videoModal?.setAttribute("aria-hidden", "true");
-    document.body.classList.remove("modalOpen");
-
-    updateLiveStatus();
-
-    if (modalLastFocus && typeof modalLastFocus.focus === "function") {
-      modalLastFocus.focus();
-    }
-  } finally {
-    isClosingModal = false;
-  }
+  setText(
+    els.playerProgressText,
+    `Watched: ${watched}s • Progress: ${percent}% • Threshold: ${threshold}s${
+      suspicious > 0 ? ` • Suspicious skips: ${suspicious}` : ""
+    }`
+  );
 }
-
 /* --------------------------------------------------
    TRACKING
 -------------------------------------------------- */
@@ -888,255 +931,3 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
-export async function mountBookBracketPlayer({
-  youtubeVideoId,
-  playerElementId,
-  onReady = null,
-  onProgress = null,
-  onCompleted = null,
-  onStateChange = null,
-  onError = null,
-  completionThresholdPercent = 0.9,
-  minimumWatchSecondsFloor = 30,
-} = {}) {
-  if (!youtubeVideoId) {
-    throw new Error("mountBookBracketPlayer requires youtubeVideoId.");
-  }
-
-  if (!playerElementId) {
-    throw new Error("mountBookBracketPlayer requires playerElementId.");
-  }
-
-  const mountEl = document.getElementById(playerElementId);
-  if (!mountEl) {
-    throw new Error(`Player mount element not found: #${playerElementId}`);
-  }
-
-  mountEl.replaceChildren();
-
-  await loadYouTubeIframeApi();
-
-  let destroyed = false;
-  let player = null;
-  let progressTimer = null;
-
-  const seenSeconds = new Set();
-  let maxObservedTime = 0;
-  let suspiciousSeekCount = 0;
-  let lastCurrentTime = 0;
-  let completed = false;
-  let durationSeconds = 0;
-  let isPlaybackActive = false;
-
-  const getThresholdSeconds = () => {
-    const byPercent = durationSeconds * clampNumber(completionThresholdPercent, 0, 1);
-    return Math.max(minimumWatchSecondsFloor, Math.floor(byPercent));
-  };
-
-  const getWatchSeconds = () => seenSeconds.size;
-
-  const buildPlayerState = () => {
-    const watchSeconds = getWatchSeconds();
-    const safeDuration = durationSeconds > 0 ? durationSeconds : 0;
-    const watchPercent =
-      safeDuration > 0 ? Math.min(1, watchSeconds / safeDuration) : 0;
-
-    return {
-      youtubeVideoId,
-      durationSeconds: safeDuration,
-      watchSeconds,
-      watchPercent,
-      maxObservedTime,
-      suspiciousSeekCount,
-      completionThresholdPercent: clampNumber(completionThresholdPercent, 0, 1),
-      completionThresholdSeconds: getThresholdSeconds(),
-      completed,
-      isPlaybackActive,
-    };
-  };
-
-  const emitReady = () => {
-    if (typeof onReady === "function") onReady(buildPlayerState());
-  };
-
-  const emitProgress = () => {
-    if (typeof onProgress === "function") onProgress(buildPlayerState());
-  };
-
-  const emitCompleted = () => {
-    if (typeof onCompleted === "function") onCompleted(buildPlayerState());
-  };
-
-  const emitStateChange = () => {
-    if (typeof onStateChange === "function") onStateChange(buildPlayerState());
-  };
-
-  const emitError = (err) => {
-    if (typeof onError === "function") onError(err);
-  };
-
-  const markCurrentSecondWatched = () => {
-    if (!player || typeof player.getCurrentTime !== "function") return;
-
-    const currentTime = Number(player.getCurrentTime() || 0);
-    const floored = Math.max(0, Math.floor(currentTime));
-
-    if (currentTime > maxObservedTime) {
-      maxObservedTime = currentTime;
-    }
-
-    if (currentTime - lastCurrentTime > 2.5) {
-      suspiciousSeekCount += 1;
-    }
-
-    lastCurrentTime = currentTime;
-    seenSeconds.add(floored);
-
-    const threshold = getThresholdSeconds();
-    const watchSeconds = getWatchSeconds();
-
-    if (!completed && threshold > 0 && watchSeconds >= threshold) {
-      completed = true;
-      emitProgress();
-      emitCompleted();
-    } else {
-      emitProgress();
-    }
-  };
-
-  const stopProgressTimer = () => {
-    if (progressTimer) {
-      window.clearInterval(progressTimer);
-      progressTimer = null;
-    }
-  };
-
-  const startProgressTimer = () => {
-    stopProgressTimer();
-    progressTimer = window.setInterval(() => {
-      if (destroyed || !player) return;
-      markCurrentSecondWatched();
-    }, 1000);
-  };
-
-  await new Promise((resolve, reject) => {
-    try {
-      player = new window.YT.Player(playerElementId, {
-        videoId: youtubeVideoId,
-        playerVars: {
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          enablejsapi: 1,
-          origin: window.location.origin,
-        },
-        events: {
-          onReady: (event) => {
-            try {
-              durationSeconds = Number(event.target.getDuration?.() || 0);
-              emitReady();
-              emitStateChange();
-              resolve();
-            } catch (err) {
-              reject(err);
-            }
-          },
-
-          onStateChange: (event) => {
-            const stateCode = event.data;
-
-            if (stateCode === window.YT.PlayerState.PLAYING) {
-              isPlaybackActive = true;
-
-              if (!durationSeconds && typeof player.getDuration === "function") {
-                durationSeconds = Number(player.getDuration() || 0);
-              }
-
-              startProgressTimer();
-              emitStateChange();
-              return;
-            }
-
-            if (stateCode === window.YT.PlayerState.PAUSED) {
-              isPlaybackActive = false;
-              stopProgressTimer();
-              emitStateChange();
-              emitProgress();
-              return;
-            }
-
-            if (stateCode === window.YT.PlayerState.ENDED) {
-              isPlaybackActive = false;
-              stopProgressTimer();
-
-              if (durationSeconds <= 0 && typeof player.getDuration === "function") {
-                durationSeconds = Number(player.getDuration() || 0);
-              }
-
-              const maxTime = Math.floor(
-                Number(player.getCurrentTime?.() || durationSeconds || 0)
-              );
-
-              for (let s = 0; s <= maxTime; s += 1) {
-                seenSeconds.add(s);
-              }
-
-              maxObservedTime = Math.max(maxObservedTime, maxTime);
-
-              if (!completed) {
-                completed = true;
-                emitProgress();
-                emitCompleted();
-              }
-
-              emitStateChange();
-              return;
-            }
-
-            if (stateCode === window.YT.PlayerState.BUFFERING) {
-              emitStateChange();
-              return;
-            }
-
-            if (stateCode === window.YT.PlayerState.CUED) {
-              emitStateChange();
-            }
-          },
-
-          onError: (event) => {
-            const err = new Error(`YouTube player error: ${event?.data ?? "unknown"}`);
-            emitError(err);
-            reject(err);
-          },
-        },
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
-
-  return {
-    getState() {
-      return buildPlayerState();
-    },
-
-    async destroy() {
-      destroyed = true;
-      stopProgressTimer();
-
-      try {
-        if (player && typeof player.destroy === "function") {
-          player.destroy();
-        }
-      } catch (err) {
-        console.warn("Failed to destroy YouTube player:", err);
-      }
-
-      player = null;
-
-      if (mountEl) {
-        mountEl.replaceChildren();
-      }
-    },
-  };
-}
