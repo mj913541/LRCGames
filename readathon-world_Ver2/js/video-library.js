@@ -587,10 +587,10 @@ function syncActiveProgressFromPlayerState(playerState) {
   activeVideoProgress.suspiciousSkips = Number(playerState.suspiciousSeekCount || 0);
 
   if (playerState.completed) {
-    activeVideoProgress.completed = true;
-    if (!activeVideoProgress.rubiesAwarded && activeVideo) {
-      activeVideoProgress.rubiesAwarded = Number(activeVideo.rubies || 0);
-    }
+    activeVideoProgress.watchPercent = Math.max(
+      clampPercent(activeVideoProgress.watchPercent || 0),
+      MIN_WATCH_PERCENT
+    );
   }
 }
 

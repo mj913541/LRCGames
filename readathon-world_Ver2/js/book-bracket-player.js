@@ -65,6 +65,7 @@ export async function mountBookBracketPlayer({
   onError = null,
   completionThresholdPercent = 0.9,
   minimumWatchSecondsFloor = 30,
+  startSeconds = 0,
 } = {}) {
   if (!youtubeVideoId) {
     throw new Error("mountBookBracketPlayer requires youtubeVideoId.");
@@ -190,13 +191,14 @@ export async function mountBookBracketPlayer({
     try {
       player = new window.YT.Player(playerElementId, {
         videoId: youtubeVideoId,
-        playerVars: {
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          enablejsapi: 1,
-          origin: window.location.origin,
-        },
+playerVars: {
+  rel: 0,
+  modestbranding: 1,
+  playsinline: 1,
+  enablejsapi: 1,
+  origin: window.location.origin,
+  start: Math.max(0, Math.floor(Number(startSeconds) || 0)),
+},
         events: {
           onReady: (event) => {
             try {
