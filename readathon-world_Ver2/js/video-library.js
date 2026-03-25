@@ -4,14 +4,21 @@ import {
   getSchoolId,
   waitForAuthReady,
   getIdTokenClaims,
+  fnSubmitTransaction,
 } from "./firebase.js";
+
+import {
+  setHeaderUser,
+  wireSignOut,
+  normalizeError,
+} from "./app.js";
 
 import {
   doc,
   collection,
+  getDoc,
   getDocs,
   setDoc,
-  runTransaction,
   serverTimestamp,
   query,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -163,8 +170,8 @@ const SAVE_PROGRESS_EVERY_MS = 5000;
 -------------------------------------------------- */
 
 const els = {
-  dataTitle: document.getElementById("dataTitle"),
-  dataSubtitle: document.getElementById("dataSubtitle"),
+  hdr: document.getElementById("hdr"),
+  btnSignOut: document.getElementById("btnSignOut"),
 
   videoGrid: document.getElementById("videoGrid"),
   completedCount: document.getElementById("completedCount"),
@@ -179,20 +186,13 @@ const els = {
   watchRewardText: document.getElementById("watchRewardText"),
 };
 
-if (els.dataTitle) els.dataTitle.textContent = PAGE_TITLE;
-if (els.dataSubtitle) els.dataSubtitle.textContent = PAGE_SUBTITLE;
-
-/* --------------------------------------------------
-   SESSION STATE
--------------------------------------------------- */
-
 let schoolId = null;
 let userId = null;
 let claims = null;
 
 let player = null;
 let playerReadyResolver = null;
-let playerReadyPromise = new Promise((resolve) => {
+const playerReadyPromise = new Promise((resolve) => {
   playerReadyResolver = resolve;
 });
 
@@ -216,7 +216,7 @@ const progressByVideoKey = new Map();
 init().catch((error) => {
   console.error("video-library init failed:", error);
   if (els.currentVideoStatus) {
-    els.currentVideoStatus.textContent = "Error loading page";
+    els.currentVideoStatus.textContent = normalizeError(error);
   }
 });
 
@@ -240,6 +240,13 @@ async function init() {
     throw new Error("Missing schoolId or userId.");
   }
 
+  setHeaderUser(els.hdr, {
+    title: PAGE_TITLE,
+    subtitle: PAGE_SUBTITLE,
+  });
+
+  wireSignOut(els.btnSignOut);
+
   await loadAllProgress();
   renderVideoGrid();
   renderStats();
@@ -261,6 +268,8 @@ window.onYouTubeIframeAPIReady = function () {
       controls: 1,
       rel: 0,
       modestbranding: 1,
+      enablejsapi: 1,
+      origin: window.location.origin,
     },
     events: {
       onReady: () => {
@@ -279,10 +288,6 @@ function schoolRootPath() {
   return `readathonV2_schools/${schoolId}`;
 }
 
-function readathonSummaryPath() {
-  return `${schoolRootPath()}/users/${userId}/readathon/summary`;
-}
-
 function videoLibrarySummaryPath() {
   return `${schoolRootPath()}/users/${userId}/videoLibrary/summary`;
 }
@@ -295,12 +300,8 @@ function videoProgressPath(videoKey) {
   return `${videoProgressCollectionPath()}/${videoKey}`;
 }
 
-function transactionsPath() {
-  return `${schoolRootPath()}/transactions`;
-}
-
 /* --------------------------------------------------
-   LOAD BACKEND DATA
+   LOAD DATA
 -------------------------------------------------- */
 
 async function loadAllProgress() {
@@ -357,12 +358,10 @@ function renderVideoGrid() {
 
       <div class="videoCardBody">
         <h3 class="videoCardTitle">${escapeHtml(item.title)}</h3>
-
         <div class="videoCardMeta">
           <span class="${pillClass}">${pillText}</span>
           <span>${Number(item.rubies || 0)} rubies</span>
         </div>
-
         <div class="videoRewardTag">
           ${completed ? "Reward already earned" : "Reward available"}
         </div>
@@ -375,16 +374,14 @@ function renderVideoGrid() {
 }
 
 function renderStats() {
-  if (!els.completedCount || !els.earnedRubies) return;
-
   const completedCount = [...progressByVideoKey.values()].filter((x) => x.completed).length;
   const earnedRubies = [...progressByVideoKey.values()].reduce(
     (sum, x) => sum + Number(x.rubiesAwarded || 0),
     0
   );
 
-  els.completedCount.textContent = String(completedCount);
-  els.earnedRubies.textContent = String(earnedRubies);
+  if (els.completedCount) els.completedCount.textContent = String(completedCount);
+  if (els.earnedRubies) els.earnedRubies.textContent = String(earnedRubies);
 }
 
 function updateLiveStatus() {
@@ -400,12 +397,9 @@ function updateLiveStatus() {
   const pct = clampPercent(activeVideoProgress.watchPercent || 0);
   els.currentVideoStatus.textContent = activeVideo.title;
   els.watchProgressText.textContent = `${pct}%`;
-
-  if (activeVideoProgress.completed) {
-    els.watchRewardText.textContent = `${activeVideoProgress.rubiesAwarded || activeVideo.rubies} rubies earned`;
-  } else {
-    els.watchRewardText.textContent = "Not earned yet";
-  }
+  els.watchRewardText.textContent = activeVideoProgress.completed
+    ? `${activeVideoProgress.rubiesAwarded || activeVideo.rubies} rubies earned`
+    : "Not earned yet";
 }
 
 /* --------------------------------------------------
@@ -437,25 +431,16 @@ async function openVideoModal(item) {
   const existing = progressByVideoKey.get(item.key) || null;
   activeVideoProgress = buildLocalProgress(item, existing);
 
-  if (els.videoModal) {
-    els.videoModal.classList.remove("isHidden");
-    els.videoModal.setAttribute("aria-hidden", "false");
-  }
-
+  els.videoModal?.classList.remove("isHidden");
+  els.videoModal?.setAttribute("aria-hidden", "false");
   document.body.classList.add("modalOpen");
 
-  if (els.videoModalTitle) {
-    els.videoModalTitle.textContent = item.title;
-  }
-
-  if (els.videoModalMeta) {
-    els.videoModalMeta.textContent = `${item.rubies} rubies available`;
-  }
+  if (els.videoModalTitle) els.videoModalTitle.textContent = item.title;
+  if (els.videoModalMeta) els.videoModalMeta.textContent = `${item.rubies} rubies available`;
 
   updateLiveStatus();
 
   await playerReadyPromise;
-
   resetTrackingStateFromProgress(activeVideoProgress);
 
   player.loadVideoById({
@@ -483,12 +468,10 @@ async function closeVideoModal() {
   watchedSeconds = new Set();
   suspiciousSkips = 0;
 
-  if (els.videoModal) {
-    els.videoModal.classList.add("isHidden");
-    els.videoModal.setAttribute("aria-hidden", "true");
-  }
-
+  els.videoModal?.classList.add("isHidden");
+  els.videoModal?.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modalOpen");
+
   updateLiveStatus();
 
   if (modalLastFocus && typeof modalLastFocus.focus === "function") {
@@ -544,7 +527,6 @@ function startTracking() {
     activeVideoProgress.watchedSecondCount = watchedSeconds.size;
     activeVideoProgress.watchPercent = computeWatchPercent(watchedSeconds.size, duration);
     activeVideoProgress.suspiciousSkips = suspiciousSkips;
-    activeVideoProgress.lastWatchedAtClient = Date.now();
 
     updateLiveStatus();
   }, 1000);
@@ -594,7 +576,7 @@ async function handleVideoEnded() {
 }
 
 /* --------------------------------------------------
-   BACKEND WRITES
+   WRITES
 -------------------------------------------------- */
 
 async function saveActiveProgress() {
@@ -628,108 +610,94 @@ async function saveActiveProgress() {
 }
 
 async function awardVideoCompletion(item, progress) {
-  const summaryRef = doc(db, readathonSummaryPath());
-  const videoSummaryRef = doc(db, videoLibrarySummaryPath());
-  const progressRef = doc(db, videoProgressPath(item.key));
-  const transactionsRef = collection(db, transactionsPath());
-
-  await runTransaction(db, async (transaction) => {
-    const summarySnap = await transaction.get(summaryRef);
-    const progressSnap = await transaction.get(progressRef);
-    const videoSummarySnap = await transaction.get(videoSummaryRef);
-
-    const existingProgress = progressSnap.exists() ? progressSnap.data() : null;
-
-    if (existingProgress?.completed) {
-      progress.completed = true;
-      progress.rubiesAwarded = Number(existingProgress.rubiesAwarded || item.rubies || 0);
-      progress.watchPercent = Math.max(
-        clampPercent(existingProgress.watchPercent || 0),
-        clampPercent(progress.watchPercent || 0)
-      );
-      return;
-    }
-
-    const currentSummary = summarySnap.exists() ? summarySnap.data() : {};
-    const currentRubiesBalance = Number(currentSummary.rubiesBalance || 0);
-    const currentRubiesEarned = Number(currentSummary.rubiesLifetimeEarned || 0);
-
-    const videoSummary = videoSummarySnap.exists() ? videoSummarySnap.data() : {};
-    const currentCompletedVideos = Number(videoSummary.completedVideos || 0);
-    const currentVideoRubies = Number(videoSummary.totalRubiesAwarded || 0);
-
-    const reward = Number(item.rubies || 0);
-
-    transaction.set(
-      progressRef,
-      {
-        videoKey: item.key,
-        youtubeId: item.youtubeId,
-        youtubeUrl: item.youtubeUrl || "",
-        title: item.title,
-        rubiesPlanned: reward,
-        watchPercent: Math.max(clampPercent(progress.watchPercent || 0), MIN_WATCH_PERCENT),
-        watchedSecondCount: Number(progress.watchedSecondCount || 0),
-        durationSeconds: Number(progress.durationSeconds || 0),
-        resumeAtSeconds: Number(progress.resumeAtSeconds || 0),
-        suspiciousSkips: Number(progress.suspiciousSkips || 0),
-        completed: true,
-        completedAt: serverTimestamp(),
-        rubiesAwarded: reward,
-        lastWatchedAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
+  const existing = progressByVideoKey.get(item.key) || {};
+  if (existing.completed) {
+    progress.completed = true;
+    progress.rubiesAwarded = Number(existing.rubiesAwarded || item.rubies || 0);
+    progress.watchPercent = Math.max(
+      clampPercent(existing.watchPercent || 0),
+      clampPercent(progress.watchPercent || 0),
+      MIN_WATCH_PERCENT
     );
+    return;
+  }
 
-    transaction.set(
-      summaryRef,
-      {
-        rubiesBalance: currentRubiesBalance + reward,
-        rubiesLifetimeEarned: currentRubiesEarned + reward,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+  await fnSubmitTransaction({
+    schoolId,
+    targetUserId: userId,
+    actionType: "RUBIES_AWARD",
+    deltaMinutes: 0,
+    deltaRubies: Number(item.rubies || 0),
+    deltaMoneyRaisedCents: 0,
+    note: `Video reward: ${item.title}`.slice(0, 300),
+  });
 
-    transaction.set(
-      videoSummaryRef,
-      {
-        completedVideos: currentCompletedVideos + 1,
-        totalRubiesAwarded: currentVideoRubies + reward,
-        updatedAt: serverTimestamp(),
-      },
-      { merge: true }
-    );
+  progress.completed = true;
+  progress.rubiesAwarded = Number(item.rubies || 0);
+  progress.watchPercent = Math.max(
+    clampPercent(progress.watchPercent || 0),
+    MIN_WATCH_PERCENT
+  );
 
-    const txRef = doc(transactionsRef);
-    transaction.set(txRef, {
-      kind: "video_reward",
-      source: "video_library",
-      schoolId,
-      userId,
+  await setDoc(
+    doc(db, videoProgressPath(item.key)),
+    {
       videoKey: item.key,
       youtubeId: item.youtubeId,
       youtubeUrl: item.youtubeUrl || "",
       title: item.title,
-      rubiesDelta: reward,
-      createdAt: serverTimestamp(),
-    });
+      rubiesPlanned: Number(item.rubies || 0),
+      watchPercent: progress.watchPercent,
+      watchedSecondCount: Number(progress.watchedSecondCount || 0),
+      durationSeconds: Number(progress.durationSeconds || 0),
+      resumeAtSeconds: Number(progress.resumeAtSeconds || 0),
+      suspiciousSkips: Number(progress.suspiciousSkips || 0),
+      completed: true,
+      completedAt: serverTimestamp(),
+      rubiesAwarded: Number(item.rubies || 0),
+      lastWatchedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 
-    progress.completed = true;
-    progress.rubiesAwarded = reward;
-    progress.watchPercent = Math.max(clampPercent(progress.watchPercent || 0), MIN_WATCH_PERCENT);
-  });
-
-  progressByVideoKey.set(item.key, {
-    ...(progressByVideoKey.get(item.key) || {}),
-    ...progress,
+  const nextMap = new Map(progressByVideoKey);
+  nextMap.set(item.key, {
+    ...(nextMap.get(item.key) || {}),
+    videoKey: item.key,
+    youtubeId: item.youtubeId,
+    youtubeUrl: item.youtubeUrl || "",
+    title: item.title,
+    rubiesPlanned: Number(item.rubies || 0),
+    watchPercent: progress.watchPercent,
+    watchedSecondCount: Number(progress.watchedSecondCount || 0),
+    durationSeconds: Number(progress.durationSeconds || 0),
+    resumeAtSeconds: Number(progress.resumeAtSeconds || 0),
+    suspiciousSkips: Number(progress.suspiciousSkips || 0),
     completed: true,
     rubiesAwarded: Number(item.rubies || 0),
-    watchPercent: Math.max(clampPercent(progress.watchPercent || 0), MIN_WATCH_PERCENT),
   });
 
-  await saveActiveProgress();
+  const completedCount = [...nextMap.values()].filter((x) => x.completed).length;
+  const totalRubiesAwarded = [...nextMap.values()].reduce(
+    (sum, x) => sum + Number(x.rubiesAwarded || 0),
+    0
+  );
+
+  await setDoc(
+    doc(db, videoLibrarySummaryPath()),
+    {
+      completedVideos: completedCount,
+      totalRubiesAwarded,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  progressByVideoKey.clear();
+  for (const [k, v] of nextMap.entries()) {
+    progressByVideoKey.set(k, v);
+  }
 }
 
 /* --------------------------------------------------
