@@ -1,0 +1,305 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* -----------------------------
+      Helpers
+    ------------------------------*/
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function authUid() {
+      return isSignedIn() ? request.auth.uid : null;
+    }
+
+    function tokenSchoolId() {
+      return isSignedIn() ? request.auth.token.schoolId : null;
+    }
+
+    function tokenUserId() {
+      return isSignedIn() ? request.auth.token.userId : null;
+    }
+
+    function tokenRole() {
+      return isSignedIn() ? request.auth.token.role : null;
+    }
+
+    function isSchool(schoolId) {
+      return isSignedIn() && tokenSchoolId() == schoolId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && tokenRole() == "admin";
+    }
+
+    function isStaff() {
+      return isSignedIn() && tokenRole() == "staff";
+    }
+
+    function isStudent() {
+      return isSignedIn() && tokenRole() == "student";
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && (
+        authUid() == userId ||
+        tokenUserId() == userId
+      );
+    }
+
+    function staffLinkActive(schoolId, staffId, studentId) {
+      return exists(
+        /databases/$(database)/documents/readathonV2_schools/$(schoolId)/staffStudentLinks/$(staffId + "_" + studentId)
+      )
+      && get(
+        /databases/$(database)/documents/readathonV2_schools/$(schoolId)/staffStudentLinks/$(staffId + "_" + studentId)
+      ).data.active == true;
+    }
+
+    function canReadTargetUser(schoolId, targetUserId) {
+      return isSchool(schoolId) && (
+        isAdmin()
+        || isSelf(targetUserId)
+        || (isStaff() && staffLinkActive(schoolId, tokenUserId(), targetUserId))
+      );
+    }
+
+    /* -----------------------------
+      Root: Multi-school
+      readathonV2_schools/{schoolId}/...
+    ------------------------------*/
+    match /readathonV2_schools/{schoolId} {
+
+      allow read, write: if false;
+
+      /* -----------------------------
+        AVATAR CATALOG
+        /avatarCatalog/catalog/items/{itemId}
+      ------------------------------*/
+      match /avatarCatalog/catalog/items/{itemId} {
+        allow read: if isSchool(schoolId);
+        allow write: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        AVATAR ROOM STATE (top-level)
+        /userRoomState/{userId}
+      ------------------------------*/
+      match /userRoomState/{userId} {
+        allow get: if canReadTargetUser(schoolId, userId);
+        allow list: if false;
+
+        allow create, update: if isSchool(schoolId) && isSelf(userId);
+        allow delete: if false;
+      }
+
+      /* -----------------------------
+        USERS
+        /users/{userId}
+      ------------------------------*/
+      match /users/{userId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || isSelf(userId)
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), userId))
+        );
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+
+        /* -----------------------------
+          AVATAR ROOM STATE (legacy/nested)
+          /users/{userId}/avatarRoom/state
+        ------------------------------*/
+        match /avatarRoom/state {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if false;
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+
+        /* -----------------------------
+          READATHON SUMMARY
+          /users/{userId}/readathon/summary
+        ------------------------------*/
+        match /readathon/summary {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if false;
+
+          // Server / function owned
+          allow create, update, delete: if false;
+
+          /* -----------------------------
+            INVENTORY
+            /users/{userId}/readathon/summary/inventory/{itemId}
+          ------------------------------*/
+          match /inventory/{itemId} {
+            allow get: if canReadTargetUser(schoolId, userId);
+            allow list: if canReadTargetUser(schoolId, userId);
+
+            // Server / function owned
+            allow create, update, delete: if false;
+          }
+        }
+
+        /* -----------------------------
+          VIDEO LIBRARY SUMMARY
+          /users/{userId}/videoLibrary/summary
+        ------------------------------*/
+        match /videoLibrary/summary {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if false;
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+
+        /* -----------------------------
+          VIDEO PROGRESS
+          /users/{userId}/videoProgress/{videoKey}
+        ------------------------------*/
+        match /videoProgress/{videoKey} {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if isSchool(schoolId) && isSelf(userId);
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+      }
+
+      /* -----------------------------
+        PRIZE CATALOG
+        /prizeCatalog/{prizeId}
+      ------------------------------*/
+      match /prizeCatalog/{prizeId} {
+        allow get: if isSchool(schoolId);
+        allow list: if isSchool(schoolId);
+
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        PRIZE ORDERS
+        /prizeOrders/{orderId}
+      ------------------------------*/
+      match /prizeOrders/{orderId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.userId == authUid())
+          || (resource.data.userId == tokenUserId())
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), resource.data.userId))
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        // Server / function owned
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        LEGACY PRIZE REDEMPTIONS
+        /prizeRedemptions/{redemptionId}
+      ------------------------------*/
+      match /prizeRedemptions/{redemptionId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.userId == authUid())
+          || (resource.data.userId == tokenUserId())
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), resource.data.userId))
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        SECRETS
+        /secrets/{userId}
+      ------------------------------*/
+      match /secrets/{userId} {
+        allow read, write: if false;
+      }
+
+      /* -----------------------------
+        PUBLIC STUDENT PICKER
+        /publicStudents/{studentId}
+      ------------------------------*/
+      match /publicStudents/{studentId} {
+        allow get: if resource.data.active == true;
+        allow list: if resource.data.active == true;
+
+        allow create, update, delete: if isAdmin() && isSchool(schoolId);
+      }
+
+      /* -----------------------------
+        LEADERBOARDS
+        /leaderboards/{docId}
+      ------------------------------*/
+      match /leaderboards/{docId} {
+        allow get: if isSchool(schoolId);
+        allow list: if false;
+
+        // Server / function owned
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        PUBLIC HOMEROOMS
+        /publicHomerooms/{homeroomId}
+      ------------------------------*/
+      match /publicHomerooms/{homeroomId} {
+        allow get: if isSchool(schoolId);
+        allow list: if isSchool(schoolId);
+
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        HOMEROOMS (private)
+        /homerooms/{homeroomId}
+      ------------------------------*/
+      match /homerooms/{homeroomId} {
+        allow get: if isSchool(schoolId) && (isAdmin() || isStaff());
+        allow list: if isSchool(schoolId) && (isAdmin() || isStaff());
+
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        STAFF-STUDENT LINKS
+        /staffStudentLinks/{linkId}
+      ------------------------------*/
+      match /staffStudentLinks/{linkId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (isStaff() && resource.data.staffId == tokenUserId())
+          || (isStudent() && resource.data.studentId == tokenUserId())
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        Transactions Audit Log
+        /transactions/{txId}
+      ------------------------------*/
+      match /transactions/{txId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.targetUserId == tokenUserId())
+          || (resource.data.targetUserId == authUid())
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), resource.data.targetUserId))
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+      }
+    }
+  }
+}

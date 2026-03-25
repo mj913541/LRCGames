@@ -36,7 +36,7 @@ const VIDEO_ITEMS = [
     title: "The Smart Cookie",
     youtubeId: "LJq-7-wycqY",
     youtubeUrl: "https://youtu.be/LJq-7-wycqY",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/the-smart-cookie.jpg",
   },
   {
@@ -44,7 +44,7 @@ const VIDEO_ITEMS = [
     title: "The Couch Potato",
     youtubeId: "qfwF75e4BYc",
     youtubeUrl: "https://youtu.be/qfwF75e4BYc",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/the-couch-potato.jpg",
   },
   {
@@ -52,7 +52,7 @@ const VIDEO_ITEMS = [
     title: "The Sour Grape",
     youtubeId: "QZn1SCPtOw4",
     youtubeUrl: "https://youtu.be/QZn1SCPtOw4",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/the-sour-grape.jpg",
   },
   {
@@ -60,7 +60,7 @@ const VIDEO_ITEMS = [
     title: "The Big Cheese",
     youtubeId: "8X0x7mqwJiU",
     youtubeUrl: "https://youtu.be/8X0x7mqwJiU",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/the-big-cheese.jpg",
   },
   {
@@ -68,7 +68,7 @@ const VIDEO_ITEMS = [
     title: "We Don't Eat Our Classmates",
     youtubeId: "th6exRnPixg",
     youtubeUrl: "https://youtu.be/th6exRnPixg",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/we-dont-eat-our-classmates.jpg",
   },
   {
@@ -76,7 +76,7 @@ const VIDEO_ITEMS = [
     title: "Knight Owl",
     youtubeId: "503VhkZAEfw",
     youtubeUrl: "https://youtu.be/503VhkZAEfw",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/knight-owl.jpg",
   },
   {
@@ -84,7 +84,7 @@ const VIDEO_ITEMS = [
     title: "Dragons Love Tacos",
     youtubeId: "JYy9gbv44QE",
     youtubeUrl: "https://youtu.be/JYy9gbv44QE",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/dragons-love-tacos.jpg",
   },
   {
@@ -92,7 +92,7 @@ const VIDEO_ITEMS = [
     title: "How to Catch a Snowman",
     youtubeId: "Xtd-mTRcu7U",
     youtubeUrl: "https://youtu.be/Xtd-mTRcu7U",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/how-to-catch-a-snowman.jpg",
   },
   {
@@ -100,7 +100,7 @@ const VIDEO_ITEMS = [
     title: "Gym Teacher from the Black Lagoon",
     youtubeId: "AR9oL1YfpRU",
     youtubeUrl: "https://youtu.be/AR9oL1YfpRU",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/gym-teacher-black-lagoon.jpg",
   },
   {
@@ -108,7 +108,7 @@ const VIDEO_ITEMS = [
     title: "Music Teacher from the Black Lagoon",
     youtubeId: "7-s0hcwQOaE",
     youtubeUrl: "https://youtu.be/7-s0hcwQOaE",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/music-teacher-black-lagoon.jpg",
   },
   {
@@ -116,7 +116,7 @@ const VIDEO_ITEMS = [
     title: "Librarian from the Black Lagoon",
     youtubeId: "ZOZ7ExGHsCw",
     youtubeUrl: "https://youtu.be/ZOZ7ExGHsCw",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/librarian-black-lagoon.jpg",
   },
   {
@@ -124,7 +124,7 @@ const VIDEO_ITEMS = [
     title: "Class Pet from the Black Lagoon",
     youtubeId: "r54lszFx_8g",
     youtubeUrl: "https://youtu.be/r54lszFx_8g",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/class-pet-black-lagoon.jpg",
   },
   {
@@ -132,7 +132,7 @@ const VIDEO_ITEMS = [
     title: "Pig the Star",
     youtubeId: "Ic_Ar31iFwA",
     youtubeUrl: "https://youtu.be/Ic_Ar31iFwA",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/pig-the-star.jpg",
   },
   {
@@ -140,7 +140,7 @@ const VIDEO_ITEMS = [
     title: "Pig the Stinker",
     youtubeId: "OSaC4JBsOjE",
     youtubeUrl: "https://youtu.be/OSaC4JBsOjE",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/pig-the-stinker.jpg",
   },
   {
@@ -148,7 +148,7 @@ const VIDEO_ITEMS = [
     title: "Pig the Winner",
     youtubeId: "7Zhzv3RfqGM",
     youtubeUrl: "https://youtu.be/7Zhzv3RfqGM",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/pig-the-winner.jpg",
   },
   {
@@ -156,7 +156,7 @@ const VIDEO_ITEMS = [
     title: "Pig the Slob",
     youtubeId: "S5UA0LajxOE",
     youtubeUrl: "https://youtu.be/S5UA0LajxOE",
-    rubies: 5,
+    rubies: 10,
     image: "../img/book-bracket/pig-the-slob.jpg",
   },
 ];
