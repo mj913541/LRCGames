@@ -258,7 +258,6 @@ async function init() {
   await loadAllProgress();
   renderVideoGrid();
   renderStats();
-  wireModal();
   updateLiveStatus();
 }
 
