@@ -1,0 +1,315 @@
+:root {
+  --page-bg: #f6f8fc;
+  --card-bg: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #dbe3f0;
+  --shadow: 0 12px 30px rgba(31, 41, 55, 0.12);
+  --shadow-soft: 0 8px 20px rgba(31, 41, 55, 0.08);
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  color: var(--text);
+  background: var(--page-bg);
+}
+
+body.modalOpen {
+  overflow: hidden;
+}
+
+.pageHeader {
+  padding: 18px 22px 0;
+}
+
+#dataTitle,
+#dataSubtitle {
+  display: none;
+}
+
+.videoLibraryPage {
+  width: min(1300px, calc(100% - 28px));
+  margin: 0 auto;
+  padding: 18px 0 40px;
+}
+
+.videoLibraryHero {
+  margin-bottom: 22px;
+}
+
+.videoLibraryTitle {
+  margin: 0 0 8px;
+  font-size: clamp(1.9rem, 2.8vw, 2.8rem);
+}
+
+.videoLibrarySubtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.videoLibraryStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.statCard {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+  padding: 16px 18px;
+}
+
+.statLabel {
+  display: block;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.videoGridSection {
+  margin-top: 22px;
+}
+
+.videoGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.videoCard {
+  position: relative;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+
+.videoCard:hover,
+.videoCard:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow);
+}
+
+.videoThumbWrap {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  background: #e9eef7;
+  overflow: hidden;
+}
+
+.videoThumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  background: #dfe7f3;
+}
+
+.videoPlayBadge {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(17, 24, 39, 0.8);
+  color: #fff;
+  font-size: 1.15rem;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+}
+
+.videoCardBody {
+  padding: 14px;
+}
+
+.videoCardTitle {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.videoCardMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.videoStatusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #234;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.videoStatusPill.isComplete {
+  background: #e6f8eb;
+  color: #166534;
+}
+
+.videoStatusPill.isWatching {
+  background: #fff4db;
+  color: #9a6700;
+}
+
+.videoRewardTag {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.videoModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.videoModal.isHidden {
+  display: none;
+}
+
+.videoModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 25, 0.72);
+}
+
+.videoModalPanel {
+  position: relative;
+  z-index: 1;
+  width: min(1200px, calc(100vw - 26px));
+  height: min(92vh, 900px);
+  margin: 4vh auto;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.35);
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+}
+
+.videoModalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 46px;
+  height: 46px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.videoModalHeader {
+  padding: 22px 22px 10px;
+}
+
+.videoModalHeader h2 {
+  margin: 0 0 6px;
+  font-size: 1.35rem;
+}
+
+.videoModalHeader p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.videoPlayerShell {
+  padding: 12px 22px 22px;
+  min-height: 0;
+}
+
+#ytPlayer,
+#ytPlayer iframe {
+  width: 100%;
+  height: 100%;
+  min-height: 420px;
+  border: 0;
+  border-radius: 18px;
+  background: #000;
+}
+
+.videoModalFooter {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 22px 22px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.videoWatchStatus {
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.videoWatchStatus strong {
+  color: #fff;
+}
+
+@media (max-width: 980px) {
+  .videoGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .videoLibraryStats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .videoGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .videoModalPanel {
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  #ytPlayer,
+  #ytPlayer iframe {
+    min-height: 260px;
+  }
+
+  .videoModalFooter {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 480px) {
+  .videoGrid {
+    grid-template-columns: 1fr;
+  }
+}

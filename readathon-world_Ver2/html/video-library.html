@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Video Library</title>
+  <link rel="stylesheet" href="../css/video-library.css" />
+</head>
+<body>
+  <header id="hdr" class="pageHeader">
+    <div id="dataTitle" data-title>Video Library</div>
+    <div id="dataSubtitle" data-subtitle>Watch videos and earn rubies</div>
+  </header>
+
+  <main class="videoLibraryPage" id="videoLibraryPage">
+    <section class="videoLibraryHero">
+      <h1 class="videoLibraryTitle">Video Library</h1>
+      <p class="videoLibrarySubtitle">
+        Click a card to watch a video. Completed videos earn rubies once.
+      </p>
+
+      <div class="videoLibraryStats">
+        <div class="statCard">
+          <span class="statLabel">Completed</span>
+          <strong id="completedCount">0</strong>
+        </div>
+
+        <div class="statCard">
+          <span class="statLabel">Rubies Earned</span>
+          <strong id="earnedRubies">0</strong>
+        </div>
+
+        <div class="statCard">
+          <span class="statLabel">Current Video</span>
+          <strong id="currentVideoStatus">Not watching</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="videoGridSection">
+      <div id="videoGrid" class="videoGrid" aria-label="Video choices"></div>
+    </section>
+  </main>
+
+  <div
+    id="videoModal"
+    class="videoModal isHidden"
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="videoModalTitle"
+  >
+    <div class="videoModalBackdrop" data-close-modal></div>
+
+    <div class="videoModalPanel">
+      <button
+        id="btnCloseVideoModal"
+        class="videoModalClose"
+        type="button"
+        aria-label="Close video"
+      >
+        ✕
+      </button>
+
+      <div class="videoModalHeader">
+        <h2 id="videoModalTitle">Now Playing</h2>
+        <p id="videoModalMeta">Loading…</p>
+      </div>
+
+      <div class="videoPlayerShell">
+        <div id="ytPlayer"></div>
+      </div>
+
+      <div class="videoModalFooter">
+        <div class="videoWatchStatus">
+          <span>Progress:</span>
+          <strong id="watchProgressText">0%</strong>
+        </div>
+
+        <div class="videoWatchStatus">
+          <span>Reward:</span>
+          <strong id="watchRewardText">Not earned yet</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script type="module" src="../js/video-library.js"></script>
+</body>
+</html>
