@@ -22,9 +22,7 @@ import {
   query,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-import {
-  mountBookBracketPlayer,
-} from "./book-bracket-player.js";
+import { mountBookBracketPlayer } from "./book-bracket-player.js";
 
 /* --------------------------------------------------
    PAGE CONFIG
@@ -165,8 +163,6 @@ const VIDEO_ITEMS = [
 ];
 
 const MIN_WATCH_PERCENT = 90;
-const MAX_ALLOWED_FORWARD_JUMP_SECONDS = 8;
-const SAVE_PROGRESS_EVERY_MS = 5000;
 
 /* --------------------------------------------------
    ELEMENTS
@@ -181,38 +177,27 @@ const els = {
   earnedRubies: document.getElementById("earnedRubies"),
   currentVideoStatus: document.getElementById("currentVideoStatus"),
 
-  videoModal: document.getElementById("videoModal"),
-  btnCloseVideoModal: document.getElementById("btnCloseVideoModal"),
-  videoModalTitle: document.getElementById("videoModalTitle"),
-  videoModalMeta: document.getElementById("videoModalMeta"),
-  watchProgressText: document.getElementById("watchProgressText"),
-  watchRewardText: document.getElementById("watchRewardText"),
+  playerModal: document.getElementById("bbPlayerModal"),
+  playerModalTitle: document.getElementById("bbPlayerModalTitle"),
+  playerModalSubtitle: document.getElementById("bbPlayerModalSubtitle"),
+  closePlayerBtn: document.getElementById("bbClosePlayerBtn"),
+  playerMount: document.getElementById("bookBracketPlayer"),
+  playerStatus: document.getElementById("bbPlayerStatus"),
+  playerProgressText: document.getElementById("bbPlayerProgressText"),
 };
+
+/* --------------------------------------------------
+   STATE
+-------------------------------------------------- */
 
 let schoolId = null;
 let userId = null;
 let claims = null;
 
-let youtubeApiPromise = null;
-let player = null;
-let playerMountNonce = 0;
-
+let activePlayerSession = null;
 let activeVideo = null;
 let activeVideoProgress = null;
-
-let duration = 0;
-let lastTime = 0;
-let watchedSeconds = new Set();
-let suspiciousSkips = 0;
-let trackingIntervalId = null;
-let saveIntervalId = null;
 let modalLastFocus = null;
-
-/*
-  Ignore duplicate PAUSED/ENDED events right after a manual close.
-  This prevents the old player instance from calling save logic after
-  activeVideo has already been cleared.
-*/
 let isClosingModal = false;
 
 const progressByVideoKey = new Map();
@@ -254,136 +239,12 @@ async function init() {
   });
 
   wireSignOut(els.btnSignOut);
+  wireModalEvents();
 
   await loadAllProgress();
   renderVideoGrid();
   renderStats();
   updateLiveStatus();
-}
-
-/* --------------------------------------------------
-   YOUTUBE API
--------------------------------------------------- */
-
-function loadYouTubeIframeApi() {
-  if (window.YT?.Player) {
-    return Promise.resolve(window.YT);
-  }
-
-  if (youtubeApiPromise) {
-    return youtubeApiPromise;
-  }
-
-  youtubeApiPromise = new Promise((resolve, reject) => {
-    const priorReady = window.onYouTubeIframeAPIReady;
-
-    window.onYouTubeIframeAPIReady = () => {
-      if (typeof priorReady === "function") {
-        try {
-          priorReady();
-        } catch (err) {
-          console.warn("Previous onYouTubeIframeAPIReady handler failed:", err);
-        }
-      }
-      resolve(window.YT);
-    };
-
-    let tries = 0;
-    const timer = window.setInterval(() => {
-      tries += 1;
-
-      if (window.YT?.Player) {
-        window.clearInterval(timer);
-        resolve(window.YT);
-        return;
-      }
-
-      if (tries > 200) {
-        window.clearInterval(timer);
-        reject(
-          new Error(
-            "Timed out loading YouTube Iframe API. Make sure the page includes https://www.youtube.com/iframe_api before video-library.js."
-          )
-        );
-      }
-    }, 100);
-  });
-
-  return youtubeApiPromise;
-}
-
-async function destroyVideoPlayer() {
-  const oldPlayer = player;
-  player = null;
-
-  if (oldPlayer && typeof oldPlayer.destroy === "function") {
-    try {
-      oldPlayer.destroy();
-    } catch (err) {
-      console.warn("Failed to destroy YouTube player:", err);
-    }
-  }
-
-  const mountEl = document.getElementById("ytPlayer");
-  if (mountEl) {
-    mountEl.replaceChildren();
-  }
-}
-
-async function mountVideoPlayer(item, progress) {
-  const mountNonce = ++playerMountNonce;
-  const mountEl = document.getElementById("ytPlayer");
-
-  if (!mountEl) {
-    throw new Error("Missing #ytPlayer mount element.");
-  }
-
-  mountEl.replaceChildren();
-
-  await loadYouTubeIframeApi();
-
-  if (mountNonce !== playerMountNonce) return;
-
-  await destroyVideoPlayer();
-
-  await new Promise((resolve, reject) => {
-    try {
-      player = new window.YT.Player("ytPlayer", {
-        width: "100%",
-        height: "100%",
-        videoId: item.youtubeId,
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1,
-          enablejsapi: 1,
-          origin: window.location.origin,
-          start: Number(progress?.resumeAtSeconds || 0),
-        },
-        events: {
-          onReady: (event) => {
-            try {
-              const resumeAt = Number(progress?.resumeAtSeconds || 0);
-              if (resumeAt > 0) {
-                event.target.seekTo(resumeAt, true);
-              }
-              resolve();
-            } catch (err) {
-              reject(err);
-            }
-          },
-          onStateChange: onPlayerStateChange,
-          onError: (event) => {
-            reject(new Error(`YouTube player error: ${event?.data ?? "unknown"}`));
-          },
-        },
-      });
-    } catch (err) {
-      reject(err);
-    }
-  });
 }
 
 /* --------------------------------------------------
@@ -475,7 +336,10 @@ function renderVideoGrid() {
     `;
 
     card.addEventListener("click", () => {
-      openVideoModal(item).catch(console.error);
+      openVideoModal(item).catch((err) => {
+        console.error(err);
+        setText(els.playerStatus, normalizeError(err));
+      });
     });
 
     els.videoGrid.appendChild(card);
@@ -489,138 +353,197 @@ function renderStats() {
     0
   );
 
-  if (els.completedCount) els.completedCount.textContent = String(completedCount);
-  if (els.earnedRubies) els.earnedRubies.textContent = String(earnedRubies);
+  if (els.completedCount) {
+    els.completedCount.textContent = String(completedCount);
+  }
+
+  if (els.earnedRubies) {
+    els.earnedRubies.textContent = String(earnedRubies);
+  }
 }
 
 function updateLiveStatus() {
-  if (!els.currentVideoStatus || !els.watchProgressText || !els.watchRewardText) return;
+  if (!els.currentVideoStatus) return;
 
   if (!activeVideo || !activeVideoProgress) {
     els.currentVideoStatus.textContent = "Not watching";
-    els.watchProgressText.textContent = "0%";
-    els.watchRewardText.textContent = "Not earned yet";
     return;
   }
 
   const pct = clampPercent(activeVideoProgress.watchPercent || 0);
-  els.currentVideoStatus.textContent = activeVideo.title;
-  els.watchProgressText.textContent = `${pct}%`;
-  els.watchRewardText.textContent = activeVideoProgress.completed
-    ? `${activeVideoProgress.rubiesAwarded || activeVideo.rubies} rubies earned`
-    : "Not earned yet";
+
+  if (activeVideoProgress.completed) {
+    els.currentVideoStatus.textContent = `${activeVideo.title} • Completed • ${pct}%`;
+  } else if (pct > 0) {
+    els.currentVideoStatus.textContent = `${activeVideo.title} • ${pct}% watched`;
+  } else {
+    els.currentVideoStatus.textContent = `${activeVideo.title} • Ready to watch`;
+  }
 }
 
 /* --------------------------------------------------
    MODAL
 -------------------------------------------------- */
 
-/* =========================================================
-   PLAYER MODAL
-========================================================= */
+function wireModalEvents() {
+  if (els.closePlayerBtn) {
+    els.closePlayerBtn.addEventListener("click", () => {
+      closeVideoModal().catch(console.error);
+    });
+  }
 
-function openPlayerModal({ book, matchup }) {
-  setText(els.playerModalTitle, book?.title || "Read Aloud");
-  setText(
-    els.playerModalSubtitle,
-    `${matchup?.roundLabel || ""} • ${matchup?.regionLabel || ""}`
-  );
-  setText(els.playerStatus, "Loading player...");
-  setText(els.playerProgressText, "");
-  setVisible(els.playerModal, true);
+  const backdrop = els.playerModal?.querySelector(".bbModalBackdrop");
+  if (backdrop) {
+    backdrop.addEventListener("click", () => {
+      closeVideoModal().catch(console.error);
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isModalOpen()) {
+      closeVideoModal().catch(console.error);
+    }
+  });
 }
 
-async function closePlayerModal() {
+function isModalOpen() {
+  return !!els.playerModal && els.playerModal.style.display !== "none";
+}
+
+function openPlayerModal(item) {
+  modalLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  setText(els.playerModalTitle, item?.title || "Video");
+  setText(els.playerModalSubtitle, `${Number(item?.rubies || 0)} rubies available`);
+  setText(els.playerStatus, "Loading player.");
+  setText(els.playerProgressText, "");
+
+  setVisible(els.playerModal, true);
+
+  if (els.closePlayerBtn) {
+    window.setTimeout(() => {
+      try {
+        els.closePlayerBtn.focus();
+      } catch (err) {
+        // ignore focus failure
+      }
+    }, 0);
+  }
+}
+
+async function closeVideoModal() {
+  if (isClosingModal) return;
+  isClosingModal = true;
+
   try {
-    if (state.activePlayerSession) {
-      await state.activePlayerSession.destroy();
+    if (activePlayerSession) {
+      await activePlayerSession.destroy();
     }
   } catch (err) {
     console.warn("Failed to destroy active player session:", err);
   }
 
-  state.activePlayerSession = null;
-  state.activeListeningBookId = null;
-  state.activeListeningMatchupId = null;
+  activePlayerSession = null;
+  activeVideo = null;
+  activeVideoProgress = null;
+
   setVisible(els.playerModal, false);
-}
+  setText(els.playerStatus, "Loading player.");
+  setText(els.playerProgressText, "");
 
-async function startListeningForBook(side) {
-  clearError();
+  updateLiveStatus();
 
-  const matchup = getCurrentMatchup();
-  if (!matchup) return;
-
-  const bookId = side === "A" ? matchup.bookAId : matchup.bookBId;
-  const book = getBookFromState(bookId);
-
-  if (!book?.youtubeVideoId) {
-    showError("This book does not have a YouTube video ID yet.");
-    return;
+  if (modalLastFocus && typeof modalLastFocus.focus === "function") {
+    try {
+      modalLastFocus.focus();
+    } catch (err) {
+      // ignore focus failure
+    }
   }
 
-  await closePlayerModal();
+  window.setTimeout(() => {
+    isClosingModal = false;
+  }, 50);
+}
 
-  state.activeListeningBookId = bookId;
-  state.activeListeningMatchupId = matchup.matchupId;
+async function openVideoModal(item) {
+  if (!item?.youtubeId) {
+    throw new Error("This video does not have a YouTube video ID yet.");
+  }
 
-  openPlayerModal({ book, matchup });
+  await closeVideoModal();
 
-  state.activePlayerSession = await mountBookBracketPlayer({
-    schoolId: state.schoolId,
-    userId: state.userId,
-    eventId: BOOK_BRACKET_EVENT_ID,
-    matchupId: matchup.matchupId,
-    bookId,
-    youtubeVideoId: book.youtubeVideoId,
+  const existing = progressByVideoKey.get(item.key) || {};
+  activeVideo = item;
+  activeVideoProgress = buildLocalProgress(item, existing);
+
+  openPlayerModal(item);
+  updateLiveStatus();
+
+  activePlayerSession = await mountBookBracketPlayer({
+    youtubeVideoId: item.youtubeId,
     playerElementId: "bookBracketPlayer",
 
     onReady: (playerState) => {
       setText(els.playerStatus, "▶ Player ready. Start watching!");
+      syncActiveProgressFromPlayerState(playerState);
       updatePlayerProgressUi(playerState);
+      updateLiveStatus();
     },
 
     onProgress: (playerState) => {
+      syncActiveProgressFromPlayerState(playerState);
       updatePlayerProgressUi(playerState);
+      updateLiveStatus();
     },
 
     onCompleted: async (playerState) => {
       try {
-        setText(els.playerStatus, "✅ Book completed!");
+        syncActiveProgressFromPlayerState(playerState);
+        setText(els.playerStatus, "✅ Video completed!");
         updatePlayerProgressUi(playerState);
 
-        await fnCompleteBookBracketBook({
-          schoolId: state.schoolId,
-          eventId: BOOK_BRACKET_EVENT_ID,
-          matchupId: matchup.matchupId,
-          bookId,
-          watchSeconds: Math.floor(playerState.watchSeconds || 0),
-          watchPercent: Number(playerState.watchPercent || 0),
-          maxObservedTime: Number(playerState.maxObservedTime || 0),
-          durationSeconds: Math.floor(playerState.durationSeconds || 0),
-          suspiciousSeekCount: Number(playerState.suspiciousSeekCount || 0),
-        });
+        const validWatch =
+          clampPercent(activeVideoProgress?.watchPercent || 0) >= MIN_WATCH_PERCENT &&
+          Number(activeVideoProgress?.suspiciousSkips || 0) === 0;
 
-        await refreshProgressFromFirestore();
-        renderCurrentMatchup();
+        if (validWatch && activeVideo && activeVideoProgress && !activeVideoProgress.completed) {
+          await awardVideoCompletion(activeVideo, activeVideoProgress);
+        } else if (activeVideoProgress) {
+          await saveActiveProgress();
+        }
+
+        renderVideoGrid();
+        renderStats();
+        updateLiveStatus();
       } catch (err) {
-        showError(normalizeError(err));
+        console.error(err);
+        setText(els.playerStatus, normalizeError(err));
       }
     },
 
     onStateChange: (playerState) => {
+      syncActiveProgressFromPlayerState(playerState);
+
       if (playerState?.completed) {
-        setText(els.playerStatus, "✅ Book completed!");
+        setText(els.playerStatus, "✅ Video completed!");
       } else if (playerState?.isPlaybackActive) {
-        setText(els.playerStatus, "▶ Watching...");
+        setText(els.playerStatus, "▶ Watching.");
       } else {
         setText(els.playerStatus, "⏸ Paused");
+      }
+
+      updatePlayerProgressUi(playerState);
+      updateLiveStatus();
+
+      if (!playerState?.isPlaybackActive && activeVideoProgress) {
+        saveActiveProgress().catch(console.error);
       }
     },
 
     onError: (err) => {
-      showError(normalizeError(err));
-      setText(els.playerStatus, "Player error");
+      console.error(err);
+      setText(els.playerStatus, `Player error: ${normalizeError(err)}`);
     },
   });
 }
@@ -631,123 +554,44 @@ function updatePlayerProgressUi(playerState) {
   const threshold = Math.floor(playerState?.completionThresholdSeconds || 0);
   const suspicious = Number(playerState?.suspiciousSeekCount || 0);
 
+  let rewardText = "";
+  if (activeVideoProgress?.completed) {
+    rewardText = ` • Reward: ${Number(activeVideoProgress.rubiesAwarded || activeVideo?.rubies || 0)} rubies earned`;
+  } else {
+    rewardText = " • Reward: not earned yet";
+  }
+
   setText(
     els.playerProgressText,
     `Watched: ${watched}s • Progress: ${percent}% • Threshold: ${threshold}s${
       suspicious > 0 ? ` • Suspicious skips: ${suspicious}` : ""
-    }`
+    }${rewardText}`
   );
 }
-/* --------------------------------------------------
-   TRACKING
--------------------------------------------------- */
 
-function onPlayerStateChange(event) {
-  if (isClosingModal || !activeVideo || !activeVideoProgress || !player || !window.YT) return;
+function syncActiveProgressFromPlayerState(playerState) {
+  if (!activeVideo || !activeVideoProgress || !playerState) return;
 
-  if (event.data === window.YT.PlayerState.PLAYING) {
-    duration = Math.floor(player.getDuration() || 0);
-    startTracking();
-  }
+  activeVideoProgress.videoKey = activeVideo.key;
+  activeVideoProgress.youtubeId = activeVideo.youtubeId;
+  activeVideoProgress.youtubeUrl = activeVideo.youtubeUrl || "";
+  activeVideoProgress.title = activeVideo.title;
+  activeVideoProgress.rubiesPlanned = Number(activeVideo.rubies || 0);
 
-  if (event.data === window.YT.PlayerState.PAUSED) {
-    stopTracking();
-    saveActiveProgress().catch(console.error);
-  }
-
-  if (event.data === window.YT.PlayerState.ENDED) {
-    stopTracking();
-    handleVideoEnded().catch(console.error);
-  }
-}
-
-function startTracking() {
-  stopTracking();
-
-  trackingIntervalId = window.setInterval(() => {
-    if (!player || !activeVideo || !activeVideoProgress) return;
-
-    let currentTime = 0;
-    let currentDuration = duration || 0;
-
-    try {
-      currentTime = Math.floor(player.getCurrentTime() || 0);
-      currentDuration = Math.floor(player.getDuration() || duration || 0);
-    } catch (err) {
-      return;
-    }
-
-    duration = currentDuration;
-
-    if (currentTime > 0) {
-      watchedSeconds.add(currentTime);
-      activeVideoProgress.resumeAtSeconds = currentTime;
-    }
-
-    const jump = currentTime - lastTime;
-    if (lastTime > 0 && jump > MAX_ALLOWED_FORWARD_JUMP_SECONDS + 1) {
-      suspiciousSkips += 1;
-    }
-
-    lastTime = currentTime;
-
-    activeVideoProgress.durationSeconds = duration;
-    activeVideoProgress.watchedSecondCount = watchedSeconds.size;
-    activeVideoProgress.watchPercent = computeWatchPercent(watchedSeconds.size, duration);
-    activeVideoProgress.suspiciousSkips = suspiciousSkips;
-
-    updateLiveStatus();
-  }, 1000);
-
-  saveIntervalId = window.setInterval(() => {
-    saveActiveProgress().catch(console.error);
-  }, SAVE_PROGRESS_EVERY_MS);
-}
-
-function stopTracking() {
-  if (trackingIntervalId) {
-    window.clearInterval(trackingIntervalId);
-    trackingIntervalId = null;
-  }
-
-  if (saveIntervalId) {
-    window.clearInterval(saveIntervalId);
-    saveIntervalId = null;
-  }
-}
-
-async function handleVideoEnded() {
-  if (!activeVideo || !activeVideoProgress || !player) return;
-
-  let resolvedDuration = duration || 0;
-  try {
-    resolvedDuration = Math.floor(player.getDuration() || duration || 0);
-  } catch (err) {
-    // keep existing duration
-  }
-
-  activeVideoProgress.durationSeconds = resolvedDuration;
-  activeVideoProgress.watchedSecondCount = watchedSeconds.size;
-  activeVideoProgress.watchPercent = computeWatchPercent(
-    watchedSeconds.size,
-    activeVideoProgress.durationSeconds
+  activeVideoProgress.durationSeconds = Math.floor(Number(playerState.durationSeconds || 0));
+  activeVideoProgress.watchedSecondCount = Math.floor(Number(playerState.watchSeconds || 0));
+  activeVideoProgress.resumeAtSeconds = Math.floor(Number(playerState.maxObservedTime || 0));
+  activeVideoProgress.watchPercent = clampPercent(
+    Number(playerState.watchPercent || 0) * 100
   );
-  activeVideoProgress.resumeAtSeconds = activeVideoProgress.durationSeconds;
-  activeVideoProgress.suspiciousSkips = suspiciousSkips;
+  activeVideoProgress.suspiciousSkips = Number(playerState.suspiciousSeekCount || 0);
 
-  const validWatch =
-    activeVideoProgress.watchPercent >= MIN_WATCH_PERCENT &&
-    Number(activeVideoProgress.suspiciousSkips || 0) === 0;
-
-  if (validWatch && !activeVideoProgress.completed) {
-    await awardVideoCompletion(activeVideo, activeVideoProgress);
-  } else {
-    await saveActiveProgress();
+  if (playerState.completed) {
+    activeVideoProgress.completed = true;
+    if (!activeVideoProgress.rubiesAwarded && activeVideo) {
+      activeVideoProgress.rubiesAwarded = Number(activeVideo.rubies || 0);
+    }
   }
-
-  renderVideoGrid();
-  renderStats();
-  updateLiveStatus();
 }
 
 /* --------------------------------------------------
@@ -786,6 +630,7 @@ async function saveActiveProgress() {
 
 async function awardVideoCompletion(item, progress) {
   const existing = progressByVideoKey.get(item.key) || {};
+
   if (existing.completed) {
     progress.completed = true;
     progress.rubiesAwarded = Number(existing.rubiesAwarded || item.rubies || 0);
@@ -896,24 +741,6 @@ function buildLocalProgress(item, existing = null) {
   };
 }
 
-function resetTrackingStateFromProgress(progress) {
-  duration = Number(progress.durationSeconds || 0);
-  lastTime = Number(progress.resumeAtSeconds || 0);
-  suspiciousSkips = Number(progress.suspiciousSkips || 0);
-
-  watchedSeconds = new Set();
-
-  const priorSeconds = Number(progress.watchedSecondCount || 0);
-  for (let i = 1; i <= priorSeconds; i += 1) {
-    watchedSeconds.add(i);
-  }
-}
-
-function computeWatchPercent(watchedCount, totalDuration) {
-  if (!totalDuration || totalDuration <= 0) return 0;
-  return Math.min(100, Math.round((Number(watchedCount || 0) / Number(totalDuration)) * 100));
-}
-
 function clampPercent(value) {
   const num = Number(value || 0);
   if (num < 0) return 0;
@@ -930,3 +757,12 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+function setText(el, value) {
+  if (!el) return;
+  el.textContent = value ?? "";
+}
+
+function setVisible(el, visible) {
+  if (!el) return;
+  el.style.display = visible ? "" : "none";
+}
