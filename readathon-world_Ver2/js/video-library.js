@@ -653,7 +653,10 @@ async function awardVideoCompletion(item, progress) {
     return;
   }
 
-  await fnSubmitTransaction({
+try {
+  console.log("Submitting transaction...");
+
+  const result = await fnSubmitTransaction({
     schoolId,
     targetUserId: userId,
     actionType: "RUBIES_AWARD",
@@ -662,6 +665,12 @@ async function awardVideoCompletion(item, progress) {
     deltaMoneyRaisedCents: 0,
     note: `Video reward: ${item.title}`.slice(0, 300),
   });
+
+  console.log("Transaction result:", result);
+
+} catch (err) {
+  console.error("❌ Transaction FAILED:", err);
+}
 
   progress.completed = true;
   progress.rubiesAwarded = Number(item.rubies || 0);
