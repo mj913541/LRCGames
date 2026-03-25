@@ -45,45 +45,38 @@
     </section>
   </main>
 
-  <div
-    id="videoModal"
-    class="videoModal isHidden"
-    aria-hidden="true"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="videoModalTitle"
-  >
-    <div class="videoModalBackdrop" data-close-modal></div>
+  <div id="bbPlayerModal" class="bbModal" style="display:none;">
+    <div class="bbModalBackdrop"></div>
 
-    <div class="videoModalPanel">
-      <button
-        id="btnCloseVideoModal"
-        class="videoModalClose"
-        type="button"
-        aria-label="Close video"
-      >
-        ✕
-      </button>
-
-      <div class="videoModalHeader">
-        <h2 id="videoModalTitle">Now Playing</h2>
-        <p id="videoModalMeta">Loading…</p>
-      </div>
-
-      <div class="videoPlayerShell">
-        <div id="ytPlayer"></div>
-      </div>
-
-      <div class="videoModalFooter">
-        <div class="videoWatchStatus">
-          <span>Progress:</span>
-          <strong id="watchProgressText">0%</strong>
+    <div
+      class="bbModalCard"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bbPlayerModalTitle"
+    >
+      <div class="bbModalHeader">
+        <div>
+          <h3 id="bbPlayerModalTitle">Read Aloud</h3>
+          <p id="bbPlayerModalSubtitle">Round • Region</p>
         </div>
 
-        <div class="videoWatchStatus">
-          <span>Reward:</span>
-          <strong id="watchRewardText">Not earned yet</strong>
-        </div>
+        <button
+          id="bbClosePlayerBtn"
+          class="bbIconBtn"
+          type="button"
+          aria-label="Close player"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div class="bbPlayerWrap">
+        <div id="bookBracketPlayer" class="bbPlayerMount"></div>
+      </div>
+
+      <div class="bbPlayerInfo">
+        <div id="bbPlayerStatus" class="bbPlayerStatus">Loading player...</div>
+        <div id="bbPlayerProgressText" class="bbPlayerProgressText"></div>
       </div>
     </div>
   </div>

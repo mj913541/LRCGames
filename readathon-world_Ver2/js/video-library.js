@@ -22,6 +22,10 @@ import {
   query,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+import {
+  mountBookBracketPlayer,
+} from "./book-bracket-player.js";
+
 /* --------------------------------------------------
    PAGE CONFIG
 -------------------------------------------------- */
