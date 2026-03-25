@@ -16,7 +16,6 @@ import {
 import {
   doc,
   collection,
-  getDoc,
   getDocs,
   setDoc,
   serverTimestamp,
@@ -190,11 +189,9 @@ let schoolId = null;
 let userId = null;
 let claims = null;
 
+let youtubeApiPromise = null;
 let player = null;
-let playerReadyResolver = null;
-const playerReadyPromise = new Promise((resolve) => {
-  playerReadyResolver = resolve;
-});
+let playerMountNonce = 0;
 
 let activeVideo = null;
 let activeVideoProgress = null;
@@ -206,6 +203,13 @@ let suspiciousSkips = 0;
 let trackingIntervalId = null;
 let saveIntervalId = null;
 let modalLastFocus = null;
+
+/*
+  Ignore duplicate PAUSED/ENDED events right after a manual close.
+  This prevents the old player instance from calling save logic after
+  activeVideo has already been cleared.
+*/
+let isClosingModal = false;
 
 const progressByVideoKey = new Map();
 
@@ -255,30 +259,129 @@ async function init() {
 }
 
 /* --------------------------------------------------
-   YOUTUBE API READY
+   YOUTUBE API
 -------------------------------------------------- */
 
-window.onYouTubeIframeAPIReady = function () {
-  player = new YT.Player("ytPlayer", {
-    width: "100%",
-    height: "100%",
-    videoId: "",
-    playerVars: {
-      autoplay: 1,
-      controls: 1,
-      rel: 0,
-      modestbranding: 1,
-      enablejsapi: 1,
-      origin: window.location.origin,
-    },
-    events: {
-      onReady: () => {
-        if (playerReadyResolver) playerReadyResolver();
-      },
-      onStateChange: onPlayerStateChange,
-    },
+function loadYouTubeIframeApi() {
+  if (window.YT?.Player) {
+    return Promise.resolve(window.YT);
+  }
+
+  if (youtubeApiPromise) {
+    return youtubeApiPromise;
+  }
+
+  youtubeApiPromise = new Promise((resolve, reject) => {
+    const priorReady = window.onYouTubeIframeAPIReady;
+
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof priorReady === "function") {
+        try {
+          priorReady();
+        } catch (err) {
+          console.warn("Previous onYouTubeIframeAPIReady handler failed:", err);
+        }
+      }
+      resolve(window.YT);
+    };
+
+    let tries = 0;
+    const timer = window.setInterval(() => {
+      tries += 1;
+
+      if (window.YT?.Player) {
+        window.clearInterval(timer);
+        resolve(window.YT);
+        return;
+      }
+
+      if (tries > 200) {
+        window.clearInterval(timer);
+        reject(
+          new Error(
+            "Timed out loading YouTube Iframe API. Make sure the page includes https://www.youtube.com/iframe_api before video-library.js."
+          )
+        );
+      }
+    }, 100);
   });
-};
+
+  return youtubeApiPromise;
+}
+
+async function destroyVideoPlayer() {
+  const oldPlayer = player;
+  player = null;
+
+  if (oldPlayer && typeof oldPlayer.destroy === "function") {
+    try {
+      oldPlayer.destroy();
+    } catch (err) {
+      console.warn("Failed to destroy YouTube player:", err);
+    }
+  }
+
+  const mountEl = document.getElementById("ytPlayer");
+  if (mountEl) {
+    mountEl.replaceChildren();
+  }
+}
+
+async function mountVideoPlayer(item, progress) {
+  const mountNonce = ++playerMountNonce;
+  const mountEl = document.getElementById("ytPlayer");
+
+  if (!mountEl) {
+    throw new Error("Missing #ytPlayer mount element.");
+  }
+
+  mountEl.replaceChildren();
+
+  await loadYouTubeIframeApi();
+
+  if (mountNonce !== playerMountNonce) return;
+
+  await destroyVideoPlayer();
+
+  await new Promise((resolve, reject) => {
+    try {
+      player = new window.YT.Player("ytPlayer", {
+        width: "100%",
+        height: "100%",
+        videoId: item.youtubeId,
+        playerVars: {
+          autoplay: 1,
+          controls: 1,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          enablejsapi: 1,
+          origin: window.location.origin,
+          start: Number(progress?.resumeAtSeconds || 0),
+        },
+        events: {
+          onReady: (event) => {
+            try {
+              const resumeAt = Number(progress?.resumeAtSeconds || 0);
+              if (resumeAt > 0) {
+                event.target.seekTo(resumeAt, true);
+              }
+              resolve();
+            } catch (err) {
+              reject(err);
+            }
+          },
+          onStateChange: onPlayerStateChange,
+          onError: (event) => {
+            reject(new Error(`YouTube player error: ${event?.data ?? "unknown"}`));
+          },
+        },
+      });
+    } catch (err) {
+      reject(err);
+    }
+  });
+}
 
 /* --------------------------------------------------
    PATH HELPERS
@@ -368,7 +471,10 @@ function renderVideoGrid() {
       </div>
     `;
 
-    card.addEventListener("click", () => openVideoModal(item));
+    card.addEventListener("click", () => {
+      openVideoModal(item).catch(console.error);
+    });
+
     els.videoGrid.appendChild(card);
   }
 }
@@ -438,15 +544,18 @@ async function openVideoModal(item) {
   if (els.videoModalTitle) els.videoModalTitle.textContent = item.title;
   if (els.videoModalMeta) els.videoModalMeta.textContent = `${item.rubies} rubies available`;
 
+  resetTrackingStateFromProgress(activeVideoProgress);
   updateLiveStatus();
 
-  await playerReadyPromise;
-  resetTrackingStateFromProgress(activeVideoProgress);
-
-  player.loadVideoById({
-    videoId: item.youtubeId,
-    startSeconds: Number(activeVideoProgress.resumeAtSeconds || 0),
-  });
+  try {
+    await mountVideoPlayer(item, activeVideoProgress);
+  } catch (err) {
+    console.error("Failed to mount video player:", err);
+    if (els.currentVideoStatus) {
+      els.currentVideoStatus.textContent = "Could not load video";
+    }
+    return;
+  }
 
   requestAnimationFrame(() => {
     els.btnCloseVideoModal?.focus();
@@ -454,28 +563,32 @@ async function openVideoModal(item) {
 }
 
 async function closeVideoModal() {
-  stopTracking();
-  await saveActiveProgress();
+  if (isClosingModal) return;
+  isClosingModal = true;
 
-  if (player?.stopVideo) {
-    player.stopVideo();
-  }
+  try {
+    stopTracking();
+    await saveActiveProgress();
+    await destroyVideoPlayer();
 
-  activeVideo = null;
-  activeVideoProgress = null;
-  duration = 0;
-  lastTime = 0;
-  watchedSeconds = new Set();
-  suspiciousSkips = 0;
+    activeVideo = null;
+    activeVideoProgress = null;
+    duration = 0;
+    lastTime = 0;
+    watchedSeconds = new Set();
+    suspiciousSkips = 0;
 
-  els.videoModal?.classList.add("isHidden");
-  els.videoModal?.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("modalOpen");
+    els.videoModal?.classList.add("isHidden");
+    els.videoModal?.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("modalOpen");
 
-  updateLiveStatus();
+    updateLiveStatus();
 
-  if (modalLastFocus && typeof modalLastFocus.focus === "function") {
-    modalLastFocus.focus();
+    if (modalLastFocus && typeof modalLastFocus.focus === "function") {
+      modalLastFocus.focus();
+    }
+  } finally {
+    isClosingModal = false;
   }
 }
 
@@ -484,19 +597,19 @@ async function closeVideoModal() {
 -------------------------------------------------- */
 
 function onPlayerStateChange(event) {
-  if (!activeVideo || !activeVideoProgress) return;
+  if (isClosingModal || !activeVideo || !activeVideoProgress || !player || !window.YT) return;
 
-  if (event.data === YT.PlayerState.PLAYING) {
+  if (event.data === window.YT.PlayerState.PLAYING) {
     duration = Math.floor(player.getDuration() || 0);
     startTracking();
   }
 
-  if (event.data === YT.PlayerState.PAUSED) {
+  if (event.data === window.YT.PlayerState.PAUSED) {
     stopTracking();
     saveActiveProgress().catch(console.error);
   }
 
-  if (event.data === YT.PlayerState.ENDED) {
+  if (event.data === window.YT.PlayerState.ENDED) {
     stopTracking();
     handleVideoEnded().catch(console.error);
   }
@@ -508,8 +621,17 @@ function startTracking() {
   trackingIntervalId = window.setInterval(() => {
     if (!player || !activeVideo || !activeVideoProgress) return;
 
-    const currentTime = Math.floor(player.getCurrentTime() || 0);
-    duration = Math.floor(player.getDuration() || duration || 0);
+    let currentTime = 0;
+    let currentDuration = duration || 0;
+
+    try {
+      currentTime = Math.floor(player.getCurrentTime() || 0);
+      currentDuration = Math.floor(player.getDuration() || duration || 0);
+    } catch (err) {
+      return;
+    }
+
+    duration = currentDuration;
 
     if (currentTime > 0) {
       watchedSeconds.add(currentTime);
@@ -549,9 +671,16 @@ function stopTracking() {
 }
 
 async function handleVideoEnded() {
-  if (!activeVideo || !activeVideoProgress) return;
+  if (!activeVideo || !activeVideoProgress || !player) return;
 
-  activeVideoProgress.durationSeconds = Math.floor(player.getDuration() || duration || 0);
+  let resolvedDuration = duration || 0;
+  try {
+    resolvedDuration = Math.floor(player.getDuration() || duration || 0);
+  } catch (err) {
+    // keep existing duration
+  }
+
+  activeVideoProgress.durationSeconds = resolvedDuration;
   activeVideoProgress.watchedSecondCount = watchedSeconds.size;
   activeVideoProgress.watchPercent = computeWatchPercent(
     watchedSeconds.size,
@@ -724,7 +853,7 @@ function buildLocalProgress(item, existing = null) {
 function resetTrackingStateFromProgress(progress) {
   duration = Number(progress.durationSeconds || 0);
   lastTime = Number(progress.resumeAtSeconds || 0);
-  suspiciousSkips = 0;
+  suspiciousSkips = Number(progress.suspiciousSkips || 0);
 
   watchedSeconds = new Set();
 

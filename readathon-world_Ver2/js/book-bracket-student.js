@@ -127,7 +127,7 @@ const state = {
 ========================================================= */
 
 function setText(el, value) {
-  if (el) el.textContent = value ?? "";
+  if (el) el.textContent = value ?? "" ;
 }
 
 function setVisible(el, visible) {
