@@ -474,6 +474,11 @@ async function openVideoModal(item) {
   await closeVideoModal();
 
   const existing = progressByVideoKey.get(item.key) || {};
+  const resumeAtSeconds = Math.max(
+    0,
+    Math.floor(Number(existing?.resumeAtSeconds || 0))
+  );
+
   activeVideo = item;
   activeVideoProgress = buildLocalProgress(item, existing);
 
@@ -483,9 +488,15 @@ async function openVideoModal(item) {
   activePlayerSession = await mountBookBracketPlayer({
     youtubeVideoId: item.youtubeId,
     playerElementId: "bookBracketPlayer",
+    startSeconds: resumeAtSeconds,
 
     onReady: (playerState) => {
-      setText(els.playerStatus, "▶ Player ready. Start watching!");
+      setText(
+        els.playerStatus,
+        resumeAtSeconds > 0
+          ? `▶ Player ready. Resuming at ${resumeAtSeconds}s`
+          : "▶ Player ready. Start watching!"
+      );
       syncActiveProgressFromPlayerState(playerState);
       updatePlayerProgressUi(playerState);
       updateLiveStatus();
