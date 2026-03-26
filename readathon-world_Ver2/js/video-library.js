@@ -5,6 +5,7 @@ import {
   waitForAuthReady,
   getIdTokenClaims,
   fnSubmitTransaction,
+  userSummaryRef,
 } from "./firebase.js";
 
 import {
@@ -653,24 +654,23 @@ async function awardVideoCompletion(item, progress) {
     return;
   }
 
-try {
-  console.log("Submitting transaction...");
+  try {
+    console.log("Submitting transaction...");
 
-  const result = await fnSubmitTransaction({
-    schoolId,
-    targetUserId: userId,
-    actionType: "RUBIES_AWARD",
-    deltaMinutes: 0,
-    deltaRubies: Number(item.rubies || 0),
-    deltaMoneyRaisedCents: 0,
-    note: `Video reward: ${item.title}`.slice(0, 300),
-  });
+    const result = await fnSubmitTransaction({
+      schoolId,
+      targetUserId: userId,
+      actionType: "RUBIES_AWARD",
+      deltaMinutes: 0,
+      deltaRubies: Number(item.rubies || 0),
+      deltaMoneyRaisedCents: 0,
+      note: `Video reward: ${item.title}`.slice(0, 300),
+    });
 
-  console.log("Transaction result:", result);
-
-} catch (err) {
-  console.error("❌ Transaction FAILED:", err);
-}
+    console.log("Transaction result:", result);
+  } catch (err) {
+    console.error("❌ Transaction FAILED:", err);
+  }
 
   progress.completed = true;
   progress.rubiesAwarded = Number(item.rubies || 0);
@@ -725,10 +725,10 @@ try {
   );
 
   await setDoc(
-    doc(db, videoLibrarySummaryPath()),
+    userSummaryRef(schoolId, userId),
     {
-      completedVideos: completedCount,
-      totalRubiesAwarded,
+      videoLibraryCompletedVideos: completedCount,
+      videoLibraryRubiesAwarded: totalRubiesAwarded,
       updatedAt: serverTimestamp(),
     },
     { merge: true }
