@@ -21,6 +21,7 @@ import {
   setDoc,
   serverTimestamp,
   query,
+  increment,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { mountBookBracketPlayer } from "./book-bracket-player.js";
@@ -724,15 +725,16 @@ async function awardVideoCompletion(item, progress) {
     0
   );
 
-  await setDoc(
-    userSummaryRef(schoolId, userId),
-    {
-      videoLibraryCompletedVideos: completedCount,
-      videoLibraryRubiesAwarded: totalRubiesAwarded,
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+await setDoc(
+  userSummaryRef(schoolId, userId),
+  {
+    videoLibraryCompletedVideos: completedCount,
+    videoLibraryRubiesAwarded: totalRubiesAwarded,
+    rubiesBalance: increment(Number(item.rubies || 0)),
+    updatedAt: serverTimestamp(),
+  },
+  { merge: true }
+);
 
   progressByVideoKey.clear();
   for (const [k, v] of nextMap.entries()) {
