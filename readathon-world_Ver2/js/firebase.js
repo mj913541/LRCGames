@@ -76,11 +76,7 @@ export const fnRedeemPrizeCredit = httpsCallable(functions, "redeemPrizeCredit")
 export const fnFulfillPrizeOrder = httpsCallable(functions, "fulfillPrizeOrder");
 export const fnDeliverPrizeOrder = httpsCallable(functions, "deliverPrizeOrder");
 export const fnCancelPrizeOrder = httpsCallable(functions, "cancelPrizeOrder");
-export const fnCompleteBookBracketBook = httpsCallable(functions, "completeBookBracketBook");
-export const fnSubmitBookBracketVote = httpsCallable(functions, "submitBookBracketVote");
-export const fnTeacherUnlockBookBracketMatchup = httpsCallable(functions, "teacherUnlockBookBracketMatchup");
-export const fnAdvanceBookBracketRound = httpsCallable(functions, "advanceBookBracketRound");
-
+export const fnCompleteVideoReward = httpsCallable(functions, "completeVideoReward");
 /* --------------------------------------------------
    School ID Helpers
 -------------------------------------------------- */
