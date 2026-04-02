@@ -16,6 +16,7 @@ import {
   getDocs,
   query,
   orderBy,
+  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -160,7 +161,18 @@ export async function loadInventory({ schoolId, userId }) {
     ...d.data(),
   }));
 }
-
+export function watchSummary({ schoolId, userId }, onData, onError) {
+  const ref = userSummaryRef(schoolId, userId);
+  return onSnapshot(
+    ref,
+    (snap) => {
+      onData(snap.exists() ? snap.data() : null);
+    },
+    (err) => {
+      if (onError) onError(err);
+    }s
+  );
+}
 /* --------------------------------------------------
    Avatar Equipped (Local Only)
 -------------------------------------------------- */

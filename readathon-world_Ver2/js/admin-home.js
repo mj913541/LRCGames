@@ -11,7 +11,7 @@ import {
   guardRoleOrRedirect,
   setHeaderUser,
   wireSignOut,
-  loadSummary,
+  watchSummary,
   loadInventory,
   fmtInt,
   fmtMoneyCents,
@@ -59,8 +59,15 @@ async function init() {
     subtitle: `${schoolId} • ${userId}`,
   });
 
-  const summary = await loadSummary({ schoolId, userId });
-  renderSummary(summary);
+  watchSummary(
+  { schoolId, userId },
+  (summary) => {
+    renderSummary(summary);
+  },
+  (err) => {
+    showError(normalizeError(err));
+  }
+);
 
   const inv = await loadInventory({ schoolId, userId });
   renderInventory(inv);
