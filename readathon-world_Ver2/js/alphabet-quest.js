@@ -192,6 +192,7 @@ async function getOrCreateProgress() {
   }
 
   const data = snap.data() || {};
+
   if (data?.daily?.dateKey !== todayDateKey()) {
     data.daily = {
       dateKey: todayDateKey(),
@@ -382,6 +383,7 @@ function buildChallengeQuestion() {
 
 function generateQuestions() {
   const out = [];
+
   for (let i = 0; i < CONFIG.roundSettings.questionsPerRound; i += 1) {
     if (state.mode === "practice") {
       out.push(Math.random() < 0.5 ? buildUpperLowerQuestion() : buildLetterNameQuestion());
@@ -469,14 +471,26 @@ async function handleChoice(choice, clickedBtn) {
   state.locked = false;
   renderQuestion();
 }
-console.log("AUTH CHECK", {
-  currentUser: auth.currentUser ? auth.currentUser.uid : null,
-  schoolId: getSchoolId()
-});
-async function awardRubiesThroughFunction(amount) {
-  if (!amount) return;
 
-  await fnSubmitTransaction({
+async function awardRubiesThroughFunction(amount) {
+  if (!amount || amount <= 0) {
+    return { ok: true, awarded: 0 };
+  }
+
+  const currentUser = auth.currentUser;
+
+  console.log("Alphabet Quest reward auth check:", {
+    authUid: currentUser ? currentUser.uid : null,
+    stateUserId: state.userId,
+    schoolId: state.schoolId,
+    localSchoolId: getSchoolId(),
+  });
+
+  if (!currentUser) {
+    throw new Error("No signed-in Firebase user found when trying to award rubies.");
+  }
+
+  const result = await fnSubmitTransaction({
     schoolId: state.schoolId,
     targetUserId: state.userId,
     actionType: "RUBIES_AWARD",
@@ -485,62 +499,102 @@ async function awardRubiesThroughFunction(amount) {
     deltaMoneyRaisedCents: 0,
     note: "Alphabet Quest reward",
   });
+
+  console.log("Alphabet Quest reward success:", result?.data || result);
+
+  return {
+    ok: true,
+    awarded: amount,
+    result: result?.data || null,
+  };
 }
 
 async function saveRoundResult() {
   const totalQuestions = CONFIG.roundSettings.questionsPerRound;
   const passed = state.score >= CONFIG.roundSettings.passingScore;
 
-  let finalReward = 0;
+  let rewardCandidate = 0;
   let cooldownBlocked = false;
+  let actualReward = 0;
+  let rewardError = null;
+
+  const currentSnap = await getDoc(state.progressRef);
+  const existing = currentSnap.exists() ? currentSnap.data() : buildInitialProgress();
+
+  const normalized = {
+    ...existing,
+    daily:
+      existing?.daily?.dateKey === todayDateKey()
+        ? existing.daily
+        : { dateKey: todayDateKey(), rewardWins: 0, rubiesEarnedToday: 0 },
+  };
+
+  cooldownBlocked = isCooldownActive(normalized);
+
+  rewardCandidate = cooldownBlocked
+    ? 0
+    : calculateReward({
+        passed,
+        mode: state.mode,
+        progress: normalized,
+      });
+
+  if (rewardCandidate > 0) {
+    try {
+      const rewardResult = await awardRubiesThroughFunction(rewardCandidate);
+      actualReward = rewardResult.awarded || 0;
+    } catch (err) {
+      console.error("Alphabet Quest reward FAILED:", err);
+      rewardError = err;
+      actualReward = 0;
+    }
+  }
+
   let nextProgressData = null;
 
   await runTransaction(db, async (transaction) => {
     const snap = await transaction.get(state.progressRef);
-    const existing = snap.exists() ? snap.data() : buildInitialProgress();
+    const existingInsideTx = snap.exists() ? snap.data() : buildInitialProgress();
 
-    const normalized = {
-      ...existing,
+    const normalizedInsideTx = {
+      ...existingInsideTx,
       daily:
-        existing?.daily?.dateKey === todayDateKey()
-          ? existing.daily
+        existingInsideTx?.daily?.dateKey === todayDateKey()
+          ? existingInsideTx.daily
           : { dateKey: todayDateKey(), rewardWins: 0, rubiesEarnedToday: 0 },
     };
 
-    cooldownBlocked = isCooldownActive(normalized);
-    finalReward = cooldownBlocked
-      ? 0
-      : calculateReward({
-          passed,
-          mode: state.mode,
-          progress: normalized,
-        });
-
     const next = {
-      ...normalized,
-      totalRoundsPlayed: Number(normalized.totalRoundsPlayed || 0) + 1,
-      totalRoundsPassed: Number(normalized.totalRoundsPassed || 0) + (passed ? 1 : 0),
-      totalQuestions: Number(normalized.totalQuestions || 0) + totalQuestions,
-      correctAnswers: Number(normalized.correctAnswers || 0) + state.score,
-      currentStreak: passed ? Number(normalized.currentStreak || 0) + 1 : 0,
+      ...normalizedInsideTx,
+      totalRoundsPlayed: Number(normalizedInsideTx.totalRoundsPlayed || 0) + 1,
+      totalRoundsPassed: Number(normalizedInsideTx.totalRoundsPassed || 0) + (passed ? 1 : 0),
+      totalQuestions: Number(normalizedInsideTx.totalQuestions || 0) + totalQuestions,
+      correctAnswers: Number(normalizedInsideTx.correctAnswers || 0) + state.score,
+      currentStreak: passed ? Number(normalizedInsideTx.currentStreak || 0) + 1 : 0,
       bestStreak: Math.max(
-        Number(normalized.bestStreak || 0),
-        passed ? Number(normalized.currentStreak || 0) + 1 : 0
+        Number(normalizedInsideTx.bestStreak || 0),
+        passed ? Number(normalizedInsideTx.currentStreak || 0) + 1 : 0
       ),
-      weakItems: Array.from(new Set([...(normalized.weakItems || []), ...state.weakItems])).slice(0, 20),
+      weakItems: Array.from(
+        new Set([...(normalizedInsideTx.weakItems || []), ...state.weakItems])
+      ).slice(0, 20),
     };
 
     next.masteryState = getMasteryState(next);
     next.challengeUnlocked = next.masteryState === "basic_mastered";
-    next.lifetimeRubiesEarned = Number(normalized.lifetimeRubiesEarned || 0) + finalReward;
+    next.lifetimeRubiesEarned =
+      Number(normalizedInsideTx.lifetimeRubiesEarned || 0) + actualReward;
+
     next.daily = {
       dateKey: todayDateKey(),
-      rewardWins: Number(normalized.daily?.rewardWins || 0) + (finalReward > 0 ? 1 : 0),
-      rubiesEarnedToday: Number(normalized.daily?.rubiesEarnedToday || 0) + finalReward,
+      rewardWins: Number(normalizedInsideTx.daily?.rewardWins || 0) + (actualReward > 0 ? 1 : 0),
+      rubiesEarnedToday:
+        Number(normalizedInsideTx.daily?.rubiesEarnedToday || 0) + actualReward,
     };
 
     next.lastPlayedAt = serverTimestamp();
-    next.lastRewardedAt = finalReward > 0 ? serverTimestamp() : normalized.lastRewardedAt || null;
+    next.lastRewardedAt =
+      actualReward > 0 ? serverTimestamp() : normalizedInsideTx.lastRewardedAt || null;
 
     transaction.set(
       state.progressRef,
@@ -558,10 +612,10 @@ async function saveRoundResult() {
         lifetimeRubiesEarned: next.lifetimeRubiesEarned,
         daily: next.daily,
         modeStats: {
-          ...normalized.modeStats,
+          ...normalizedInsideTx.modeStats,
           [state.mode]: {
-            played: Number(normalized?.modeStats?.[state.mode]?.played || 0) + 1,
-            passed: Number(normalized?.modeStats?.[state.mode]?.passed || 0) + (passed ? 1 : 0),
+            played: Number(normalizedInsideTx?.modeStats?.[state.mode]?.played || 0) + 1,
+            passed: Number(normalizedInsideTx?.modeStats?.[state.mode]?.passed || 0) + (passed ? 1 : 0),
           },
         },
         weakItems: next.weakItems,
@@ -574,40 +628,50 @@ async function saveRoundResult() {
     nextProgressData = {
       ...next,
       modeStats: {
-        ...normalized.modeStats,
+        ...normalizedInsideTx.modeStats,
         [state.mode]: {
-          played: Number(normalized?.modeStats?.[state.mode]?.played || 0) + 1,
-          passed: Number(normalized?.modeStats?.[state.mode]?.passed || 0) + (passed ? 1 : 0),
+          played: Number(normalizedInsideTx?.modeStats?.[state.mode]?.played || 0) + 1,
+          passed: Number(normalizedInsideTx?.modeStats?.[state.mode]?.passed || 0) + (passed ? 1 : 0),
         },
       },
     };
   });
 
-  if (finalReward > 0) {
-    await awardRubiesThroughFunction(finalReward);
-  }
-
   state.progressData = nextProgressData;
 
   return {
     passed,
-    reward: finalReward,
+    reward: actualReward,
     cooldownBlocked,
     masteryState: state.progressData.masteryState,
     challengeUnlocked: state.progressData.challengeUnlocked,
+    rewardError,
   };
 }
 
 async function finishRound() {
   els.progressFill.style.width = "100%";
 
-  const result = await saveRoundResult();
+  let result;
+
+  try {
+    result = await saveRoundResult();
+  } catch (err) {
+    console.error("finishRound failed:", err);
+    showEndCard(
+      "Reward Error",
+      "You finished the round, but there was a problem saving progress or sending the ruby reward."
+    );
+    return;
+  }
 
   let summary = `You scored ${state.score} out of ${CONFIG.roundSettings.questionsPerRound}.`;
 
   if (result.passed) {
     if (result.reward > 0) {
       summary += ` You earned ${result.reward} rubies!`;
+    } else if (result.rewardError) {
+      summary += " You passed, but the ruby award did not go through because the page was not authenticated correctly.";
     } else if (result.cooldownBlocked) {
       summary += " You passed, but ruby rewards are cooling down right now.";
     } else if (state.mode === "practice") {
@@ -662,8 +726,18 @@ function bindEvents() {
 }
 
 async function initForUser(user) {
+  if (!user) {
+    showEndCard("Not Signed In", "Please sign in before playing Alphabet Quest.");
+    return;
+  }
+
   state.userId = user.uid;
   state.schoolId = getSchoolId();
+
+  console.log("Alphabet Quest initForUser:", {
+    uid: user.uid,
+    schoolId: state.schoolId,
+  });
 
   if (!state.schoolId) {
     showEndCard("Missing School ID", "Could not find schoolId for this session.");
