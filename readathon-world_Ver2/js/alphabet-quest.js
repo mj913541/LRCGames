@@ -469,7 +469,10 @@ async function handleChoice(choice, clickedBtn) {
   state.locked = false;
   renderQuestion();
 }
-
+console.log("AUTH CHECK", {
+  currentUser: auth.currentUser ? auth.currentUser.uid : null,
+  schoolId: getSchoolId()
+});
 async function awardRubiesThroughFunction(amount) {
   if (!amount) return;
 
