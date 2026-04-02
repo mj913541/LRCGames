@@ -170,7 +170,7 @@ export function watchSummary({ schoolId, userId }, onData, onError) {
     },
     (err) => {
       if (onError) onError(err);
-    }s
+    }
   );
 }
 /* --------------------------------------------------
