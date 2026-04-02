@@ -490,23 +490,48 @@ async function awardRubiesThroughFunction(amount) {
     throw new Error("No signed-in Firebase user found when trying to award rubies.");
   }
 
-  const result = await fnSubmitTransaction({
-    schoolId: state.schoolId,
-    targetUserId: state.userId,
-    actionType: "RUBIES_AWARD",
-    deltaMinutes: 0,
-    deltaRubies: amount,
-    deltaMoneyRaisedCents: 0,
-    note: "Alphabet Quest reward",
-  });
+  try {
+    // 🔑 THIS IS THE KEY FIX
+    const token = await currentUser.getIdToken();
 
-  console.log("Alphabet Quest reward success:", result?.data || result);
+    const response = await fetch(
+      "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`, // ✅ REQUIRED
+        },
+        body: JSON.stringify({
+          schoolId: state.schoolId,
+          targetUserId: state.userId,
+          actionType: "RUBIES_AWARD",
+          deltaMinutes: 0,
+          deltaRubies: amount,
+          deltaMoneyRaisedCents: 0,
+          note: "Alphabet Quest reward",
+        }),
+      }
+    );
 
-  return {
-    ok: true,
-    awarded: amount,
-    result: result?.data || null,
-  };
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data?.error || "Transaction failed");
+    }
+
+    console.log("Alphabet Quest reward success:", data);
+
+    return {
+      ok: true,
+      awarded: amount,
+      result: data,
+    };
+
+  } catch (err) {
+    console.error("Alphabet Quest reward FAILED:", err);
+    throw err;
+  }
 }
 
 async function saveRoundResult() {
