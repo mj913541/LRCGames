@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Multiple Choice</title>
+  <link rel="stylesheet" href="./functional-baseline.css" />
+</head>
+<body>
+  <!-- Required by shared app.js helpers -->
+  <div id="dataTitle" data-title="Multiple Choice" hidden></div>
+  <div id="dataSubtitle" data-subtitle="Multiple Choice" hidden></div>
+
+  <main class="mc-page">
+    <section class="mc-shell">
+      <header class="mc-header">
+        <div>
+          <p class="mc-kicker">Skill Game</p>
+          <h1>Alphabet Quest</h1>
+          <p class="mc-subtitle">
+            Practice letter names, sounds, and upper/lowercase matching.
+          </p>
+        </div>
+
+        <div class="mc-status-card">
+          <div class="mc-status-row"><span>Mode</span><strong id="modeLabel">Basic Quest</strong></div>
+          <div class="mc-status-row"><span>Question</span><strong id="roundLabel">1 / 8</strong></div>
+          <div class="mc-status-row"><span>Score</span><strong id="scoreLabel">0</strong></div>
+          <div class="mc-status-row"><span>Today’s Paid Wins</span><strong id="dailyWinsLabel">0</strong></div>
+        </div>
+      </header>
+
+      <section class="mc-top-actions">
+        <button id="practiceBtn" class="mc-mode-btn" type="button">Practice</button>
+        <button id="basicBtn" class="mc-mode-btn is-active" type="button">Basic Quest</button>
+        <button id="challengeBtn" class="mc-mode-btn" type="button">Challenge</button>
+      </section>
+
+      <section class="mc-game-card">
+        <div class="mc-progress-wrap">
+          <div class="mc-progress-bar">
+            <div id="progressFill" class="mc-progress-fill"></div>
+          </div>
+        </div>
+
+        <div id="promptBadge" class="mc-prompt-badge">Match</div>
+
+        <div class="mc-question-area">
+          <h2 id="questionText" class="mc-question-text">Loading...</h2>
+          <p id="questionHint" class="mc-question-hint"></p>
+        </div>
+
+        <div id="choiceGrid" class="mc-choice-grid"></div>
+        <div id="feedbackBox" class="mc-feedback-box" aria-live="polite"></div>
+      </section>
+      
+  <div id="endCard" class="mc-modal is-hidden">
+    <div class="mc-modal-card">
+      <h2 id="endTitle"></h2>
+      <p id="endSummary"></p>
+      <button id="playAgainBtn" type="button">Play Again</button>
+    </div>
+  </div>
+
+
+  <script type="module" src="./alphabet-quest.js"></script>
+</body>
+</html>

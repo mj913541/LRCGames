@@ -420,7 +420,7 @@ function renderQuestion() {
   q.choices.forEach((choice) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "aq-choice-btn";
+    btn.className = "mc-choice-btn";
     btn.textContent = choice;
     btn.addEventListener("click", () => handleChoice(choice, btn));
     els.choiceGrid.appendChild(btn);
@@ -431,7 +431,7 @@ function renderQuestion() {
 
 function lockChoices() {
   state.locked = true;
-  els.choiceGrid.querySelectorAll(".aq-choice-btn").forEach((btn) => {
+  els.choiceGrid.querySelectorAll(".mc-choice-btn").forEach((btn) => {
     btn.disabled = true;
   });
 }
@@ -444,7 +444,7 @@ async function handleChoice(choice, clickedBtn) {
 
   lockChoices();
 
-  els.choiceGrid.querySelectorAll(".aq-choice-btn").forEach((btn) => {
+  els.choiceGrid.querySelectorAll(".mc-choice-btn").forEach((btn) => {
     if (btn.textContent === q.correctAnswer) btn.classList.add("is-correct");
   });
 
