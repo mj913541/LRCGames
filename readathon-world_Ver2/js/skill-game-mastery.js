@@ -1,8 +1,19 @@
+/* ==================================================
+   skill-game-mastery.js
+   Shared mastery helpers for all skill games
+================================================== */
+
+/**
+ * Safe number helper
+ */
 function n(value, fallback = 0) {
   const num = Number(value);
   return Number.isFinite(num) ? num : fallback;
 }
 
+/**
+ * Returns a safe accuracy from 0 to 1
+ */
 export function getSkillGameAccuracy(progress = {}) {
   const totalQuestions = n(progress.totalQuestions, 0);
   const correctAnswers = n(progress.correctAnswers, 0);
@@ -12,10 +23,16 @@ export function getSkillGameAccuracy(progress = {}) {
   return correctAnswers / totalQuestions;
 }
 
+/**
+ * Returns whether the game uses mastery
+ */
 export function masteryEnabled(config = {}) {
   return !!config?.masterySettings?.enabled;
 }
 
+/**
+ * Returns the mastery state string for a game
+ */
 export function getSkillGameMasteryState(progress = {}, config = {}) {
   const mastery = config?.masterySettings || {};
 
@@ -41,6 +58,9 @@ export function getSkillGameMasteryState(progress = {}, config = {}) {
   return mastered ? masteryStateOnComplete : "learning";
 }
 
+/**
+ * Returns whether challenge mode should unlock
+ */
 export function isSkillGameChallengeUnlocked(progress = {}, config = {}) {
   const state =
     progress.masteryState || getSkillGameMasteryState(progress, config);
@@ -48,6 +68,9 @@ export function isSkillGameChallengeUnlocked(progress = {}, config = {}) {
   return state === (config?.masterySettings?.masteryStateOnComplete || "basic_mastered");
 }
 
+/**
+ * Returns whether a mastered player should stop earning in basic mode
+ */
 export function shouldBasicModeStopPaying(progress = {}, config = {}) {
   if (!masteryEnabled(config)) return false;
 
@@ -57,6 +80,10 @@ export function shouldBasicModeStopPaying(progress = {}, config = {}) {
   return masteryState === (config?.masterySettings?.masteryStateOnComplete || "basic_mastered");
 }
 
+/**
+ * Builds the next progress object after a completed round
+ * This does NOT save anything. It only calculates the next state.
+ */
 export function buildNextSkillGameProgress({
   progress = {},
   config = {},
@@ -111,6 +138,9 @@ export function buildNextSkillGameProgress({
   return next;
 }
 
+/**
+ * Creates a clean initial progress object for any skill game
+ */
 export function buildInitialSkillGameProgress({
   gameId,
   title,
@@ -144,6 +174,9 @@ export function buildInitialSkillGameProgress({
   };
 }
 
+/**
+ * Resets only the daily section if the date changed
+ */
 export function normalizeSkillGameDaily(progress = {}, todayKey = "") {
   const existingDateKey = progress?.daily?.dateKey || "";
 
