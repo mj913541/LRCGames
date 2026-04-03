@@ -4,11 +4,7 @@ import {
   getSchoolId,
   fnSubmitTransaction,
   userSummaryRef,
-} from "./firebase.js";
-// KEEP
-// These imports are still part of your Firebase/game setup.
-// You may not end up using fnSubmitTransaction directly here,
-// because this file currently uses fetch to your HTTP function instead.
+} from "../readathon-world_Ver2/js/firebase.js";
 
 import {
   doc,
@@ -17,18 +13,11 @@ import {
   runTransaction,
   serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-// KEEP
-// These are needed for saving progress/mastery/reward tracking.
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-// KEEP
-// Needed so the game loads only when a student is signed in.
 
 const GAME_ID = "alphabet-quest";
-// CHANGE Rename this to something like:const GAME_ID = "plus-one-quest";
-
 const GAME_TITLE = "Alphabet Quest";
-// CHANGE Rename this to something like:const GAME_TITLE = "+1 Quest";
 
 const CONFIG = {
   roundSettings: {
@@ -53,9 +42,6 @@ const CONFIG = {
     cooldownSeconds: 120,
   },
 };
-// KEEP
-// This is the main mastery + ruby award programming.
-// You can change the numbers if you want, but the structure should stay the same if you want the same behavior.
 
 const LETTERS = [
   { upper: "A", lower: "a", sound: "/a/" },
@@ -85,9 +71,6 @@ const LETTERS = [
   { upper: "Y", lower: "y", sound: "/y/" },
   { upper: "Z", lower: "z", sound: "/z/" },
 ];
-// CHANGE
-// This whole LETTERS array is alphabet-specific.
-// Replace this with number data if needed, or remove it completely if your +1 questions generate numbers directly.
 
 const state = {
   schoolId: "",
@@ -102,8 +85,6 @@ const state = {
   progressRef: null,
   progressData: null,
 };
-// KEEP
-// This state object is still useful for a +1 game. weakItems can still work too, for example storing "4+1" or "7+1".
 
 const els = {
   modeLabel: document.getElementById("modeLabel"),
@@ -124,14 +105,10 @@ const els = {
   basicBtn: document.getElementById("basicBtn"),
   challengeBtn: document.getElementById("challengeBtn"),
 };
-// MOSTLY KEEP
-// Keep this if your HTML uses the same ids.
-// Only change if your +1 game HTML uses different element ids.
 
 function todayDateKey() {
   return new Date().toISOString().slice(0, 10);
 }
-// KEEP Needed for daily reward tracking.
 
 function shuffle(arr) {
   const copy = [...arr];
@@ -141,30 +118,25 @@ function shuffle(arr) {
   }
   return copy;
 }
-// KEEP Very useful for randomizing answer choices.
 
 function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-// KEEP Still useful if you use arrays for math prompts.
 
 function pickDistinct(arr, count, excludeFn = null) {
   const filtered = excludeFn ? arr.filter((x) => !excludeFn(x)) : [...arr];
   return shuffle(filtered).slice(0, count);
 }
-// KEEP Very useful for creating wrong answer choices.
 
 function wait(ms) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
-// KEEP-used for the pause between questions.
 
 function getModeLabel(mode) {
   if (mode === "practice") return "Practice";
   if (mode === "challenge") return "Challenge";
   return "Basic Quest";
 }
-// KEEP
 
 function getProgressRef(schoolId, userId) {
   return doc(
@@ -177,9 +149,6 @@ function getProgressRef(schoolId, userId) {
     GAME_ID
   );
 }
-// KEEP
-// This is exactly what you want.
-// It stores progress under skillGames/{GAME_ID}.
 
 function buildInitialProgress() {
   return {
@@ -209,9 +178,6 @@ function buildInitialProgress() {
     lastRewardedAt: null,
   };
 }
-// KEEP
-// This is part of the mastery/reward framework.
-// Only the gameId/title values change automatically if you rename them above.
 
 async function getOrCreateProgress() {
   const ref = getProgressRef(state.schoolId, state.userId);
@@ -239,9 +205,6 @@ async function getOrCreateProgress() {
   state.progressRef = ref;
   state.progressData = data;
 }
-// KEEP
-// This loads or creates the progress doc.
-// Important for daily ruby caps and mastery tracking.
 
 function updateModeButtons() {
   els.practiceBtn.classList.toggle("is-active", state.mode === "practice");
@@ -249,8 +212,6 @@ function updateModeButtons() {
   els.challengeBtn.classList.toggle("is-active", state.mode === "challenge");
   els.challengeBtn.disabled = !state.progressData?.challengeUnlocked;
 }
-// KEEP
-// This is still good for practice/basic/challenge mode handling.
 
 function renderHud() {
   const total = CONFIG.roundSettings.questionsPerRound;
@@ -262,33 +223,26 @@ function renderHud() {
   const pct = (state.currentIndex / total) * 100;
   els.progressFill.style.width = `${Math.max(0, Math.min(100, pct))}%`;
 }
-// KEEP
-// Still works perfectly for a math game.
 
 function setFeedback(msg) {
   els.feedbackBox.textContent = msg || "";
 }
-// KEEP
 
 function showEndCard(title, summary) {
   els.endTitle.textContent = title;
   els.endSummary.textContent = summary;
   els.endCard.classList.remove("is-hidden");
 }
-// KEEP
 
 function hideEndCard() {
   els.endCard.classList.add("is-hidden");
 }
-// KEEP
 
 function getAccuracy(progress) {
   const totalQuestions = Number(progress?.totalQuestions || 0);
   if (!totalQuestions) return 0;
   return Number(progress.correctAnswers || 0) / totalQuestions;
 }
-// KEEP
-// This is part of mastery calculation.
 
 function getMasteryState(progress) {
   const m = CONFIG.masterySettings;
@@ -301,23 +255,17 @@ function getMasteryState(progress) {
 
   return mastered ? m.masteryStateOnComplete : "learning";
 }
-// KEEP
-// This is one of the most important mastery functions.
 
 function secondsSinceLastReward(progress) {
   const ts = progress?.lastRewardedAt;
   if (!ts?.toDate) return Number.POSITIVE_INFINITY;
   return Math.floor((Date.now() - ts.toDate().getTime()) / 1000);
 }
-// KEEP
-// This controls the anti-spam reward cooldown.
 
 function isCooldownActive(progress) {
   if (state.mode === "practice") return false;
   return secondsSinceLastReward(progress) < CONFIG.antiSpamSettings.cooldownSeconds;
 }
-// KEEP
-// Also part of anti-spam reward behavior.
 
 function calculateReward({ passed, mode, progress }) {
   if (!passed) return 0;
@@ -342,9 +290,6 @@ function calculateReward({ passed, mode, progress }) {
 
   return 0;
 }
-// KEEP
-// This is the ruby award logic.
-// Very important if you want the same reward behavior.
 
 function buildUpperLowerQuestion() {
   const target = pickRandom(LETTERS);
@@ -380,9 +325,6 @@ function buildUpperLowerQuestion() {
     trackingKey: target.lower,
   };
 }
-// CHANGE
-// Replace this entire function with a +1 math question builder.
-// Example idea: buildPlusOneQuestion()
 
 function buildLetterNameQuestion() {
   const target = pickRandom(LETTERS);
@@ -400,9 +342,6 @@ function buildLetterNameQuestion() {
     trackingKey: target.upper,
   };
 }
-// CHANGE
-// Replace with another math question type if you want variety,
-// or remove if your game only needs one +1 question style.
 
 function buildSoundQuestion() {
   const target = pickRandom(LETTERS);
@@ -420,11 +359,6 @@ function buildSoundQuestion() {
     trackingKey: target.upper,
   };
 }
-// CHANGE
-// This is alphabet-only.
-// Replace with a math variation, such as:
-// "What is 6 + 1?"
-// or "What comes after 6?"
 
 function buildChallengeQuestion() {
   const roll = Math.random();
@@ -446,13 +380,6 @@ function buildChallengeQuestion() {
     trackingKey: target.upper,
   };
 }
-// CHANGE
-// Replace with a harder +1 challenge question.
-// Example:
-// - larger numbers
-// - word form to number
-// - "what comes next?"
-// - mixed +1 and missing number questions
 
 function generateQuestions() {
   const out = [];
@@ -477,10 +404,6 @@ function generateQuestions() {
   state.roundComplete = false;
   state.weakItems = [];
 }
-// CHANGE PARTIALLY
-// Keep the overall structure.
-// Change which question-builder functions get called.
-// This is where your +1 game chooses what kinds of questions to generate.
 
 function renderQuestion() {
   hideEndCard();
@@ -505,10 +428,6 @@ function renderQuestion() {
 
   renderHud();
 }
-// MOSTLY KEEP
-// This works for any multiple-choice game.
-// You may want to rename the CSS class later,
-// but functionally it can stay the same.
 
 function lockChoices() {
   state.locked = true;
@@ -516,7 +435,6 @@ function lockChoices() {
     btn.disabled = true;
   });
 }
-// KEEP
 
 async function handleChoice(choice, clickedBtn) {
   if (state.locked || state.roundComplete) return;
@@ -553,10 +471,6 @@ async function handleChoice(choice, clickedBtn) {
   state.locked = false;
   renderQuestion();
 }
-// KEEP
-// This is important.
-// It updates score, weakItems, and moves to finishRound().
-// This supports mastery tracking.
 
 async function awardRubiesThroughFunction(amount) {
   if (!amount || amount <= 0) {
@@ -619,14 +533,6 @@ async function awardRubiesThroughFunction(amount) {
     throw err;
   }
 }
-// KEEP MOSTLY
-// Keep this whole function for ruby awarding.
-// CHANGE only the display text/log text/note if you want:
-// "Alphabet Quest reward auth check:"
-// "Alphabet Quest reward success:"
-// "Alphabet Quest reward FAILED:"
-// note: "Alphabet Quest reward"
-// Those should become +1 game wording.
 
 async function saveRoundResult() {
   const totalQuestions = CONFIG.roundSettings.questionsPerRound;
@@ -767,10 +673,6 @@ async function saveRoundResult() {
     rewardError,
   };
 }
-// KEEP
-// This is the MOST IMPORTANT function to keep.
-// This is where progress, mastery, streaks, daily wins,
-// and ruby reward results are saved.
 
 async function finishRound() {
   els.progressFill.style.width = "100%";
@@ -812,10 +714,6 @@ async function finishRound() {
   renderHud();
   showEndCard(result.passed ? "Round Complete!" : "Keep Practicing!", summary);
 }
-// KEEP MOSTLY
-// Keep the structure.
-// CHANGE only the wording if you want it to sound math-specific,
-// especially "You mastered Basic Quest!"
 
 async function startRound() {
   if (state.mode === "challenge" && !state.progressData?.challengeUnlocked) {
@@ -828,15 +726,11 @@ async function startRound() {
   renderHud();
   renderQuestion();
 }
-// KEEP MOSTLY
-// Keep the logic.
-// You may want to change the text "mastering Basic Quest."
 
 function switchMode(mode) {
   state.mode = mode;
   startRound();
 }
-// KEEP
 
 async function refreshReadathonSummaryIfNeeded() {
   try {
@@ -845,7 +739,6 @@ async function refreshReadathonSummaryIfNeeded() {
     console.warn("Could not refresh summary after reward:", err);
   }
 }
-// KEEP- Helpful if you want the student's ruby total to refresh after rewards.
 
 function bindEvents() {
   els.practiceBtn.addEventListener("click", () => switchMode("practice"));
@@ -856,8 +749,6 @@ function bindEvents() {
     startRound();
   });
 }
-// KEEP
-// Works as long as your HTML buttons stay the same.
 
 async function initForUser(user) {
   if (!user) {
@@ -883,12 +774,8 @@ async function initForUser(user) {
   renderHud();
   await startRound();
 }
-// KEEP MOSTLY
-// Keep the structure.
-// CHANGE the text/log wording from "Alphabet Quest" to your new game name if desired.
 
 bindEvents();
-// KEEP
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -903,6 +790,3 @@ onAuthStateChanged(auth, async (user) => {
     showEndCard("Game Error", err?.message || "Something went wrong while loading.");
   }
 });
-// KEEP MOSTLY
-// Keep the auth flow.
-// CHANGE wording/log text if you want the new game name to appear.
