@@ -56,11 +56,12 @@ button {
 
 .header {
   display: grid;
+  background-color: darkgreen;
   grid-template-columns: minmax(0, 3fr) minmax(180px, 1fr) minmax(220px, 1fr);
   gap: 18px;
   align-items: center;
   width: 100%;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 /* LEFT SIDE */
