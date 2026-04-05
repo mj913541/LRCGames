@@ -21,7 +21,7 @@
 
 .mc-question-hint {
   margin-top: 10px;
-  color: var(--mc-soft-text);
+  color: var(--soft-text);
   font-size: 1.05rem;
 }
 
@@ -36,27 +36,27 @@
   padding: 18px;
   font-size: clamp(1.5rem, 3vw, 2.2rem);
   font-weight: 800;
-  border-radius: var(--mc-radius-lg);
+  border-radius: var(--radius-lg);
 }
 
 .mc-choice-btn.is-correct {
-  background: var(--mc-correct);
-  border-color: var(--mc-correct-border);
+  background: var(--correct);
+  border-color: var(--correct-border);
 }
 
 .mc-choice-btn.is-wrong {
-  background: var(--mc-wrong);
-  border-color: var(--mc-wrong-border);
+  background: var(--wrong);
+  border-color: var(--wrong-border);
 }
 
 .mc-feedback-box {
   min-height: 58px;
   margin-top: 16px;
   padding: 14px 16px;
-  border-radius: var(--mc-radius-md);
+  border-radius: var(--radius-md);
   font-weight: 700;
   background: #f7fbff;
-  border: 2px dashed var(--mc-border);
+  border: 2px dashed var(--border);
 }
 
 .mc-bottom-panel {
@@ -65,7 +65,9 @@
   gap: 18px;
 }
 
-.mc-mini-card { padding: 20px; }
+.mc-mini-card {
+  padding: 20px;
+}
 
 .mc-mini-card h3 {
   margin-top: 0;
@@ -74,14 +76,14 @@
 
 .mc-mini-card p,
 .mc-mini-card li {
-  color: var(--mc-soft-text);
+  color: var(--soft-text);
 }
 
 .mc-primary-btn {
   padding: 14px 22px;
   font-weight: 800;
   background: #ecf8ff;
-  border-color: var(--mc-accent);
+  border-color: var(--accent);
 }
 
 @media (max-width: 820px) {

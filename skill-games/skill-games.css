@@ -1,3 +1,25 @@
+:root {
+  --bg: #f6fbff;
+  --card: #ffffff;
+  --border: #dbe8f4;
+  --text: #18314f;
+  --soft-text: #53708f;
+  --accent: #5bb6ff;
+  --accent-2: #8ddf92;
+  --correct: #dff8e5;
+  --correct-border: #8ed7a1;
+  --wrong: #ffe5e5;
+  --wrong-border: #f1aaaa;
+  --shadow: 0 10px 30px rgba(24, 49, 79, 0.08);
+  --radius-xl: 28px;
+  --radius-lg: 20px;
+  --radius-md: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
@@ -8,7 +30,9 @@ body {
   color: var(--text);
 }
 
-button { font: inherit; }
+button {
+  font: inherit;
+}
 
 .page {
   min-height: 100vh;
@@ -36,21 +60,22 @@ button { font: inherit; }
   margin: 0 0 8px;
   font-size: 0.95rem;
   font-weight: 700;
-  color: var(--mc-soft-text);
+  color: var(--soft-text);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .subtitle {
   margin: 0;
-  color: var(--mc-soft-text);
+  color: var(--soft-text);
   font-size: 1.05rem;
 }
 
 .status-card,
 .game-card,
 .mini-card,
-.end-card {
+.end-card,
+.modal-card {
   background: var(--card);
   border: 2px solid var(--border);
   border-radius: var(--radius-xl);
@@ -70,7 +95,9 @@ button { font: inherit; }
   gap: 16px;
 }
 
-.status-row span { color: var(--soft-text); }
+.status-row span {
+  color: var(--soft-text);
+}
 
 .top-actions {
   display: flex;
@@ -81,7 +108,8 @@ button { font: inherit; }
 
 .mode-btn,
 .primary-btn,
-.choice-btn {
+.choice-btn,
+#playAgainBtn {
   border: 2px solid var(--border);
   background: #fff;
   color: var(--text);
@@ -92,7 +120,8 @@ button { font: inherit; }
 
 .mode-btn:hover,
 .primary-btn:hover,
-.choice-btn:hover {
+.choice-btn:hover,
+#playAgainBtn:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 16px rgba(24, 49, 79, 0.08);
 }
@@ -104,7 +133,7 @@ button { font: inherit; }
 
 .mode-btn.is-active {
   background: #e9f7ff;
-  border-color: var(--mc-accent);
+  border-color: var(--accent);
 }
 
 .mode-btn:disabled {
@@ -117,7 +146,9 @@ button { font: inherit; }
   margin-bottom: 18px;
 }
 
-.progress-wrap { margin-bottom: 16px; }
+.progress-wrap {
+  margin-bottom: 16px;
+}
 
 .progress-bar {
   width: 100%;
@@ -125,28 +156,15 @@ button { font: inherit; }
   background: #eef5fb;
   border-radius: 999px;
   overflow: hidden;
-  border: 2px solid var(--mc-border);
+  border: 2px solid var(--border);
 }
 
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--mc-accent), var(--mc-accent-2));
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
   transition: width 0.25s ease;
 }
-
-
-
-
-
-.endCard {
-  margin-top: 18px;
-  padding: 24px;
-  text-align: center;
-}
-
-.endCard.is-hidden { display: none; }
-
 
 .modal {
   position: fixed;
@@ -165,9 +183,34 @@ button { font: inherit; }
 
 .modal-card {
   width: min(460px, 100%);
-  background: #ffffff;
-  border-radius: 20px;
   padding: 24px;
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
   text-align: center;
+}
+
+.modal-card h2 {
+  margin-top: 0;
+  margin-bottom: 12px;
+  color: var(--text);
+}
+
+.modal-card p {
+  margin-bottom: 18px;
+  color: var(--soft-text);
+}
+
+#playAgainBtn {
+  padding: 12px 22px;
+  font-weight: 700;
+  background: #ecf8ff;
+  border-color: var(--accent);
+}
+
+@media (max-width: 820px) {
+  .header {
+    grid-template-columns: 1fr;
+  }
+
+  .page {
+    padding: 14px;
+  }
 }
