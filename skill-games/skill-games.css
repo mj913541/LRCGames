@@ -159,14 +159,13 @@ button { font: inherit; }
 
 
 
-.end-card {
+.endCard {
   margin-top: 18px;
   padding: 24px;
   text-align: center;
 }
 
-.end-card.is-hidden { display: none; }
-
+.endCard.is-hidden { display: none; }
 
 
 .modal {
