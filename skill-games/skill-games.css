@@ -42,21 +42,21 @@ button {
   min-height: 100vh;
   width: 100%;
   max-width: 100%;
-  padding: 12px;
+  padding: 16px 12px;
   overflow-x: hidden;
 }
 
 .shell {
   width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 16px;
 }
 
 .header {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
-  gap: 16px;
-  margin-bottom: 16px;
+  grid-template-columns: 4fr 1fr;
+  gap: 20px;
   align-items: start;
 }
 
@@ -146,6 +146,7 @@ button {
 .modal-card {
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   background: var(--card);
   border: 2px solid var(--border);
   border-radius: var(--radius-xl);
@@ -158,6 +159,7 @@ button {
   gap: 12px;
   align-content: start;
 }
+
 
 .status-row {
   display: grid;
