@@ -311,3 +311,19 @@ body {
     border-radius: 20px;
   }
 }
+.click-zone.is-complete {
+  background: linear-gradient(135deg, #d4f8d4, #bdf2c2);
+  border: 2px solid #4caf50;
+}
+
+.zone-complete-badge {
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  background: #4caf50;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 900;
+  padding: 3px 6px;
+  border-radius: 999px;
+}

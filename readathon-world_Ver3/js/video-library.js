@@ -314,11 +314,13 @@ function renderVideoGrid() {
       zone.classList.add("is-watching");
     }
 
+    const rewardAmount = Number(progress.rubiesAwarded || item.rubies || 0);
+
     const statusText = completed
-      ? "Completed"
+      ? `✅ Completed • ${rewardAmount} rubies earned`
       : watchPercent > 0
-      ? `${watchPercent}% watched`
-      : `${Number(item.rubies || 0)} rubies`;
+      ? `▶ ${watchPercent}% watched`
+      : `💎 ${Number(item.rubies || 0)} rubies`;
 
     zone.disabled = false;
     zone.title = item.title;
@@ -326,12 +328,13 @@ function renderVideoGrid() {
 
     zone.innerHTML = `
       <div class="zone-card">
-        <img class="zone-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />
-        <div class="zone-text">
-          <div class="zone-title">${escapeHtml(item.title)}</div>
-          <div class="zone-meta">${escapeHtml(statusText)}</div>
-        </div>
+      <img class="zone-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />
+      <div class="zone-text">
+        <div class="zone-title">${escapeHtml(item.title)}</div>
+        <div class="zone-meta">${escapeHtml(statusText)}</div>
       </div>
+      ${completed ? '<div class="zone-complete-badge">CLAIMED</div>' : ''}
+    </div>
     `;
 
     zone.onclick = () => {
