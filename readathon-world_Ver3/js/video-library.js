@@ -4,8 +4,6 @@ import {
   getSchoolId,
   waitForAuthReady,
   getIdTokenClaims,
-  fnSubmitTransaction,
-  userSummaryRef,
 } from "./firebase.js";
 
 import {
@@ -21,7 +19,6 @@ import {
   setDoc,
   serverTimestamp,
   query,
-  increment,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import { mountBookBracketPlayer } from "./book-bracket-player.js";
@@ -653,23 +650,58 @@ async function awardVideoCompletion(item, progress) {
     return;
   }
 
-  try {
-    console.log("Submitting transaction...");
+  const currentUser = auth.currentUser;
 
-    const result = await fnSubmitTransaction({
-      schoolId,
-      targetUserId: userId,
-      actionType: "RUBIES_AWARD",
-      deltaMinutes: 0,
-      deltaRubies: Number(item.rubies || 0),
-      deltaMoneyRaisedCents: 0,
-      note: `Video reward: ${item.title}`.slice(0, 300),
-    });
+  console.log("Video reward auth check:", {
+    authUid: currentUser ? currentUser.uid : null,
+    pageUserId: userId,
+    schoolId,
+    localSchoolId: getSchoolId(),
+    videoKey: item.key,
+  });
 
-    console.log("Transaction result:", result);
-  } catch (err) {
-    console.error("❌ Transaction FAILED:", err);
+  if (!currentUser) {
+    throw new Error("No signed-in Firebase user found when trying to award video rubies.");
   }
+
+  const token = await currentUser.getIdToken();
+
+  const response = await fetch(
+    "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        schoolId,
+        targetUserId: userId,
+        actionType: "RUBIES_AWARD",
+        deltaMinutes: 0,
+        deltaRubies: Number(item.rubies || 0),
+        deltaMoneyRaisedCents: 0,
+        note: `Video reward: ${item.title}`.slice(0, 300),
+      }),
+    }
+  );
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      `Video reward failed with HTTP ${response.status}`
+    );
+  }
+
+  console.log("✅ Video reward transaction success:", data);
 
   progress.completed = true;
   progress.rubiesAwarded = Number(item.rubies || 0);
@@ -678,31 +710,7 @@ async function awardVideoCompletion(item, progress) {
     MIN_WATCH_PERCENT
   );
 
-  await setDoc(
-    doc(db, videoProgressPath(item.key)),
-    {
-      videoKey: item.key,
-      youtubeId: item.youtubeId,
-      youtubeUrl: item.youtubeUrl || "",
-      title: item.title,
-      rubiesPlanned: Number(item.rubies || 0),
-      watchPercent: progress.watchPercent,
-      watchedSecondCount: Number(progress.watchedSecondCount || 0),
-      durationSeconds: Number(progress.durationSeconds || 0),
-      resumeAtSeconds: Number(progress.resumeAtSeconds || 0),
-      suspiciousSkips: Number(progress.suspiciousSkips || 0),
-      completed: true,
-      completedAt: serverTimestamp(),
-      rubiesAwarded: Number(item.rubies || 0),
-      lastWatchedAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
-
-  const nextMap = new Map(progressByVideoKey);
-  nextMap.set(item.key, {
-    ...(nextMap.get(item.key) || {}),
+  const videoDocPayload = {
     videoKey: item.key,
     youtubeId: item.youtubeId,
     youtubeUrl: item.youtubeUrl || "",
@@ -714,7 +722,22 @@ async function awardVideoCompletion(item, progress) {
     resumeAtSeconds: Number(progress.resumeAtSeconds || 0),
     suspiciousSkips: Number(progress.suspiciousSkips || 0),
     completed: true,
+    completedAt: serverTimestamp(),
     rubiesAwarded: Number(item.rubies || 0),
+    lastWatchedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  await setDoc(
+    doc(db, videoProgressPath(item.key)),
+    videoDocPayload,
+    { merge: true }
+  );
+
+  const nextMap = new Map(progressByVideoKey);
+  nextMap.set(item.key, {
+    ...(nextMap.get(item.key) || {}),
+    ...videoDocPayload,
   });
 
   const completedCount = [...nextMap.values()].filter((x) => x.completed).length;
@@ -723,16 +746,15 @@ async function awardVideoCompletion(item, progress) {
     0
   );
 
-await setDoc(
-  userSummaryRef(schoolId, userId),
-  {
-    videoLibraryCompletedVideos: completedCount,
-    videoLibraryRubiesAwarded: totalRubiesAwarded,
-    rubiesBalance: increment(Number(item.rubies || 0)),
-    updatedAt: serverTimestamp(),
-  },
-  { merge: true }
-);
+  await setDoc(
+    doc(db, videoLibrarySummaryPath()),
+    {
+      completedCount,
+      earnedRubies: totalRubiesAwarded,
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
 
   progressByVideoKey.clear();
   for (const [k, v] of nextMap.entries()) {
