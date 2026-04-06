@@ -162,6 +162,7 @@ const VIDEO_ITEMS = [
 ];
 
 const MIN_WATCH_PERCENT = 90;
+const VOTE_REWARD_RUBIES = 10;
 
 const MATCHUPS = [
   {
@@ -812,7 +813,7 @@ function openVoteModalShell(matchup) {
     document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   setText(els.voteModalTitle, matchup?.label || "Vote");
-  setText(els.voteModalSubtitle, "Choose your favorite video");
+  setText(els.voteModalSubtitle, `Choose your favorite video • Earn ${VOTE_REWARD_RUBIES} rubies`);
   setText(els.voteModalStatus, "Choose one video to submit your vote.");
   setVisible(els.voteModal, true);
 
@@ -902,7 +903,7 @@ async function openVoteModal(matchup) {
             ? "✅ Voted"
             : existingVote
             ? "Vote Submitted"
-            : "Vote for This Video"
+            : `Vote for This Video (+${VOTE_REWARD_RUBIES} 💎)`
         }
       </button>
     `;
@@ -913,16 +914,19 @@ async function openVoteModal(matchup) {
       btn.addEventListener("click", async () => {
         try {
           btn.disabled = true;
-          setText(els.voteModalStatus, "Submitting vote...");
+          setText(els.voteModalStatus, "Submitting vote and awarding rubies...");
 
           await submitMatchupVote(matchup, item);
 
-          setText(els.voteModalStatus, `✅ Vote submitted for ${item.title}.`);
+          setText(
+            els.voteModalStatus,
+            `✅ Vote submitted for ${item.title}. +${VOTE_REWARD_RUBIES} rubies awarded.`
+          );
           renderMatchupButtons();
 
           window.setTimeout(() => {
             closeVoteModal();
-          }, 350);
+          }, 450);
         } catch (err) {
           console.error(err);
           btn.disabled = false;
@@ -945,6 +949,53 @@ async function openVoteModal(matchup) {
         : "✅ You already voted in this matchup."
     );
   }
+}
+
+async function awardVoteRubies(matchup, selectedItem) {
+  const currentUser = auth.currentUser;
+
+  if (!currentUser) {
+    throw new Error("No signed-in Firebase user found when trying to award vote rubies.");
+  }
+
+  const token = await currentUser.getIdToken();
+
+  const response = await fetch(
+    "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        schoolId,
+        targetUserId: userId,
+        actionType: "RUBIES_AWARD",
+        deltaMinutes: 0,
+        deltaRubies: VOTE_REWARD_RUBIES,
+        deltaMoneyRaisedCents: 0,
+        note: `Vote reward: ${matchup.label} → ${selectedItem.title}`.slice(0, 300),
+      }),
+    }
+  );
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    data = null;
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error ||
+      data?.message ||
+      `Vote reward failed with HTTP ${response.status}`
+    );
+  }
+
+  return data;
 }
 
 async function submitMatchupVote(matchup, selectedItem) {
@@ -993,6 +1044,8 @@ async function submitMatchupVote(matchup, selectedItem) {
   await setDoc(doc(db, videoVotePath(matchup.matchupId)), payload, {
     merge: false,
   });
+
+  await awardVoteRubies(matchup, selectedItem);
 
   votesByMatchupId.set(matchup.matchupId, {
     ...payload,
@@ -1076,7 +1129,7 @@ async function awardVideoCompletion(item, progress) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
         schoolId,
