@@ -163,6 +163,57 @@ const VIDEO_ITEMS = [
 
 const MIN_WATCH_PERCENT = 90;
 
+const MATCHUPS = [
+  {
+    matchupId: "round1_match1",
+    label: "Round 1 • Match 1",
+    leftVideoId: "video_01",
+    rightVideoId: "video_02",
+  },
+  {
+    matchupId: "round1_match2",
+    label: "Round 1 • Match 2",
+    leftVideoId: "video_03",
+    rightVideoId: "video_04",
+  },
+  {
+    matchupId: "round1_match3",
+    label: "Round 1 • Match 3",
+    leftVideoId: "video_05",
+    rightVideoId: "video_06",
+  },
+  {
+    matchupId: "round1_match4",
+    label: "Round 1 • Match 4",
+    leftVideoId: "video_07",
+    rightVideoId: "video_08",
+  },
+  {
+    matchupId: "round1_match5",
+    label: "Round 1 • Match 5",
+    leftVideoId: "video_09",
+    rightVideoId: "video_10",
+  },
+  {
+    matchupId: "round1_match6",
+    label: "Round 1 • Match 6",
+    leftVideoId: "video_11",
+    rightVideoId: "video_12",
+  },
+  {
+    matchupId: "round1_match7",
+    label: "Round 1 • Match 7",
+    leftVideoId: "video_13",
+    rightVideoId: "video_14",
+  },
+  {
+    matchupId: "round1_match8",
+    label: "Round 1 • Match 8",
+    leftVideoId: "video_15",
+    rightVideoId: "video_16",
+  },
+];
+
 /* --------------------------------------------------
    ELEMENTS
 -------------------------------------------------- */
@@ -172,6 +223,15 @@ const els = {
   btnSignOut: document.getElementById("btnSignOut"),
 
   clickZones: [...document.querySelectorAll(".click-zone")],
+  matchupZones: [...document.querySelectorAll(".matchup-zone")],
+
+  voteModal: document.getElementById("voteModal"),
+  voteModalTitle: document.getElementById("voteModalTitle"),
+  voteModalSubtitle: document.getElementById("voteModalSubtitle"),
+  closeVoteModalBtn: document.getElementById("closeVoteModalBtn"),
+  voteChoices: document.getElementById("voteChoices"),
+  voteModalStatus: document.getElementById("voteModalStatus"),
+
   completedCount: document.getElementById("completedCount"),
   earnedRubies: document.getElementById("earnedRubies"),
   currentVideoStatus: document.getElementById("currentVideoStatus"),
@@ -200,6 +260,10 @@ let modalLastFocus = null;
 let isClosingModal = false;
 
 const progressByVideoKey = new Map();
+const votesByMatchupId = new Map();
+
+let activeMatchup = null;
+let voteModalLastFocus = null;
 
 /* --------------------------------------------------
    INIT
@@ -239,9 +303,12 @@ async function init() {
 
   wireSignOut(els.btnSignOut);
   wireModalEvents();
+  wireVoteModalEvents();
 
   await loadAllProgress();
+  await loadAllVotes();
   renderVideoGrid();
+  renderMatchupButtons();
   renderStats();
   updateLiveStatus();
 }
@@ -266,6 +333,14 @@ function videoProgressPath(videoKey) {
   return `${videoProgressCollectionPath()}/${videoKey}`;
 }
 
+function videoVotesCollectionPath() {
+  return `${schoolRootPath()}/users/${userId}/videoVotes`;
+}
+
+function videoVotePath(matchupId) {
+  return `${videoVotesCollectionPath()}/${matchupId}`;
+}
+
 /* --------------------------------------------------
    LOAD DATA
 -------------------------------------------------- */
@@ -278,6 +353,20 @@ async function loadAllProgress() {
 
   for (const docSnap of snap.docs) {
     progressByVideoKey.set(docSnap.id, {
+      id: docSnap.id,
+      ...docSnap.data(),
+    });
+  }
+}
+
+async function loadAllVotes() {
+  const qRef = query(collection(db, videoVotesCollectionPath()));
+  const snap = await getDocs(qRef);
+
+  votesByMatchupId.clear();
+
+  for (const docSnap of snap.docs) {
+    votesByMatchupId.set(docSnap.id, {
       id: docSnap.id,
       ...docSnap.data(),
     });
@@ -314,10 +403,8 @@ function renderVideoGrid() {
       zone.classList.add("is-watching");
     }
 
-    const rewardAmount = Number(progress.rubiesAwarded || item.rubies || 0);
-
     const statusText = completed
-      ? "" // no text when completed
+      ? ""
       : watchPercent > 0
       ? `▶ ${watchPercent}%`
       : `💎 ${Number(item.rubies || 0)}`;
@@ -328,13 +415,13 @@ function renderVideoGrid() {
 
     zone.innerHTML = `
       <div class="zone-card">
-      <img class="zone-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />
-      <div class="zone-text">
-        <div class="zone-title">${escapeHtml(item.title)}</div>
-        <div class="zone-meta">${escapeHtml(statusText)}</div>
+        <img class="zone-thumb" src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" />
+        <div class="zone-text">
+          <div class="zone-title">${escapeHtml(item.title)}</div>
+          <div class="zone-meta">${escapeHtml(statusText)}</div>
+        </div>
+        ${completed ? '<div class="zone-check">✓</div>' : ""}
       </div>
-      ${completed ? '<div class="zone-check">✓</div>' : ''}
-     </div>
     `;
 
     zone.onclick = () => {
@@ -346,8 +433,70 @@ function renderVideoGrid() {
   });
 }
 
+function renderMatchupButtons() {
+  if (!els.matchupZones?.length) return;
+
+  els.matchupZones.forEach((btn, index) => {
+    const matchup = MATCHUPS[index];
+
+    if (!matchup) {
+      btn.style.display = "none";
+      return;
+    }
+
+    const leftProgress = progressByVideoKey.get(matchup.leftVideoId) || {};
+    const rightProgress = progressByVideoKey.get(matchup.rightVideoId) || {};
+    const existingVote = votesByMatchupId.get(matchup.matchupId);
+
+    const unlocked = !!leftProgress.completed && !!rightProgress.completed;
+    const completed = !!existingVote;
+
+    btn.classList.remove("is-locked", "is-unlocked", "is-completed");
+
+    let icon = "🔒";
+    let stateText = "Locked";
+
+    if (completed) {
+      btn.classList.add("is-completed");
+      btn.disabled = false;
+      icon = "✅";
+      stateText = "Completed";
+    } else if (unlocked) {
+      btn.classList.add("is-unlocked");
+      btn.disabled = false;
+      icon = "🔓";
+      stateText = "Unlocked";
+    } else {
+      btn.classList.add("is-locked");
+      btn.disabled = true;
+      icon = "🔒";
+      stateText = "Locked";
+    }
+
+    btn.innerHTML = `
+      <div class="matchup-icon">${icon}</div>
+      <div class="matchup-label">${escapeHtml(matchup.label)}</div>
+      <div class="matchup-state">${escapeHtml(stateText)}</div>
+    `;
+
+    btn.title = `${matchup.label} • ${stateText}`;
+
+    btn.onclick = () => {
+      if (btn.disabled && !completed) return;
+
+      openVoteModal(matchup).catch((err) => {
+        console.error(err);
+        setText(els.voteModalStatus, normalizeError(err));
+      });
+    };
+  });
+}
+
 function renderStats() {
-  const completedCount = [...progressByVideoKey.values()].filter((x) => x.completed).length;
+  const completedCount = [...progressByVideoKey.values()].filter(
+    (x) => x.completed
+  ).length;
+
   const earnedRubies = [...progressByVideoKey.values()].reduce(
     (sum, x) => sum + Number(x.rubiesAwarded || 0),
     0
@@ -382,7 +531,7 @@ function updateLiveStatus() {
 }
 
 /* --------------------------------------------------
-   MODAL
+   PLAYER MODAL
 -------------------------------------------------- */
 
 function wireModalEvents() {
@@ -411,10 +560,14 @@ function isModalOpen() {
 }
 
 function openPlayerModal(item) {
-  modalLastFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  modalLastFocus =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
   setText(els.playerModalTitle, item?.title || "Video");
-  setText(els.playerModalSubtitle, `${Number(item?.rubies || 0)} rubies available`);
+  setText(
+    els.playerModalSubtitle,
+    `${Number(item?.rubies || 0)} rubies available`
+  );
   setText(els.playerStatus, "Loading player.");
   setText(els.playerProgressText, "");
 
@@ -424,7 +577,7 @@ function openPlayerModal(item) {
     window.setTimeout(() => {
       try {
         els.closePlayerBtn.focus();
-      } catch (err) {
+      } catch {
         // ignore focus failure
       }
     }, 0);
@@ -456,7 +609,7 @@ async function closeVideoModal() {
   if (modalLastFocus && typeof modalLastFocus.focus === "function") {
     try {
       modalLastFocus.focus();
-    } catch (err) {
+    } catch {
       // ignore focus failure
     }
   }
@@ -515,16 +668,23 @@ async function openVideoModal(item) {
         updatePlayerProgressUi(playerState);
 
         const validWatch =
-          clampPercent(activeVideoProgress?.watchPercent || 0) >= MIN_WATCH_PERCENT &&
+          clampPercent(activeVideoProgress?.watchPercent || 0) >=
+            MIN_WATCH_PERCENT &&
           Number(activeVideoProgress?.suspiciousSkips || 0) === 0;
 
-        if (validWatch && activeVideo && activeVideoProgress && !activeVideoProgress.completed) {
+        if (
+          validWatch &&
+          activeVideo &&
+          activeVideoProgress &&
+          !activeVideoProgress.completed
+        ) {
           await awardVideoCompletion(activeVideo, activeVideoProgress);
         } else if (activeVideoProgress) {
           await saveActiveProgress();
         }
 
         renderVideoGrid();
+        renderMatchupButtons();
         renderStats();
         updateLiveStatus();
       } catch (err) {
@@ -562,12 +722,16 @@ async function openVideoModal(item) {
 function updatePlayerProgressUi(playerState) {
   const watched = Math.floor(playerState?.watchSeconds || 0);
   const percent = Math.round(Number(playerState?.watchPercent || 0) * 100);
-  const threshold = Math.floor(playerState?.completionThresholdSeconds || 0);
+  const threshold = Math.floor(
+    Number(playerState?.completionThresholdSeconds || 0)
+  );
   const suspicious = Number(playerState?.suspiciousSeekCount || 0);
 
   let rewardText = "";
   if (activeVideoProgress?.completed) {
-    rewardText = ` • Reward: ${Number(activeVideoProgress.rubiesAwarded || activeVideo?.rubies || 0)} rubies earned`;
+    rewardText = ` • Reward: ${Number(
+      activeVideoProgress.rubiesAwarded || activeVideo?.rubies || 0
+    )} rubies earned`;
   } else {
     rewardText = " • Reward: not earned yet";
   }
@@ -589,13 +753,21 @@ function syncActiveProgressFromPlayerState(playerState) {
   activeVideoProgress.title = activeVideo.title;
   activeVideoProgress.rubiesPlanned = Number(activeVideo.rubies || 0);
 
-  activeVideoProgress.durationSeconds = Math.floor(Number(playerState.durationSeconds || 0));
-  activeVideoProgress.watchedSecondCount = Math.floor(Number(playerState.watchSeconds || 0));
-  activeVideoProgress.resumeAtSeconds = Math.floor(Number(playerState.maxObservedTime || 0));
+  activeVideoProgress.durationSeconds = Math.floor(
+    Number(playerState.durationSeconds || 0)
+  );
+  activeVideoProgress.watchedSecondCount = Math.floor(
+    Number(playerState.watchSeconds || 0)
+  );
+  activeVideoProgress.resumeAtSeconds = Math.floor(
+    Number(playerState.maxObservedTime || 0)
+  );
   activeVideoProgress.watchPercent = clampPercent(
     Number(playerState.watchPercent || 0) * 100
   );
-  activeVideoProgress.suspiciousSkips = Number(playerState.suspiciousSeekCount || 0);
+  activeVideoProgress.suspiciousSkips = Number(
+    playerState.suspiciousSeekCount || 0
+  );
 
   if (playerState.completed) {
     activeVideoProgress.watchPercent = Math.max(
@@ -603,6 +775,230 @@ function syncActiveProgressFromPlayerState(playerState) {
       MIN_WATCH_PERCENT
     );
   }
+}
+
+/* --------------------------------------------------
+   VOTE MODAL
+-------------------------------------------------- */
+
+function wireVoteModalEvents() {
+  if (els.closeVoteModalBtn) {
+    els.closeVoteModalBtn.addEventListener("click", () => {
+      closeVoteModal();
+    });
+  }
+
+  const backdrop = els.voteModal?.querySelector(".voteModalBackdrop");
+  if (backdrop) {
+    backdrop.addEventListener("click", () => {
+      closeVoteModal();
+    });
+  }
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isVoteModalOpen()) {
+      closeVoteModal();
+    }
+  });
+}
+
+function isVoteModalOpen() {
+  return !!els.voteModal && els.voteModal.style.display !== "none";
+}
+
+function openVoteModalShell(matchup) {
+  activeMatchup = matchup;
+  voteModalLastFocus =
+    document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+  setText(els.voteModalTitle, matchup?.label || "Vote");
+  setText(els.voteModalSubtitle, "Choose your favorite video");
+  setText(els.voteModalStatus, "Choose one video to submit your vote.");
+  setVisible(els.voteModal, true);
+
+  if (els.closeVoteModalBtn) {
+    window.setTimeout(() => {
+      try {
+        els.closeVoteModalBtn.focus();
+      } catch {
+        // ignore focus failure
+      }
+    }, 0);
+  }
+}
+
+function closeVoteModal() {
+  activeMatchup = null;
+
+  setVisible(els.voteModal, false);
+  setText(els.voteModalTitle, "");
+  setText(els.voteModalSubtitle, "");
+  setText(els.voteModalStatus, "Loading vote options...");
+
+  if (els.voteChoices) {
+    els.voteChoices.innerHTML = "";
+  }
+
+  if (voteModalLastFocus && typeof voteModalLastFocus.focus === "function") {
+    try {
+      voteModalLastFocus.focus();
+    } catch {
+      // ignore focus failure
+    }
+  }
+}
+
+async function openVoteModal(matchup) {
+  if (!matchup) {
+    throw new Error("Missing matchup.");
+  }
+
+  const existingVote = votesByMatchupId.get(matchup.matchupId);
+
+  const leftItem = VIDEO_ITEMS.find((item) => item.key === matchup.leftVideoId);
+  const rightItem = VIDEO_ITEMS.find((item) => item.key === matchup.rightVideoId);
+
+  if (!leftItem || !rightItem) {
+    throw new Error("Missing video data for this matchup.");
+  }
+
+  const leftProgress = progressByVideoKey.get(matchup.leftVideoId) || {};
+  const rightProgress = progressByVideoKey.get(matchup.rightVideoId) || {};
+  const unlocked = !!leftProgress.completed && !!rightProgress.completed;
+
+  if (!unlocked && !existingVote) {
+    throw new Error("This matchup is still locked.");
+  }
+
+  openVoteModalShell(matchup);
+
+  if (els.voteChoices) {
+    els.voteChoices.innerHTML = "";
+  }
+
+  const choices = [leftItem, rightItem];
+
+  for (const item of choices) {
+    const card = document.createElement("article");
+    card.className = "voteChoiceCard";
+
+    const selectedAlready = existingVote?.selectedVideoId === item.key;
+
+    card.innerHTML = `
+      <img
+        class="voteChoiceThumb"
+        src="${escapeHtml(item.image)}"
+        alt="${escapeHtml(item.title)}"
+      />
+      <div class="voteChoiceTitle">${escapeHtml(item.title)}</div>
+      <button
+        class="voteChoiceBtn"
+        type="button"
+        data-video-key="${escapeHtml(item.key)}"
+        ${existingVote ? "disabled" : ""}
+      >
+        ${
+          selectedAlready
+            ? "✅ Voted"
+            : existingVote
+            ? "Vote Submitted"
+            : "Vote for This Video"
+        }
+      </button>
+    `;
+
+    const btn = card.querySelector(".voteChoiceBtn");
+
+    if (btn && !existingVote) {
+      btn.addEventListener("click", async () => {
+        try {
+          btn.disabled = true;
+          setText(els.voteModalStatus, "Submitting vote...");
+
+          await submitMatchupVote(matchup, item);
+
+          setText(els.voteModalStatus, `✅ Vote submitted for ${item.title}.`);
+          renderMatchupButtons();
+
+          window.setTimeout(() => {
+            closeVoteModal();
+          }, 350);
+        } catch (err) {
+          console.error(err);
+          btn.disabled = false;
+          setText(els.voteModalStatus, normalizeError(err));
+        }
+      });
+    }
+
+    els.voteChoices?.appendChild(card);
+  }
+
+  if (existingVote) {
+    const selectedItem =
+      VIDEO_ITEMS.find((item) => item.key === existingVote.selectedVideoId) || null;
+
+    setText(
+      els.voteModalStatus,
+      selectedItem
+        ? `✅ You already voted for ${selectedItem.title}.`
+        : "✅ You already voted in this matchup."
+    );
+  }
+}
+
+async function submitMatchupVote(matchup, selectedItem) {
+  if (!matchup?.matchupId) {
+    throw new Error("Missing matchup ID.");
+  }
+
+  if (!selectedItem?.key) {
+    throw new Error("Missing selected video.");
+  }
+
+  const leftProgress = progressByVideoKey.get(matchup.leftVideoId) || {};
+  const rightProgress = progressByVideoKey.get(matchup.rightVideoId) || {};
+  const unlocked = !!leftProgress.completed && !!rightProgress.completed;
+
+  if (!unlocked) {
+    throw new Error("This matchup is still locked.");
+  }
+
+  if (votesByMatchupId.has(matchup.matchupId)) {
+    throw new Error("You already voted in this matchup.");
+  }
+
+  if (
+    selectedItem.key !== matchup.leftVideoId &&
+    selectedItem.key !== matchup.rightVideoId
+  ) {
+    throw new Error("Selected video is not part of this matchup.");
+  }
+
+  const matchNumber =
+    Number(String(matchup.matchupId || "").replace("round1_match", "")) || 0;
+
+  const payload = {
+    matchupId: matchup.matchupId,
+    roundNumber: 1,
+    matchNumber,
+    label: matchup.label,
+    leftVideoId: matchup.leftVideoId,
+    rightVideoId: matchup.rightVideoId,
+    selectedVideoId: selectedItem.key,
+    submittedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+
+  await setDoc(doc(db, videoVotePath(matchup.matchupId)), payload, {
+    merge: false,
+  });
+
+  votesByMatchupId.set(matchup.matchupId, {
+    ...payload,
+    submittedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  });
 }
 
 /* --------------------------------------------------
@@ -637,6 +1033,11 @@ async function saveActiveProgress() {
     ...(progressByVideoKey.get(activeVideo.key) || {}),
     ...payload,
   });
+
+  renderVideoGrid();
+  renderMatchupButtons();
+  renderStats();
+  updateLiveStatus();
 }
 
 async function awardVideoCompletion(item, progress) {
@@ -675,7 +1076,7 @@ async function awardVideoCompletion(item, progress) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         schoolId,
@@ -699,8 +1100,8 @@ async function awardVideoCompletion(item, progress) {
   if (!response.ok) {
     throw new Error(
       data?.error ||
-      data?.message ||
-      `Video reward failed with HTTP ${response.status}`
+        data?.message ||
+        `Video reward failed with HTTP ${response.status}`
     );
   }
 
@@ -731,11 +1132,9 @@ async function awardVideoCompletion(item, progress) {
     updatedAt: serverTimestamp(),
   };
 
-  await setDoc(
-    doc(db, videoProgressPath(item.key)),
-    videoDocPayload,
-    { merge: true }
-  );
+  await setDoc(doc(db, videoProgressPath(item.key)), videoDocPayload, {
+    merge: true,
+  });
 
   const nextMap = new Map(progressByVideoKey);
   nextMap.set(item.key, {

@@ -57,6 +57,18 @@
         <button id="zone-18" class="click-zone" type="button" aria-label="Video slot 18"></button>
         <button id="zone-19" class="click-zone" type="button" aria-label="Video slot 19"></button>
         <button id="zone-20" class="click-zone" type="button" aria-label="Video slot 20"></button>
+
+
+
+<button id="matchup-01" class="matchup-zone" type="button" aria-label="Round 1 Match 1"></button>
+<button id="matchup-02" class="matchup-zone" type="button" aria-label="Round 1 Match 2"></button>
+<button id="matchup-03" class="matchup-zone" type="button" aria-label="Round 1 Match 3"></button>
+<button id="matchup-04" class="matchup-zone" type="button" aria-label="Round 1 Match 4"></button>
+
+<button id="matchup-05" class="matchup-zone" type="button" aria-label="Round 1 Match 5"></button>
+<button id="matchup-06" class="matchup-zone" type="button" aria-label="Round 1 Match 6"></button>
+<button id="matchup-07" class="matchup-zone" type="button" aria-label="Round 1 Match 7"></button>
+<button id="matchup-08" class="matchup-zone" type="button" aria-label="Round 1 Match 8"></button>
       </div>
     </section>
   </main>
@@ -96,6 +108,41 @@
       </div>
     </div>
   </div>
+
+
+<div id="voteModal" class="voteModal" style="display:none;">
+  <div class="voteModalBackdrop"></div>
+
+  <div
+    class="voteModalCard"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="voteModalTitle"
+  >
+    <div class="voteModalHeader">
+      <div>
+        <h3 id="voteModalTitle">Round 1 • Match 1</h3>
+        <p id="voteModalSubtitle">Choose your favorite video</p>
+      </div>
+
+      <button
+        id="closeVoteModalBtn"
+        class="voteIconBtn"
+        type="button"
+        aria-label="Close voting"
+      >
+        ✕
+      </button>
+    </div>
+
+    <div id="voteChoices" class="voteChoices"></div>
+
+    <div class="voteModalInfo">
+      <div id="voteModalStatus" class="voteModalStatus">Loading vote options...</div>
+    </div>
+  </div>
+</div>
+
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script type="module" src="../js/video-library.js"></script>

@@ -3,74 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Video Library" />
   <title>Video Library</title>
   <link rel="stylesheet" href="../css/video-library.css" />
 </head>
 <body>
+  <!-- Required by shared app.js helpers -->
   <header id="hdr" class="pageHeader">
     <div id="data-title" data-title>Video Library</div>
     <div id="data-subtitle" data-subtitle>Watch videos and earn rubies</div>
   </header>
 
-  <main class="videoLibraryPage" id="videoLibraryPage">
-    <section class="videoLibraryHero">
-      <div class="videoLibraryHeroText">
-        <p class="videoLibraryKicker">Read Aloud Rewards</p>
-        <h1 class="videoLibraryTitle">Video Library</h1>
-        <p class="videoLibrarySubtitle">
-          Click a card to watch a video. Completed videos earn rubies once.
-        </p>
+  <main class="videoLibraryPage">
+    <section class="videoLibraryStats">
+      <div class="statCard">
+        <span class="statLabel">Completed</span>
+        <strong id="completedCount">0</strong>
       </div>
 
-      <div class="videoLibraryStats">
-        <div class="statCard">
-          <span class="statLabel">Completed</span>
-          <strong id="completedCount">0</strong>
-        </div>
+      <div class="statCard">
+        <span class="statLabel">Rubies Earned</span>
+        <strong id="earnedRubies">0</strong>
+      </div>
 
-        <div class="statCard">
-          <span class="statLabel">Rubies Earned</span>
-          <strong id="earnedRubies">0</strong>
-        </div>
-
-        <div class="statCard">
-          <span class="statLabel">Current Video</span>
-          <strong id="currentVideoStatus">Not watching</strong>
-        </div>
+      <div class="statCard">
+        <span class="statLabel">Current Video</span>
+        <strong id="currentVideoStatus">Not watching</strong>
       </div>
     </section>
 
-    <section class="videoZonesLayout">
-      <div class="videoZone videoZone--featured">
-        <div class="videoZoneHeader">
-          <h2 class="videoZoneTitle">Featured</h2>
-          <p class="videoZoneSubtitle">Spotlight videos</p>
-        </div>
-        <div id="zone-featured" class="videoZoneGrid" aria-label="Featured videos"></div>
-      </div>
+    <section class="boardWrap">
+      <div class="background-container" id="videoZoneBoard" aria-label="Video library board">
+        <button id="zone-01" class="click-zone" type="button" aria-label="Video slot 1"></button>
+        <button id="zone-02" class="click-zone" type="button" aria-label="Video slot 2"></button>
+        <button id="zone-03" class="click-zone" type="button" aria-label="Video slot 3"></button>
+        <button id="zone-04" class="click-zone" type="button" aria-label="Video slot 4"></button>
+        <button id="zone-05" class="click-zone" type="button" aria-label="Video slot 5"></button>
 
-      <div class="videoZone videoZone--blackLagoon">
-        <div class="videoZoneHeader">
-          <h2 class="videoZoneTitle">Black Lagoon</h2>
-          <p class="videoZoneSubtitle">Funny school-themed stories</p>
-        </div>
-        <div id="zone-blackLagoon" class="videoZoneGrid" aria-label="Black Lagoon videos"></div>
-      </div>
+        <button id="zone-06" class="click-zone" type="button" aria-label="Video slot 6"></button>
+        <button id="zone-07" class="click-zone" type="button" aria-label="Video slot 7"></button>
+        <button id="zone-08" class="click-zone" type="button" aria-label="Video slot 8"></button>
+        <button id="zone-09" class="click-zone" type="button" aria-label="Video slot 9"></button>
+        <button id="zone-10" class="click-zone" type="button" aria-label="Video slot 10"></button>
 
-      <div class="videoZone videoZone--pig">
-        <div class="videoZoneHeader">
-          <h2 class="videoZoneTitle">Pig Books</h2>
-          <p class="videoZoneSubtitle">Pig series</p>
-        </div>
-        <div id="zone-pig" class="videoZoneGrid" aria-label="Pig videos"></div>
-      </div>
+        <button id="zone-11" class="click-zone" type="button" aria-label="Video slot 11"></button>
+        <button id="zone-12" class="click-zone" type="button" aria-label="Video slot 12"></button>
+        <button id="zone-13" class="click-zone" type="button" aria-label="Video slot 13"></button>
+        <button id="zone-14" class="click-zone" type="button" aria-label="Video slot 14"></button>
+        <button id="zone-15" class="click-zone" type="button" aria-label="Video slot 15"></button>
 
-      <div class="videoZone videoZone--all">
-        <div class="videoZoneHeader">
-          <h2 class="videoZoneTitle">All Videos</h2>
-          <p class="videoZoneSubtitle">Everything in one place</p>
-        </div>
-        <div id="zone-all" class="videoZoneGrid" aria-label="All videos"></div>
+        <button id="zone-16" class="click-zone" type="button" aria-label="Video slot 16"></button>
+        <button id="zone-17" class="click-zone" type="button" aria-label="Video slot 17"></button>
+        <button id="zone-18" class="click-zone" type="button" aria-label="Video slot 18"></button>
+        <button id="zone-19" class="click-zone" type="button" aria-label="Video slot 19"></button>
+        <button id="zone-20" class="click-zone" type="button" aria-label="Video slot 20"></button>
       </div>
     </section>
   </main>
