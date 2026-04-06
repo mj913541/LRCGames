@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Video Library</title>
   <link rel="stylesheet" href="../css/video-library.css" />
 </head>
@@ -17,10 +14,13 @@
 
   <main class="videoLibraryPage" id="videoLibraryPage">
     <section class="videoLibraryHero">
-      <h1 class="videoLibraryTitle">Video Library</h1>
-      <p class="videoLibrarySubtitle">
-        Click a card to watch a video. Completed videos earn rubies once.
-      </p>
+      <div class="videoLibraryHeroText">
+        <p class="videoLibraryKicker">Read Aloud Rewards</p>
+        <h1 class="videoLibraryTitle">Video Library</h1>
+        <p class="videoLibrarySubtitle">
+          Click a card to watch a video. Completed videos earn rubies once.
+        </p>
+      </div>
 
       <div class="videoLibraryStats">
         <div class="statCard">
@@ -40,8 +40,38 @@
       </div>
     </section>
 
-    <section class="videoGridSection">
-      <div id="videoGrid" class="videoGrid" aria-label="Video choices"></div>
+    <section class="videoZonesLayout">
+      <div class="videoZone videoZone--featured">
+        <div class="videoZoneHeader">
+          <h2 class="videoZoneTitle">Featured</h2>
+          <p class="videoZoneSubtitle">Spotlight videos</p>
+        </div>
+        <div id="zone-featured" class="videoZoneGrid" aria-label="Featured videos"></div>
+      </div>
+
+      <div class="videoZone videoZone--blackLagoon">
+        <div class="videoZoneHeader">
+          <h2 class="videoZoneTitle">Black Lagoon</h2>
+          <p class="videoZoneSubtitle">Funny school-themed stories</p>
+        </div>
+        <div id="zone-blackLagoon" class="videoZoneGrid" aria-label="Black Lagoon videos"></div>
+      </div>
+
+      <div class="videoZone videoZone--pig">
+        <div class="videoZoneHeader">
+          <h2 class="videoZoneTitle">Pig Books</h2>
+          <p class="videoZoneSubtitle">Pig series</p>
+        </div>
+        <div id="zone-pig" class="videoZoneGrid" aria-label="Pig videos"></div>
+      </div>
+
+      <div class="videoZone videoZone--all">
+        <div class="videoZoneHeader">
+          <h2 class="videoZoneTitle">All Videos</h2>
+          <p class="videoZoneSubtitle">Everything in one place</p>
+        </div>
+        <div id="zone-all" class="videoZoneGrid" aria-label="All videos"></div>
+      </div>
     </section>
   </main>
 
@@ -57,7 +87,7 @@
       <div class="bbModalHeader">
         <div>
           <h3 id="bbPlayerModalTitle">Read Aloud</h3>
-          <p id="bbPlayerModalSubtitle">Round • Region</p>
+          <p id="bbPlayerModalSubtitle">Video reward</p>
         </div>
 
         <button

@@ -1,0 +1,312 @@
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  font-family: var(--font, 'Comic Sans MS', sans-serif);
+  color: var(--text, #2f2418);
+  background:
+    radial-gradient(circle at top, #f7f1df 0%, #efe7cd 50%, #e7dcc0 100%);
+  min-height: 100vh;
+}
+
+#dataTitle,
+#dataSubtitle {
+  display: none;
+}
+
+.pageHeader,
+.videoLibraryPage {
+  position: relative;
+  z-index: 1;
+}
+
+.pageHeader {
+  padding: 14px 16px 0;
+}
+
+.videoLibraryPage {
+  width: min(1500px, calc(100% - 20px));
+  margin: 0 auto;
+  padding: 10px 0 24px;
+}
+
+.videoLibraryStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.statCard {
+  background: rgba(255, 248, 232, 0.92);
+  border: 1px solid rgba(132, 94, 49, 0.22);
+  border-radius: 20px;
+  box-shadow: 0 8px 24px rgba(60, 42, 22, 0.12);
+  padding: 14px 16px;
+}
+
+.statLabel {
+  display: block;
+  color: #7b6548;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+.statCard strong {
+  display: block;
+  font-size: 1.2rem;
+  color: #3c2a16;
+}
+
+.boardWrap {
+  display: flex;
+  justify-content: center;
+}
+
+.background-container {
+  position: relative;
+  width: min(100vw, calc(100vh * 1.5));
+  aspect-ratio: 1536 / 1024;
+  background: url('../img/bg/book-madness.png') no-repeat center center;
+  background-size: 100% 100%;
+  flex-shrink: 0;
+  border-radius: 24px;
+  overflow: hidden;
+}
+
+.click-zone {
+  position: absolute;
+  width: 140px;
+  height: 55px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  box-sizing: border-box;
+  border: 2px solid rgba(94, 47, 15, 0.28);
+  background: rgba(255, 248, 231, 0.82);
+  border-radius: 12px;
+  padding: 5px 7px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(49, 28, 9, 0.12);
+  color: inherit;
+}
+
+.click-zone:hover,
+.click-zone:focus-visible {
+  transform: scale(1.03);
+  box-shadow: 0 8px 22px rgba(49, 28, 9, 0.2);
+  border-color: rgba(201, 140, 45, 0.85);
+  outline: none;
+}
+
+.click-zone:disabled {
+  cursor: default;
+  opacity: 0.92;
+}
+
+.click-zone.is-complete {
+  background: rgba(219, 255, 215, 0.9);
+}
+
+.click-zone.is-watching {
+  background: rgba(255, 241, 193, 0.92);
+}
+
+.click-zone.is-empty {
+  background: rgba(242, 232, 214, 0.74);
+}
+
+.zone-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.zone-thumb {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex: 0 0 42px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: #f2ead8;
+}
+
+.zone-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.zone-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #322111;
+  line-height: 1.08;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.zone-meta {
+  font-size: 0.7rem;
+  color: #6f5a43;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 20 starter zones - tweak these later however you want */
+
+/* Row 1 */
+#zone-01 { top: 40px; left: 40px; }
+#zone-02 { top: 40px; left: 220px; }
+#zone-03 { top: 40px; left: 400px; }
+#zone-04 { top: 40px; left: 580px; }
+#zone-05 { top: 40px; left: 760px; }
+
+/* Row 2 */
+#zone-06 { top: 140px; left: 40px; }
+#zone-07 { top: 140px; left: 220px; }
+#zone-08 { top: 140px; left: 400px; }
+#zone-09 { top: 140px; left: 580px; }
+#zone-10 { top: 140px; left: 760px; }
+
+/* Row 3 */
+#zone-11 { top: 240px; left: 40px; }
+#zone-12 { top: 240px; left: 220px; }
+#zone-13 { top: 240px; left: 400px; }
+#zone-14 { top: 240px; left: 580px; }
+#zone-15 { top: 240px; left: 760px; }
+
+/* Row 4 */
+#zone-16 { top: 340px; left: 40px; }
+#zone-17 { top: 340px; left: 220px; }
+#zone-18 { top: 340px; left: 400px; }
+#zone-19 { top: 340px; left: 580px; }
+#zone-20 { top: 340px; left: 760px; }
+
+/* Modal/player styles */
+.bbModal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+.bbModalBackdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 15, 25, 0.72);
+}
+
+.bbModalCard {
+  position: relative;
+  z-index: 2;
+  width: min(1100px, calc(100% - 18px));
+  max-height: calc(100vh - 24px);
+  overflow: auto;
+  margin: 12px auto;
+  background: #fffdf9;
+  border-radius: 28px;
+  border: 2px solid #edd5a3;
+  box-shadow: 0 18px 46px rgba(27, 18, 4, 0.32);
+  padding: 18px;
+  color: #3c2a16;
+}
+
+.bbModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.bbModalHeader h3 {
+  margin: 0 0 6px;
+}
+
+.bbModalHeader p {
+  margin: 0;
+  color: #7b6548;
+  font-weight: 700;
+}
+
+.bbIconBtn {
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  border: 2px solid #ead6aa;
+  background: #fff;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.bbPlayerWrap {
+  border-radius: 22px;
+  overflow: hidden;
+  background: #000;
+  border: 2px solid #e7d8bb;
+}
+
+.bbPlayerMount {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 260px;
+}
+
+.bbPlayerInfo {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.bbPlayerStatus,
+.bbPlayerProgressText {
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #fff7e8;
+  border: 2px solid #efd8a8;
+  font-weight: 800;
+}
+
+@media (max-width: 1100px) {
+  .videoLibraryStats {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  body {
+    overflow: auto;
+  }
+
+  .videoLibraryPage {
+    width: min(100% - 12px, 100%);
+  }
+
+  .background-container {
+    width: 100vw;
+  }
+
+  .zone-thumb {
+    display: none;
+  }
+
+  .bbModalCard {
+    width: min(100% - 10px, 100%);
+    margin: 5px auto;
+    border-radius: 20px;
+  }
+}
