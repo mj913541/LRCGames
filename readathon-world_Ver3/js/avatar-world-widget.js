@@ -58,7 +58,6 @@ export async function mountAvatarWorldWidget(opts = {}) {
     mountEl.innerHTML = renderWidget({
       role,
       hasRoom: !!roomState,
-      openUrl,
       showAdminTools: role === "admin",
       rubiesBalance: summary?.rubiesBalance ?? 0,
     });
@@ -136,15 +135,23 @@ function normalizeRoomState(raw = {}) {
       ? raw.equippedWearableIds.filter(Boolean)
       : [],
 
-    avatarPlacement: raw.avatarPlacement || raw.avatar || null,
-    petPlacement: raw.petPlacement || raw.pet || null,
+    avatarPlacement:
+      normalizeFreePlacement(raw.avatarPlacement || raw.avatar || null, "avatar"),
+
+    petPlacements: Array.isArray(raw.petPlacements)
+      ? raw.petPlacements.map((p) => normalizePlacement(p, "pets")).filter(Boolean)
+      : raw.petPlacement
+      ? [normalizePlacement(raw.petPlacement, "pets")].filter(Boolean)
+      : raw.pet
+      ? [normalizePlacement(raw.pet, "pets")].filter(Boolean)
+      : [],
 
     wallPlacements: Array.isArray(raw.wallPlacements)
-      ? raw.wallPlacements.filter(Boolean)
+      ? raw.wallPlacements.map((p) => normalizePlacement(p, "wall")).filter(Boolean)
       : [],
 
     floorPlacements: Array.isArray(raw.floorPlacements)
-      ? raw.floorPlacements.filter(Boolean)
+      ? raw.floorPlacements.map((p) => normalizePlacement(p, "floor")).filter(Boolean)
       : [],
   };
 }
@@ -182,6 +189,7 @@ function normalizeCatalogItem(id, raw = {}) {
     thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
     group,
     wearableClass,
+    layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
     raw,
   };
 }
@@ -219,8 +227,61 @@ function normalizeWearableClass(slot, subslot, raw = {}) {
   return null;
 }
 
+function defaultLayerOrderFor(wearableClass) {
+  if (wearableClass === "base") return 10;
+  if (wearableClass === "head") return 30;
+  if (wearableClass === "accessory") return 40;
+  return 50;
+}
+
+function defaultPlacementForGroup(kind) {
+  if (kind === "avatar") return { x: 50, y: 78, scale: 1, z: 25 };
+  if (kind === "wall") return { x: 26, y: 30, scale: 1, z: 12 };
+  if (kind === "floor") return { x: 26, y: 78, scale: 1, z: 42 };
+  if (kind === "pets") return { x: 77, y: 78, scale: 1, z: 32 };
+  return { x: 50, y: 50, scale: 1, z: 10 };
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return clamp(n, min, max);
+}
+
+function normalizeFreePlacement(raw, kind) {
+  const defaults = defaultPlacementForGroup(kind);
+
+  return {
+    x: clampNumber(raw?.x, 0, 100, defaults.x),
+    y: clampNumber(raw?.y, 0, 100, defaults.y),
+    scale: clampNumber(raw?.scale, 0.2, 3, defaults.scale),
+    z: Number.isFinite(Number(raw?.z)) ? Number(raw.z) : defaults.z,
+  };
+}
+
+function normalizePlacement(raw, kind) {
+  if (!raw) return null;
+
+  const itemId = raw.itemId || raw.id || null;
+  if (!itemId) return null;
+
+  const defaults = defaultPlacementForGroup(kind);
+
+  return {
+    itemId,
+    x: clampNumber(raw.x, 0, 100, defaults.x),
+    y: clampNumber(raw.y, 0, 100, defaults.y),
+    scale: clampNumber(raw.scale, 0.2, 3, defaults.scale),
+    z: Number.isFinite(Number(raw.z)) ? Number(raw.z) : defaults.z,
+  };
+}
+
 /* ----------------------------
-  Widget scene renderer
+  Shared-renderer-style widget scene
 ---------------------------- */
 function renderRoomSceneIntoWidget(mountEl, roomState, catalogById) {
   const sceneEl = mountEl.querySelector("[data-aw-room-scene]");
@@ -228,8 +289,6 @@ function renderRoomSceneIntoWidget(mountEl, roomState, catalogById) {
 
   sceneEl.innerHTML = "";
 
-  const ROOM_W = 1024;
-  const ROOM_H = 1024;
   const fallbackBg = "../img/bg/index.png";
 
   const backgroundItem = roomState?.backgroundId
@@ -240,198 +299,113 @@ function renderRoomSceneIntoWidget(mountEl, roomState, catalogById) {
     ? catalogById.get(roomState.avatarBaseId)
     : null;
 
-  const wearableItems = Array.isArray(roomState?.wearableIds)
-    ? roomState.wearableIds.map((id) => catalogById.get(id)).filter(Boolean)
-    : [];
+  const wearables = (roomState?.wearableIds || [])
+    .map((id) => catalogById.get(id))
+    .filter(Boolean)
+    .sort((a, b) => a.layerOrder - b.layerOrder);
 
-  const petItem = roomState?.petPlacement?.itemId
-    ? catalogById.get(roomState.petPlacement.itemId)
-    : null;
+  const avatarPlacement =
+    roomState?.avatarPlacement || defaultPlacementForGroup("avatar");
 
-  const wallPlacements = Array.isArray(roomState?.wallPlacements)
-    ? roomState.wallPlacements
-    : [];
+  const bgEl = document.createElement("div");
+  bgEl.className = "awSceneBg";
+  bgEl.style.backgroundImage = `url("${escapeAttr(backgroundItem?.imageUrl || fallbackBg)}")`;
+  sceneEl.appendChild(bgEl);
 
-  const floorPlacements = Array.isArray(roomState?.floorPlacements)
-    ? roomState.floorPlacements
-    : [];
+  renderPlacedList(sceneEl, roomState?.wallPlacements || [], catalogById, "wall");
+  renderAvatar(sceneEl, baseItem, wearables, avatarPlacement);
 
-  const avatarPlacement = roomState?.avatarPlacement || {
-    x: ROOM_W * 0.5,
-    y: ROOM_H * 0.78,
-    scale: 1,
-    rotation: 0,
-  };
-
-  const petPlacement = roomState?.petPlacement || null;
-
-  sceneEl.appendChild(
-    createSceneImg({
-      src: backgroundItem?.imageUrl || fallbackBg,
-      className: "awSceneBg",
-    })
-  );
-
-  wallPlacements.forEach((placement) => {
-    const item = catalogById.get(placement?.itemId);
+  (roomState?.petPlacements || []).forEach((placement, index) => {
+    const item = catalogById.get(placement.itemId);
     if (!item?.imageUrl) return;
 
     sceneEl.appendChild(
-      createPlacedSceneImg({
-        src: item.imageUrl,
-        placement,
-        className: "awSceneWall",
-        roomW: ROOM_W,
-        roomH: ROOM_H,
-        defaultWidthPct: 18,
-      })
-    );
-  });
-
-  if (baseItem?.imageUrl) {
-    sceneEl.appendChild(
-      createPlacedAvatarImg({
-        src: baseItem.imageUrl,
-        placement: avatarPlacement,
-        className: "awSceneAvatarBase",
-        roomW: ROOM_W,
-        roomH: ROOM_H,
-      })
-    );
-  }
-
-  wearableItems.forEach((item) => {
-    if (!item?.imageUrl) return;
-
-    sceneEl.appendChild(
-      createPlacedAvatarImg({
-        src: item.imageUrl,
-        placement: avatarPlacement,
-        className: "awSceneAvatarWearable",
-        roomW: ROOM_W,
-        roomH: ROOM_H,
-      })
-    );
-  });
-
-  floorPlacements.forEach((placement) => {
-    const item = catalogById.get(placement?.itemId);
-    if (!item?.imageUrl) return;
-
-    sceneEl.appendChild(
-      createPlacedSceneImg({
-        src: item.imageUrl,
-        placement,
-        className: "awSceneFloor",
-        roomW: ROOM_W,
-        roomH: ROOM_H,
-        defaultWidthPct: 20,
-      })
-    );
-  });
-
-  if (petItem?.imageUrl && petPlacement) {
-    sceneEl.appendChild(
-      createPlacedPetImg({
-        src: petItem.imageUrl,
-        placement: petPlacement,
+      createObjectEl(item.imageUrl, placement, {
+        baseWidth: 128,
+        z: placement.z ?? (32 + index),
         className: "awScenePet",
-        roomW: ROOM_W,
-        roomH: ROOM_H,
       })
     );
-  }
+  });
+
+  renderPlacedList(sceneEl, roomState?.floorPlacements || [], catalogById, "floor");
 }
 
-function createSceneImg({ src, className = "" }) {
+function renderPlacedList(sceneEl, list = [], catalogById, kind) {
+  list.forEach((placement, index) => {
+    const item = catalogById.get(placement.itemId);
+    if (!item?.imageUrl) return;
+
+    const baseWidth = kind === "wall" ? 190 : 170;
+    const z = placement.z ?? (kind === "wall" ? 12 + index : 42 + index);
+
+    sceneEl.appendChild(
+      createObjectEl(item.imageUrl, placement, {
+        baseWidth,
+        z,
+        className: kind === "wall" ? "awSceneWall" : "awSceneFloor",
+      })
+    );
+  });
+}
+
+function renderAvatar(sceneEl, baseItem, wearables, placement) {
+  if (!placement) return;
+
+  const avatarEl = document.createElement("div");
+  avatarEl.className = "awSceneAvatar";
+  avatarEl.style.left = `${placement.x}%`;
+  avatarEl.style.top = `${placement.y}%`;
+  avatarEl.style.width = `${Math.round(240 * placement.scale)}px`;
+  avatarEl.style.zIndex = String(placement.z ?? 25);
+
+  const stackEl = document.createElement("div");
+  stackEl.className = "awSceneAvatarStack";
+
+  if (baseItem?.imageUrl) {
+    stackEl.appendChild(createAvatarPiece(baseItem));
+  }
+
+  wearables.forEach((item) => {
+    if (!item?.imageUrl) return;
+    stackEl.appendChild(createAvatarPiece(item));
+  });
+
+  avatarEl.appendChild(stackEl);
+  sceneEl.appendChild(avatarEl);
+}
+
+function createAvatarPiece(item) {
+  const wrap = document.createElement("div");
+  wrap.className = "awSceneAvatarPiece";
+  wrap.style.zIndex = String(item.layerOrder ?? 1);
+
+  const img = document.createElement("img");
+  img.src = item.imageUrl;
+  img.alt = "";
+  img.draggable = false;
+
+  wrap.appendChild(img);
+  return wrap;
+}
+
+function createObjectEl(src, placement, opts = {}) {
+  const el = document.createElement("div");
+  const widthPx = Math.round((opts.baseWidth || 170) * (placement?.scale || 1));
+
+  el.className = `awSceneObject ${opts.className || ""}`.trim();
+  el.style.left = `${placement?.x ?? 50}%`;
+  el.style.top = `${placement?.y ?? 50}%`;
+  el.style.width = `${widthPx}px`;
+  el.style.zIndex = String(opts.z ?? placement?.z ?? 1);
+
   const img = document.createElement("img");
   img.src = src;
   img.alt = "";
-  img.className = className;
   img.draggable = false;
-  return img;
-}
 
-function createPlacedSceneImg({
-  src,
-  placement = {},
-  className = "",
-  roomW = 1024,
-  roomH = 1024,
-  defaultWidthPct = 20,
-}) {
-  const img = createSceneImg({ src, className });
-
-  const x = Number(placement.x ?? placement.left ?? roomW * 0.5);
-  const y = Number(placement.y ?? placement.top ?? roomH * 0.5);
-  const scale = Number(placement.scale ?? 1);
-  const rotation = Number(placement.rotation ?? placement.rotate ?? 0);
-  const widthPct = Number(
-    placement.widthPct ??
-    placement.previewWidthPct ??
-    defaultWidthPct
-  );
-
-  img.style.left = `${(x / roomW) * 100}%`;
-  img.style.top = `${(y / roomH) * 100}%`;
-  img.style.width = `${widthPct}%`;
-  img.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
-
-  return img;
-}
-
-function createPlacedAvatarImg({
-  src,
-  placement = {},
-  className = "",
-  roomW = 1024,
-  roomH = 1024,
-}) {
-  const img = createSceneImg({ src, className });
-
-  const x = Number(placement.x ?? roomW * 0.5);
-  const y = Number(placement.y ?? roomH * 0.78);
-  const scale = Number(placement.scale ?? 1);
-  const rotation = Number(placement.rotation ?? 0);
-  const widthPct = Number(
-    placement.widthPct ??
-    placement.previewWidthPct ??
-    28
-  );
-
-  img.style.left = `${(x / roomW) * 100}%`;
-  img.style.top = `${(y / roomH) * 100}%`;
-  img.style.width = `${widthPct}%`;
-  img.style.transform = `translate(-50%, -100%) scale(${scale}) rotate(${rotation}deg)`;
-
-  return img;
-}
-
-function createPlacedPetImg({
-  src,
-  placement = {},
-  className = "",
-  roomW = 1024,
-  roomH = 1024,
-}) {
-  const img = createSceneImg({ src, className });
-
-  const x = Number(placement.x ?? roomW * 0.72);
-  const y = Number(placement.y ?? roomH * 0.84);
-  const scale = Number(placement.scale ?? 1);
-  const rotation = Number(placement.rotation ?? 0);
-  const widthPct = Number(
-    placement.widthPct ??
-    placement.previewWidthPct ??
-    14
-  );
-
-  img.style.left = `${(x / roomW) * 100}%`;
-  img.style.top = `${(y / roomH) * 100}%`;
-  img.style.width = `${widthPct}%`;
-  img.style.transform = `translate(-50%, -100%) scale(${scale}) rotate(${rotation}deg)`;
-
-  return img;
+  el.appendChild(img);
+  return el;
 }
 
 /* ----------------------------
@@ -459,7 +433,6 @@ function renderError(msg) {
 function renderWidget({
   role,
   hasRoom,
-  openUrl,
   showAdminTools,
   rubiesBalance,
 }) {

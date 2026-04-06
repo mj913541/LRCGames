@@ -50,47 +50,63 @@
   background: #e9eef5;
 }
 
-.awRoomScene img {
-  user-select: none;
-  -webkit-user-drag: none;
-  pointer-events: none;
-  display: block;
-}
-
 .awSceneBg {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
-.awSceneWall,
-.awSceneFloor,
-.awSceneAvatarBase,
-.awSceneAvatarWearable,
-.awScenePet {
+/* base positioned elements */
+.awSceneObject,
+.awSceneAvatar {
   position: absolute;
-  height: auto;
-  object-fit: contain;
   transform-origin: center center;
 }
 
-.awSceneWall {
-  z-index: 2;
-}
-
-.awSceneFloor {
-  z-index: 3;
-}
-
-.awSceneAvatarBase,
-.awSceneAvatarWearable {
-  z-index: 4;
+/* match real room anchor behavior */
+.awSceneAvatar {
+  transform: translate(-50%, -100%);
 }
 
 .awScenePet {
-  z-index: 5;
+  transform: translate(-50%, -100%);
+}
+
+.awSceneWall {
+  transform: translate(-50%, -12%);
+}
+
+.awSceneFloor {
+  transform: translate(-50%, -100%);
+}
+
+.awSceneAvatarStack {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+}
+
+.awSceneAvatarPiece {
+  position: absolute;
+  inset: 0;
+}
+
+.awSceneAvatarPiece img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.awRoomScene img {
+  width: 100%;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
 }
 
 .awWidgetMeta {
