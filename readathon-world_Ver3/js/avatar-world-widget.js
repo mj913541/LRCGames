@@ -55,17 +55,15 @@ export async function mountAvatarWorldWidget(opts = {}) {
       loadSummary({ schoolId, userId }),
     ]);
 
-    const preview = buildPreviewModel(roomState, catalogById);
-
     mountEl.innerHTML = renderWidget({
       role,
-      preview,
       hasRoom: !!roomState,
       openUrl,
       showAdminTools: role === "admin",
       rubiesBalance: summary?.rubiesBalance ?? 0,
     });
 
+    renderRoomSceneIntoWidget(mountEl, roomState, catalogById);
     wireWidget(mountEl, { openUrl });
   } catch (err) {
     console.error("mountAvatarWorldWidget failed:", err);
@@ -222,9 +220,16 @@ function normalizeWearableClass(slot, subslot, raw = {}) {
 }
 
 /* ----------------------------
-  Preview model
+  Widget scene renderer
 ---------------------------- */
-function buildPreviewModel(roomState, catalogById) {
+function renderRoomSceneIntoWidget(mountEl, roomState, catalogById) {
+  const sceneEl = mountEl.querySelector("[data-aw-room-scene]");
+  if (!sceneEl) return;
+
+  sceneEl.innerHTML = "";
+
+  const ROOM_W = 1024;
+  const ROOM_H = 1024;
   const fallbackBg = "../img/bg/index.png";
 
   const backgroundItem = roomState?.backgroundId
@@ -236,44 +241,197 @@ function buildPreviewModel(roomState, catalogById) {
     : null;
 
   const wearableItems = Array.isArray(roomState?.wearableIds)
-    ? roomState.wearableIds
-        .map((id) => catalogById.get(id))
-        .filter(Boolean)
+    ? roomState.wearableIds.map((id) => catalogById.get(id)).filter(Boolean)
     : [];
-
-  const headItem =
-    wearableItems.find((item) => item.wearableClass === "head") || null;
-
-  const accessoryItem =
-    wearableItems.find((item) => item.wearableClass === "accessory") || null;
 
   const petItem = roomState?.petPlacement?.itemId
     ? catalogById.get(roomState.petPlacement.itemId)
     : null;
 
-  const wallItems = Array.isArray(roomState?.wallPlacements)
+  const wallPlacements = Array.isArray(roomState?.wallPlacements)
     ? roomState.wallPlacements
-        .map((p) => catalogById.get(p?.itemId))
-        .filter(Boolean)
-        .slice(0, 2)
     : [];
 
-  const floorItems = Array.isArray(roomState?.floorPlacements)
+  const floorPlacements = Array.isArray(roomState?.floorPlacements)
     ? roomState.floorPlacements
-        .map((p) => catalogById.get(p?.itemId))
-        .filter(Boolean)
-        .slice(0, 2)
     : [];
 
-  return {
-    backgroundUrl: backgroundItem?.imageUrl || fallbackBg,
-    baseUrl: baseItem?.imageUrl || "",
-    headUrl: headItem?.imageUrl || "",
-    accessoryUrl: accessoryItem?.imageUrl || "",
-    petUrl: petItem?.imageUrl || "",
-    wallUrls: wallItems.map((x) => x.imageUrl).filter(Boolean),
-    floorUrls: floorItems.map((x) => x.imageUrl).filter(Boolean),
+  const avatarPlacement = roomState?.avatarPlacement || {
+    x: ROOM_W * 0.5,
+    y: ROOM_H * 0.78,
+    scale: 1,
+    rotation: 0,
   };
+
+  const petPlacement = roomState?.petPlacement || null;
+
+  sceneEl.appendChild(
+    createSceneImg({
+      src: backgroundItem?.imageUrl || fallbackBg,
+      className: "awSceneBg",
+    })
+  );
+
+  wallPlacements.forEach((placement) => {
+    const item = catalogById.get(placement?.itemId);
+    if (!item?.imageUrl) return;
+
+    sceneEl.appendChild(
+      createPlacedSceneImg({
+        src: item.imageUrl,
+        placement,
+        className: "awSceneWall",
+        roomW: ROOM_W,
+        roomH: ROOM_H,
+        defaultWidthPct: 18,
+      })
+    );
+  });
+
+  if (baseItem?.imageUrl) {
+    sceneEl.appendChild(
+      createPlacedAvatarImg({
+        src: baseItem.imageUrl,
+        placement: avatarPlacement,
+        className: "awSceneAvatarBase",
+        roomW: ROOM_W,
+        roomH: ROOM_H,
+      })
+    );
+  }
+
+  wearableItems.forEach((item) => {
+    if (!item?.imageUrl) return;
+
+    sceneEl.appendChild(
+      createPlacedAvatarImg({
+        src: item.imageUrl,
+        placement: avatarPlacement,
+        className: "awSceneAvatarWearable",
+        roomW: ROOM_W,
+        roomH: ROOM_H,
+      })
+    );
+  });
+
+  floorPlacements.forEach((placement) => {
+    const item = catalogById.get(placement?.itemId);
+    if (!item?.imageUrl) return;
+
+    sceneEl.appendChild(
+      createPlacedSceneImg({
+        src: item.imageUrl,
+        placement,
+        className: "awSceneFloor",
+        roomW: ROOM_W,
+        roomH: ROOM_H,
+        defaultWidthPct: 20,
+      })
+    );
+  });
+
+  if (petItem?.imageUrl && petPlacement) {
+    sceneEl.appendChild(
+      createPlacedPetImg({
+        src: petItem.imageUrl,
+        placement: petPlacement,
+        className: "awScenePet",
+        roomW: ROOM_W,
+        roomH: ROOM_H,
+      })
+    );
+  }
+}
+
+function createSceneImg({ src, className = "" }) {
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "";
+  img.className = className;
+  img.draggable = false;
+  return img;
+}
+
+function createPlacedSceneImg({
+  src,
+  placement = {},
+  className = "",
+  roomW = 1024,
+  roomH = 1024,
+  defaultWidthPct = 20,
+}) {
+  const img = createSceneImg({ src, className });
+
+  const x = Number(placement.x ?? placement.left ?? roomW * 0.5);
+  const y = Number(placement.y ?? placement.top ?? roomH * 0.5);
+  const scale = Number(placement.scale ?? 1);
+  const rotation = Number(placement.rotation ?? placement.rotate ?? 0);
+  const widthPct = Number(
+    placement.widthPct ??
+    placement.previewWidthPct ??
+    defaultWidthPct
+  );
+
+  img.style.left = `${(x / roomW) * 100}%`;
+  img.style.top = `${(y / roomH) * 100}%`;
+  img.style.width = `${widthPct}%`;
+  img.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${rotation}deg)`;
+
+  return img;
+}
+
+function createPlacedAvatarImg({
+  src,
+  placement = {},
+  className = "",
+  roomW = 1024,
+  roomH = 1024,
+}) {
+  const img = createSceneImg({ src, className });
+
+  const x = Number(placement.x ?? roomW * 0.5);
+  const y = Number(placement.y ?? roomH * 0.78);
+  const scale = Number(placement.scale ?? 1);
+  const rotation = Number(placement.rotation ?? 0);
+  const widthPct = Number(
+    placement.widthPct ??
+    placement.previewWidthPct ??
+    28
+  );
+
+  img.style.left = `${(x / roomW) * 100}%`;
+  img.style.top = `${(y / roomH) * 100}%`;
+  img.style.width = `${widthPct}%`;
+  img.style.transform = `translate(-50%, -100%) scale(${scale}) rotate(${rotation}deg)`;
+
+  return img;
+}
+
+function createPlacedPetImg({
+  src,
+  placement = {},
+  className = "",
+  roomW = 1024,
+  roomH = 1024,
+}) {
+  const img = createSceneImg({ src, className });
+
+  const x = Number(placement.x ?? roomW * 0.72);
+  const y = Number(placement.y ?? roomH * 0.84);
+  const scale = Number(placement.scale ?? 1);
+  const rotation = Number(placement.rotation ?? 0);
+  const widthPct = Number(
+    placement.widthPct ??
+    placement.previewWidthPct ??
+    14
+  );
+
+  img.style.left = `${(x / roomW) * 100}%`;
+  img.style.top = `${(y / roomH) * 100}%`;
+  img.style.width = `${widthPct}%`;
+  img.style.transform = `translate(-50%, -100%) scale(${scale}) rotate(${rotation}deg)`;
+
+  return img;
 }
 
 /* ----------------------------
@@ -300,7 +458,6 @@ function renderError(msg) {
 
 function renderWidget({
   role,
-  preview,
   hasRoom,
   openUrl,
   showAdminTools,
@@ -314,54 +471,7 @@ function renderWidget({
       </div>
 
       <div class="awWidgetPreview" aria-label="Avatar World preview">
-        <img
-          src="${escapeAttr(preview.backgroundUrl)}"
-          alt="Avatar World room background preview"
-        />
-
-        ${
-          preview.wallUrls[0]
-            ? `<img class="awWidgetPreviewLayer awWidgetWall1" src="${escapeAttr(preview.wallUrls[0])}" alt="" />`
-            : ""
-        }
-        ${
-          preview.wallUrls[1]
-            ? `<img class="awWidgetPreviewLayer awWidgetWall2" src="${escapeAttr(preview.wallUrls[1])}" alt="" />`
-            : ""
-        }
-
-        ${
-          preview.baseUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetAvatar" src="${escapeAttr(preview.baseUrl)}" alt="" />`
-            : ""
-        }
-        ${
-          preview.headUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetAvatar" src="${escapeAttr(preview.headUrl)}" alt="" />`
-            : ""
-        }
-        ${
-          preview.accessoryUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetAvatar" src="${escapeAttr(preview.accessoryUrl)}" alt="" />`
-            : ""
-        }
-
-        ${
-          preview.petUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetPet" src="${escapeAttr(preview.petUrl)}" alt="" />`
-            : ""
-        }
-
-        ${
-          preview.floorUrls[0]
-            ? `<img class="awWidgetPreviewLayer awWidgetFloor1" src="${escapeAttr(preview.floorUrls[0])}" alt="" />`
-            : ""
-        }
-        ${
-          preview.floorUrls[1]
-            ? `<img class="awWidgetPreviewLayer awWidgetFloor2" src="${escapeAttr(preview.floorUrls[1])}" alt="" />`
-            : ""
-        }
+        <div class="awRoomScene" data-aw-room-scene></div>
       </div>
 
       <div class="awWidgetMeta">
