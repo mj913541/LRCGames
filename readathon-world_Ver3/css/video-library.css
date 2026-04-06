@@ -79,7 +79,7 @@ body {
 
 .click-zone {
   position: absolute;
-  width: 140px;
+  width: 55px;
   height: 55px;
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
@@ -166,35 +166,38 @@ body {
   text-overflow: ellipsis;
 }
 
-/* 20 starter zones - tweak these later however you want */
 
-/* Row 1 */
-#zone-01 { top: 40px; left: 40px; }
-#zone-02 { top: 40px; left: 220px; }
-#zone-03 { top: 40px; left: 400px; }
-#zone-04 { top: 40px; left: 580px; }
-#zone-05 { top: 40px; left: 760px; }
+/* Clump 1 */
+#zone-01 { top: 10px; left: 2px; }
+#zone-02 { top: 95px; left: 2px; } 
+#zone-03 { top: 175px; left: 2px; } 
+#zone-04 { top: 260px; left: 2px; } 
 
-/* Row 2 */
-#zone-06 { top: 140px; left: 40px; }
-#zone-07 { top: 140px; left: 220px; }
-#zone-08 { top: 140px; left: 400px; }
-#zone-09 { top: 140px; left: 580px; }
-#zone-10 { top: 140px; left: 760px; }
 
-/* Row 3 */
-#zone-11 { top: 240px; left: 40px; }
-#zone-12 { top: 240px; left: 220px; }
-#zone-13 { top: 240px; left: 400px; }
-#zone-14 { top: 240px; left: 580px; }
-#zone-15 { top: 240px; left: 760px; }
+/* Clump 2 */
+#zone-05 { top: 340px; left: 2px; } 
+#zone-06 { top: 425px; left: 2px; } 
+#zone-07 { top: 505px; left: 2px; }
+#zone-08 { top: 580px; left: 2px; }
 
-/* Row 4 */
-#zone-16 { top: 340px; left: 40px; }
-#zone-17 { top: 340px; left: 220px; }
-#zone-18 { top: 340px; left: 400px; }
-#zone-19 { top: 340px; left: 580px; }
-#zone-20 { top: 340px; left: 760px; }
+
+/* Clump 3 */
+#zone-09 { top: 10px; right: 2px; }
+#zone-10 { top: 95px; right: 2px; }
+#zone-11 { top: 175px; right: 2px; } 
+#zone-12 { top: 260px; right: 2px; }
+
+/* Clump 4 */
+#zone-13 { top: 340px; right: 2px; }
+#zone-14 { top: 425px; right: 2px; }
+#zone-15 { top: 505px; right: 2px; }
+#zone-16 { top: 580px; right: 2px; }
+
+
+#zone-17 { top: 9000px; left: 9000px; }
+#zone-18 { top: 9000px; left: 9000px; }
+#zone-19 { top: 9000px; left: 9000px; }
+#zone-20 { top: 9000px; left: 9000px; }
 
 /* Modal/player styles */
 .bbModal {
