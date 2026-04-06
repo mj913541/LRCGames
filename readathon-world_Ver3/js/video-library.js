@@ -317,10 +317,10 @@ function renderVideoGrid() {
     const rewardAmount = Number(progress.rubiesAwarded || item.rubies || 0);
 
     const statusText = completed
-      ? `✅ Completed • ${rewardAmount} rubies earned`
+      ? "" // no text when completed
       : watchPercent > 0
-      ? `▶ ${watchPercent}% watched`
-      : `💎 ${Number(item.rubies || 0)} rubies`;
+      ? `▶ ${watchPercent}%`
+      : `💎 ${Number(item.rubies || 0)}`;
 
     zone.disabled = false;
     zone.title = item.title;
@@ -333,8 +333,8 @@ function renderVideoGrid() {
         <div class="zone-title">${escapeHtml(item.title)}</div>
         <div class="zone-meta">${escapeHtml(statusText)}</div>
       </div>
-      ${completed ? '<div class="zone-complete-badge">CLAIMED</div>' : ''}
-    </div>
+      ${completed ? '<div class="zone-check">✓</div>' : ''}
+     </div>
     `;
 
     zone.onclick = () => {
