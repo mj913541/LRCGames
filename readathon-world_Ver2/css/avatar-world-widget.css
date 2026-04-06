@@ -34,7 +34,7 @@
 
 .awWidgetPreview {
   width: 100%;
-  height: 1024px;
+  aspect-ratio: 1 / 1;
   border-radius: 12px;
   overflow: hidden;
   background: #f2f2f2;
@@ -42,21 +42,71 @@
   position: relative;
 }
 
-.awWidgetPreview img {
+.awRoomScene {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  display: block;
+  overflow: hidden;
+  background: #e9eef5;
 }
 
-/* future-ready layered preview support */
-.awWidgetPreviewLayer {
+.awSceneBg {
   position: absolute;
   inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* base positioned elements */
+.awSceneObject,
+.awSceneAvatar {
+  position: absolute;
+  transform-origin: center center;
+}
+
+/* match real room anchor behavior */
+.awSceneAvatar {
+  transform: translate(-50%, -100%);
+}
+
+.awScenePet {
+  transform: translate(-50%, -100%);
+}
+
+.awSceneWall {
+  transform: translate(-50%, -12%);
+}
+
+.awSceneFloor {
+  transform: translate(-50%, -100%);
+}
+
+.awSceneAvatarStack {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+}
+
+.awSceneAvatarPiece {
+  position: absolute;
+  inset: 0;
+}
+
+.awSceneAvatarPiece img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+.awRoomScene img {
+  width: 100%;
+  height: auto;
+  display: block;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
 }
 
 .awWidgetMeta {
@@ -99,6 +149,6 @@
 
 @media (max-width: 700px) {
   .awWidgetPreview {
-    height: 130px;
+    aspect-ratio: 1 / 1;
   }
 }

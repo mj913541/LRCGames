@@ -55,17 +55,14 @@ export async function mountAvatarWorldWidget(opts = {}) {
       loadSummary({ schoolId, userId }),
     ]);
 
-    const preview = buildPreviewModel(roomState, catalogById);
-
     mountEl.innerHTML = renderWidget({
       role,
-      preview,
       hasRoom: !!roomState,
-      openUrl,
       showAdminTools: role === "admin",
       rubiesBalance: summary?.rubiesBalance ?? 0,
     });
 
+    renderRoomSceneIntoWidget(mountEl, roomState, catalogById);
     wireWidget(mountEl, { openUrl });
   } catch (err) {
     console.error("mountAvatarWorldWidget failed:", err);
@@ -138,15 +135,23 @@ function normalizeRoomState(raw = {}) {
       ? raw.equippedWearableIds.filter(Boolean)
       : [],
 
-    avatarPlacement: raw.avatarPlacement || raw.avatar || null,
-    petPlacement: raw.petPlacement || raw.pet || null,
+    avatarPlacement:
+      normalizeFreePlacement(raw.avatarPlacement || raw.avatar || null, "avatar"),
+
+    petPlacements: Array.isArray(raw.petPlacements)
+      ? raw.petPlacements.map((p) => normalizePlacement(p, "pets")).filter(Boolean)
+      : raw.petPlacement
+      ? [normalizePlacement(raw.petPlacement, "pets")].filter(Boolean)
+      : raw.pet
+      ? [normalizePlacement(raw.pet, "pets")].filter(Boolean)
+      : [],
 
     wallPlacements: Array.isArray(raw.wallPlacements)
-      ? raw.wallPlacements.filter(Boolean)
+      ? raw.wallPlacements.map((p) => normalizePlacement(p, "wall")).filter(Boolean)
       : [],
 
     floorPlacements: Array.isArray(raw.floorPlacements)
-      ? raw.floorPlacements.filter(Boolean)
+      ? raw.floorPlacements.map((p) => normalizePlacement(p, "floor")).filter(Boolean)
       : [],
   };
 }
@@ -184,6 +189,7 @@ function normalizeCatalogItem(id, raw = {}) {
     thumbUrl: raw.thumbnailUrl || raw.thumbUrl || raw.imagePath || imageUrl,
     group,
     wearableClass,
+    layerOrder: Number(raw.layerOrder ?? raw.zIndex ?? defaultLayerOrderFor(wearableClass)),
     raw,
   };
 }
@@ -221,10 +227,68 @@ function normalizeWearableClass(slot, subslot, raw = {}) {
   return null;
 }
 
+function defaultLayerOrderFor(wearableClass) {
+  if (wearableClass === "base") return 10;
+  if (wearableClass === "head") return 30;
+  if (wearableClass === "accessory") return 40;
+  return 50;
+}
+
+function defaultPlacementForGroup(kind) {
+  if (kind === "avatar") return { x: 50, y: 78, scale: 1, z: 25 };
+  if (kind === "wall") return { x: 26, y: 30, scale: 1, z: 12 };
+  if (kind === "floor") return { x: 26, y: 78, scale: 1, z: 42 };
+  if (kind === "pets") return { x: 77, y: 78, scale: 1, z: 32 };
+  return { x: 50, y: 50, scale: 1, z: 10 };
+}
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function clampNumber(value, min, max, fallback) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return fallback;
+  return clamp(n, min, max);
+}
+
+function normalizeFreePlacement(raw, kind) {
+  const defaults = defaultPlacementForGroup(kind);
+
+  return {
+    x: clampNumber(raw?.x, 0, 100, defaults.x),
+    y: clampNumber(raw?.y, 0, 100, defaults.y),
+    scale: clampNumber(raw?.scale, 0.2, 3, defaults.scale),
+    z: Number.isFinite(Number(raw?.z)) ? Number(raw.z) : defaults.z,
+  };
+}
+
+function normalizePlacement(raw, kind) {
+  if (!raw) return null;
+
+  const itemId = raw.itemId || raw.id || null;
+  if (!itemId) return null;
+
+  const defaults = defaultPlacementForGroup(kind);
+
+  return {
+    itemId,
+    x: clampNumber(raw.x, 0, 100, defaults.x),
+    y: clampNumber(raw.y, 0, 100, defaults.y),
+    scale: clampNumber(raw.scale, 0.2, 3, defaults.scale),
+    z: Number.isFinite(Number(raw.z)) ? Number(raw.z) : defaults.z,
+  };
+}
+
 /* ----------------------------
-  Preview model
+  Shared-renderer-style widget scene
 ---------------------------- */
-function buildPreviewModel(roomState, catalogById) {
+function renderRoomSceneIntoWidget(mountEl, roomState, catalogById) {
+  const sceneEl = mountEl.querySelector("[data-aw-room-scene]");
+  if (!sceneEl) return;
+
+  sceneEl.innerHTML = "";
+
   const fallbackBg = "../img/bg/index.png";
 
   const backgroundItem = roomState?.backgroundId
@@ -235,45 +299,113 @@ function buildPreviewModel(roomState, catalogById) {
     ? catalogById.get(roomState.avatarBaseId)
     : null;
 
-  const wearableItems = Array.isArray(roomState?.wearableIds)
-    ? roomState.wearableIds
-        .map((id) => catalogById.get(id))
-        .filter(Boolean)
-    : [];
+  const wearables = (roomState?.wearableIds || [])
+    .map((id) => catalogById.get(id))
+    .filter(Boolean)
+    .sort((a, b) => a.layerOrder - b.layerOrder);
 
-  const headItem =
-    wearableItems.find((item) => item.wearableClass === "head") || null;
+  const avatarPlacement =
+    roomState?.avatarPlacement || defaultPlacementForGroup("avatar");
 
-  const accessoryItem =
-    wearableItems.find((item) => item.wearableClass === "accessory") || null;
+  const bgEl = document.createElement("div");
+  bgEl.className = "awSceneBg";
+  bgEl.style.backgroundImage = `url("${escapeAttr(backgroundItem?.imageUrl || fallbackBg)}")`;
+  sceneEl.appendChild(bgEl);
 
-  const petItem = roomState?.petPlacement?.itemId
-    ? catalogById.get(roomState.petPlacement.itemId)
-    : null;
+  renderPlacedList(sceneEl, roomState?.wallPlacements || [], catalogById, "wall");
+  renderAvatar(sceneEl, baseItem, wearables, avatarPlacement);
 
-  const wallItems = Array.isArray(roomState?.wallPlacements)
-    ? roomState.wallPlacements
-        .map((p) => catalogById.get(p?.itemId))
-        .filter(Boolean)
-        .slice(0, 2)
-    : [];
+  (roomState?.petPlacements || []).forEach((placement, index) => {
+    const item = catalogById.get(placement.itemId);
+    if (!item?.imageUrl) return;
 
-  const floorItems = Array.isArray(roomState?.floorPlacements)
-    ? roomState.floorPlacements
-        .map((p) => catalogById.get(p?.itemId))
-        .filter(Boolean)
-        .slice(0, 2)
-    : [];
+    sceneEl.appendChild(
+      createObjectEl(item.imageUrl, placement, {
+        baseWidth: 128,
+        z: placement.z ?? (32 + index),
+        className: "awScenePet",
+      })
+    );
+  });
 
-  return {
-    backgroundUrl: backgroundItem?.imageUrl || fallbackBg,
-    baseUrl: baseItem?.imageUrl || "",
-    headUrl: headItem?.imageUrl || "",
-    accessoryUrl: accessoryItem?.imageUrl || "",
-    petUrl: petItem?.imageUrl || "",
-    wallUrls: wallItems.map((x) => x.imageUrl).filter(Boolean),
-    floorUrls: floorItems.map((x) => x.imageUrl).filter(Boolean),
-  };
+  renderPlacedList(sceneEl, roomState?.floorPlacements || [], catalogById, "floor");
+}
+
+function renderPlacedList(sceneEl, list = [], catalogById, kind) {
+  list.forEach((placement, index) => {
+    const item = catalogById.get(placement.itemId);
+    if (!item?.imageUrl) return;
+
+    const baseWidth = kind === "wall" ? 190 : 170;
+    const z = placement.z ?? (kind === "wall" ? 12 + index : 42 + index);
+
+    sceneEl.appendChild(
+      createObjectEl(item.imageUrl, placement, {
+        baseWidth,
+        z,
+        className: kind === "wall" ? "awSceneWall" : "awSceneFloor",
+      })
+    );
+  });
+}
+
+function renderAvatar(sceneEl, baseItem, wearables, placement) {
+  if (!placement) return;
+
+  const avatarEl = document.createElement("div");
+  avatarEl.className = "awSceneAvatar";
+  avatarEl.style.left = `${placement.x}%`;
+  avatarEl.style.top = `${placement.y}%`;
+  avatarEl.style.width = `${Math.round(240 * placement.scale)}px`;
+  avatarEl.style.zIndex = String(placement.z ?? 25);
+
+  const stackEl = document.createElement("div");
+  stackEl.className = "awSceneAvatarStack";
+
+  if (baseItem?.imageUrl) {
+    stackEl.appendChild(createAvatarPiece(baseItem));
+  }
+
+  wearables.forEach((item) => {
+    if (!item?.imageUrl) return;
+    stackEl.appendChild(createAvatarPiece(item));
+  });
+
+  avatarEl.appendChild(stackEl);
+  sceneEl.appendChild(avatarEl);
+}
+
+function createAvatarPiece(item) {
+  const wrap = document.createElement("div");
+  wrap.className = "awSceneAvatarPiece";
+  wrap.style.zIndex = String(item.layerOrder ?? 1);
+
+  const img = document.createElement("img");
+  img.src = item.imageUrl;
+  img.alt = "";
+  img.draggable = false;
+
+  wrap.appendChild(img);
+  return wrap;
+}
+
+function createObjectEl(src, placement, opts = {}) {
+  const el = document.createElement("div");
+  const widthPx = Math.round((opts.baseWidth || 170) * (placement?.scale || 1));
+
+  el.className = `awSceneObject ${opts.className || ""}`.trim();
+  el.style.left = `${placement?.x ?? 50}%`;
+  el.style.top = `${placement?.y ?? 50}%`;
+  el.style.width = `${widthPx}px`;
+  el.style.zIndex = String(opts.z ?? placement?.z ?? 1);
+
+  const img = document.createElement("img");
+  img.src = src;
+  img.alt = "";
+  img.draggable = false;
+
+  el.appendChild(img);
+  return el;
 }
 
 /* ----------------------------
@@ -300,9 +432,7 @@ function renderError(msg) {
 
 function renderWidget({
   role,
-  preview,
   hasRoom,
-  openUrl,
   showAdminTools,
   rubiesBalance,
 }) {
@@ -314,54 +444,7 @@ function renderWidget({
       </div>
 
       <div class="awWidgetPreview" aria-label="Avatar World preview">
-        <img
-          src="${escapeAttr(preview.backgroundUrl)}"
-          alt="Avatar World room background preview"
-        />
-
-        ${
-          preview.wallUrls[0]
-            ? `<img class="awWidgetPreviewLayer awWidgetWall1" src="${escapeAttr(preview.wallUrls[0])}" alt="" />`
-            : ""
-        }
-        ${
-          preview.wallUrls[1]
-            ? `<img class="awWidgetPreviewLayer awWidgetWall2" src="${escapeAttr(preview.wallUrls[1])}" alt="" />`
-            : ""
-        }
-
-        ${
-          preview.baseUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetAvatar" src="${escapeAttr(preview.baseUrl)}" alt="" />`
-            : ""
-        }
-        ${
-          preview.headUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetAvatar" src="${escapeAttr(preview.headUrl)}" alt="" />`
-            : ""
-        }
-        ${
-          preview.accessoryUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetAvatar" src="${escapeAttr(preview.accessoryUrl)}" alt="" />`
-            : ""
-        }
-
-        ${
-          preview.petUrl
-            ? `<img class="awWidgetPreviewLayer awWidgetPet" src="${escapeAttr(preview.petUrl)}" alt="" />`
-            : ""
-        }
-
-        ${
-          preview.floorUrls[0]
-            ? `<img class="awWidgetPreviewLayer awWidgetFloor1" src="${escapeAttr(preview.floorUrls[0])}" alt="" />`
-            : ""
-        }
-        ${
-          preview.floorUrls[1]
-            ? `<img class="awWidgetPreviewLayer awWidgetFloor2" src="${escapeAttr(preview.floorUrls[1])}" alt="" />`
-            : ""
-        }
+        <div class="awRoomScene" data-aw-room-scene></div>
       </div>
 
       <div class="awWidgetMeta">
