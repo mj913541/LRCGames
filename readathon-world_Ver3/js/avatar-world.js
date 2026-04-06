@@ -25,6 +25,7 @@ import {
   setDoc,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+import { renderAvatarRoom } from "./avatar-room-renderer.js";
 /* ---------------------------------------
    DOM
 --------------------------------------- */
@@ -513,149 +514,20 @@ function renderHeaderUser() {
 }
 
 function renderRoom() {
-  renderBackground();
-  renderPlacedObjects("wall");
-  renderAvatar();
-  renderPets();
-  renderPlacedObjects("floor");
-}
-
-function renderBackground() {
-  const bgItem = getOwnedItem(state.room.backgroundId);
-  els.roomBackground.style.backgroundImage = bgItem
-    ? `url("${bgItem.imageUrl}")`
-    : "none";
-}
-
-function renderAvatar() {
-  els.avatarLayer.innerHTML = "";
-
-  const base = getOwnedItem(state.room.avatarBaseId);
-  const avatarPlacement = state.room.avatarPlacement || defaultPlacementForGroup("avatar");
-
-  const wearables = state.room.wearableIds
-    .map(getOwnedItem)
-    .filter(Boolean)
-    .sort((a, b) => a.layerOrder - b.layerOrder);
-
-  const pieces = [];
-
-  if (base) {
-    pieces.push(`
-      <div class="aw-avatar-piece" data-piece="base" style="z-index:${base.layerOrder};">
-        <img src="${escapeHtml(base.imageUrl)}" alt="${escapeHtml(base.name)}" draggable="false">
-      </div>
-    `);
-  }
-
-  wearables.forEach((item) => {
-    pieces.push(`
-      <div
-        class="aw-avatar-piece"
-        data-piece="${escapeHtml(item.wearableClass || "wearable")}"
-        style="z-index:${item.layerOrder};"
-      >
-        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
-      </div>
-    `);
-  });
-
-  const selected = isSelected("avatar", 0) ? " is-selected" : "";
-  const showHandle = isSelected("avatar", 0);
-
-  const el = document.createElement("button");
-  el.type = "button";
-  el.className = `aw-room-object aw-avatar-object${selected}`;
-  el.dataset.kind = "avatar";
-  el.dataset.index = "0";
-
-  el.style.left = `${avatarPlacement.x}%`;
-  el.style.top = `${avatarPlacement.y}%`;
-  el.style.width = `${Math.round(240 * avatarPlacement.scale)}px`;
-  el.style.zIndex = String(avatarPlacement.z ?? 25);
-
-  el.innerHTML = `
-    <div class="aw-avatar-stack">
-      ${pieces.join("")}
-    </div>
-    ${showHandle ? `<span class="aw-resize-handle" data-resize-handle="true" aria-hidden="true"></span>` : ""}
-  `;
-
-  wirePlacementElement(el, "avatar", 0);
-  els.avatarLayer.appendChild(el);
-}
-
-function renderPets() {
-  els.petLayer.innerHTML = "";
-
-  const pets = Array.isArray(state.room.petPlacements) ? state.room.petPlacements : [];
-
-  pets.forEach((pet, index) => {
-    const item = getOwnedItem(pet.itemId);
-    if (!item) return;
-
-    const selected = isSelected("pet", index) ? " is-selected" : "";
-    const showHandle = isSelected("pet", index);
-
-    const el = document.createElement("button");
-    el.type = "button";
-    el.className = `aw-room-object aw-pet-object${selected}`;
-    el.dataset.kind = "pet";
-    el.dataset.index = String(index);
-
-    const widthPx = Math.round(128 * pet.scale);
-
-    el.style.left = `${pet.x}%`;
-    el.style.top = `${pet.y}%`;
-    el.style.width = `${widthPx}px`;
-    el.style.zIndex = String(pet.z ?? (32 + index));
-
-    el.innerHTML = `
-      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
-      ${showHandle ? `<span class="aw-resize-handle" data-resize-handle="true" aria-hidden="true"></span>` : ""}
-    `;
-
-    wirePlacementElement(el, "pet", index);
-    els.petLayer.appendChild(el);
+  renderAvatarRoom(els.roomCanvas, state.room, state.catalogById, {
+    mode: "full",
+    selectedPlacement: state.selectedPlacement,
+    onWireElement: wirePlacementElement,
+    layers: {
+      background: els.roomBackground,
+      wall: els.wallLayer,
+      avatar: els.avatarLayer,
+      pet: els.petLayer,
+      floor: els.floorLayer,
+    },
   });
 }
 
-function renderPlacedObjects(kind) {
-  const layer = kind === "wall" ? els.wallLayer : els.floorLayer;
-  const list = kind === "wall" ? state.room.wallPlacements : state.room.floorPlacements;
-
-  layer.innerHTML = "";
-
-  list.forEach((placement, index) => {
-    const item = getOwnedItem(placement.itemId);
-    if (!item) return;
-
-    const selected = isSelected(kind, index) ? " is-selected" : "";
-    const showHandle = isSelected(kind, index);
-
-    const el = document.createElement("button");
-    el.type = "button";
-    el.className = `aw-room-object${selected}`;
-    el.dataset.kind = kind;
-    el.dataset.index = String(index);
-
-    const baseWidth = kind === "wall" ? 190 : 170;
-    const widthPx = Math.round(baseWidth * placement.scale);
-
-    el.style.left = `${placement.x}%`;
-    el.style.top = `${placement.y}%`;
-    el.style.width = `${widthPx}px`;
-    el.style.zIndex = String(placement.z ?? (kind === "wall" ? 12 + index : 42 + index));
-
-    el.innerHTML = `
-      <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.name)}" draggable="false">
-      ${showHandle ? `<span class="aw-resize-handle" data-resize-handle="true" aria-hidden="true"></span>` : ""}
-    `;
-
-    wirePlacementElement(el, kind, index);
-    layer.appendChild(el);
-  });
-}
 
 /* ---------------------------------------
    Inventory Actions

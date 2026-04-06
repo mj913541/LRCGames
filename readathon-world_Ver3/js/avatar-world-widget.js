@@ -22,6 +22,8 @@ import {
   orderBy,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+import { renderAvatarRoom } from "./avatar-room-renderer.js";
+
 /* ----------------------------
   Public mount
 ---------------------------- */
@@ -287,125 +289,9 @@ function renderRoomSceneIntoWidget(mountEl, roomState, catalogById) {
   const sceneEl = mountEl.querySelector("[data-aw-room-scene]");
   if (!sceneEl) return;
 
-  sceneEl.innerHTML = "";
-
-  const fallbackBg = "../img/bg/index.png";
-
-  const backgroundItem = roomState?.backgroundId
-    ? catalogById.get(roomState.backgroundId)
-    : null;
-
-  const baseItem = roomState?.avatarBaseId
-    ? catalogById.get(roomState.avatarBaseId)
-    : null;
-
-  const wearables = (roomState?.wearableIds || [])
-    .map((id) => catalogById.get(id))
-    .filter(Boolean)
-    .sort((a, b) => a.layerOrder - b.layerOrder);
-
-  const avatarPlacement =
-    roomState?.avatarPlacement || defaultPlacementForGroup("avatar");
-
-  const bgEl = document.createElement("div");
-  bgEl.className = "awSceneBg";
-  bgEl.style.backgroundImage = `url("${escapeAttr(backgroundItem?.imageUrl || fallbackBg)}")`;
-  sceneEl.appendChild(bgEl);
-
-  renderPlacedList(sceneEl, roomState?.wallPlacements || [], catalogById, "wall");
-  renderAvatar(sceneEl, baseItem, wearables, avatarPlacement);
-
-  (roomState?.petPlacements || []).forEach((placement, index) => {
-    const item = catalogById.get(placement.itemId);
-    if (!item?.imageUrl) return;
-
-    sceneEl.appendChild(
-      createObjectEl(item.imageUrl, placement, {
-        baseWidth: 128,
-        z: placement.z ?? (32 + index),
-        className: "awScenePet",
-      })
-    );
+  renderAvatarRoom(sceneEl, roomState, catalogById, {
+    mode: "widget",
   });
-
-  renderPlacedList(sceneEl, roomState?.floorPlacements || [], catalogById, "floor");
-}
-
-function renderPlacedList(sceneEl, list = [], catalogById, kind) {
-  list.forEach((placement, index) => {
-    const item = catalogById.get(placement.itemId);
-    if (!item?.imageUrl) return;
-
-    const baseWidth = kind === "wall" ? 190 : 170;
-    const z = placement.z ?? (kind === "wall" ? 12 + index : 42 + index);
-
-    sceneEl.appendChild(
-      createObjectEl(item.imageUrl, placement, {
-        baseWidth,
-        z,
-        className: kind === "wall" ? "awSceneWall" : "awSceneFloor",
-      })
-    );
-  });
-}
-
-function renderAvatar(sceneEl, baseItem, wearables, placement) {
-  if (!placement) return;
-
-  const avatarEl = document.createElement("div");
-  avatarEl.className = "awSceneAvatar";
-  avatarEl.style.left = `${placement.x}%`;
-  avatarEl.style.top = `${placement.y}%`;
-  avatarEl.style.width = `${Math.round(240 * placement.scale)}px`;
-  avatarEl.style.zIndex = String(placement.z ?? 25);
-
-  const stackEl = document.createElement("div");
-  stackEl.className = "awSceneAvatarStack";
-
-  if (baseItem?.imageUrl) {
-    stackEl.appendChild(createAvatarPiece(baseItem));
-  }
-
-  wearables.forEach((item) => {
-    if (!item?.imageUrl) return;
-    stackEl.appendChild(createAvatarPiece(item));
-  });
-
-  avatarEl.appendChild(stackEl);
-  sceneEl.appendChild(avatarEl);
-}
-
-function createAvatarPiece(item) {
-  const wrap = document.createElement("div");
-  wrap.className = "awSceneAvatarPiece";
-  wrap.style.zIndex = String(item.layerOrder ?? 1);
-
-  const img = document.createElement("img");
-  img.src = item.imageUrl;
-  img.alt = "";
-  img.draggable = false;
-
-  wrap.appendChild(img);
-  return wrap;
-}
-
-function createObjectEl(src, placement, opts = {}) {
-  const el = document.createElement("div");
-  const widthPx = Math.round((opts.baseWidth || 170) * (placement?.scale || 1));
-
-  el.className = `awSceneObject ${opts.className || ""}`.trim();
-  el.style.left = `${placement?.x ?? 50}%`;
-  el.style.top = `${placement?.y ?? 50}%`;
-  el.style.width = `${widthPx}px`;
-  el.style.zIndex = String(opts.z ?? placement?.z ?? 1);
-
-  const img = document.createElement("img");
-  img.src = src;
-  img.alt = "";
-  img.draggable = false;
-
-  el.appendChild(img);
-  return el;
 }
 
 /* ----------------------------
