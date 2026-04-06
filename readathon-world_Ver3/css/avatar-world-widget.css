@@ -42,7 +42,11 @@
   position: relative;
 }
 
-.awRoomScene {
+/* ---------------------------------------
+   SCENE (MATCHES SHARED RENDERER)
+--------------------------------------- */
+
+.awWidgetPreview .awRoomScene {
   position: relative;
   width: 100%;
   height: 100%;
@@ -50,64 +54,106 @@
   background: #e9eef5;
 }
 
-.awSceneBg {
+/* Background */
+.awWidgetPreview .aw-room-background {
   position: absolute;
   inset: 0;
-  background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background-size: cover;
+  z-index: 1;
 }
 
-/* base positioned elements */
-.awSceneObject,
-.awSceneAvatar {
+/* Layers */
+.awWidgetPreview .aw-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.awWidgetPreview .aw-layer-wall { z-index: 10; }
+.awWidgetPreview .aw-layer-avatar { z-index: 20; }
+.awWidgetPreview .aw-layer-pet { z-index: 30; }
+.awWidgetPreview .aw-layer-floor { z-index: 40; }
+
+/* Objects */
+.awWidgetPreview .aw-room-object {
   position: absolute;
   transform-origin: center center;
+  pointer-events: none;
+  background: none;
+  border: none;
+  padding: 0;
+  outline: none;
+  overflow: visible;
 }
 
-/* match real room anchor behavior */
-.awSceneAvatar {
+/* Images */
+.awWidgetPreview .aw-room-object img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: none !important;
+  border: none;
+  mix-blend-mode: normal;
+  image-rendering: auto;
+  -webkit-user-drag: none;
+  user-select: none;
+  pointer-events: none;
+
+  /* nice polish */
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.25));
+}
+
+/* ---------------------------------------
+   POSITIONING (CRITICAL 🔥)
+--------------------------------------- */
+
+/* Avatar + pets anchor to feet */
+.awWidgetPreview .aw-avatar-object {
   transform: translate(-50%, -100%);
 }
 
-.awScenePet {
+.awWidgetPreview .aw-pet-object {
   transform: translate(-50%, -100%);
 }
 
-.awSceneWall {
+/* Wall items hang slightly down */
+.awWidgetPreview .aw-layer-wall .aw-room-object {
   transform: translate(-50%, -12%);
 }
 
-.awSceneFloor {
+/* Floor items sit on ground */
+.awWidgetPreview .aw-layer-floor .aw-room-object {
   transform: translate(-50%, -100%);
 }
 
-.awSceneAvatarStack {
+/* ---------------------------------------
+   AVATAR STACK
+--------------------------------------- */
+
+.awWidgetPreview .aw-avatar-stack {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
+  pointer-events: none;
 }
 
-.awSceneAvatarPiece {
+.awWidgetPreview .aw-avatar-piece {
   position: absolute;
   inset: 0;
 }
 
-.awSceneAvatarPiece img {
+.awWidgetPreview .aw-avatar-piece img {
   width: 100%;
   height: 100%;
   object-fit: contain;
+  display: block;
 }
 
-.awRoomScene img {
-  width: 100%;
-  height: auto;
-  display: block;
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.25));
-}
+/* ---------------------------------------
+   TEXT + BUTTONS
+--------------------------------------- */
 
 .awWidgetMeta {
   margin-bottom: 10px;
