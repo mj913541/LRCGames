@@ -2,29 +2,31 @@
  * merge-video-progress-from-tsv.cjs
  *
  * Location:
- *   /LRCGames/LRCGames/tools/
+ *   /tools/merge-video-progress-from-tsv.cjs
  *
- * Expected TSV headers:
- *   userId    videoId
+ * TSV:
+ *   /data_imports/video-progress-import.tsv
  *
  * Run:
- *   node merge-video-progress-from-tsv.cjs ./video-progress-import.tsv
+ *   node tools/merge-video-progress-from-tsv.cjs
  */
 
 const fs = require("fs");
 const path = require("path");
 const admin = require("firebase-admin");
 
-// 🔐 YOUR SERVICE ACCOUNT (already working path)
+// 🔐 SERVICE ACCOUNT (your working path)
 const serviceAccount = require("C:/Users/malbr/OneDrive/Desktop/keys/lrcquest-3039e-serviceAccount.json");
 
 // ------------------------------------
 // CONFIG
 // ------------------------------------
 const SCHOOL_ID = "308_longbeach_elementary";
-const DEFAULT_INPUT_FILE = path.resolve(__dirname, "./video-progress-import.tsv");
 
-const DRY_RUN = false; // 🔁 set to true to preview first
+// 👇 THIS is the important fix
+const DEFAULT_INPUT_FILE = path.resolve(__dirname, "../data_imports/video-progress-import.tsv");
+
+const DRY_RUN = false; // set true to preview
 const BATCH_SIZE = 400;
 
 const UPDATE_DATA = {
@@ -80,11 +82,6 @@ function normalizeVideoId(videoId) {
 
   if (!raw) throw new Error("Missing videoId");
 
-  // Accept flexible formats:
-  // 1 → video_01
-  // 01 → video_01
-  // video_1 → video_01
-  // video_01 → video_01
   const match =
     raw.match(/^video_(\d{1,2})$/i) ||
     raw.match(/^(\d{1,2})$/);
@@ -138,7 +135,7 @@ async function main() {
     const inputFile = path.resolve(process.argv[2] || DEFAULT_INPUT_FILE);
 
     if (!fs.existsSync(inputFile)) {
-      console.error(`❌ TSV file not found: ${inputFile}`);
+      console.error(`❌ TSV not found: ${inputFile}`);
       process.exit(1);
     }
 
@@ -202,7 +199,7 @@ async function main() {
     await commitInBatches(writes);
 
     console.log("");
-    console.log("🎉 DONE! Video progress merged successfully.");
+    console.log("🎉 DONE! Video progress merged.");
 
   } catch (err) {
     console.error("💥 Fatal error:");
