@@ -51,7 +51,7 @@ const VIDEO_ITEMS = [
     key: "video_03",
     title: "The Sour Grape",
     youtubeId: "QZn1SCPtOw4",
-    youtubeUrl: "https://youtu.be/E7KcHOL4eL4",
+    youtubeUrl: "https://youtu.be/wbKcjspT3q8",
     rubies: 10,
     image: "../img/book-bracket/the-sour-grape.jpg",
   },
