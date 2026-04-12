@@ -4,7 +4,7 @@ import {
   getSchoolId,
   fnSubmitTransaction,
   userSummaryRef,
-} from "../readathon-world_Ver2/js/firebase.js";
+} from "../../readathon-world_Ver2/js/firebase.js";
 // KEEP
 // These imports are still part of your Firebase/game setup.
 // You may not end up using fnSubmitTransaction directly here,

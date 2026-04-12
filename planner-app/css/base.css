@@ -1,0 +1,8 @@
+body {
+  margin: 0;
+  font-family: "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top left, #fff6fb 0%, transparent 30%),
+    radial-gradient(circle at top right, #f3f8ff 0%, transparent 28%),
+    linear-gradient(180deg, #f9f4fb 0%, #fdfaf6 100%);
+}

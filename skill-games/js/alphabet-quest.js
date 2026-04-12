@@ -4,7 +4,7 @@ import {
   getSchoolId,
   fnSubmitTransaction,
   userSummaryRef,
-} from "../readathon-world_Ver2/js/firebase.js";
+} from "../../readathon-world_Ver2/js/firebase.js";
 
 import {
   doc,

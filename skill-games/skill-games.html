@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alpha-Burst</title>
+    <link rel="stylesheet" href="./skill-games/skill-games.css" />
+</head>
+<body>
+  <!-- shared helpers if needed -->
+  <div id="dataTitle" data-title="Alphabet Quest" hidden></div>
+  <div id="dataSubtitle" data-subtitle="Practice letters and earn rubies" hidden></div>
+
+  <div class="game-shell">
+    <header class="header">
+      <div class="header-main">
+        <p class="kicker">Skill Game</p>
+        <p class="subtitle">- Practice Matching Letters</p>
+
+        <div class="title-marquee">
+          <div class="title-marquee-track">
+            <span>Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨</span>
+            <span>Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="game-layout">
+      <aside class="game-sidebar">
+          <section class="actions-card">
+              <p class="sidebar-card-title">Play Mode</p>
+              <div class="top-actions">
+                <button id="practiceBtn" class="mode-btn" type="button">🌟 Practice</button>
+                <button id="basicBtn" class="mode-btn is-active" type="button">🗺️ Basic</button>
+                <button id="challengeBtn" class="mode-btn" type="button">🏆 Challenge</button>
+              </div>
+          </section>
+
+        <section class="status-card">
+          <div class="status-row">
+            <span>Round</span>
+            <strong id="roundLabel">1 / 8</strong>
+          </div>
+
+          <div class="status-row">
+            <span>Score</span>
+            <strong id="scoreLabel">0</strong>
+          </div>
+
+          <div class="status-row">
+            <span>Streak</span>
+            <strong id="streakLabel">0</strong>
+          </div>
+
+          <div class="status-row">
+            <span>Rubies</span>
+            <strong id="rewardLabel">0</strong>
+          </div>
+        </section>
+      </aside>
+
+      <main class="game-board-wrap">
+        <section class="game-board">
+          <!-- put your game content inside here -->
+          <div class="game-board-inner">
+            <p class="board-placeholder">Game board goes here</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
