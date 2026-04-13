@@ -195,28 +195,25 @@ function styleCenterNextButton() {
   });
 }
 
-function showCenterNextButton() {
-  els.nextRoundBtn.disabled = false;
-  els.nextRoundBtn.style.display = "inline-flex";
-  els.nextRoundBtn.style.alignItems = "center";
-  els.nextRoundBtn.style.justifyContent = "center";
+// CENTER BUTTON CONTROL
+function showCenterButton(type) {
+  els.startRoundBtn.classList.remove("is-visible");
+  els.nextRoundBtn.classList.remove("is-visible");
 
-  requestAnimationFrame(() => {
-    els.nextRoundBtn.style.opacity = "1";
-    els.nextRoundBtn.style.transform = "translate(-50%, -50%) scale(1.06)";
-  });
+  if (type === "start") {
+    els.startRoundBtn.disabled = false;
+    els.startRoundBtn.classList.add("is-visible");
+  }
+
+  if (type === "next") {
+    els.nextRoundBtn.disabled = false;
+    els.nextRoundBtn.classList.add("is-visible");
+  }
 }
 
-function hideCenterNextButton() {
-  els.nextRoundBtn.disabled = true;
-  els.nextRoundBtn.style.opacity = "0";
-  els.nextRoundBtn.style.transform = "translate(-50%, -50%) scale(0.92)";
-
-  window.setTimeout(() => {
-    if (els.nextRoundBtn.disabled) {
-      els.nextRoundBtn.style.display = "none";
-    }
-  }, 180);
+function hideCenterButtons() {
+  els.startRoundBtn.classList.remove("is-visible");
+  els.nextRoundBtn.classList.remove("is-visible");
 }
 
 function setMode(modeKey) {
@@ -290,6 +287,7 @@ function renderRoundIntro() {
   els.feedbackBadge.textContent = "Ready!";
   els.feedbackBadge.classList.remove("is-correct", "is-wrong");
 
+  showCenterButton("start");
   updateStats();
 }
 
@@ -338,6 +336,7 @@ function startRound() {
     startTimer();
   }
 
+  hideCenterButtons();
   updateStats();
 }
 
@@ -562,7 +561,7 @@ function finishRound(cleared) {
   }
 
   els.startRoundBtn.disabled = true;
-  showCenterNextButton();
+  showCenterButton("next");
   updateStats();
 
   if (state.mode.key === "challenge") {

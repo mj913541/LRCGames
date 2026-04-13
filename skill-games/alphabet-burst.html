@@ -4,113 +4,95 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Alpha-Burst</title>
-    <link rel="stylesheet" href="./css/skill-games.css" />
-    <link rel="stylesheet" href="./css/alpha-burst.css" />
+  <link rel="stylesheet" href="./css/alpha-burst.css" />
+  <link rel="stylesheet" href="./css/skill-games.css" />
 </head>
 <body>
-  <!-- shared helpers if needed -->
-  <div id="dataTitle" data-title="Alphabet Burst" hidden></div>
-  <div id="dataSubtitle" data-subtitle="Tap the matching letters and earn rubies" hidden></div>
 
-  <div class="game-shell">
-    <header class="header">
-      <div class="header-main">
-        <p class="kicker">Skill Game</p>
-        <p class="subtitle">- Practice Matching Letters</p>
+<div id="dataTitle" data-title="Alphabet Burst" hidden></div>
+<div id="dataSubtitle" data-subtitle="Tap the matching letters and earn rubies" hidden></div>
 
-        <div class="title-marquee">
-          <div class="title-marquee-track">
-            <span>Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨</span>
-            <span>Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨</span>
-          </div>
+<div class="game-shell">
+  <header class="header">
+    <div class="header-main">
+      <p class="kicker">Skill Game</p>
+      <p class="subtitle">- Practice Matching Letters</p>
+
+      <div class="title-marquee">
+        <div class="title-marquee-track">
+          <span>Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨</span>
+          <span>Alpha-Burst ✨ Alpha-Burst ✨ Alpha-Burst ✨</span>
         </div>
       </div>
-    </header>
+    </div>
+  </header>
 
-    <div class="game-layout">
-      <aside class="game-sidebar">
-          <section class="actions-card">
-              <p class="sidebar-card-title">Play Mode</p>
-              <div class="top-actions">
-                <button id="practiceBtn" class="mode-btn" type="button">🌟 Practice</button>
-                <button id="basicBtn" class="mode-btn is-active" type="button">🗺️ Basic</button>
-                <button id="challengeBtn" class="mode-btn" type="button">🏆 Challenge</button>
-              </div>
+  <div class="game-layout">
+    <aside class="game-sidebar">
+      <section class="actions-card">
+        <p class="sidebar-card-title">Play Mode</p>
+        <div class="top-actions">
+          <button id="practiceBtn" class="mode-btn">🌟 Practice</button>
+          <button id="questBtn" class="mode-btn is-active">🗺️ Quest</button>
+          <button id="challengeBtn" class="mode-btn">🏆 Challenge</button>
+        </div>
+      </section>
+
+      <section class="status-card">
+        <div class="status-row"><span>Round</span><strong id="roundLabel">1 / 8</strong></div>
+        <div class="status-row"><span>Score</span><strong id="scoreLabel">0</strong></div>
+        <div class="status-row"><span>Streak</span><strong id="streakLabel">0</strong></div>
+        <div class="status-row"><span>Rubies</span><strong id="rubiesLabel">0</strong></div>
+        <div class="status-row"><span>Time</span><strong id="timerLabel">∞</strong></div>
+      </section>
+    </aside>
+
+    <main class="game-board-wrap">
+      <section class="game-board">
+        <div class="game-board-inner">
+
+          <section class="ab-progress-wrap">
+            <div class="ab-progress-bar">
+              <div id="progressFill" class="ab-progress-fill"></div>
+            </div>
           </section>
 
-        <section class="status-card">
-          <div class="status-row">
-            <span>Round</span>
-            <strong id="roundLabel">1 / 8</strong>
-          </div>
+          <section class="ab-game-card">
 
-          <div class="status-row">
-            <span>Score</span>
-            <strong id="scoreLabel">0</strong>
-          </div>
-
-          <div class="status-row">
-            <span>Streak</span>
-            <strong id="streakLabel">0</strong>
-          </div>
-
-          <div class="status-row">
-            <span>Rubies</span>
-            <strong id="rewardLabel">0</strong>
-          </div>
-        </section>
-      </aside>
-
-
-      <main class="game-board-wrap">
-        <section class="game-board">
-          <div class="game-board-inner">
-            <section class="ab-progress-wrap" aria-label="Game progress">
-              <div class="ab-progress-bar">
-                <div id="progressFill" class="ab-progress-fill"></div>
+            <div class="ab-topline">
+              <div class="ab-badge-group">
+                <span id="feedbackBadge" class="ab-feedback-badge">Ready!</span>
+                <span id="rewardHint" class="ab-reward-hint">Tap all correct bubbles</span>
               </div>
-            </section>
+            </div>
 
-            <section class="ab-game-card">
-              <div class="ab-topline">
-                <div class="ab-badge-group">
-                  <span id="feedbackBadge" class="ab-feedback-badge">Ready!</span>
-                  <span id="rewardHint" class="ab-reward-hint">Tap all correct bubbles</span>
+            <div class="ab-prompt-wrap">
+              <p id="promptType" class="ab-prompt-type">Match Burst</p>
+              <h2 id="promptText" class="ab-prompt-text">Find all lowercase matches for: A</h2>
+            </div>
+
+            <div class="ab-playfield-wrap">
+              <div id="playfield" class="ab-playfield">
+
+                <!-- CENTER BUTTON SYSTEM -->
+                <div class="ab-center-ui">
+                  <button id="startRoundBtn" class="ab-center-btn">Start Round</button>
+                  <button id="nextRoundBtn" class="ab-center-btn" disabled>Next Round</button>
                 </div>
-                <p id="helperText" class="ab-helper-text">Get ready for the next burst.</p>
-              </div>
 
-              <div class="ab-prompt-wrap">
-                <p id="promptType" class="ab-prompt-type">Match Burst</p>
-                <h2 id="promptText" class="ab-prompt-text">Find all lowercase matches for: A</h2>
               </div>
+            </div>
 
-              <div class="ab-playfield-wrap">
-                <div id="playfield" class="ab-playfield" aria-live="polite"></div>
-              </div>
+          </section>
 
-              <div class="ab-bottom-row">
-                <button id="startRoundBtn" class="ab-action-btn" type="button">Start Round</button>
-                <button id="nextRoundBtn" class="ab-action-btn" type="button" disabled>Next Round</button>
-              </div>
-            </section>
+          <div id="fxLayer" class="ab-fx-layer"></div>
 
-            <section id="summaryCard" class="ab-summary-card" hidden>
-              <h3>Burst Complete 🎉</h3>
-              <p id="summaryText">You did awesome.</p>
-              <div class="ab-summary-actions">
-                <button id="playAgainBtn" class="ab-mode-btn" type="button">Play Again</button>
-              </div>
-            </section>
-
-            <div id="fxLayer" class="ab-fx-layer" aria-hidden="true"></div>
-          </div>
-        </section>
-      </main>
-    </div>
+        </div>
+      </section>
+    </main>
   </div>
+</div>
 
-  <script src="./js/alpha-burst.js"></script>
-    <script src="./js/skill-games.js"></script>
+<script src="./js/alpha-burst.js"></script>
 </body>
 </html>
