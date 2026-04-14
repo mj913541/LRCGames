@@ -201,7 +201,9 @@ grid-template-columns: minmax(120px, 160px) minmax(0, 1fr);
   transform: none;
   box-shadow: none;
 }
-
+#challengeBtn:disabled::after {
+  content: " 🔒";
+}
 #challengeBtn:disabled:hover,
 .mode-btn:disabled:hover {
   transform: none;
