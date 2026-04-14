@@ -193,7 +193,20 @@ grid-template-columns: minmax(120px, 160px) minmax(0, 1fr);
 .mode-btn:active {
   transform: translateY(0) scale(0.99);
 }
+#challengeBtn:disabled,
+.mode-btn:disabled {
+  opacity: 0.6;
+  filter: brightness(0.78) saturate(0.8);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
 
+#challengeBtn:disabled:hover,
+.mode-btn:disabled:hover {
+  transform: none;
+  filter: brightness(0.78) saturate(0.8);
+}
 .mode-btn.is-active {
   color: #7a4b00;
   background:
