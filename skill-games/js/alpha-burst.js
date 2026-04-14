@@ -1,3 +1,42 @@
+import {
+  auth,
+  db,
+  getSchoolId,
+  userSummaryRef,
+} from "../../readathon-world_Ver2/js/firebase.js";
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  runTransaction,
+  serverTimestamp,
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+const GAME_ID = "alpha-burst";
+const GAME_TITLE = "Alpha Burst";
+
+const CONFIG = {
+  rewardSettings: {
+    fullRewardDailyWins: 3,
+    reducedRewardDailyWins: 3,
+    reducedRewardAmount: 5,
+    practiceReward: 0,
+  },
+  masterySettings: {
+    enabled: true,
+    roundsRequired: 10,
+    accuracyThreshold: 0.9,
+    streakRequired: 3,
+    masteryStateOnComplete: "quest_mastered",
+  },
+  antiSpamSettings: {
+    cooldownSeconds: 120,
+  },
+};
+
 const LETTER_PAIRS = [
   { upper: "A", lower: "a" },
   { upper: "B", lower: "b" },
@@ -83,14 +122,10 @@ const els = {
   rubiesLabel: document.getElementById("rubiesLabel"),
   timerLabel: document.getElementById("timerLabel"),
   progressFill: document.getElementById("progressFill"),
-  feedbackBadge: document.getElementById("feedbackBadge"),
-  rewardHint: document.getElementById("rewardHint"),
-  helperText: document.getElementById("helperText"),
   promptType: document.getElementById("promptType"),
   promptText: document.getElementById("promptText"),
   playfield: document.getElementById("playfield"),
-  startRoundBtn: document.getElementById("startRoundBtn"),
-  nextRoundBtn: document.getElementById("nextRoundBtn"),
+  roundActionBtn: document.getElementById("roundActionBtn"),
   summaryCard: document.getElementById("summaryCard"),
   summaryText: document.getElementById("summaryText"),
   playAgainBtn: document.getElementById("playAgainBtn"),
@@ -98,6 +133,11 @@ const els = {
 };
 
 const state = {
+  schoolId: "",
+  userId: "",
+  progressRef: null,
+  progressData: null,
+
   mode: MODES.quest,
   roundIndex: 0,
   score: 0,
@@ -114,8 +154,18 @@ const state = {
   timerSecondsLeft: 0,
   timerInterval: null,
   animationFrame: null,
-  frameCount: 0
+  frameCount: 0,
+
+  roundRubiesEarned: 0,
+  roundCorrectTaps: 0,
+  roundWrongTaps: 0,
+  roundWeakItems: [],
+  lastRoundResult: null,
 };
+
+function todayDateKey() {
+  return new Date().toISOString().slice(0, 10);
+}
 
 function shuffleArray(input) {
   const arr = [...input];
@@ -134,6 +184,10 @@ function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+function wait(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 function buildRoundBank() {
   const rounds = [];
 
@@ -146,9 +200,10 @@ function buildRoundBank() {
     );
 
     rounds.push({
-      prompt: `Tap all lowercase matches for: ${pair.upper}`,
+      prompt: `Find all lowercase matches for: ${pair.upper}`,
       targetItems: Array(8).fill(pair.lower),
-      decoyItems: lowercaseDecoys
+      decoyItems: lowercaseDecoys,
+      trackingKey: pair.upper
     });
 
     const uppercaseDecoys = pickRandomItems(
@@ -159,9 +214,10 @@ function buildRoundBank() {
     );
 
     rounds.push({
-      prompt: `Tap all uppercase matches for: ${pair.lower}`,
+      prompt: `Find all uppercase matches for: ${pair.lower}`,
       targetItems: Array(8).fill(pair.upper),
-      decoyItems: uppercaseDecoys
+      decoyItems: uppercaseDecoys,
+      trackingKey: pair.lower
     });
   });
 
@@ -174,56 +230,249 @@ function chooseRounds(mode) {
   return shuffleArray(ROUND_BANK).slice(0, mode.totalRounds);
 }
 
-function styleCenterNextButton() {
-  els.nextRoundBtn.textContent = "Next Round ✨";
-  Object.assign(els.nextRoundBtn.style, {
+function getProgressRef(schoolId, userId) {
+  return doc(
+    db,
+    "readathonV2_schools",
+    schoolId,
+    "users",
+    userId,
+    "skillGames",
+    GAME_ID
+  );
+}
+
+function buildInitialProgress() {
+  return {
+    gameId: GAME_ID,
+    title: GAME_TITLE,
+    totalRoundsPlayed: 0,
+    totalRoundsPassed: 0,
+    totalTapAttempts: 0,
+    correctTaps: 0,
+    totalClears: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    masteryState: "learning",
+    challengeUnlocked: false,
+    lifetimeRubiesEarned: 0,
+    daily: {
+      dateKey: todayDateKey(),
+      rewardWins: 0,
+      rubiesEarnedToday: 0,
+    },
+    modeStats: {
+      practice: { played: 0, passed: 0 },
+      quest: { played: 0, passed: 0 },
+      challenge: { played: 0, passed: 0 },
+    },
+    weakItems: [],
+    lastPlayedAt: null,
+    lastRewardedAt: null,
+  };
+}
+
+async function getOrCreateProgress() {
+  const ref = getProgressRef(state.schoolId, state.userId);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    const initial = buildInitialProgress();
+    await setDoc(ref, initial, { merge: true });
+    state.progressRef = ref;
+    state.progressData = initial;
+    return;
+  }
+
+  const data = snap.data() || {};
+
+  if (data?.daily?.dateKey !== todayDateKey()) {
+    data.daily = {
+      dateKey: todayDateKey(),
+      rewardWins: 0,
+      rubiesEarnedToday: 0,
+    };
+    await setDoc(ref, { daily: data.daily }, { merge: true });
+  }
+
+  state.progressRef = ref;
+  state.progressData = data;
+}
+
+function getAccuracy(progress) {
+  const totalTapAttempts = Number(progress?.totalTapAttempts || 0);
+  if (!totalTapAttempts) return 0;
+  return Number(progress?.correctTaps || 0) / totalTapAttempts;
+}
+
+function getMasteryState(progress) {
+  const m = CONFIG.masterySettings;
+  if (!m.enabled) return "not_used";
+
+  const mastered =
+    Number(progress.totalRoundsPlayed || 0) >= m.roundsRequired &&
+    getAccuracy(progress) >= m.accuracyThreshold &&
+    Number(progress.currentStreak || 0) >= m.streakRequired;
+
+  return mastered ? m.masteryStateOnComplete : "learning";
+}
+
+function secondsSinceLastReward(progress) {
+  const ts = progress?.lastRewardedAt;
+  if (!ts?.toDate) return Number.POSITIVE_INFINITY;
+  return Math.floor((Date.now() - ts.toDate().getTime()) / 1000);
+}
+
+function isCooldownActive(progress) {
+  if (state.mode.key === "practice") return false;
+  return secondsSinceLastReward(progress) < CONFIG.antiSpamSettings.cooldownSeconds;
+}
+
+function calculateReward({ passed, mode, progress, earnedThisRound }) {
+  if (!passed) return 0;
+
+  const rewards = CONFIG.rewardSettings;
+  const masteryState = progress?.masteryState || "learning";
+  const dailyWins = Number(progress?.daily?.rewardWins || 0);
+
+  if (mode === "practice") return rewards.practiceReward || 0;
+
+  if (masteryState === "quest_mastered" && mode === "quest") {
+    return 0;
+  }
+
+  if (dailyWins < rewards.fullRewardDailyWins) {
+    return earnedThisRound;
+  }
+
+  if (dailyWins < rewards.fullRewardDailyWins + rewards.reducedRewardDailyWins) {
+    return Math.min(rewards.reducedRewardAmount || 0, earnedThisRound);
+  }
+
+  return 0;
+}
+
+function updateModeButtons() {
+  els.practiceBtn.classList.toggle("is-active", state.mode.key === "practice");
+  els.questBtn.classList.toggle("is-active", state.mode.key === "quest");
+  els.challengeBtn.classList.toggle("is-active", state.mode.key === "challenge");
+  els.challengeBtn.disabled = !state.progressData?.challengeUnlocked;
+}
+
+function styleRoundActionButton() {
+  Object.assign(els.roundActionBtn.style, {
     position: "absolute",
     left: "50%",
     top: "50%",
-    transform: "translate(-50%, -50%) scale(1)",
-    zIndex: "200",
+    transform: "translate(-50%, -50%) scale(0.92)",
+    zIndex: "50",
     minWidth: "240px",
     minHeight: "72px",
     padding: "18px 28px",
     fontSize: "1.45rem",
-    fontWeight: "800",
+    fontWeight: "900",
     borderRadius: "999px",
-    boxShadow: "0 18px 38px rgba(90, 60, 160, 0.28)",
     display: "none",
     opacity: "0",
+    pointerEvents: "none",
     transition: "opacity 180ms ease, transform 180ms ease"
   });
 }
 
-// CENTER BUTTON CONTROL
-function showCenterButton(type) {
-  els.startRoundBtn.classList.remove("is-visible");
-  els.nextRoundBtn.classList.remove("is-visible");
+function showRoundActionButton(label) {
+  els.roundActionBtn.textContent = label;
+  els.roundActionBtn.style.display = "inline-flex";
+  els.roundActionBtn.style.opacity = "1";
+  els.roundActionBtn.style.pointerEvents = "auto";
+  els.roundActionBtn.style.transform = "translate(-50%, -50%) scale(1)";
+  els.roundActionBtn.disabled = false;
 
-  if (type === "start") {
-    els.startRoundBtn.disabled = false;
-    els.startRoundBtn.classList.add("is-visible");
+  els.roundActionBtn.animate(
+    [
+      { transform: "translate(-50%, -50%) scale(0.8)", opacity: 0 },
+      { transform: "translate(-50%, -50%) scale(1.08)", opacity: 1 },
+      { transform: "translate(-50%, -50%) scale(1)", opacity: 1 }
+    ],
+    {
+      duration: 220,
+      easing: "ease-out"
+    }
+  );
+}
+
+function hideRoundActionButton() {
+  els.roundActionBtn.style.display = "none";
+  els.roundActionBtn.style.opacity = "0";
+  els.roundActionBtn.style.pointerEvents = "none";
+  els.roundActionBtn.style.transform = "translate(-50%, -50%) scale(0.92)";
+}
+
+function updateStats() {
+  if (els.modeLabel) {
+    els.modeLabel.textContent = state.mode.label;
   }
 
-  if (type === "next") {
-    els.nextRoundBtn.disabled = false;
-    els.nextRoundBtn.classList.add("is-visible");
+  if (els.roundLabel) {
+    els.roundLabel.textContent = `${Math.min(state.roundIndex + 1, state.mode.totalRounds)} / ${state.mode.totalRounds}`;
+  }
+
+  if (els.scoreLabel) els.scoreLabel.textContent = String(state.score);
+  if (els.streakLabel) {
+    els.streakLabel.textContent = String(state.progressData?.currentStreak ?? state.streak);
+  }
+  if (els.rubiesLabel) {
+    els.rubiesLabel.textContent = String(state.progressData?.daily?.rewardWins || 0);
+  }
+
+  if (els.timerLabel) {
+    if (!state.mode.timeLimit) {
+      els.timerLabel.textContent = "∞";
+    } else if (!state.roundStarted && !state.roundFinished) {
+      els.timerLabel.textContent = String(state.mode.timeLimit);
+    } else {
+      els.timerLabel.textContent = String(Math.max(0, state.timerSecondsLeft));
+    }
+  }
+
+  const progressPercent = state.mode.totalRounds
+    ? (state.roundIndex / state.mode.totalRounds) * 100
+    : 0;
+
+  if (els.progressFill) {
+    els.progressFill.style.width = `${Math.max(0, Math.min(100, progressPercent))}%`;
   }
 }
 
-function hideCenterButtons() {
-  els.startRoundBtn.classList.remove("is-visible");
-  els.nextRoundBtn.classList.remove("is-visible");
-}
+function renderRoundIntro() {
+  const round = state.rounds[state.roundIndex];
 
-function setMode(modeKey) {
-  state.mode = MODES[modeKey] || MODES.quest;
+  if (!round) {
+    void finishGame();
+    return;
+  }
 
-  els.practiceBtn.classList.toggle("is-active", modeKey === "practice");
-  els.questBtn.classList.toggle("is-active", modeKey === "quest");
-  els.challengeBtn.classList.toggle("is-active", modeKey === "challenge");
+  state.currentRound = round;
+  state.roundStarted = false;
+  state.roundFinished = false;
+  state.combo = 0;
+  state.targetsRemaining = Math.min(state.mode.targetCount, round.targetItems.length);
+  state.timerSecondsLeft = state.mode.timeLimit || 0;
+  state.frameCount = 0;
+  state.roundRubiesEarned = 0;
+  state.roundCorrectTaps = 0;
+  state.roundWrongTaps = 0;
+  state.roundWeakItems = [];
+  state.lastRoundResult = null;
 
-  resetGame();
+  els.playfield.innerHTML = "";
+  els.summaryCard.hidden = true;
+  els.promptType.textContent = "Letter Match";
+  els.promptText.textContent = round.prompt;
+  els.timerLabel.textContent = state.mode.timeLimit ? String(state.timerSecondsLeft) : "∞";
+
+  showRoundActionButton("Start Round");
+  updateModeButtons();
+  updateStats();
 }
 
 function resetGame() {
@@ -244,90 +493,73 @@ function resetGame() {
   state.roundStartTime = 0;
   state.timerSecondsLeft = state.mode.timeLimit || 0;
   state.frameCount = 0;
+  state.roundRubiesEarned = 0;
+  state.roundCorrectTaps = 0;
+  state.roundWrongTaps = 0;
+  state.roundWeakItems = [];
+  state.lastRoundResult = null;
 
   els.playfield.innerHTML = "";
   els.summaryCard.hidden = true;
-  els.startRoundBtn.disabled = false;
-  hideCenterNextButton();
-
-  els.feedbackBadge.textContent = "Ready!";
-  els.feedbackBadge.classList.remove("is-correct", "is-wrong");
-  els.rewardHint.textContent = `+${state.mode.rewardPerTap} per tap • combo boosts rewards`;
-  els.helperText.textContent = "Press Start Round when you're ready.";
+  hideRoundActionButton();
 
   renderRoundIntro();
-  updateStats();
 }
 
-function renderRoundIntro() {
-  const round = state.rounds[state.roundIndex];
+function setMode(modeKey) {
+  const requested = MODES[modeKey] || MODES.quest;
 
-  if (!round) {
-    finishGame();
+  if (requested.key === "challenge" && !state.progressData?.challengeUnlocked) {
+    els.promptType.textContent = "Challenge Locked";
+    els.promptText.textContent = "Challenge unlocks after mastering Quest mode.";
+    updateModeButtons();
+    updateStats();
     return;
   }
 
-  state.currentRound = round;
-  state.roundStarted = false;
-  state.roundFinished = false;
-  state.combo = 0;
-  state.targetsRemaining = Math.min(state.mode.targetCount, round.targetItems.length);
-  state.timerSecondsLeft = state.mode.timeLimit || 0;
-  state.frameCount = 0;
-
-  els.playfield.innerHTML = "";
-  els.playfield.appendChild(els.nextRoundBtn);
-  hideCenterNextButton();
-
-  els.promptType.textContent = "Letter Match";
-  els.promptText.textContent = round.prompt;
-  els.timerLabel.textContent = state.mode.timeLimit ? String(state.timerSecondsLeft) : "∞";
-  els.startRoundBtn.disabled = false;
-  els.helperText.textContent = "Press Start Round to release the bubbles.";
-  els.feedbackBadge.textContent = "Ready!";
-  els.feedbackBadge.classList.remove("is-correct", "is-wrong");
-
-  showCenterButton("start");
-  updateStats();
+  state.mode = requested;
+  updateModeButtons();
+  resetGame();
 }
 
-function updateStats() {
-  els.modeLabel.textContent = state.mode.label;
-  els.roundLabel.textContent = `${Math.min(state.roundIndex + 1, state.mode.totalRounds)} / ${state.mode.totalRounds}`;
-  els.scoreLabel.textContent = String(state.score);
-  els.streakLabel.textContent = String(state.streak);
-  els.rubiesLabel.textContent = String(state.rubies);
-
-  if (!state.mode.timeLimit) {
-    els.timerLabel.textContent = "∞";
-  } else if (!state.roundStarted && !state.roundFinished) {
-    els.timerLabel.textContent = String(state.mode.timeLimit);
-  } else {
-    els.timerLabel.textContent = String(Math.max(0, state.timerSecondsLeft));
+function handleRoundAction() {
+  if (!state.roundStarted && !state.roundFinished) {
+    void startRound();
+    return;
   }
 
-  const progressPercent = state.mode.totalRounds
-    ? (state.roundIndex / state.mode.totalRounds) * 100
-    : 0;
-
-  els.progressFill.style.width = `${Math.max(0, Math.min(100, progressPercent))}%`;
+  if (state.roundFinished) {
+    goNextRound();
+  }
 }
 
-function startRound() {
+async function startRound() {
   if (!state.currentRound || state.roundStarted) return;
+
+  if (state.mode.key === "challenge" && !state.progressData?.challengeUnlocked) {
+    els.promptType.textContent = "Challenge Locked";
+    els.promptText.textContent = "Challenge unlocks after mastering Quest mode.";
+    showRoundActionButton("Locked");
+    return;
+  }
 
   state.roundStarted = true;
   state.roundFinished = false;
   state.roundStartTime = performance.now();
   state.combo = 0;
   state.frameCount = 0;
+  state.roundRubiesEarned = 0;
+  state.roundCorrectTaps = 0;
+  state.roundWrongTaps = 0;
+  state.roundWeakItems = [];
 
-  els.startRoundBtn.disabled = true;
-  hideCenterNextButton();
+  hideRoundActionButton();
 
-  els.feedbackBadge.textContent = "Go!";
-  els.feedbackBadge.classList.remove("is-correct", "is-wrong");
-  els.helperText.textContent = "Tap every correct bubble fast.";
+  showFloatingText("GO!", {
+    big: true,
+    duration: 900,
+    fontSize: "2.4rem"
+  });
 
   createBubblesForRound(state.currentRound);
   startAnimation();
@@ -336,23 +568,29 @@ function startRound() {
     startTimer();
   }
 
-  hideCenterButtons();
   updateStats();
 }
 
 function createBubblesForRound(round) {
   els.playfield.innerHTML = "";
-  els.playfield.appendChild(els.nextRoundBtn);
-  hideCenterNextButton();
-
   state.activeBubbles = [];
 
   const targetItems = round.targetItems.slice(0, state.mode.targetCount);
   const decoyItems = round.decoyItems.slice(0, state.mode.decoyCount);
 
   const allItems = [
-    ...targetItems.map((text) => ({ text, isTarget: true, isGolden: false })),
-    ...decoyItems.map((text) => ({ text, isTarget: false, isGolden: false }))
+    ...targetItems.map((text) => ({
+      text,
+      isTarget: true,
+      isGolden: false,
+      trackingKey: round.trackingKey
+    })),
+    ...decoyItems.map((text) => ({
+      text,
+      isTarget: false,
+      isGolden: false,
+      trackingKey: round.trackingKey
+    }))
   ];
 
   const shuffledItems = shuffleArray(allItems);
@@ -389,6 +627,7 @@ function makeBubbleObject(item, index = 0) {
     text: item.text,
     isTarget: item.isTarget,
     isGolden: !!item.isGolden,
+    trackingKey: item.trackingKey || "",
     size,
     x: 10 + Math.random() * maxX,
     y: 10 + Math.random() * maxY,
@@ -442,6 +681,8 @@ function handleCorrectTap(bubbleObj) {
   state.targetsRemaining -= 1;
   state.score += 1;
   state.rubies += reward;
+  state.roundRubiesEarned += reward;
+  state.roundCorrectTaps += 1;
 
   bubbleObj.el.classList.add("is-correct-hit");
 
@@ -462,7 +703,7 @@ function handleCorrectTap(bubbleObj) {
   }
 
   if (comboTriggered && state.combo % 2 === 1) {
-    showFloatingText(`🔥 COMBO x2 🔥`, {
+    showFloatingText("🔥 COMBO x2 🔥", {
       big: true,
       duration: 1600,
       fontSize: "2.5rem"
@@ -471,24 +712,10 @@ function handleCorrectTap(bubbleObj) {
 
   bubbleObj.el.remove();
 
-  onRewardEarned({
-    mode: state.mode.key,
-    reward,
-    source: wasGolden ? "golden_tap" : "tap",
-    roundIndex: state.roundIndex
-  });
-
   if (state.targetsRemaining <= 0) {
-    finishRound(true);
+    void finishRound(true);
     return;
   }
-
-  els.feedbackBadge.textContent = comboTriggered ? "Combo! 🔥" : "Nice! ✨";
-  els.feedbackBadge.classList.remove("is-wrong");
-  els.feedbackBadge.classList.add("is-correct");
-
-  const comboText = state.combo >= 5 ? ` • Combo x2 active` : "";
-  els.helperText.textContent = `${state.targetsRemaining} correct bubble${state.targetsRemaining === 1 ? "" : "s"} left${comboText}.`;
 
   updateStats();
 }
@@ -497,11 +724,17 @@ function handleWrongTap(bubbleObj) {
   bubbleObj.el.classList.add("is-wrong-hit");
   state.streak = 0;
   state.combo = 0;
+  state.roundWrongTaps += 1;
 
-  els.feedbackBadge.textContent = "Oops!";
-  els.feedbackBadge.classList.remove("is-correct");
-  els.feedbackBadge.classList.add("is-wrong");
-  els.helperText.textContent = "That one is a decoy. Combo reset.";
+  if (bubbleObj.trackingKey) {
+    state.roundWeakItems.push(bubbleObj.trackingKey);
+  }
+
+  showFloatingText("Oops!", {
+    big: true,
+    duration: 700,
+    fontSize: "2rem"
+  });
 
   const playfield = els.playfield;
   playfield.classList.remove("ab-shake");
@@ -515,7 +748,218 @@ function handleWrongTap(bubbleObj) {
   updateStats();
 }
 
-function finishRound(cleared) {
+async function awardRubiesThroughFunction(amount, note) {
+  if (!amount || amount <= 0) {
+    return { ok: true, awarded: 0 };
+  }
+
+  const currentUser = auth.currentUser;
+
+  console.log("Alpha Burst reward auth check:", {
+    authUid: currentUser ? currentUser.uid : null,
+    stateUserId: state.userId,
+    schoolId: state.schoolId,
+    localSchoolId: getSchoolId(),
+  });
+
+  if (!currentUser) {
+    throw new Error("No signed-in Firebase user found when trying to award rubies.");
+  }
+
+  const token = await currentUser.getIdToken();
+
+  const response = await fetch(
+    "https://us-central1-lrcquest-3039e.cloudfunctions.net/submitTransactionHttp",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        schoolId: state.schoolId,
+        targetUserId: state.userId,
+        actionType: "RUBIES_AWARD",
+        deltaMinutes: 0,
+        deltaRubies: amount,
+        deltaMoneyRaisedCents: 0,
+        note: note || "Alpha Burst reward",
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Transaction failed");
+  }
+
+  console.log("Alpha Burst reward success:", data);
+
+  return {
+    ok: true,
+    awarded: amount,
+    result: data,
+  };
+}
+
+async function refreshReadathonSummaryIfNeeded() {
+  try {
+    await getDoc(userSummaryRef(state.schoolId, state.userId));
+  } catch (err) {
+    console.warn("Could not refresh summary after reward:", err);
+  }
+}
+
+async function saveRoundResult({ cleared, elapsedSeconds }) {
+  const passed = !!cleared;
+
+  let rewardCandidate = 0;
+  let cooldownBlocked = false;
+  let actualReward = 0;
+  let rewardError = null;
+
+  const currentSnap = await getDoc(state.progressRef);
+  const existing = currentSnap.exists() ? currentSnap.data() : buildInitialProgress();
+
+  const normalized = {
+    ...existing,
+    daily:
+      existing?.daily?.dateKey === todayDateKey()
+        ? existing.daily
+        : { dateKey: todayDateKey(), rewardWins: 0, rubiesEarnedToday: 0 },
+  };
+
+  cooldownBlocked = isCooldownActive(normalized);
+
+  rewardCandidate = cooldownBlocked
+    ? 0
+    : calculateReward({
+        passed,
+        mode: state.mode.key,
+        progress: normalized,
+        earnedThisRound: state.roundRubiesEarned,
+      });
+
+  if (rewardCandidate > 0) {
+    try {
+      const rewardResult = await awardRubiesThroughFunction(
+        rewardCandidate,
+        `Alpha Burst ${state.mode.label} round ${state.roundIndex + 1} (${elapsedSeconds.toFixed(1)}s)`
+      );
+      actualReward = rewardResult.awarded || 0;
+    } catch (err) {
+      console.error("Alpha Burst reward FAILED:", err);
+      rewardError = err;
+      actualReward = 0;
+    }
+  }
+
+  let nextProgressData = null;
+
+  await runTransaction(db, async (transaction) => {
+    const snap = await transaction.get(state.progressRef);
+    const existingInsideTx = snap.exists() ? snap.data() : buildInitialProgress();
+
+    const normalizedInsideTx = {
+      ...existingInsideTx,
+      daily:
+        existingInsideTx?.daily?.dateKey === todayDateKey()
+          ? existingInsideTx.daily
+          : { dateKey: todayDateKey(), rewardWins: 0, rubiesEarnedToday: 0 },
+    };
+
+    const totalTapAttemptsToAdd = state.roundCorrectTaps + state.roundWrongTaps;
+
+    const next = {
+      ...normalizedInsideTx,
+      totalRoundsPlayed: Number(normalizedInsideTx.totalRoundsPlayed || 0) + 1,
+      totalRoundsPassed: Number(normalizedInsideTx.totalRoundsPassed || 0) + (passed ? 1 : 0),
+      totalTapAttempts: Number(normalizedInsideTx.totalTapAttempts || 0) + totalTapAttemptsToAdd,
+      correctTaps: Number(normalizedInsideTx.correctTaps || 0) + state.roundCorrectTaps,
+      totalClears: Number(normalizedInsideTx.totalClears || 0) + (cleared ? 1 : 0),
+      currentStreak: passed ? Number(normalizedInsideTx.currentStreak || 0) + 1 : 0,
+      bestStreak: Math.max(
+        Number(normalizedInsideTx.bestStreak || 0),
+        passed ? Number(normalizedInsideTx.currentStreak || 0) + 1 : 0
+      ),
+      weakItems: Array.from(
+        new Set([...(normalizedInsideTx.weakItems || []), ...state.roundWeakItems])
+      ).slice(0, 20),
+    };
+
+    next.masteryState = getMasteryState(next);
+    next.challengeUnlocked = next.masteryState === "quest_mastered";
+    next.lifetimeRubiesEarned =
+      Number(normalizedInsideTx.lifetimeRubiesEarned || 0) + actualReward;
+
+    next.daily = {
+      dateKey: todayDateKey(),
+      rewardWins: Number(normalizedInsideTx.daily?.rewardWins || 0) + (actualReward > 0 ? 1 : 0),
+      rubiesEarnedToday:
+        Number(normalizedInsideTx.daily?.rubiesEarnedToday || 0) + actualReward,
+    };
+
+    next.lastPlayedAt = serverTimestamp();
+    next.lastRewardedAt =
+      actualReward > 0 ? serverTimestamp() : normalizedInsideTx.lastRewardedAt || null;
+
+    transaction.set(
+      state.progressRef,
+      {
+        gameId: GAME_ID,
+        title: GAME_TITLE,
+        totalRoundsPlayed: next.totalRoundsPlayed,
+        totalRoundsPassed: next.totalRoundsPassed,
+        totalTapAttempts: next.totalTapAttempts,
+        correctTaps: next.correctTaps,
+        totalClears: next.totalClears,
+        currentStreak: next.currentStreak,
+        bestStreak: next.bestStreak,
+        masteryState: next.masteryState,
+        challengeUnlocked: next.challengeUnlocked,
+        lifetimeRubiesEarned: next.lifetimeRubiesEarned,
+        daily: next.daily,
+        modeStats: {
+          ...normalizedInsideTx.modeStats,
+          [state.mode.key]: {
+            played: Number(normalizedInsideTx?.modeStats?.[state.mode.key]?.played || 0) + 1,
+            passed: Number(normalizedInsideTx?.modeStats?.[state.mode.key]?.passed || 0) + (passed ? 1 : 0),
+          },
+        },
+        weakItems: next.weakItems,
+        lastPlayedAt: next.lastPlayedAt,
+        lastRewardedAt: next.lastRewardedAt,
+      },
+      { merge: true }
+    );
+
+    nextProgressData = {
+      ...next,
+      modeStats: {
+        ...normalizedInsideTx.modeStats,
+        [state.mode.key]: {
+          played: Number(normalizedInsideTx?.modeStats?.[state.mode.key]?.played || 0) + 1,
+          passed: Number(normalizedInsideTx?.modeStats?.[state.mode.key]?.passed || 0) + (passed ? 1 : 0),
+        },
+      },
+    };
+  });
+
+  state.progressData = nextProgressData;
+
+  return {
+    passed,
+    reward: actualReward,
+    rewardCandidate,
+    cooldownBlocked,
+    masteryState: state.progressData.masteryState,
+    challengeUnlocked: state.progressData.challengeUnlocked,
+    rewardError,
+  };
+}
+
+async function finishRound(cleared) {
   if (state.roundFinished) return;
 
   state.roundFinished = true;
@@ -536,39 +980,81 @@ function finishRound(cleared) {
     if (state.combo >= 8) bonus += 6;
 
     state.rubies += bonus;
+    state.roundRubiesEarned += bonus;
 
-    els.feedbackBadge.textContent = "Round Clear! 🎉";
-    els.feedbackBadge.classList.remove("is-wrong");
-    els.feedbackBadge.classList.add("is-correct");
-    els.helperText.textContent = `Cleared in ${elapsedSeconds.toFixed(1)}s • Bonus shower!`;
+    showFloatingText("🎉 CLEAR!", {
+      big: true,
+      duration: 1600,
+      fontSize: "2.6rem"
+    });
 
     rubyShower(bonus);
     burstEffectCenter(18);
-
-    onRewardEarned({
-      mode: state.mode.key,
-      reward: bonus,
-      source: "clear_bonus",
-      roundIndex: state.roundIndex
-    });
   } else {
     state.streak = 0;
     state.combo = 0;
-    els.feedbackBadge.textContent = "Time's Up!";
-    els.feedbackBadge.classList.remove("is-correct");
-    els.feedbackBadge.classList.add("is-wrong");
-    els.helperText.textContent = "Try the next burst.";
+
+    showFloatingText("⏰ Time's Up!", {
+      big: true,
+      duration: 1200,
+      fontSize: "2.3rem"
+    });
   }
 
-  els.startRoundBtn.disabled = true;
-  showCenterButton("next");
+  let result;
+
+  try {
+    result = await saveRoundResult({ cleared, elapsedSeconds });
+    await refreshReadathonSummaryIfNeeded();
+  } catch (err) {
+    console.error("Alpha Burst finishRound failed:", err);
+    els.summaryCard.hidden = false;
+    els.summaryText.textContent =
+      "You finished the round, but there was a problem saving progress or ruby rewards.";
+    showRoundActionButton("Next Round ✨");
+    return;
+  }
+
+  state.lastRoundResult = result;
+  updateModeButtons();
   updateStats();
 
-  if (state.mode.key === "challenge") {
-    window.setTimeout(() => {
-      goNextRound();
-    }, 850);
+  let summary = cleared
+    ? `Round cleared! You earned ${state.roundRubiesEarned} burst rubies this round.`
+    : `Round ended. You collected ${state.roundRubiesEarned} burst rubies before time ran out.`;
+
+  if (result.passed) {
+    if (result.reward > 0) {
+      summary += ` ${result.reward} rubies were awarded to your account.`;
+    } else if (result.rewardError) {
+      summary += " The round counted, but the ruby award failed to send.";
+    } else if (result.cooldownBlocked) {
+      summary += " Ruby rewards are cooling down right now.";
+    } else if (state.mode.key === "practice") {
+      summary += " Practice mode does not award account rubies.";
+    } else if (result.masteryState === "quest_mastered" && state.mode.key === "quest") {
+      summary += " Quest mode is mastered! Use Challenge mode to keep earning account rubies.";
+    } else {
+      summary += " No account rubies were awarded this round.";
+    }
+  } else {
+    summary += " Clear the round to count a pass.";
   }
+
+  if (result.challengeUnlocked) {
+    summary += " Challenge mode is now unlocked!";
+  }
+
+  els.summaryCard.hidden = false;
+  els.summaryText.textContent = summary;
+
+  if (state.mode.key === "challenge") {
+    await wait(850);
+    goNextRound();
+    return;
+  }
+
+  showRoundActionButton("Next Round ✨");
 }
 
 function goNextRound() {
@@ -577,34 +1063,45 @@ function goNextRound() {
   state.roundIndex += 1;
 
   if (state.roundIndex >= state.mode.totalRounds) {
-    finishGame();
+    void finishGame();
     return;
   }
 
   renderRoundIntro();
 }
 
-function finishGame() {
+async function finishGame() {
   stopTimer();
   stopAnimation();
 
   els.playfield.innerHTML = "";
-  els.playfield.appendChild(els.nextRoundBtn);
-  hideCenterNextButton();
+  hideRoundActionButton();
 
-  els.progressFill.style.width = "100%";
+  if (els.progressFill) {
+    els.progressFill.style.width = "100%";
+  }
+
   els.promptType.textContent = "Complete!";
   els.promptText.textContent = "Amazing burst work!";
-  els.feedbackBadge.textContent = "Game Complete 🎉";
-  els.feedbackBadge.classList.remove("is-wrong");
-  els.feedbackBadge.classList.add("is-correct");
-  els.helperText.textContent = "Press Play Again to start over.";
-  els.startRoundBtn.disabled = true;
 
-  els.summaryText.textContent =
-    `You popped ${state.score} correct bubbles and earned ${state.rubies} rubies.`;
+  let summary =
+    `You popped ${state.score} correct bubbles and collected ${state.rubies} burst rubies this game.`;
 
+  if (state.progressData) {
+    summary += ` Daily reward wins: ${state.progressData?.daily?.rewardWins || 0}.`;
+    summary += ` Mastery: ${state.progressData?.masteryState || "learning"}.`;
+  }
+
+  els.summaryText.textContent = summary;
   els.summaryCard.hidden = false;
+
+  showFloatingText("Game Complete 🎉", {
+    big: true,
+    duration: 1600,
+    fontSize: "2.5rem"
+  });
+
+  updateModeButtons();
   updateStats();
 }
 
@@ -618,7 +1115,7 @@ function startTimer() {
     if (state.timerSecondsLeft <= 0) {
       state.timerSecondsLeft = 0;
       updateStats();
-      finishRound(false);
+      void finishRound(false);
     }
   }, 1000);
 }
@@ -641,12 +1138,14 @@ function maybeSpawnExtraBubble() {
     ? {
         text: state.currentRound.targetItems[0],
         isTarget: true,
-        isGolden
+        isGolden,
+        trackingKey: state.currentRound.trackingKey
       }
     : {
         text: randomFrom(state.currentRound.decoyItems),
         isTarget: false,
-        isGolden: false
+        isGolden: false,
+        trackingKey: state.currentRound.trackingKey
       };
 
   const bubbleObj = makeBubbleObject(item, state.activeBubbles.length + 20);
@@ -654,10 +1153,6 @@ function maybeSpawnExtraBubble() {
 
   els.playfield.appendChild(bubbleObj.el);
   state.activeBubbles.push(bubbleObj);
-
-  if (shouldSpawnTarget) {
-    state.targetsRemaining += 1;
-  }
 }
 
 function startAnimation() {
@@ -823,39 +1318,78 @@ function burstEffectCenter(particles = 16) {
   }
 }
 
-function onRewardEarned(payload) {
-  console.log("Reward earned:", payload);
+async function initForUser(user) {
+  if (!user) {
+    els.promptType.textContent = "Not Signed In";
+    els.promptText.textContent = "Please sign in before playing Alpha Burst.";
+    showRoundActionButton("Sign in required");
+    return;
+  }
 
-  // Later:
-  // fnSubmitTransaction({
-  //   schoolId,
-  //   targetUserId,
-  //   actionType: "RUBIES_AWARD",
-  //   deltaRubies: payload.reward,
-  //   deltaMinutes: 0,
-  //   deltaMoneyRaisedCents: 0,
-  //   note: `Alphabet Burst ${payload.source}`
-  // });
+  state.userId = user.uid;
+  state.schoolId = getSchoolId();
+
+  console.log("Alpha Burst initForUser:", {
+    uid: user.uid,
+    schoolId: state.schoolId,
+  });
+
+  if (!state.schoolId) {
+    els.promptType.textContent = "Missing School ID";
+    els.promptText.textContent = "Could not find schoolId for this session.";
+    showRoundActionButton("Missing school");
+    return;
+  }
+
+  await getOrCreateProgress();
+  updateModeButtons();
+  resetGame();
 }
 
 els.practiceBtn.addEventListener("click", () => setMode("practice"));
 els.questBtn.addEventListener("click", () => setMode("quest"));
 els.challengeBtn.addEventListener("click", () => setMode("challenge"));
-els.startRoundBtn.addEventListener("click", startRound);
-els.nextRoundBtn.addEventListener("click", goNextRound);
-els.playAgainBtn.addEventListener("click", resetGame);
-
-window.addEventListener("resize", () => {
-  if (state.roundStarted && !state.roundFinished) {
-    const currentRound = state.currentRound;
-    const oldTargetsRemaining = state.targetsRemaining;
-
-    stopAnimation();
-    createBubblesForRound(currentRound);
-    state.targetsRemaining = oldTargetsRemaining;
-    startAnimation();
-  }
+els.roundActionBtn.addEventListener("click", handleRoundAction);
+els.playAgainBtn.addEventListener("click", async () => {
+  await refreshReadathonSummaryIfNeeded();
+  resetGame();
 });
 
-styleCenterNextButton();
-resetGame();
+window.addEventListener("resize", () => {
+  if (!state.roundStarted || state.roundFinished) return;
+
+  const bounds = els.playfield.getBoundingClientRect();
+
+  state.activeBubbles.forEach((bubble) => {
+    if (bubble.removed || !bubble.el.isConnected) return;
+
+    const maxX = Math.max(0, bounds.width - bubble.size);
+    const maxY = Math.max(0, bounds.height - bubble.size);
+
+    bubble.x = Math.min(Math.max(0, bubble.x), maxX);
+    bubble.y = Math.min(Math.max(0, bubble.y), maxY);
+
+    bubble.el.style.left = `${bubble.x}px`;
+    bubble.el.style.top = `${bubble.y}px`;
+  });
+});
+
+styleRoundActionButton();
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    els.promptType.textContent = "Not Signed In";
+    els.promptText.textContent = "Please sign in before playing Alpha Burst.";
+    showRoundActionButton("Sign in required");
+    return;
+  }
+
+  try {
+    await initForUser(user);
+  } catch (err) {
+    console.error("Alpha Burst failed to load:", err);
+    els.promptType.textContent = "Game Error";
+    els.promptText.textContent = err?.message || "Something went wrong while loading.";
+    showRoundActionButton("Load error");
+  }
+});

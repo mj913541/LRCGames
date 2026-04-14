@@ -1,11 +1,3 @@
-/* /css/alpha-burst.css */
-/* Shell-safe Alpha-Burst styles
-   Use with:
-   - skill-games.html
-   - skill-games.css
-   Do NOT let this file style html/body or the shared shell.
-*/
-
 :root {
   --ab-bg-1: #f7f4ff;
   --ab-bg-2: #eaf8ff;
@@ -24,22 +16,22 @@
   --ab-radius-md: 14px;
 }
 
-/* Game board wrapper content only */
-.game-board-inner {
+.game-board .game-board-inner {
   position: relative;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   gap: 10px;
   align-items: stretch;
-  justify-items: stretch;
+  justify-content: stretch;
   padding: 10px;
   overflow: hidden;
 }
 
-/* Progress */
 .ab-progress-wrap {
   width: 100%;
   padding: 0 2px;
+  flex: 0 0 auto;
 }
 
 .ab-progress-bar {
@@ -58,15 +50,14 @@
   transition: width 0.25s ease;
 }
 
-/* Main card */
 .ab-game-card {
   position: relative;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   padding: 12px;
   border-radius: var(--ab-radius-xl);
@@ -76,86 +67,12 @@
   overflow: hidden;
 }
 
-/* Floating HUD / top info */
-.ab-topline {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  z-index: 6;
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  pointer-events: none;
-}
-
-.ab-badge-group {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.ab-feedback-badge,
-.ab-reward-hint {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 28px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 900;
-  box-shadow: 0 8px 18px rgba(79, 60, 130, 0.14);
-  backdrop-filter: blur(6px);
-}
-
-.ab-feedback-badge {
-  background: rgba(255, 255, 255, 0.88);
-  color: var(--ab-accent);
-  opacity: 0;
-  transform: translateY(-8px) scale(0.92);
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.ab-feedback-badge.is-show {
-  opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.ab-feedback-badge.is-correct {
-  background: rgba(67, 194, 133, 0.16);
-  color: #237b54;
-}
-
-.ab-feedback-badge.is-wrong {
-  background: rgba(255, 112, 132, 0.16);
-  color: #c9475d;
-}
-
-.ab-reward-hint {
-  background: rgba(255, 245, 218, 0.9);
-  color: #876200;
-}
-
-/* hide helper text by default */
-.ab-helper-text {
-  display: none;
-  margin: 0;
-  color: var(--ab-soft-text);
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-
-/* Prompt */
 .ab-prompt-wrap {
   text-align: center;
   display: grid;
-  gap: 4px;
-  padding-top: 28px; /* enough room under floating HUD */
+  gap: 2px;
+  padding-top: 4px;
+  flex: 0 0 auto;
 }
 
 .ab-prompt-type {
@@ -165,6 +82,7 @@
   font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  display: none;
 }
 
 .ab-prompt-text {
@@ -174,7 +92,6 @@
   color: var(--ab-text);
 }
 
-/* Playfield */
 .ab-playfield-wrap {
   min-width: 0;
   min-height: 0;
@@ -182,6 +99,7 @@
   justify-content: center;
   align-items: stretch;
   overflow: hidden;
+  flex: 1 1 auto;
 }
 
 .ab-playfield {
@@ -199,7 +117,6 @@
   border: 2px solid rgba(141, 124, 255, 0.14);
 }
 
-/* Bubble buttons only */
 .ab-bubble {
   position: absolute;
   border: 0;
@@ -239,15 +156,6 @@
   animation: abPop 220ms ease forwards;
 }
 
-/* Bottom buttons */
-.ab-bottom-row {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  position: relative;
-}
-
 .ab-action-btn,
 .ab-mode-btn {
   border: 0;
@@ -284,7 +192,6 @@
   transform: none;
 }
 
-/* Summary */
 .ab-summary-card {
   width: 100%;
   padding: 24px;
@@ -293,6 +200,7 @@
   background: var(--ab-card);
   border: 1px solid var(--ab-border);
   box-shadow: var(--ab-shadow);
+  flex: 0 0 auto;
 }
 
 .ab-summary-card h3 {
@@ -313,7 +221,6 @@
   margin-top: 14px;
 }
 
-/* Effects */
 .ab-fx-layer {
   pointer-events: none;
   position: fixed;
@@ -322,7 +229,6 @@
   z-index: 999;
 }
 
-/* center floating combo / reward burst */
 .ab-float {
   position: fixed;
   left: 50%;
@@ -338,43 +244,12 @@
   z-index: 1001;
 }
 
-/* extra big reward version */
 .ab-float.is-reward {
   font-size: clamp(1.8rem, 4vw, 2.8rem);
   color: #ff9a00;
   text-shadow:
     0 2px 14px rgba(255,255,255,0.95),
     0 0 24px rgba(255,205,88,0.7);
-}
-
-/* floating badge popup */
-.ab-badge-pop {
-  position: fixed;
-  left: 50%;
-  top: 18%;
-  transform: translate(-50%, 0);
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-size: 1rem;
-  font-weight: 1000;
-  box-shadow: 0 14px 30px rgba(79, 60, 130, 0.18);
-  z-index: 1002;
-  animation: abBadgePop 720ms ease forwards;
-}
-
-.ab-badge-pop.is-correct {
-  background: rgba(67, 194, 133, 0.96);
-  color: white;
-}
-
-.ab-badge-pop.is-wrong {
-  background: rgba(255, 112, 132, 0.96);
-  color: white;
-}
-
-.ab-badge-pop.is-reward {
-  background: linear-gradient(135deg, #ffd44f, #ff9f43);
-  color: #5a3900;
 }
 
 .ab-burst {
@@ -393,7 +268,6 @@
   animation: abShake 250ms ease;
 }
 
-/* Animations */
 @keyframes abFloatCenter {
   0% {
     opacity: 0;
@@ -412,25 +286,6 @@
   }
 }
 
-@keyframes abBadgePop {
-  0% {
-    opacity: 0;
-    transform: translate(-50%, -12px) scale(0.82);
-  }
-  15% {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1.06);
-  }
-  70% {
-    opacity: 1;
-    transform: translate(-50%, 0) scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: translate(-50%, -10px) scale(0.94);
-  }
-}
-
 @keyframes abBurst {
   0% {
     opacity: 0.95;
@@ -438,7 +293,7 @@
   }
   100% {
     opacity: 0;
-    transform: translate(var(--burst-x, 0), var(--burst-y, 0)) scale(0.3);
+    transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.3);
   }
 }
 
@@ -462,7 +317,6 @@
   100% { transform: translateX(0); }
 }
 
-/* Responsive */
 @media (max-width: 980px) {
   .ab-game-card {
     padding: 10px;
@@ -479,21 +333,6 @@
 }
 
 @media (max-width: 640px) {
-  .ab-topline {
-    left: 8px;
-    right: 8px;
-    top: 8px;
-  }
-
-  .ab-bottom-row {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .ab-action-btn {
-    width: min(260px, 100%);
-  }
-
   .ab-playfield {
     min-height: 240px;
   }
@@ -503,123 +342,4 @@
     min-height: 58px;
     font-size: 1.2rem;
   }
-
-  .ab-badge-pop {
-    top: 16%;
-    font-size: 0.9rem;
-    padding: 8px 14px;
-  }
-}
-/* CENTER OVERLAY */
-.ab-center-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: rgba(255, 255, 255, 0.35);
-  backdrop-filter: blur(6px);
-
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-/* visible state */
-.ab-center-overlay.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-/* BIG GAME BUTTON */
-.ab-center-btn {
-  border: none;
-  border-radius: 999px;
-
-  padding: 18px 34px;
-  font: inherit;
-  font-weight: 1000;
-
-  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-
-  cursor: pointer;
-
-  background: linear-gradient(135deg, #8d7cff, #ff9fc7);
-  color: white;
-
-  box-shadow:
-    0 18px 40px rgba(141, 124, 255, 0.35),
-    0 0 30px rgba(255, 159, 199, 0.35);
-
-  transform: scale(0.85);
-  opacity: 0;
-
-  transition:
-    transform 0.25s ease,
-    opacity 0.25s ease,
-    box-shadow 0.2s ease;
-}
-
-/* POP IN animation */
-.ab-center-overlay.is-visible .ab-center-btn {
-  transform: scale(1);
-  opacity: 1;
-}
-
-/* hover feel */
-.ab-center-btn:hover {
-  transform: scale(1.05);
-}
-
-/* click feel */
-.ab-center-btn:active {
-  transform: scale(0.98);
-}
-
-/* CENTER BUTTON SYSTEM */
-.ab-center-ui {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.ab-center-ui button {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-  transform: scale(0.85);
-  transition: all 0.25s ease;
-}
-
-.ab-center-ui button.is-visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: scale(1);
-}
-
-.ab-center-btn {
-  border: none;
-  border-radius: 999px;
-  padding: 18px 34px;
-  font: inherit;
-  font-weight: 1000;
-  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
-  cursor: pointer;
-  color: white;
-
-  background: linear-gradient(135deg, #8d7cff, #ff9fc7);
-
-  box-shadow:
-    0 18px 40px rgba(141, 124, 255, 0.35),
-    0 0 30px rgba(255, 159, 199, 0.35);
-}
-
-#nextRoundBtn {
-  background: linear-gradient(135deg, #ffd44f, #ff9f43);
 }

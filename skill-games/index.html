@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Skill Games</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg1: #f7f8ff;
+      --bg2: #eef4ff;
+      --card: #ffffff;
+      --text: #24304a;
+      --muted: #5f6b85;
+      --accent: #6c8cff;
+      --accent-dark: #4d6fe8;
+      --shadow: 0 10px 30px rgba(44, 66, 130, 0.12);
+      --radius: 20px;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, var(--bg1), var(--bg2));
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .page-shell {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: var(--card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 28px 24px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .kicker {
+      font-size: 0.9rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 4vw, 3rem);
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    .games-section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+    }
+
+    .game-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 190px;
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 14px 36px rgba(44, 66, 130, 0.16);
+    }
+
+    .game-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #dfe7ff, #edf2ff);
+      display: grid;
+      place-items: center;
+      font-size: 1.6rem;
+    }
+
+    .game-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    .game-description {
+      color: var(--muted);
+      line-height: 1.45;
+      font-size: 0.95rem;
+      flex-grow: 1;
+    }
+
+    .game-link {
+      display: inline-block;
+      text-decoration: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 700;
+      padding: 12px 16px;
+      border-radius: 14px;
+      text-align: center;
+      transition: background 0.18s ease;
+    }
+
+    .game-link:hover {
+      background: var(--accent-dark);
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .hidden-data {
+      display: none;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding: 16px;
+      }
+
+      .hero {
+        padding: 22px 18px;
+      }
+
+      .game-card {
+        min-height: unset;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <!-- Required shared hooks for your JS -->
+    <div class="hidden-data">
+      <div id="data-title" data-title>Skill Games</div>
+      <div id="data-subtitle" data-subtitle>Choose a game to begin</div>
+    </div>
+
+    <header class="hero">
+      <div class="kicker">Learning Arcade</div>
+      <h1>Skill Games</h1>
+      <p class="subtitle">
+        Choose a game below to practice skills, earn rewards, and have fun.
+      </p>
+    </header>
+
+    <main class="games-section" id="gamesSection">
+      <article class="game-card">
+        <div class="game-icon">🔤</div>
+        <h2 class="game-title">Alphabet Quest</h2>
+        <p class="game-description">
+          Practice letter skills with fun challenges and quick rounds.
+        </p>
+        <a class="game-link" href="alphabet-quest.html">Play Game</a>
+      </article>
+
+      <article class="game-card">
+        <div class="game-icon">💥</div>
+        <h2 class="game-title">Alpha Burst</h2>
+        <p class="game-description">
+          Burst through fast-paced letter activities and build your score.
+        </p>
+        <a class="game-link" href="./alphabet-burst.html">Play Game</a>
+      </article>
+
+      <article class="game-card">
+        <div class="game-icon">📚</div>
+        <h2 class="game-title">Reading Match</h2>
+        <p class="game-description">
+          Match words, sounds, or pictures in a simple reading practice game.
+        </p>
+        <a class="game-link" href="reading-match.html">Play Game</a>
+      </article>
+
+      <article class="game-card">
+        <div class="game-icon">➕</div>
+        <h2 class="game-title">Math Sprint</h2>
+        <p class="game-description">
+          Race through quick math problems and try to beat your best score.
+        </p>
+        <a class="game-link" href="math-sprint.html">Play Game</a>
+      </article>
+    </main>
+
+    <div class="footer-note">
+      More games coming soon...
+    </div>
+  </div>
+
+  <script>
+    // Optional starter data if you want to build cards dynamically later
+    const skillGames = [
+      {
+        title: "Alphabet Quest",
+        description: "Practice letter skills with fun challenges and quick rounds.",
+        icon: "🔤",
+        href: "alphabet-quest.html"
+      },
+      {
+        title: "Alpha Burst",
+        description: "Burst through fast-paced letter activities and build your score.",
+        icon: "💥",
+        href: "alpha-burst.html"
+      },
+      {
+        title: "Reading Match",
+        description: "Match words, sounds, or pictures in a simple reading practice game.",
+        icon: "📚",
+        href: "reading-match.html"
+      },
+      {
+        title: "Math Sprint",
+        description: "Race through quick math problems and try to beat your best score.",
+        icon: "➕",
+        href: "math-sprint.html"
+      }
+    ];
+
+    console.log("Skill Games index page loaded.");
+    console.log("Games available:", skillGames);
+  </script>
+</body>
+</html>
