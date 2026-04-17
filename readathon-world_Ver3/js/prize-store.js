@@ -23,7 +23,6 @@ import { normalizeError } from "./app.js";
 -------------------------------------------------- */
 
 const els = {
-  // Required data attributes for project standards
   title: document.querySelector("[data-title]"),
   subtitle: document.querySelector("[data-subtitle]"),
   
@@ -85,8 +84,9 @@ async function loadStudentStoreSummary() {
     const summary = await fetchUserSummary(state.schoolId, state.user.uid);
     state.summary = summary;
 
-    const donations = summary?.donationsCents || 0;
-    const available = summary?.prizeCreditCents || 0;
+    // Use normalized values for display
+    const donations = normalizePriceToCents(summary?.donationsCents);
+    const available = normalizePriceToCents(summary?.prizeCreditCents);
 
     els.currentDonationsDisplay.textContent = formatMoney(donations);
     els.availableToSpendDisplay.textContent = formatMoney(available);
@@ -99,7 +99,6 @@ async function loadPrizeCatalog() {
   try {
     const prizeCatalogRef = collection(db, `readathonV2_schools/${state.schoolId}/prizeCatalog`);
     
-    // Simplified query to avoid immediate complex index requirements
     const qRef = query(
       prizeCatalogRef,
       where("active", "==", true),
@@ -107,7 +106,17 @@ async function loadPrizeCatalog() {
     );
 
     const snap = await getDocs(qRef);
-    state.allPrizes = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    
+    // Normalize prices immediately upon loading from Firestore
+    state.allPrizes = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+        price: normalizePriceToCents(data.price),
+        donationsNeeded: normalizePriceToCents(data.donationsNeeded)
+      };
+    });
     
     applyFilters();
   } catch (error) {
@@ -153,8 +162,10 @@ function renderPrizes(list) {
     clone.querySelector(".prize-name").textContent = prize.name;
     clone.querySelector(".prize-description").textContent = prize.description || "";
     clone.querySelector(".prize-category").textContent = prize.category || "General";
+    
+    // Values are now pre-normalized to cents
     clone.querySelector(".prize-price").textContent = formatMoney(prize.price);
-    clone.querySelector(".prize-donations").textContent = formatMoney(prize.donationsNeeded || 0);
+    clone.querySelector(".prize-donations").textContent = formatMoney(prize.donationsNeeded);
 
     const qtyVal = clone.querySelector(".qty-value");
     const plus = clone.querySelector(".qty-plus");
@@ -221,7 +232,7 @@ function renderCart() {
     });
   }
 
-  const available = state.summary?.prizeCreditCents || 0;
+  const available = normalizePriceToCents(state.summary?.prizeCreditCents);
   const remaining = available - totalCents;
 
   els.cartTotalDisplay.textContent = formatMoney(totalCents);
@@ -236,7 +247,6 @@ function renderCart() {
     els.cartRemainingDisplay.classList.remove("negative");
   }
 
-  // Remove buttons
   els.cartList.querySelectorAll(".cart-remove-btn").forEach(btn => {
     btn.onclick = (e) => {
       const idx = parseInt(e.target.dataset.index);
@@ -254,7 +264,6 @@ async function handleSubmitCart() {
     renderCart();
     setStatus("Submitting your request...");
 
-    // Process each item in cart via the Firebase Cloud Function
     for (const item of state.cart) {
       for (let i = 0; i < item.qty; i++) {
         await fnRedeemPrizeCredit({
@@ -308,6 +317,19 @@ function setStatus(message) {
   }
 }
 
+/**
+ * Ensures values are in cents. 
+ * If value is >= 1000, assumes it's already cents.
+ * Otherwise, multiplies by 100 to convert dollars to cents.
+ */
+function normalizePriceToCents(value) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return 0;
+
+  if (n >= 1000) return Math.round(n);
+  return Math.round(n * 100);
+}
+
 function formatMoney(cents) {
   const dollars = (cents || 0) / 100;
   return new Intl.NumberFormat("en-US", {
@@ -316,5 +338,4 @@ function formatMoney(cents) {
   }).format(dollars);
 }
 
-// Start execution
 init();
