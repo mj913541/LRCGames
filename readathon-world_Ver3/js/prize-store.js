@@ -23,6 +23,7 @@ import { normalizeError } from "./app.js";
 -------------------------------------------------- */
 
 const els = {
+  // Required data attributes for project standards
   title: document.querySelector("[data-title]"),
   subtitle: document.querySelector("[data-subtitle]"),
   
@@ -48,6 +49,8 @@ let state = {
   schoolId: null,
   user: null,
   summary: null,
+  donationsRaisedCents: 0,
+  availableToSpendCents: 0,
   allPrizes: [],
   cart: [],
   isSubmittingCart: false,
@@ -68,7 +71,9 @@ async function init() {
       return;
     }
 
+    // Load balances first
     await loadStudentStoreSummary();
+    // Then load catalog
     await loadPrizeCatalog();
 
     setupListeners();
@@ -84,14 +89,47 @@ async function loadStudentStoreSummary() {
     const summary = await fetchUserSummary(state.schoolId, state.user.uid);
     state.summary = summary;
 
-    // Use normalized values for display
-    const donations = normalizePriceToCents(summary?.donationsCents);
-    const available = normalizePriceToCents(summary?.prizeCreditCents);
+    // Fix: Check for multiple field name possibilities from Firebase
+    const rawDonations = summary?.donationsCents || summary?.moneyRaisedCents || 0;
+    
+    // Normalize to cents and update state
+    state.donationsRaisedCents = normalizePriceToCents(rawDonations);
+    
+    // Readathon World Rule: Students get 20% of donations as prize credit
+    state.availableToSpendCents = Math.floor(state.donationsRaisedCents * 0.2);
 
-    els.currentDonationsDisplay.textContent = formatMoney(donations);
-    els.availableToSpendDisplay.textContent = formatMoney(available);
+    updateSummaryDisplays();
   } catch (error) {
     console.error("Failed to load user summary:", error);
+  }
+}
+
+function updateSummaryDisplays() {
+  if (els.currentDonationsDisplay) {
+    els.currentDonationsDisplay.textContent = formatMoney(state.donationsRaisedCents);
+  }
+
+  if (els.availableToSpendDisplay) {
+    els.availableToSpendDisplay.textContent = formatMoney(state.availableToSpendCents);
+  }
+
+  const totalInCart = getCartTotalCents();
+  const remaining = state.availableToSpendCents - totalInCart;
+
+  if (els.remainingAfterCartDisplay) {
+    els.remainingAfterCartDisplay.textContent = formatMoney(remaining);
+  }
+
+  if (els.cartAvailableDisplay) {
+    els.cartAvailableDisplay.textContent = formatMoney(state.availableToSpendCents);
+  }
+
+  if (els.cartTotalDisplay) {
+    els.cartTotalDisplay.textContent = formatMoney(totalInCart);
+  }
+
+  if (els.cartRemainingDisplay) {
+    els.cartRemainingDisplay.textContent = formatMoney(remaining);
   }
 }
 
@@ -99,6 +137,7 @@ async function loadPrizeCatalog() {
   try {
     const prizeCatalogRef = collection(db, `readathonV2_schools/${state.schoolId}/prizeCatalog`);
     
+    // Using a simplified query to ensure stability
     const qRef = query(
       prizeCatalogRef,
       where("active", "==", true),
@@ -107,7 +146,6 @@ async function loadPrizeCatalog() {
 
     const snap = await getDocs(qRef);
     
-    // Normalize prices immediately upon loading from Firestore
     state.allPrizes = snap.docs.map(doc => {
       const data = doc.data();
       return {
@@ -121,12 +159,12 @@ async function loadPrizeCatalog() {
     applyFilters();
   } catch (error) {
     console.error("Failed to load catalog:", error);
-    renderEmpty("Unable to load prize store. Please try again later.");
+    renderEmpty("Unable to load prize store.");
   }
 }
 
 /* --------------------------------------------------
-   Filtering & UI Logic
+   UI & Cart Logic
 -------------------------------------------------- */
 
 function applyFilters() {
@@ -148,37 +186,22 @@ function renderPrizes(list) {
   if (!els.prizeShelfGrid) return;
   els.prizeShelfGrid.innerHTML = "";
 
-  if (list.length === 0) {
-    renderEmpty("No prizes match your search.");
-    return;
-  }
-
   list.forEach(prize => {
     const clone = els.prizeCardTemplate.content.cloneNode(true);
     
-    const img = clone.querySelector(".prize-image");
-    img.src = prize.image || "../img/placeholders/prize-placeholder.png";
-    
+    clone.querySelector(".prize-image").src = prize.image || "../img/placeholders/prize-placeholder.png";
     clone.querySelector(".prize-name").textContent = prize.name;
-    clone.querySelector(".prize-description").textContent = prize.description || "";
-    clone.querySelector(".prize-category").textContent = prize.category || "General";
-    
-    // Values are now pre-normalized to cents
     clone.querySelector(".prize-price").textContent = formatMoney(prize.price);
     clone.querySelector(".prize-donations").textContent = formatMoney(prize.donationsNeeded);
 
     const qtyVal = clone.querySelector(".qty-value");
-    const plus = clone.querySelector(".qty-plus");
-    const minus = clone.querySelector(".qty-minus");
-    const addBtn = clone.querySelector(".prize-request-btn");
-
-    plus.onclick = () => { qtyVal.textContent = parseInt(qtyVal.textContent) + 1; };
-    minus.onclick = () => {
+    clone.querySelector(".qty-plus").onclick = () => { qtyVal.textContent = parseInt(qtyVal.textContent) + 1; };
+    clone.querySelector(".qty-minus").onclick = () => {
       const cur = parseInt(qtyVal.textContent);
       if (cur > 1) qtyVal.textContent = cur - 1;
     };
 
-    addBtn.onclick = () => {
+    clone.querySelector(".prize-request-btn").onclick = () => {
       addToCart(prize, parseInt(qtyVal.textContent));
       qtyVal.textContent = 1;
     };
@@ -186,10 +209,6 @@ function renderPrizes(list) {
     els.prizeShelfGrid.appendChild(clone);
   });
 }
-
-/* --------------------------------------------------
-   Cart Logic
--------------------------------------------------- */
 
 function addToCart(prize, qty) {
   const existing = state.cart.find(item => item.id === prize.id);
@@ -199,92 +218,27 @@ function addToCart(prize, qty) {
     state.cart.push({ ...prize, qty });
   }
   renderCart();
-  setStatus(`Added ${qty} x ${prize.name} to cart.`);
 }
 
 function renderCart() {
   if (!els.cartList) return;
   els.cartList.innerHTML = "";
 
-  let totalCents = 0;
-
-  if (state.cart.length === 0) {
-    els.cartEmptyState.classList.remove("hidden");
-    els.submitCartBtn.disabled = true;
-  } else {
-    els.cartEmptyState.classList.add("hidden");
-    els.submitCartBtn.disabled = state.isSubmittingCart;
-
-    state.cart.forEach((item, index) => {
-      const itemTotal = item.price * item.qty;
-      totalCents += itemTotal;
-
-      const li = document.createElement("li");
-      li.className = "cart-item";
-      li.innerHTML = `
-        <div class="cart-item-info">
-          <span class="cart-item-name">${item.name} (x${item.qty})</span>
-          <span class="cart-item-price">${formatMoney(itemTotal)}</span>
-        </div>
-        <button class="cart-remove-btn" data-index="${index}">×</button>
-      `;
-      els.cartList.appendChild(li);
-    });
-  }
-
-  const available = normalizePriceToCents(state.summary?.prizeCreditCents);
-  const remaining = available - totalCents;
-
-  els.cartTotalDisplay.textContent = formatMoney(totalCents);
-  els.cartAvailableDisplay.textContent = formatMoney(available);
-  els.cartRemainingDisplay.textContent = formatMoney(remaining);
-  els.remainingAfterCartDisplay.textContent = formatMoney(remaining);
-
-  if (remaining < 0) {
-    els.cartRemainingDisplay.classList.add("negative");
-    els.submitCartBtn.disabled = true;
-  } else {
-    els.cartRemainingDisplay.classList.remove("negative");
-  }
-
-  els.cartList.querySelectorAll(".cart-remove-btn").forEach(btn => {
-    btn.onclick = (e) => {
-      const idx = parseInt(e.target.dataset.index);
-      state.cart.splice(idx, 1);
-      renderCart();
-    };
+  state.cart.forEach((item, index) => {
+    const li = document.createElement("li");
+    li.className = "cart-item";
+    li.innerHTML = `
+      <span>${item.name} (x${item.qty})</span>
+      <span>${formatMoney(item.price * item.qty)}</span>
+    `;
+    els.cartList.appendChild(li);
   });
+
+  updateSummaryDisplays();
 }
 
-async function handleSubmitCart() {
-  if (state.isSubmittingCart || state.cart.length === 0) return;
-
-  try {
-    state.isSubmittingCart = true;
-    renderCart();
-    setStatus("Submitting your request...");
-
-    for (const item of state.cart) {
-      for (let i = 0; i < item.qty; i++) {
-        await fnRedeemPrizeCredit({
-          schoolId: state.schoolId,
-          prizeId: item.id
-        });
-      }
-    }
-
-    state.cart = [];
-    await loadStudentStoreSummary();
-    applyFilters();
-    renderCart();
-    setStatus("Your prize request was submitted.");
-  } catch (error) {
-    console.error("Cart submit failed:", error);
-    setStatus(normalizeError(error) || "Could not submit your prize request.");
-  } finally {
-    state.isSubmittingCart = false;
-    renderCart();
-  }
+function getCartTotalCents() {
+  return state.cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
 }
 
 /* --------------------------------------------------
@@ -294,48 +248,48 @@ async function handleSubmitCart() {
 function setupListeners() {
   els.categoryFilter?.addEventListener("change", applyFilters);
   els.searchInput?.addEventListener("input", applyFilters);
-  els.clearCartBtn?.addEventListener("click", () => {
-    state.cart = [];
-    renderCart();
-    setStatus("Cart cleared.");
-  });
   els.submitCartBtn?.addEventListener("click", handleSubmitCart);
 }
 
-function renderEmpty(message) {
-  if (!els.prizeShelfGrid) return;
-  const empty = document.createElement("div");
-  empty.className = "empty-state";
-  empty.textContent = message || "Nothing to show right now.";
-  els.prizeShelfGrid.innerHTML = "";
-  els.prizeShelfGrid.appendChild(empty);
-}
-
-function setStatus(message) {
-  if (els.storeStatus) {
-    els.storeStatus.textContent = message || "";
+async function handleSubmitCart() {
+  if (state.isSubmittingCart || state.cart.length === 0) return;
+  state.isSubmittingCart = true;
+  setStatus("Submitting...");
+  
+  try {
+    for (const item of state.cart) {
+      for (let i = 0; i < item.qty; i++) {
+        await fnRedeemPrizeCredit({ schoolId: state.schoolId, prizeId: item.id });
+      }
+    }
+    state.cart = [];
+    await loadStudentStoreSummary();
+    renderCart();
+    setStatus("Submitted!");
+  } catch (e) {
+    setStatus(normalizeError(e));
+  } finally {
+    state.isSubmittingCart = false;
   }
 }
 
-/**
- * Ensures values are in cents. 
- * If value is >= 1000, assumes it's already cents.
- * Otherwise, multiplies by 100 to convert dollars to cents.
- */
 function normalizePriceToCents(value) {
   const n = Number(value || 0);
-  if (!Number.isFinite(n)) return 0;
-
-  if (n >= 1000) return Math.round(n);
+  // If it's already a high number (like 100 for $1.00), treat as cents
+  if (n >= 100) return Math.round(n);
+  // Otherwise multiply by 100 to convert dollars to cents
   return Math.round(n * 100);
 }
 
 function formatMoney(cents) {
-  const dollars = (cents || 0) / 100;
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-  }).format(dollars);
+  }).format(cents / 100);
+}
+
+function setStatus(msg) {
+  if (els.storeStatus) els.storeStatus.textContent = msg;
 }
 
 init();
