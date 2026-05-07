@@ -27,9 +27,12 @@ export async function mountPrizeAdminDashboard({ mountEl, schoolId }) {
           <div class="pill">Prize Store Admin</div>
           <h2 class="h2 prizeAdminTitle">Prize Orders</h2>
           <p class="sub prizeAdminSub">
-            Track reserved prizes, fulfill orders, and deliver rewards.
+            View requests, mark prizes ready, deliver them, or cancel/refund.
           </p>
         </div>
+        <button class="btn-action btn-submit-minutes" id="refreshPrizeOrdersBtn">
+          Refresh
+        </button>
       </div>
 
       <div class="prizeAdminStats" id="prizeAdminStats">
@@ -42,6 +45,10 @@ export async function mountPrizeAdminDashboard({ mountEl, schoolId }) {
     </section>
   `;
 
+  mount.querySelector("#refreshPrizeOrdersBtn")?.addEventListener("click", () => {
+    loadOrders({ schoolId, mount });
+  });
+
   await loadOrders({ schoolId, mount });
 }
 
@@ -49,17 +56,19 @@ async function loadOrders({ schoolId, mount }) {
   const listEl = mount.querySelector("#prizeAdminList");
   const statsEl = mount.querySelector("#prizeAdminStats");
 
-  const q = query(
+  listEl.innerHTML = `<div class="emptyNote">Loading orders...</div>`;
+
+  const qRef = query(
     collection(db, `${schoolRoot(schoolId)}/prizeOrders`),
     orderBy("createdAt", "desc"),
-    limit(50)
+    limit(100)
   );
 
-  const snap = await getDocs(q);
+  const snap = await getDocs(qRef);
   const orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 
   renderStats(orders, statsEl);
-  renderOrders(orders, listEl, schoolId);
+  renderOrders({ orders, listEl, schoolId, mount });
 }
 
 function renderStats(orders, el) {
@@ -78,104 +87,117 @@ function renderStats(orders, el) {
   }
 
   el.innerHTML = `
-    <div class="prizeStatCard">
-      <div class="prizeStatCard__label">Reserved</div>
-      <div class="prizeStatCard__value">${counts.reserved}</div>
-    </div>
+    ${statCard("Reserved", counts.reserved)}
+    ${statCard("Ready", counts.fulfilled)}
+    ${statCard("Delivered", counts.delivered)}
+    ${statCard("Cancelled", counts.cancelled)}
+  `;
+}
 
+function statCard(label, value) {
+  return `
     <div class="prizeStatCard">
-      <div class="prizeStatCard__label">Fulfilled</div>
-      <div class="prizeStatCard__value">${counts.fulfilled}</div>
-    </div>
-
-    <div class="prizeStatCard">
-      <div class="prizeStatCard__label">Delivered</div>
-      <div class="prizeStatCard__value">${counts.delivered}</div>
-    </div>
-
-    <div class="prizeStatCard">
-      <div class="prizeStatCard__label">Cancelled</div>
-      <div class="prizeStatCard__value">${counts.cancelled}</div>
+      <div class="prizeStatCard__label">${label}</div>
+      <div class="prizeStatCard__value">${value}</div>
     </div>
   `;
 }
 
-function renderOrders(orders, el, schoolId) {
-  el.innerHTML = "";
+function renderOrders({ orders, listEl, schoolId, mount }) {
+  listEl.innerHTML = "";
 
   if (!orders.length) {
-    el.innerHTML = `<div class="emptyNote">No prize orders yet.</div>`;
+    listEl.innerHTML = `<div class="emptyNote">No prize orders yet.</div>`;
     return;
   }
 
-  for (const o of orders) {
+  for (const order of orders) {
     const card = document.createElement("article");
     card.className = "prizeOrderCard";
 
-    const statusLabel = getStatusLabel(o);
-    const price = Number(o.price || 0).toFixed(2);
+    const statusLabel = getStatusLabel(order);
+    const price = formatMoney(order.price);
+    const requestedDate = formatDate(order.requestedAt || order.createdAt);
+    const userId = order.userId || "unknown user";
+    const role = order.requestedByRole || "student";
 
     card.innerHTML = `
       <div class="prizeOrderCard__top">
         <div class="prizeOrderCard__main">
-          <h3 class="prizeOrderCard__title">${escapeHtml(o.prizeName || "Prize")}</h3>
-          <p class="prizeOrderCard__student">${escapeHtml(o.studentDisplayName || "Student")}</p>
+          <h3 class="prizeOrderCard__title">
+            ${escapeHtml(order.prizeName || "Prize")}
+          </h3>
+          <p class="prizeOrderCard__student">
+            ${escapeHtml(order.studentDisplayName || "No display name")}
+          </p>
+          <p class="prizeOrderCard__student">
+            ${escapeHtml(userId)} • ${escapeHtml(role)}
+          </p>
         </div>
-        <div class="prizeOrderCard__status">${escapeHtml(statusLabel)}</div>
+
+        <div class="prizeOrderCard__status prizeOrderCard__status--${getStatusClass(order)}">
+          ${escapeHtml(statusLabel)}
+        </div>
       </div>
 
       <div class="prizeOrderCard__meta">
         <div class="prizeOrderCard__metaRow">
           <span>Price</span>
-          <strong>$${price}</strong>
+          <strong>${price}</strong>
         </div>
+
+        <div class="prizeOrderCard__metaRow">
+          <span>Requested</span>
+          <strong>${escapeHtml(requestedDate)}</strong>
+        </div>
+
         <div class="prizeOrderCard__metaRow">
           <span>Order ID</span>
-          <strong>${escapeHtml(o.orderId || o.id)}</strong>
+          <strong>${escapeHtml(order.orderId || order.id)}</strong>
         </div>
       </div>
 
       <div class="prizeOrderCard__actions">
-        ${buildActions(o)}
+        ${buildActions(order)}
       </div>
     `;
 
-    wireButtons(card, o, schoolId);
-    el.appendChild(card);
+    wireButtons({ card, order, schoolId, mount });
+    listEl.appendChild(card);
   }
 }
 
-function buildActions(o) {
-  if (o.status === "cancelled") {
+function buildActions(order) {
+  if (order.status === "cancelled") {
     return `<span class="prizeOrderDone">Cancelled</span>`;
   }
 
-  if (o.fulfillmentStatus === "delivered") {
+  if (order.fulfillmentStatus === "delivered") {
     return `<span class="prizeOrderDone">Delivered</span>`;
   }
 
-  if (o.fulfillmentStatus === "fulfilled") {
+  if (order.fulfillmentStatus === "fulfilled") {
     return `
       <button type="button" class="btn-action btn-donate" data-action="deliver">
         Mark Delivered
       </button>
       <button type="button" class="btn-action btn-approve-minutes" data-action="cancel">
-        Cancel
+        Cancel + Refund
       </button>
     `;
   }
 
   return `
     <button type="button" class="btn-action btn-submit-minutes" data-action="fulfill">
-      Fulfill
+      Mark Ready
     </button>
     <button type="button" class="btn-action btn-approve-minutes" data-action="cancel">
-      Cancel
+      Cancel + Refund
     </button>
   `;
 }
 
-function wireButtons(card, order, schoolId) {
+function wireButtons({ card, order, schoolId, mount }) {
   const btns = card.querySelectorAll("button");
 
   btns.forEach((btn) => {
@@ -186,24 +208,40 @@ function wireButtons(card, order, schoolId) {
         btn.disabled = true;
 
         if (action === "fulfill") {
-          await fnFulfillPrizeOrder({ orderId: order.id, schoolId });
+          await fnFulfillPrizeOrder({
+            orderId: order.id,
+            schoolId,
+          });
         }
 
         if (action === "deliver") {
-          await fnDeliverPrizeOrder({ orderId: order.id, schoolId });
+          await fnDeliverPrizeOrder({
+            orderId: order.id,
+            schoolId,
+          });
         }
 
         if (action === "cancel") {
-          const ok = window.confirm("Cancel this order and refund the student?");
-          if (!ok) {
+          const cancelReason = window.prompt(
+            "Why are you cancelling this order?",
+            "Cancelled by admin."
+          );
+
+          if (cancelReason === null) {
             btn.disabled = false;
             return;
           }
-          await fnCancelPrizeOrder({ orderId: order.id, schoolId });
+
+          await fnCancelPrizeOrder({
+            orderId: order.id,
+            schoolId,
+            cancelReason,
+          });
         }
 
-        window.location.reload();
+        await loadOrders({ schoolId, mount });
       } catch (err) {
+        console.error(err);
         btn.disabled = false;
         window.alert(err?.message || "Something went wrong.");
       }
@@ -211,11 +249,41 @@ function wireButtons(card, order, schoolId) {
   });
 }
 
-function getStatusLabel(o) {
-  if (o.status === "cancelled") return "Cancelled";
-  if (o.fulfillmentStatus === "delivered") return "Delivered";
-  if (o.fulfillmentStatus === "fulfilled") return "Fulfilled";
+function getStatusLabel(order) {
+  if (order.status === "cancelled") return "Cancelled";
+  if (order.fulfillmentStatus === "delivered") return "Delivered";
+  if (order.fulfillmentStatus === "fulfilled") return "Ready";
   return "Reserved";
+}
+
+function getStatusClass(order) {
+  if (order.status === "cancelled") return "cancelled";
+  if (order.fulfillmentStatus === "delivered") return "delivered";
+  if (order.fulfillmentStatus === "fulfilled") return "fulfilled";
+  return "reserved";
+}
+
+function formatMoney(value) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(Number(value || 0));
+}
+
+function formatDate(value) {
+  if (!value) return "Unknown";
+
+  const date =
+    typeof value.toDate === "function"
+      ? value.toDate()
+      : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Unknown";
+
+  return date.toLocaleString("en-US", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
 }
 
 function escapeHtml(str) {
