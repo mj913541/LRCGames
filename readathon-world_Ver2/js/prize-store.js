@@ -5,7 +5,6 @@ import {
   orderBy,
   query,
   where,
-  onSnapshot,
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import {
@@ -69,8 +68,6 @@ async function init() {
   await loadStudentStoreSummary();
 
   await loadPendingOrders();
-
-  watchSummaryLive();
 
   const prizes = await loadPrizeCatalog(state.schoolId);
 
@@ -142,23 +139,6 @@ async function loadStudentStoreSummary() {
   );
 
   updateSummaryDisplays();
-}
-
-function watchSummaryLive() {
-  if (!state.userId) return;
-
-  const ref = collection(
-    db,
-    "readathonV2_schools",
-    state.schoolId,
-    "users",
-    state.userId,
-    "readathon"
-  );
-
-  onSnapshot(ref, () => {
-    loadStudentStoreSummary();
-  });
 }
 
 async function loadPendingOrders() {
@@ -417,8 +397,23 @@ function renderCart() {
 }
 
 async function submitCart() {
+  await waitForAuthReady();
+
+  if (!auth.currentUser) {
+    alert("Please sign in again before requesting prizes.");
+    window.location.href = "../html/student-login.html";
+    return;
+  }
+
   if (!state.cart.length) {
     alert("Your cart is empty.");
+    return;
+  }
+
+  const cartTotal = getCartTotal();
+
+  if (cartTotal > state.availableToSpendCents) {
+    alert("You do not have enough available prize credit for this cart.");
     return;
   }
 
@@ -428,8 +423,9 @@ async function submitCart() {
   try {
     for (const prize of state.cart) {
       await fnRedeemPrizeCredit({
-        prizeId: prize.id,
         schoolId: state.schoolId,
+        prizeId: prize.id,
+        quantity: 1,
       });
 
       state.pendingOrders.push(prize);
@@ -437,22 +433,24 @@ async function submitCart() {
 
     state.cart = [];
 
-    renderCart();
-    renderPendingOrders();
-
     await loadStudentStoreSummary();
 
+    renderCart();
+    renderPendingOrders();
     applyFilters();
 
     setStatus("Prize requests submitted successfully.");
   } catch (error) {
     console.error(error);
 
-    alert(error?.message || "Unable to submit requests.");
+    alert(
+      error?.message ||
+      "Unable to submit requests. Please try signing in again."
+    );
+  } finally {
+    els.submitCartBtn.disabled = false;
+    els.submitCartBtn.textContent = "Submit Prize Requests";
   }
-
-  els.submitCartBtn.disabled = false;
-  els.submitCartBtn.textContent = "Submit Prize Requests";
 }
 
 function renderPendingOrders() {
