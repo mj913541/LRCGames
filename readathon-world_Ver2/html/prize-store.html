@@ -8,11 +8,17 @@
 </head>
 <body class="prize-store-page">
   <main class="store-shell">
+
     <section id="hdr" class="page-header page-header--hero">
       <div class="page-header__content">
+
         <div class="page-header__text">
           <h1 data-title>Prize Store</h1>
-          <p data-subtitle>Raise real money to earn fun prizes! Raise money until March 31, 2026. Choosing prizes will take place after Spring Break.</p>
+
+          <p data-subtitle>
+            Raise real money to earn fun prizes! Raise money until March 31, 2026.
+            Choosing prizes will take place after Spring Break.
+          </p>
 
           <a class="raise-money-link" href="../html/donations.html">
             Want to know how to raise money?
@@ -34,9 +40,49 @@
       </div>
     </section>
 
+    <!-- Pending Requests -->
+    <section class="pending-orders-panel" id="pendingOrdersPanel">
+      <div class="pending-orders-header">
+        <h2>Your Requests</h2>
+        <span id="pendingOrdersCount">0 Pending</span>
+      </div>
+
+      <div id="pendingOrdersList" class="pending-orders-list">
+        <div class="pending-empty">
+          No pending prize requests yet.
+        </div>
+      </div>
+    </section>
+
+    <!-- Cart -->
+    <section class="cart-panel">
+      <div class="cart-header">
+        <h2>Your Cart</h2>
+        <span id="cartCount">0 Items</span>
+      </div>
+
+      <div id="cartItems" class="cart-items">
+        <div class="cart-empty">
+          Your cart is empty.
+        </div>
+      </div>
+
+      <div class="cart-footer">
+        <div class="cart-total-row">
+          <span>Total</span>
+          <strong id="cartTotal">$0.00</strong>
+        </div>
+
+        <button id="submitCartBtn" class="submit-cart-btn">
+          Submit Prize Requests
+        </button>
+      </div>
+    </section>
+
     <section class="hidden store-toolbar">
       <div class="toolbar-left">
         <label class="toolbar-label" for="categoryFilter">Category</label>
+
         <select id="categoryFilter" class="toolbar-select">
           <option value="all">All Categories</option>
         </select>
@@ -44,6 +90,7 @@
 
       <div class="toolbar-center">
         <label class="toolbar-label" for="searchInput">Search</label>
+
         <input
           id="searchInput"
           class="toolbar-input"
@@ -55,37 +102,49 @@
 
       <div class="toolbar-right toolbar-right--stack">
         <div class="school-chip">
-          <span class="hidden chip-label">School</span>
           <strong id="schoolIdDisplay">—</strong>
         </div>
       </div>
     </section>
 
     <section class="store-status-wrap">
-      <div id="storeStatus" class="store-status">Loading prize catalog…</div>
+      <div id="storeStatus" class="store-status">
+        Loading prize catalog…
+      </div>
     </section>
 
     <section class="store-stage">
       <div class="store-backdrop">
-        <div id="prizeShelfGrid" class="prize-tier-list" aria-live="polite"></div>
+        <div id="prizeShelfGrid" class="prize-tier-list"></div>
       </div>
     </section>
   </main>
 
   <template id="prizeCardTemplate">
     <article class="prize-card">
+
+      <div class="prize-lock-overlay">
+        <div class="lock-message">
+          <div class="lock-title">LOCKED</div>
+          <div class="lock-subtitle"></div>
+        </div>
+      </div>
+
       <div class="prize-image-wrap">
         <img class="prize-image" alt="" />
       </div>
 
       <div class="prize-body">
+
         <div class="prize-topline">
           <span class="prize-category"></span>
           <span class="prize-shelf"></span>
         </div>
 
         <h3 class="prize-name"></h3>
+
         <p class="prize-description"></p>
+
         <p class="prize-misc"></p>
 
         <div class="prize-meta">
@@ -93,10 +152,17 @@
             <span class="meta-label">Price</span>
             <strong class="prize-price"></strong>
           </div>
+
           <div class="meta-pill">
             <span class="meta-label">Donations Needed</span>
             <strong class="prize-donations"></strong>
           </div>
+        </div>
+
+        <div class="prize-actions">
+          <button class="add-to-cart-btn">
+            Add To Cart
+          </button>
         </div>
       </div>
     </article>
