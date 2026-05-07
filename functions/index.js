@@ -1073,14 +1073,18 @@ exports.redeemPrizeCredit = functions.https.onCall(async (data, context) => {
   const token = context.auth.token || {};
   const schoolId = String(token.schoolId || "").trim();
   const role = String(token.role || "").trim().toLowerCase();
+  const allowedRoles = ["student", "staff", "admin"];
 
   if (!schoolId) {
     throw new functions.https.HttpsError("failed-precondition", "Missing schoolId claim.");
   }
 
-  if (role !== "student") {
-    throw new functions.https.HttpsError("permission-denied", "Only students can redeem prizes.");
-  }
+if (!allowedRoles.includes(role)) {
+  throw new functions.https.HttpsError(
+    "permission-denied",
+    "Your account cannot redeem prizes."
+  );
+}
 
   const prizeId = String(data?.prizeId || "").trim();
   if (!prizeId) {
