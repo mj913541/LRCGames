@@ -1,0 +1,526 @@
+[
+  {
+    "id": "activity_pack",
+    "image": "../img/prizes/activity-pack.png",
+    "price": 20,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Adventure Activity Pack (Backpack + Water Bottle)",
+    "active": true,
+    "description": "Perfect for outdoor fun! Includes a drawstring backpack and water bottle for sports, hiking, and everyday adventures",
+    "donationsNeeded": 100,
+    "sort": 302,
+    "category": "activity",
+    "prizeId": "activity_pack",
+    "shelf": "3",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "bendy_pencil",
+    "image": "../img/prizes/bendy-pencil.png",
+    "price": 1,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Flexible bendy pencils colorful fun novelty item",
+    "donationsNeeded": 5,
+    "sort": 101,
+    "category": "school",
+    "prizeId": "bendy_pencil",
+    "shelf": "1",
+    "name": "Flexible Bendy Pencil (2 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "block_pencil",
+    "image": "../img/prizes/block-pencil.png",
+    "price": 1.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Stackable building block pencils creative fun prize",
+    "donationsNeeded": 7.5,
+    "sort": 105,
+    "category": "school",
+    "prizeId": "block_pencil",
+    "shelf": "1",
+    "name": "Building Block Pencil (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "cactus_pen",
+    "image": "../img/prizes/cactus-pen.png",
+    "price": 1.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Cute cactus shaped gel pens fun classroom prize",
+    "donationsNeeded": 7.5,
+    "sort": 104,
+    "category": "school",
+    "prizeId": "cactus_pen",
+    "shelf": "1",
+    "name": "Cactus Pen (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "controller_keychain",
+    "image": "../img/prizes/controller-keychain.png",
+    "price": 2.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Video game controller keychain toy perfect gamer prize",
+    "donationsNeeded": 12.5,
+    "sort": 111,
+    "category": "gamer",
+    "prizeId": "controller_keychain",
+    "shelf": "1",
+    "name": "Video Game Controller Keychain (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "controller_stress_toy",
+    "image": "../img/prizes/controller-stress-toy.png",
+    "price": 10,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Video game controller squishy stress toys fun sensory prize",
+    "donationsNeeded": 50,
+    "sort": 204,
+    "category": "fidgets",
+    "prizeId": "controller_stress_toy",
+    "shelf": "2",
+    "name": "Game Controller Stress Toy (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "dinosaur_plush_giant",
+    "image": "../img/prizes/dinosaur-plush-giant.png",
+    "price": 100,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Giant Dinosaur Plush",
+    "active": true,
+    "description": "Huge dinosaur plush epic oversized prize for top fundraisers",
+    "donationsNeeded": 500,
+    "sort": 402,
+    "category": "plush",
+    "prizeId": "dinosaur_plush_giant",
+    "shelf": "4",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "food_squishy_keychain",
+    "image": "../img/prizes/food-squishy-keychain.png",
+    "price": 5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Cute food themed squishy keychains stress relief toys",
+    "donationsNeeded": 25,
+    "sort": 115,
+    "category": "fidgets",
+    "prizeId": "food_squishy_keychain",
+    "shelf": "1",
+    "name": "Food Squishy Keychain (2 Count)",
+    "stock": 999998,
+    "updatedAt": {
+      "_seconds": 1778180823,
+      "_nanoseconds": 836000000
+    }
+  },
+  {
+    "id": "game_controller_pen",
+    "image": "../img/prizes/game-controller-pen.png",
+    "price": 2.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Video game themed novelty pens perfect for gamers",
+    "donationsNeeded": 12.5,
+    "sort": 109,
+    "category": "gamer",
+    "prizeId": "game_controller_pen",
+    "shelf": "1",
+    "name": "Video Game Controller Pen (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "gummy_pencil",
+    "image": "../img/prizes/gummy-pencil.png",
+    "price": 5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Scented gummy bear mechanical pencils fun classroom reward",
+    "donationsNeeded": 25,
+    "sort": 114,
+    "category": "school",
+    "prizeId": "gummy_pencil",
+    "shelf": "1",
+    "name": "Gummy Bear Mechanical Pencil (2 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "lcd_writing_tablet",
+    "image": "../img/prizes/lcd-writing-tablet.png",
+    "price": 15,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Small LCD writing tablet reusable drawing board for kids",
+    "donationsNeeded": 75,
+    "sort": 205,
+    "category": "electronics",
+    "prizeId": "lcd_writing_tablet",
+    "shelf": "2",
+    "name": "Mini LCD Writing Tablet (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "liquid_motion_keychain",
+    "image": "../img/prizes/liquid-motion-keychain.png",
+    "price": 10,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Liquid motion timer sensory keychains calming fidget toy",
+    "donationsNeeded": 50,
+    "sort": 203,
+    "category": "fidgets",
+    "prizeId": "liquid_motion_keychain",
+    "shelf": "2",
+    "name": "Liquid Motion Timer Keychain  (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "mega_fidget_super_pack",
+    "image": "../img/prizes/mega-fidget-super-pack.png",
+    "price": 20,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Mega Fidget Super Pack (5 Misc Items)",
+    "active": true,
+    "description": "Huge fidget bundle with poppers, squishies, and sensory toys—each pack includes 5 surprise fidgets for maximum fun",
+    "donationsNeeded": 100,
+    "sort": 301,
+    "category": "fidgets",
+    "prizeId": "mega_fidget_super_pack",
+    "shelf": "3",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "mochi_squishy",
+    "image": "../img/prizes/mochi-squishy.png",
+    "price": 1,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Soft mochi squishy animals stress relief toy",
+    "donationsNeeded": 5,
+    "sort": 103,
+    "category": "fidgets",
+    "prizeId": "mochi_squishy",
+    "shelf": "1",
+    "name": "Mini Mochi Squishy Animal  (2 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "octopus_pop",
+    "image": "../img/prizes/octopus-pop.png",
+    "price": 2.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Mini octopus pop fidget keychains fun sensory toy",
+    "donationsNeeded": 12.5,
+    "sort": 113,
+    "category": "fidgets",
+    "prizeId": "octopus_pop",
+    "shelf": "1",
+    "name": "Octopus Pop Fidget Keychain (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "phone_eraser",
+    "image": "../img/prizes/phone-eraser.png",
+    "price": 1.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Mini phone shaped erasers fun school supply reward",
+    "donationsNeeded": 7.5,
+    "sort": 106,
+    "category": "school",
+    "prizeId": "phone_eraser",
+    "shelf": "1",
+    "name": "Phone Eraser (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "play_doh_mini",
+    "image": "../img/prizes/play-doh-mini.png",
+    "price": 2.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Mini play dough container perfect classroom reward",
+    "donationsNeeded": 12.5,
+    "sort": 110,
+    "category": "toys",
+    "prizeId": "play_doh_mini",
+    "shelf": "1",
+    "name": "Play Doh Mini  (3 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "scented_pencil",
+    "image": "../img/prizes/scented-pencil.png",
+    "price": 1,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Fruit scented pencils colorful classroom reward",
+    "donationsNeeded": 5,
+    "sort": 102,
+    "category": "school",
+    "prizeId": "scented_pencil",
+    "shelf": "1",
+    "name": "Scented Pencil  (2 Count)",
+    "stock": 999998,
+    "updatedAt": {
+      "_seconds": 1778180794,
+      "_nanoseconds": 422000000
+    }
+  },
+  {
+    "id": "silly_putty_pack",
+    "image": "../img/prizes/silly-putty-pack.png",
+    "price": 5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Classic silly putty eggs fun stretch bounce sensory toy",
+    "donationsNeeded": 25,
+    "sort": 116,
+    "category": "fidgets",
+    "prizeId": "silly_putty_pack",
+    "shelf": "1",
+    "name": "Silly Putty Egg Pack (2 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "slime_pack_large",
+    "image": "../img/prizes/slime-pack-large.png",
+    "price": 10,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Mega Slime Pack (6 Count)",
+    "active": true,
+    "description": "Large slime bundle set of 6 colorful sensory slime containers",
+    "donationsNeeded": 50,
+    "sort": 202,
+    "category": "fidgets",
+    "prizeId": "slime_pack_large",
+    "shelf": "2",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "slime_pack_small",
+    "image": "../img/prizes/slime-pack-small.png",
+    "price": 5,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Slime Pack (3 Count)",
+    "active": true,
+    "description": "Colorful mini slime pack set of 3 stretchy sensory fun",
+    "donationsNeeded": 25,
+    "sort": 112,
+    "category": "fidgets",
+    "prizeId": "slime_pack_small",
+    "shelf": "1",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "sports_ball_set",
+    "image": "../img/prizes/sports-ball-set.png",
+    "price": 100,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Set of basketball, soccer ball, and football for outdoor play",
+    "donationsNeeded": 500,
+    "sort": 401,
+    "category": "sports",
+    "prizeId": "sports_ball_set",
+    "shelf": "4",
+    "name": "Kids Sports Ball Set (3 Balls)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "stack_pencil",
+    "image": "../img/prizes/stack-pencil.png",
+    "price": 1.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Stackable cartoon pencils fun classroom supplies",
+    "donationsNeeded": 7.5,
+    "sort": 107,
+    "category": "school",
+    "prizeId": "stack_pencil",
+    "shelf": "1",
+    "name": "Stackable Cartoon Pencil (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "stretchy_dino_fidget",
+    "image": "../img/prizes/stretchy-dino-fidget.png",
+    "price": 2.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Colorful stretchy sensory strings fun calming fidget toy",
+    "donationsNeeded": 12.5,
+    "sort": 108,
+    "category": "fidgets",
+    "prizeId": "stretchy_dino_fidget",
+    "shelf": "1",
+    "name": "Stretchy Dino Fidget Toy (2 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "transform_fidget",
+    "image": "../img/prizes/transform-fidget.png",
+    "price": 7.5,
+    "schoolId": "308_longbeach_elementary",
+    "active": true,
+    "description": "Transformable cube fidget toy fun puzzle stress relief",
+    "donationsNeeded": 37.5,
+    "sort": 201,
+    "category": "fidgets",
+    "prizeId": "transform_fidget",
+    "shelf": "2",
+    "name": "Transformable Fidget Toy  (1 Count)",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "unicorn_plush_giant",
+    "image": "../img/prizes/unicorn-plush-giant.png",
+    "price": 100,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Giant Unicorn Plush (43 inch)",
+    "active": true,
+    "description": "Huge rainbow unicorn plush magical oversized cuddle prize",
+    "donationsNeeded": 500,
+    "sort": 403,
+    "category": "plush",
+    "prizeId": "unicorn_plush_giant",
+    "shelf": "4",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "unicorn_purse",
+    "image": "../img/prizes/unicorn-purse.png",
+    "price": 20,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Magical Unicorn Purse (Crossbody Bag)",
+    "active": true,
+    "description": "Adorable unicorn crossbody purse perfect for carrying small treasures and showing off your style",
+    "donationsNeeded": 100,
+    "sort": 303,
+    "category": "accessory",
+    "prizeId": "unicorn_purse",
+    "shelf": "3",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "weighted_plush_giant",
+    "image": "../img/prizes/weighted-plush-giant.png",
+    "price": 100,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Weighted Animal Plush (Giant)",
+    "active": true,
+    "description": "Soft weighted sloth plush calming and cozy comfort prize",
+    "donationsNeeded": 500,
+    "sort": 404,
+    "category": "plush",
+    "prizeId": "weighted_plush_giant",
+    "shelf": "4",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  },
+  {
+    "id": "weighted_plush_medium",
+    "image": "../img/prizes/weighted-plush-medium.png",
+    "price": 75,
+    "schoolId": "308_longbeach_elementary",
+    "name": "Weighted Animal Plush (Medium)",
+    "active": true,
+    "description": "Soft weighted comfort plush perfect for calming and hugging",
+    "donationsNeeded": 375,
+    "sort": 304,
+    "category": "plush",
+    "prizeId": "weighted_plush_medium",
+    "shelf": "3",
+    "updatedAt": {
+      "_seconds": 1774291057,
+      "_nanoseconds": 929000000
+    }
+  }
+]
