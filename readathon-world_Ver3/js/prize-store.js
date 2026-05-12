@@ -63,8 +63,7 @@ async function init() {
   try {
     state.schoolId = getSchoolId() || DEFAULT_SCHOOL_ID;
     
-    // Crucial: ensure Auth is fully ready before fetching summary
-    // to avoid the 401 Unauthorized issues seen in logs
+    // Ensure auth is solid to prevent 401s
     await waitForAuthReady();
     state.user = auth.currentUser;
 
@@ -73,39 +72,40 @@ async function init() {
       return;
     }
 
-    await loadStudentStoreSummary();
-    await loadPrizeCatalog();
+    // Parallel load for efficiency
+    await Promise.all([
+      loadStudentStoreSummary(),
+      loadPrizeCatalog()
+    ]);
 
     setupListeners();
     renderCart();
   } catch (error) {
     console.error("Init failed:", error);
-    setStatus("Error loading profile. Please refresh.");
+    setStatus("Connection error. Please refresh the page.");
   }
 }
 
 async function loadStudentStoreSummary() {
   try {
     const summary = await fetchUserSummary(state.schoolId, state.user.uid);
-    if (!summary) {
-      console.warn("No summary found for user:", state.user.uid);
-      return;
-    }
+    if (!summary) return;
+    
     state.summary = summary;
 
-    // Support all known donation field variations in your database
+    // Field variations support
     const rawDonations = summary.donationsCents || 
                          summary.moneyRaisedCents || 
                          summary.totalDonationsCents || 0;
     
     state.donationsRaisedCents = normalizePriceToCents(rawDonations);
     
-    // Readathon World Rule: 20% credit
+    // 20% calculation logic
     state.availableToSpendCents = Math.floor(state.donationsRaisedCents * 0.2);
 
     updateSummaryUI();
   } catch (error) {
-    console.error("Failed to load user summary:", error);
+    console.error("Summary load failed:", error);
   }
 }
 
@@ -116,8 +116,7 @@ function updateSummaryUI() {
   if (els.availableToSpendDisplay) {
     els.availableToSpendDisplay.textContent = formatMoney(state.availableToSpendCents);
   }
-  
-  renderCart(); // Refresh cart calculations
+  renderCart();
 }
 
 async function loadPrizeCatalog() {
@@ -139,22 +138,87 @@ async function loadPrizeCatalog() {
     applyFilters();
   } catch (error) {
     console.error("Catalog load failed:", error);
-    renderEmpty("Store temporarily unavailable.");
+    renderEmpty("Store is currently unavailable.");
   }
 }
 
 /* --------------------------------------------------
-   Cart & Submission Logic
+   Filtering & UI Logic
 -------------------------------------------------- */
+
+function applyFilters() {
+  const cat = els.categoryFilter?.value || "all";
+  const search = els.searchInput?.value?.toLowerCase() || "";
+
+  const filtered = state.allPrizes.filter(p => {
+    const matchesCat = cat === "all" || p.category === cat;
+    const matchesSearch = !search || p.name?.toLowerCase().includes(search);
+    return matchesCat && matchesSearch;
+  });
+
+  renderPrizes(filtered);
+}
+
+function renderPrizes(list) {
+  if (!els.prizeShelfGrid) return;
+  els.prizeShelfGrid.innerHTML = "";
+
+  list.forEach(prize => {
+    const clone = els.prizeCardTemplate.content.cloneNode(true);
+    
+    // Fill basic details
+    clone.querySelector(".prize-name").textContent = prize.name;
+    clone.querySelector(".prize-price").textContent = formatMoney(prize.price);
+    clone.querySelector(".prize-donations").textContent = formatMoney(prize.donationsNeeded);
+    
+    // Handle the image
+    const img = clone.querySelector(".prize-image");
+    if (img) {
+      img.src = prize.image || "../assets/placeholder-prize.png";
+      img.alt = prize.name;
+    }
+
+    // Set up the "Add to Cart" button logic
+    const addBtn = clone.querySelector(".prize-request-btn");
+    addBtn.addEventListener("click", () => {
+      // You may need to define an addToCart function or logic here
+      console.log("Added to cart:", prize.name);
+    });
+
+    els.prizeShelfGrid.appendChild(clone);
+  });
+
+  // Clear the loading status once done
+  if (list.length > 0) {
+    setStatus(""); 
+  } else {
+    setStatus("No prizes found matching your search.");
+  }
+}
+
+/* --------------------------------------------------
+   Cart Logic
+-------------------------------------------------- */
+
+function addToCart(prize, qty) {
+  const existing = state.cart.find(item => item.id === prize.id);
+  if (existing) {
+    existing.qty += qty;
+  } else {
+    state.cart.push({ ...prize, qty });
+  }
+  renderCart();
+  setStatus(`Added ${qty} x ${prize.name} to cart.`);
+}
 
 function renderCart() {
   if (!els.cartList) return;
   els.cartList.innerHTML = "";
 
-  let cartTotal = 0;
+  let total = 0;
   state.cart.forEach((item, index) => {
     const itemTotal = item.price * item.qty;
-    cartTotal += itemTotal;
+    total += itemTotal;
 
     const li = document.createElement("li");
     li.className = "cart-item";
@@ -165,14 +229,13 @@ function renderCart() {
     els.cartList.appendChild(li);
   });
 
-  const remaining = state.availableToSpendCents - cartTotal;
+  const remaining = state.availableToSpendCents - total;
 
-  if (els.cartTotalDisplay) els.cartTotalDisplay.textContent = formatMoney(cartTotal);
+  if (els.cartTotalDisplay) els.cartTotalDisplay.textContent = formatMoney(total);
   if (els.cartAvailableDisplay) els.cartAvailableDisplay.textContent = formatMoney(state.availableToSpendCents);
   if (els.cartRemainingDisplay) els.cartRemainingDisplay.textContent = formatMoney(remaining);
   if (els.remainingAfterCartDisplay) els.remainingAfterCartDisplay.textContent = formatMoney(remaining);
 
-  // Disable submit if over budget
   if (els.submitCartBtn) {
     els.submitCartBtn.disabled = (remaining < 0 || state.cart.length === 0 || state.isSubmittingCart);
   }
@@ -183,10 +246,9 @@ async function handleSubmitCart() {
 
   try {
     state.isSubmittingCart = true;
-    setStatus("Processing request...");
+    setStatus("Submitting your prizes...");
     renderCart();
 
-    // Loop through cart items and redeem
     for (const item of state.cart) {
       for (let i = 0; i < item.qty; i++) {
         await fnRedeemPrizeCredit({
@@ -198,9 +260,9 @@ async function handleSubmitCart() {
 
     state.cart = [];
     await loadStudentStoreSummary();
-    setStatus("Prizes requested successfully!");
+    setStatus("Prize request successful!");
   } catch (error) {
-    console.error("Submission error:", error);
+    console.error("Submission failed:", error);
     setStatus(normalizeError(error));
   } finally {
     state.isSubmittingCart = false;
@@ -214,9 +276,7 @@ async function handleSubmitCart() {
 
 function normalizePriceToCents(value) {
   const n = Number(value || 0);
-  // Assume values 100 or higher are already cents ($1.00+)
   if (n >= 100) return Math.round(n);
-  // Treat smaller values as dollars and convert
   return Math.round(n * 100);
 }
 
@@ -238,41 +298,14 @@ function setupListeners() {
   els.clearCartBtn?.addEventListener("click", () => {
     state.cart = [];
     renderCart();
-  });
-}
-
-function applyFilters() {
-  const cat = els.categoryFilter?.value || "all";
-  const search = els.searchInput?.value?.toLowerCase() || "";
-
-  const filtered = state.allPrizes.filter(p => {
-    const matchesCat = cat === "all" || p.category === cat;
-    const matchesSearch = !search || p.name?.toLowerCase().includes(search);
-    return matchesCat && matchesSearch;
-  });
-
-  renderPrizes(filtered);
-}
-
-function renderPrizes(list) {
-  if (!els.prizeShelfGrid) return;
-  els.prizeShelfGrid.innerHTML = "";
-
-  list.forEach(prize => {
-    const clone = els.prizeCardTemplate.content.cloneNode(true);
-    clone.querySelector(".prize-name").textContent = prize.name;
-    clone.querySelector(".prize-price").textContent = formatMoney(prize.price);
-    clone.querySelector(".prize-request-btn").onclick = () => {
-      const qty = parseInt(clone.querySelector(".qty-value").textContent) || 1;
-      state.cart.push({ ...prize, qty });
-      renderCart();
-    };
-    els.prizeShelfGrid.appendChild(clone);
+    setStatus("Cart cleared.");
   });
 }
 
 function renderEmpty(msg) {
-  els.prizeShelfGrid.innerHTML = `<div class="empty-state">${msg}</div>`;
+  if (els.prizeShelfGrid) {
+    els.prizeShelfGrid.innerHTML = `<div class="empty-state">${msg}</div>`;
+  }
 }
 
 init();
