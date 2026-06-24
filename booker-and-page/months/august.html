@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Booker & Page's Library Adventures</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f3ea;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #7fa99b;
+      color: white;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.2rem;
+    }
+
+    header p {
+      font-size: 1.2rem;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    }
+
+    .characters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .button-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+    }
+
+    .button {
+      background: #fff3c4;
+      border: 2px solid #e3c66b;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+      font-weight: bold;
+      text-decoration: none;
+      color: #333;
+      display: block;
+    }
+
+    .button:hover {
+      background: #ffeaa0;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      background: #e7ded0;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 700px) {
+      .characters {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>📚 Booker & Page's Library Adventures</h1>
+    <p>Learn → Choose → Read</p>
+  </header>
+
+  <main>
+
+    <section class="card">
+      <h2>August Adventure: Welcome to the LRC</h2>
+      <p><strong>Page Wonders:</strong> How does the library work?</p>
+      <p><strong>Booker's Challenge:</strong> Learn one new thing about our library today.</p>
+    </section>
+
+    <section class="card characters">
+      <div>
+        <h2>🪿 Meet Booker</h2>
+        <p>Booker is an experienced library leader who loves helping students discover books and information.</p>
+        <p><strong>Booker says:</strong> "There's always something new to discover."</p>
+      </div>
+
+      <div>
+        <h2>🐣 Meet Page</h2>
+        <p>Page is a curious learner who asks questions, explores new books, and learns how the library works.</p>
+        <p><strong>Page says:</strong> "I wonder..."</p>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>This Month We Are Learning</h2>
+      <ul>
+        <li>How to use the library safely and responsibly</li>
+        <li>How to care for books</li>
+        <li>How to use Chromebooks responsibly</li>
+        <li>How to find our way around the LRC</li>
+        <li>How to choose books we enjoy</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>August Choice Board</h2>
+      <div class="button-grid">
+        <a class="button" href="#">📚 Read<br>Look through a book that interests you.</a>
+        <a class="button" href="#">🔍 Explore<br>Find a new section of the library.</a>
+        <a class="button" href="#">💻 Technology<br>Practice Chromebook skills.</a>
+        <a class="button" href="#">🎨 Create<br>Draw Booker or Page in the library.</a>
+        <a class="button" href="#">❓ Wonder<br>Think of a question about the library.</a>
+        <a class="button" href="#">⭐ Recommend<br>Tell a friend about a book you found.</a>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Booker's August Challenge</h2>
+      <ul>
+        <li>☐ Find the book return area.</li>
+        <li>☐ Find the Picture Book Collection.</li>
+        <li>☐ Find the Explore Fiction Collection.</li>
+        <li>☐ Learn one library expectation.</li>
+        <li>☐ Find a book that looks interesting.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>New to Our Library?</h2>
+      <p>Start here with Page!</p>
+      <ol>
+        <li>Meet Mrs. A</li>
+        <li>Meet Booker & Page</li>
+        <li>Learn library expectations</li>
+        <li>Explore the library map</li>
+        <li>Learn Chromebook basics</li>
+        <li>Complete Booker's Challenge</li>
+      </ol>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>🪿 Booker says: "Every expert was once a beginner."</p>
+    <p>🐣 Page says: "Every adventure starts with a question!"</p>
+  </footer>
+
+</body>
+</html>

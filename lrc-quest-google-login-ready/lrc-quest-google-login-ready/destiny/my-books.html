@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Books</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>📖 My Books</h1>
+      <p id="welcomeLine">Loading...</p>
+    </div>
+    <a class="small-button link-button" href="../dashboard.html">Home</a>
+  </header>
+
+  <main class="dashboard-shell">
+    <section id="studentStatus" class="quest-card">
+      <h2>Coming next</h2>
+      <p>This page already knows the signed-in Google account.</p>
+      <p>Next we connect Google email → Patron Barcode → Destiny daily export.</p>
+    </section>
+  </main>
+
+  <script type="module" src="../js/firebase-config.js"></script>
+  <script type="module" src="../js/protect.js"></script>
+  <script type="module" src="../js/my-books.js"></script>
+</body>
+</html>
