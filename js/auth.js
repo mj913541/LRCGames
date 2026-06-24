@@ -7,10 +7,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 import {
   getFirestore,
-  collection,
-  query,
-  where,
-  getDocs
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
@@ -22,13 +20,6 @@ const provider = new GoogleAuthProvider();
 const button = document.getElementById("googleSignInButton");
 const message = document.getElementById("loginMessage");
 
-const usersRef = collection(
-  db,
-  "lrcquest",
-  "oswego308_longbeach",
-  "users"
-);
-
 function dashboardForRole(role) {
   if (role === "admin") return "dashboards/admin.html";
   if (role === "staff") return "dashboards/staff.html";
@@ -37,26 +28,31 @@ function dashboardForRole(role) {
   return "dashboard.html";
 }
 
-async function findUserProfile(email) {
-  const q = query(usersRef, where("email", "==", email));
-  const snapshot = await getDocs(q);
+async function getUserProfile(uid) {
+  const userRef = doc(
+    db,
+    "lrcquest",
+    "oswego308_longbeach",
+    "users",
+    uid
+  );
 
-  if (snapshot.empty) {
+  const userSnap = await getDoc(userRef);
+
+  if (!userSnap.exists()) {
     return null;
   }
 
-  const docSnap = snapshot.docs[0];
-
   return {
-    id: docSnap.id,
-    ...docSnap.data()
+    id: userSnap.id,
+    ...userSnap.data()
   };
 }
 
 async function sendUserToDashboard(user) {
   message.textContent = "Checking your LRC Quest account...";
 
-  const profile = await findUserProfile(user.email);
+  const profile = await getUserProfile(user.uid);
 
   if (!profile) {
     message.textContent = "Your Google account is not set up in LRC Quest yet.";
