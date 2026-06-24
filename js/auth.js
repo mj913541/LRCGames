@@ -21,10 +21,10 @@ const button = document.getElementById("googleSignInButton");
 const message = document.getElementById("loginMessage");
 
 function dashboardForRole(role) {
-  if (role === "admin") return "dashboards/admin.html";
-  if (role === "staff") return "dashboards/staff.html";
-  if (role === "k2") return "dashboards/k2.html";
-  if (role === "35") return "dashboards/35.html";
+  if (role === "admin") return "html/dashboards/admin.html";
+  if (role === "staff") return "html/dashboards/staff.html";
+  if (role === "k2") return "html/dashboards/k2.html";
+  if (role === "35") return "html/dashboards/35.html";
   return "dashboard.html";
 }
 
