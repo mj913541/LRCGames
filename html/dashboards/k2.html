@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Quest Home</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>LRC Quest</h1>
+      <p id="welcomeLine">Welcome, reader!</p>
+    </div>
+    <button id="signOutButton" class="small-button">Sign Out</button>
+  </header>
+
+  <main class="dashboard-shell">
+    <section class="quest-card hero">
+      <h2>Choose Your Quest</h2>
+      <p>Tap a button to get started.</p>
+    </section>
+
+    <section class="quest-grid">
+      <a class="quest-button blue" href="destiny/catalog.html">
+        <span>📚</span>
+        Find a Book
+      </a>
+      <a class="quest-button green" href="destiny/my-books.html">
+        <span>📖</span>
+        My Books
+      </a>
+      <a class="quest-button orange" href="destiny/check-in-out.html">
+        <span>🔄</span>
+        Check In / Out
+      </a>
+      <a class="quest-button purple" href="#">
+        <span>⭐</span>
+        Series of the Month
+      </a>
+    </section>
+
+    <section class="booker-note">
+      <strong>Booker says:</strong> Pick one adventure and do your best!
+    </section>
+  </main>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/protect.js"></script>
+</body>
+</html>

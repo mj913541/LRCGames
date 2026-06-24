@@ -1,206 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="LRC Landing Page" />
-    <link rel="icon" type="image/x-icon" href="./favicon.ico">
-    <title>LB LRC</title>
-
-  <style>
-    body {
-      margin: 0;
-      background-color: #f0f8e0;
-      display: flex;
-      justify-content: center;
-      align-items: start;
-      min-height: 100vh;
-      font-family: 'Comic Sans MS', sans-serif;
-    }
-
-    .background-container {
-      position: relative;
-      width: 656px;
-      height: 964px;
-      background: url('./oldPages/pictures/otherIcons/background.png') no-repeat top left;
-      background-size: 100% 100%;
-      transform-origin: top center;
-    }
-
-    /* Optional scaling for small screens */
-    @media (max-height: 964px) {
-      .background-container {
-        transform: scale(0.9);
-      }
-    }
-    @media (max-height: 860px) {
-      .background-container {
-        transform: scale(0.8);
-      }
-    }
-
-    /* Image buttons positioned at fixed pixel spots */
-.click-zone {
-  position: absolute;
-  cursor: pointer;
-  transition: transform 0.2s;
-}
-.click-zone:hover {
-  transform: scale(1.05);
-}
-
-
-    #staff-den {
-      top: 450px;
-      left: 120px;
-      width: 144px;
-      height: 87px;
-    }
-
-    #research-treehouse {
-      top: 400px;
-      left: 375px;
-      width: 225px;
-      height: 85px;
-    }
-
-    #tech-trail {
-      top: 758px;
-      left: 77px;
-      width: 149px;
-      height: 96px;
-    }
-
-    #reading-river {
-      top: 758px;
-      left: 378px;
-      width: 186px;
-      height: 93px;
-    }
-
-    /* Horizontal Grade Menu */
-    #grade-menu {
-      position: absolute;
-      top: 860px;
-      left: 77px;
-      display: none;
-      flex-direction: row;
-      gap: 10px;
-      background: transparent;
-      border-radius: 12px;
-      padding: 10px;
-      z-index: 3;
-    }
-
-
-
- .grade-icon {
-      width: 80px;
-      height: 80px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      border-radius: 50%;
-      cursor: pointer;
-      transition: transform 0.3s;
-      font-size: 1.8em;
-      font-weight: bold;
-      color: #fff;
-      font-variant: small-caps;
-      text-shadow: 2px 2px 2px #000;
-      box-shadow: 2px 2px 3px #000;
-      text-decoration: none;
-    }
-
-    .grade-icon:hover {
-      transform: scale(1.2);
-    }
-
-    #grade1 {
-      background: radial-gradient(circle, rgba(22,21,59,1) 17%, rgba(22,21,164,1) 31%, rgba(157,159,242,1) 48%, rgba(49,45,143,1) 71%, rgba(27,21,126,1) 100%);
-    }
-
-    #grade2 {
-      background: radial-gradient(circle, rgba(59,21,24,1) 17%, rgba(164,21,30,1) 31%, rgba(242,157,163,1) 48%, rgba(143,45,51,1) 71%, rgba(126,21,25,1) 100%);
-    }
-
-    #grade3 {
-      background: radial-gradient(circle, rgba(58,133,14,1) 17%, rgba(32,201,3,1) 31%, rgba(1,228,92,1) 48%, rgba(49,97,48,1) 71%, rgba(53,147,84,1) 100%);
-    }
-
-    #grade4 {
-      background: radial-gradient(circle, rgba(101,100,50,1) 17%, rgba(153,164,21,1) 31%, rgba(231,242,15,1) 48%, rgba(139,143,45,1) 71%, rgba(154,151,25,1) 100%);
-    }
-
-    #grade5 {
-      background: radial-gradient(circle, rgba(44,21,59,1) 17%, rgba(119,21,164,1) 31%, rgba(221,157,242,1) 48%, rgba(116,45,143,1) 71%, rgba(95,21,126,1) 100%);
-    }
-    /* Optional fun animal additions */
-    .animal {
-      position: absolute;
-      z-index: 1;
-      transition: transform 0.3s ease;
-    }
-
-    .animal:hover {
-      transform: scale(1.2) rotate(5deg);
-    }
-
-    #lion { top: 65px; left: 450px; width: 150px; height: 150px; }
-    #monkey { top: 640px; left: 35px; width: 70px; }
-    #giraffe {       top: 275px;
-      left: 85px;
-      width: 144px;
-      height: 87px;}
-    #crocodile { top: 695px; left: 365px; width: 100px; }
-  /* Horizontal Grade Menu 
-    .click-zone {
-  border: 2px dashed red;
-  background-color: rgba(255, 0, 0, 0.2);
-}*/
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Quest Login</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-<body>
-  <section id="schoolStatusWidget" class="school-status-panel"></section>
-  <div class="background-container">
-    <!-- Clickable Buttons -->
-    <a id="lion" class="click-zone" href="./oldPages/worksOfChoice/jungleGames12/gameHub12Jungle.html" title="Click for Works of Choice!"></a>
-      <a id="giraffe" class="click-zone" href="./readathon-world_Ver2/html/index.html" title="Click for ReadAThon!!"></a>
-    <a id="staff-den" class="click-zone" href="./oldPages/staff/staff.html" title="Click for Staff Resources"></a>
-    <a id="research-treehouse" class="click-zone" href="./oldPages/researchTreehouse.html" title="Go to Research Treehouse"></a>
-    <a id="reading-river" class="click-zone" href="./oldPages/destiny.html" title="Discover our book catalog"></a>
-    <a id="tech-trail" class="click-zone" href="#" title="Explore the Tech Trail!" onclick="toggleGradeMenu(event)"></a>
-    <div id="grade-menu">
-      <a id="grade1" class="grade-icon" href="./oldPages/subDays.html" title="1st Grade">1<sup>st</sup></a>
-      <a id="grade2" class="grade-icon" href="./oldPages/subDays.html" title="2nd Grade">2<sup>nd</sup></a>
-      <a id="grade3" class="grade-icon" href="./oldPages/subDays.html" title="3rd Grade">3<sup>rd</sup></a>
-      <a id="grade4" class="grade-icon" href="./oldPages/subDays.html" title="4th Grade">4<sup>th</sup></a>
-      <a id="grade5" class="grade-icon" href="./oldPages/subDays.html" title="5th Grade">5<sup>th</sup></a>
-    </div>
-  </div>
+<body class="login-body">
+  <main class="login-card">
+    <div class="mascot">📚✨</div>
+    <h1>LRC Quest</h1>
+    <p class="subtitle">Sign in to begin your library adventure.</p>
+    <button id="googleSignInButton" class="google-button">
+      <span>G</span>
+      Sign in with Google
+    </button>
+    <p id="loginMessage" class="message"></p>
+  </main>
 
-<script>
-  const gradeMenu = document.getElementById("grade-menu");
-
-  function toggleGradeMenu(event) {
-    event.preventDefault(); // Stop the page from jumping
-    if (gradeMenu.style.display === "flex") {
-      gradeMenu.style.display = "none";
-    } else {
-      gradeMenu.style.display = "flex";
-    }
-  }
-
-  // Hide the menu if clicking outside
-  document.addEventListener("click", function(event) {
-    const techTrail = document.getElementById("tech-trail");
-    if (!gradeMenu.contains(event.target) && event.target !== techTrail) {
-      gradeMenu.style.display = "none";
-    }
-  });
-</script>
-
-
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js"></script>
 </body>
 </html>
