@@ -1,12 +1,21 @@
 /* ==========================================================
    PERSONAL DASHBOARD
    App JavaScript
+   Touch-Friendly Version
    ========================================================== */
+
+/* ---------- Goals ---------- */
+
+const waterGoal = 10;
+const walkingGoal = 30;
 
 /* ---------- Starting Data ---------- */
 
-let waterCount = 0;
-let walkingMinutes = 0;
+let dashboardData = {
+  waterCount: 0,
+  walkingMinutes: 0,
+  completedTasks: []
+};
 
 /* ---------- Elements ---------- */
 
@@ -24,41 +33,91 @@ const removeWaterButton = document.getElementById("remove-water-button");
 const walkButtons = document.querySelectorAll(".walk-button");
 const taskCheckboxes = document.querySelectorAll(".task-checkbox");
 
-/* ---------- Goals ---------- */
+/* ---------- Load Saved Data ---------- */
 
-const waterGoal = 10;
-const walkingGoal = 30;
+function loadDashboard() {
+  const savedData = loadPersonalDashboardData();
+
+  if (savedData) {
+    dashboardData = savedData;
+  }
+
+  taskCheckboxes.forEach(function(task, index) {
+    task.checked = dashboardData.completedTasks.includes(index);
+  });
+
+  updateDashboard();
+}
+
+/* ---------- Save Current Data ---------- */
+
+function saveDashboard() {
+  savePersonalDashboardData(dashboardData);
+}
+
+/* ---------- Touch-Friendly Button Feedback ---------- */
+
+function addTouchFeedback(button) {
+  button.addEventListener("touchstart", function() {
+    button.classList.add("is-pressed");
+  });
+
+  button.addEventListener("touchend", function() {
+    button.classList.remove("is-pressed");
+  });
+
+  button.addEventListener("touchcancel", function() {
+    button.classList.remove("is-pressed");
+  });
+}
 
 /* ---------- Water ---------- */
 
 function addWater(amount) {
-  waterCount = waterCount + amount;
+  dashboardData.waterCount = dashboardData.waterCount + amount;
 
-  if (waterCount < 0) {
-    waterCount = 0;
+  if (dashboardData.waterCount < 0) {
+    dashboardData.waterCount = 0;
   }
 
-  if (waterCount > waterGoal) {
-    waterCount = waterGoal;
+  if (dashboardData.waterCount > waterGoal) {
+    dashboardData.waterCount = waterGoal;
   }
 
   updateDashboard();
+  saveDashboard();
 }
 
 /* ---------- Walking ---------- */
 
 function addWalkingMinutes(amount) {
-  walkingMinutes = walkingMinutes + amount;
+  dashboardData.walkingMinutes = dashboardData.walkingMinutes + amount;
 
-  if (walkingMinutes < 0) {
-    walkingMinutes = 0;
+  if (dashboardData.walkingMinutes < 0) {
+    dashboardData.walkingMinutes = 0;
   }
 
-  if (walkingMinutes > walkingGoal) {
-    walkingMinutes = walkingGoal;
+  if (dashboardData.walkingMinutes > walkingGoal) {
+    dashboardData.walkingMinutes = walkingGoal;
   }
 
   updateDashboard();
+  saveDashboard();
+}
+
+/* ---------- Tasks ---------- */
+
+function updateCompletedTasks() {
+  dashboardData.completedTasks = [];
+
+  taskCheckboxes.forEach(function(task, index) {
+    if (task.checked) {
+      dashboardData.completedTasks.push(index);
+    }
+  });
+
+  updateDashboard();
+  saveDashboard();
 }
 
 /* ---------- Progress Helpers ---------- */
@@ -70,17 +129,11 @@ function getProgressPercent(currentAmount, goalAmount) {
 /* ---------- Daily Score ---------- */
 
 function calculateDailyScore() {
-  let completedTasks = 0;
-
-  taskCheckboxes.forEach(function(task) {
-    if (task.checked) {
-      completedTasks++;
-    }
-  });
+  let completedTasks = dashboardData.completedTasks.length;
 
   const taskScore = completedTasks / taskCheckboxes.length;
-  const waterScore = waterCount / waterGoal;
-  const walkingScore = walkingMinutes / walkingGoal;
+  const waterScore = dashboardData.waterCount / waterGoal;
+  const walkingScore = dashboardData.walkingMinutes / walkingGoal;
 
   const totalScore = (taskScore + waterScore + walkingScore) / 3;
 
@@ -90,14 +143,14 @@ function calculateDailyScore() {
 /* ---------- Update Dashboard ---------- */
 
 function updateDashboard() {
-  waterCountElement.textContent = waterCount;
-  walkingCountElement.textContent = walkingMinutes;
+  waterCountElement.textContent = dashboardData.waterCount;
+  walkingCountElement.textContent = dashboardData.walkingMinutes;
 
   waterProgressElement.style.width =
-    getProgressPercent(waterCount, waterGoal) + "%";
+    getProgressPercent(dashboardData.waterCount, waterGoal) + "%";
 
   walkingProgressElement.style.width =
-    getProgressPercent(walkingMinutes, walkingGoal) + "%";
+    getProgressPercent(dashboardData.walkingMinutes, walkingGoal) + "%";
 
   dailyScoreElement.textContent = calculateDailyScore() + "%";
 }
@@ -120,9 +173,17 @@ walkButtons.forEach(function(button) {
 });
 
 taskCheckboxes.forEach(function(task) {
-  task.addEventListener("change", updateDashboard);
+  task.addEventListener("change", updateCompletedTasks);
+});
+
+/* ---------- Apply Touch Feedback ---------- */
+
+const allButtons = document.querySelectorAll("button");
+
+allButtons.forEach(function(button) {
+  addTouchFeedback(button);
 });
 
 /* ---------- Start App ---------- */
 
-updateDashboard();
+loadDashboard();
