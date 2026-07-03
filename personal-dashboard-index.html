@@ -3,228 +3,128 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MJ Quest</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Georgia, serif;
-      background: #f7f1e8;
-      color: #263528;
-    }
+  <title>Personal Dashboard</title>
 
-    .app {
-      max-width: 430px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-
-    h1 {
-      margin-bottom: 4px;
-      font-size: 34px;
-    }
-
-    .subtitle {
-      color: #6d766c;
-      margin-top: 0;
-    }
-
-    .card {
-      background: #fffaf2;
-      border: 1px solid #e6d9c9;
-      border-radius: 20px;
-      padding: 18px;
-      margin: 14px 0;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.06);
-    }
-
-    .energy-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    button {
-      border: none;
-      border-radius: 12px;
-      padding: 12px;
-      background: #829b73;
-      color: white;
-      font-size: 15px;
-      cursor: pointer;
-    }
-
-    button.secondary {
-      background: #eee5da;
-      color: #263528;
-    }
-
-    button.selected {
-      background: #5f7f57;
-      color: white;
-    }
-
-    .progress-bar {
-      height: 16px;
-      background: #e8dfd3;
-      border-radius: 999px;
-      overflow: hidden;
-      margin: 12px 0;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background: #6f8f61;
-      width: 0%;
-      border-radius: 999px;
-      transition: width 0.3s;
-    }
-
-    .row {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .habit {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 10px 0;
-      font-size: 18px;
-    }
-
-    input[type="checkbox"] {
-      width: 22px;
-      height: 22px;
-      accent-color: #6f8f61;
-    }
-
-    .score {
-      font-size: 42px;
-      text-align: center;
-      margin: 10px 0;
-    }
-
-    .footer-note {
-      text-align: center;
-      color: #6d766c;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="css/personal-dashboard-css/base.css" />
+  <link rel="stylesheet" href="css/personal-dashboard-css/layout.css" />
+  <link rel="stylesheet" href="css/personal-dashboard-css/cards.css" />
+  <link rel="stylesheet" href="css/personal-dashboard-css/buttons.css" />
+  <link rel="stylesheet" href="css/personal-dashboard-css/progress.css" />
+  <link rel="stylesheet" href="css/personal-dashboard-css/dashboard.css" />
+  <link rel="stylesheet" href="css/personal-dashboard-css/theme.css" />
 </head>
 
 <body>
-  <main class="app">
-    <h1>MJ Quest 🌿</h1>
-    <p class="subtitle">Tiny wins count. No guilt. Just today.</p>
+  <main class="personal-dashboard-app">
+    <header class="dashboard-header">
+      <p class="eyebrow">Today’s Quest</p>
+      <h1>Good morning, MJ 🌿</h1>
+      <p class="subtitle">Tiny wins count. No guilt. Just today.</p>
+    </header>
 
-    <section class="card">
+    <section class="dashboard-card">
       <h2>Energy Today</h2>
+
       <div class="energy-grid">
-        <button class="secondary">🌧 Barely Surviving</button>
-        <button class="secondary">🌤 Low Energy</button>
-        <button class="selected">☀️ Normal Day</button>
-        <button class="secondary">⚡ Super Motivated</button>
+        <button class="energy-button">🌧 Barely Surviving</button>
+        <button class="energy-button">🌤 Low Energy</button>
+        <button class="energy-button selected">☀️ Normal Day</button>
+        <button class="energy-button">⚡ Super Motivated</button>
       </div>
     </section>
 
-    <section class="card">
+    <section class="dashboard-card">
       <h2>💧 Water</h2>
-      <p><span id="waterCount">0</span> / 10 glasses</p>
+      <p><span id="water-count">0</span> / 10 glasses</p>
+
       <div class="progress-bar">
-        <div id="waterBar" class="progress-fill"></div>
+        <div id="water-progress" class="progress-fill"></div>
       </div>
-      <div class="row">
-        <button onclick="addWater(1)">+1 Glass</button>
-        <button onclick="addWater(-1)" class="secondary">-1</button>
+
+      <div class="button-row">
+        <button id="add-water-button">+1 Glass</button>
+        <button id="remove-water-button" class="secondary-button">-1</button>
       </div>
     </section>
 
-    <section class="card">
+    <section class="dashboard-card">
       <h2>🚶 Walking</h2>
-      <p><span id="walkCount">0</span> / 30 minutes</p>
+      <p><span id="walking-count">0</span> / 30 minutes</p>
+
       <div class="progress-bar">
-        <div id="walkBar" class="progress-fill"></div>
+        <div id="walking-progress" class="progress-fill"></div>
       </div>
-      <div class="row">
-        <button onclick="addWalk(5)">+5 min</button>
-        <button onclick="addWalk(10)">+10 min</button>
-        <button onclick="addWalk(30)">+30 min</button>
-        <button onclick="addWalk(-5)" class="secondary">-5</button>
+
+      <div class="button-row">
+        <button class="walk-button" data-minutes="5">+5</button>
+        <button class="walk-button" data-minutes="10">+10</button>
+        <button class="walk-button" data-minutes="30">+30</button>
+        <button class="walk-button secondary-button" data-minutes="-5">-5</button>
       </div>
     </section>
 
-    <section class="card">
+    <section class="dashboard-card">
       <h2>⭐ Today’s Big Three</h2>
-      <label class="habit"><input type="checkbox" class="task" /> Therapy</label>
-      <label class="habit"><input type="checkbox" class="task" /> Kitchen Reset</label>
-      <label class="habit"><input type="checkbox" class="task" /> Fold Laundry</label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Therapy
+      </label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Kitchen Reset
+      </label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Fold Laundry
+      </label>
     </section>
 
-    <section class="card">
+    <section class="dashboard-card">
       <h2>🏡 Today’s Habits</h2>
-      <label class="habit"><input type="checkbox" class="task" /> Brush Teeth</label>
-      <label class="habit"><input type="checkbox" class="task" /> Vitamins</label>
-      <label class="habit"><input type="checkbox" class="task" /> Wash Face</label>
-      <label class="habit"><input type="checkbox" class="task" /> Dishwasher</label>
-      <label class="habit"><input type="checkbox" class="task" /> Laundry</label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Brush Teeth
+      </label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Vitamins
+      </label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Wash Face
+      </label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Dishwasher
+      </label>
+
+      <label class="habit-row">
+        <input type="checkbox" class="task-checkbox" />
+        Laundry
+      </label>
     </section>
 
-    <section class="card">
+    <section class="dashboard-card score-card">
       <h2>🎉 Score Today</h2>
-      <div id="score" class="score">0%</div>
+      <p id="daily-score">0%</p>
     </section>
 
-    <p class="footer-note">You’re doing better than you think. 💚</p>
+    <footer class="dashboard-footer">
+      <p>You’re doing better than you think. 💚</p>
+    </footer>
   </main>
 
-  <script>
-    let water = 0;
-    let walking = 0;
-
-    function addWater(amount) {
-      water = Math.max(0, Math.min(10, water + amount));
-      updateScreen();
-    }
-
-    function addWalk(amount) {
-      walking = Math.max(0, Math.min(30, walking + amount));
-      updateScreen();
-    }
-
-    function updateScreen() {
-      document.getElementById("waterCount").textContent = water;
-      document.getElementById("walkCount").textContent = walking;
-
-      document.getElementById("waterBar").style.width = (water / 10) * 100 + "%";
-      document.getElementById("walkBar").style.width = (walking / 30) * 100 + "%";
-
-      updateScore();
-    }
-
-    function updateScore() {
-      const tasks = document.querySelectorAll(".task");
-      let checkedTasks = 0;
-
-      tasks.forEach(task => {
-        if (task.checked) checkedTasks++;
-      });
-
-      const waterScore = water / 10;
-      const walkScore = walking / 30;
-      const taskScore = checkedTasks / tasks.length;
-
-      const totalScore = Math.round(((waterScore + walkScore + taskScore) / 3) * 100);
-
-      document.getElementById("score").textContent = totalScore + "%";
-    }
-
-    document.querySelectorAll(".task").forEach(task => {
-      task.addEventListener("change", updateScore);
-    });
-
-    updateScreen();
-  </script>
+  <script src="js/personal-dashboard-js/storage.js"></script>
+  <script src="js/personal-dashboard-js/progress.js"></script>
+  <script src="js/personal-dashboard-js/dashboard.js"></script>
+  <script src="js/personal-dashboard-js/app.js"></script>
 </body>
 </html>
