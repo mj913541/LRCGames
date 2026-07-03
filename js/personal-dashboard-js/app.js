@@ -1,63 +1,130 @@
 /* ==========================================================
    PERSONAL DASHBOARD
-   App JavaScript
-   Touch-Friendly Version
+   Main App
    ========================================================== */
 
-/* ---------- Goals ---------- */
-
-const waterGoal = 10;
-const walkingGoal = 30;
-
-/* ---------- Starting Data ---------- */
-
-let dashboardData = {
+const dashboardData = {
+  energy: "normal",
   waterCount: 0,
   walkingMinutes: 0,
   completedTasks: []
 };
 
-/* ---------- Elements ---------- */
+const savedData = loadPersonalDashboardData();
 
-const waterCountElement = document.getElementById("water-count");
-const waterProgressElement = document.getElementById("water-progress");
+if (savedData) {
+  dashboardData.energy = savedData.energy || "normal";
+  dashboardData.waterCount = savedData.waterCount || 0;
+  dashboardData.walkingMinutes = savedData.walkingMinutes || 0;
+  dashboardData.completedTasks = savedData.completedTasks || [];
+}
 
-const walkingCountElement = document.getElementById("walking-count");
-const walkingProgressElement = document.getElementById("walking-progress");
+const waterGoal = 10;
+const walkingGoal = 30;
 
-const dailyScoreElement = document.getElementById("daily-score");
-
+const energyButtons = document.querySelectorAll(".energy-button");
+const waterCount = document.getElementById("water-count");
+const waterProgress = document.getElementById("water-progress");
 const addWaterButton = document.getElementById("add-water-button");
 const removeWaterButton = document.getElementById("remove-water-button");
 
+const walkingCount = document.getElementById("walking-count");
+const walkingProgress = document.getElementById("walking-progress");
 const walkButtons = document.querySelectorAll(".walk-button");
+
 const taskCheckboxes = document.querySelectorAll(".task-checkbox");
-
-/* ---------- Load Saved Data ---------- */
-
-function loadDashboard() {
-  const savedData = loadPersonalDashboardData();
-
-  if (savedData) {
-    dashboardData = savedData;
-  }
-
-  taskCheckboxes.forEach(function(task, index) {
-    task.checked = dashboardData.completedTasks.includes(index);
-  });
-
-  updateDashboard();
-}
-
-/* ---------- Save Current Data ---------- */
+const dailyScore = document.getElementById("daily-score");
 
 function saveDashboard() {
   savePersonalDashboardData(dashboardData);
 }
 
-/* ---------- Touch-Friendly Button Feedback ---------- */
+function updateProgressBar(element, current, goal) {
+  const percent = Math.min(100, Math.max(0, (current / goal) * 100));
+  element.style.width = percent + "%";
+}
 
-function addTouchFeedback(button) {
+function updateScore() {
+  const taskTotal = taskCheckboxes.length;
+  const taskDone = dashboardData.completedTasks.length;
+
+  const taskScore = taskDone / taskTotal;
+  const waterScore = dashboardData.waterCount / waterGoal;
+  const walkingScore = dashboardData.walkingMinutes / walkingGoal;
+
+  const score = Math.round(((taskScore + waterScore + walkingScore) / 3) * 100);
+
+  dailyScore.textContent = score + "%";
+}
+
+function refreshDashboard() {
+  waterCount.textContent = dashboardData.waterCount;
+  walkingCount.textContent = dashboardData.walkingMinutes;
+
+  updateProgressBar(waterProgress, dashboardData.waterCount, waterGoal);
+  updateProgressBar(walkingProgress, dashboardData.walkingMinutes, walkingGoal);
+
+  energyButtons.forEach(function(button) {
+    button.classList.remove("selected");
+
+    if (button.dataset.energy === dashboardData.energy) {
+      button.classList.add("selected");
+    }
+  });
+
+  taskCheckboxes.forEach(function(checkbox, index) {
+    checkbox.checked = dashboardData.completedTasks.includes(index);
+  });
+
+  updateScore();
+  saveDashboard();
+}
+
+energyButtons.forEach(function(button) {
+  button.addEventListener("click", function() {
+    dashboardData.energy = button.dataset.energy;
+    refreshDashboard();
+  });
+});
+
+addWaterButton.addEventListener("click", function() {
+  dashboardData.waterCount = Math.min(waterGoal, dashboardData.waterCount + 1);
+  refreshDashboard();
+});
+
+removeWaterButton.addEventListener("click", function() {
+  dashboardData.waterCount = Math.max(0, dashboardData.waterCount - 1);
+  refreshDashboard();
+});
+
+walkButtons.forEach(function(button) {
+  button.addEventListener("click", function() {
+    const minutes = Number(button.dataset.minutes);
+    dashboardData.walkingMinutes = Math.min(
+      walkingGoal,
+      Math.max(0, dashboardData.walkingMinutes + minutes)
+    );
+    refreshDashboard();
+  });
+});
+
+taskCheckboxes.forEach(function(checkbox, index) {
+  checkbox.addEventListener("change", function() {
+    if (checkbox.checked) {
+      if (!dashboardData.completedTasks.includes(index)) {
+        dashboardData.completedTasks.push(index);
+      }
+    } else {
+      dashboardData.completedTasks = dashboardData.completedTasks.filter(function(taskIndex) {
+        return taskIndex !== index;
+      });
+    }
+
+    refreshDashboard();
+  });
+});
+
+document.querySelectorAll("button").forEach(function(button) {
   button.addEventListener("touchstart", function() {
     button.classList.add("is-pressed");
   });
@@ -69,121 +136,6 @@ function addTouchFeedback(button) {
   button.addEventListener("touchcancel", function() {
     button.classList.remove("is-pressed");
   });
-}
-
-/* ---------- Water ---------- */
-
-function addWater(amount) {
-  dashboardData.waterCount = dashboardData.waterCount + amount;
-
-  if (dashboardData.waterCount < 0) {
-    dashboardData.waterCount = 0;
-  }
-
-  if (dashboardData.waterCount > waterGoal) {
-    dashboardData.waterCount = waterGoal;
-  }
-
-  updateDashboard();
-  saveDashboard();
-}
-
-/* ---------- Walking ---------- */
-
-function addWalkingMinutes(amount) {
-  dashboardData.walkingMinutes = dashboardData.walkingMinutes + amount;
-
-  if (dashboardData.walkingMinutes < 0) {
-    dashboardData.walkingMinutes = 0;
-  }
-
-  if (dashboardData.walkingMinutes > walkingGoal) {
-    dashboardData.walkingMinutes = walkingGoal;
-  }
-
-  updateDashboard();
-  saveDashboard();
-}
-
-/* ---------- Tasks ---------- */
-
-function updateCompletedTasks() {
-  dashboardData.completedTasks = [];
-
-  taskCheckboxes.forEach(function(task, index) {
-    if (task.checked) {
-      dashboardData.completedTasks.push(index);
-    }
-  });
-
-  updateDashboard();
-  saveDashboard();
-}
-
-/* ---------- Progress Helpers ---------- */
-
-function getProgressPercent(currentAmount, goalAmount) {
-  return Math.round((currentAmount / goalAmount) * 100);
-}
-
-/* ---------- Daily Score ---------- */
-
-function calculateDailyScore() {
-  let completedTasks = dashboardData.completedTasks.length;
-
-  const taskScore = completedTasks / taskCheckboxes.length;
-  const waterScore = dashboardData.waterCount / waterGoal;
-  const walkingScore = dashboardData.walkingMinutes / walkingGoal;
-
-  const totalScore = (taskScore + waterScore + walkingScore) / 3;
-
-  return Math.round(totalScore * 100);
-}
-
-/* ---------- Update Dashboard ---------- */
-
-function updateDashboard() {
-  waterCountElement.textContent = dashboardData.waterCount;
-  walkingCountElement.textContent = dashboardData.walkingMinutes;
-
-  waterProgressElement.style.width =
-    getProgressPercent(dashboardData.waterCount, waterGoal) + "%";
-
-  walkingProgressElement.style.width =
-    getProgressPercent(dashboardData.walkingMinutes, walkingGoal) + "%";
-
-  dailyScoreElement.textContent = calculateDailyScore() + "%";
-}
-
-/* ---------- Button Events ---------- */
-
-addWaterButton.addEventListener("click", function() {
-  addWater(1);
 });
 
-removeWaterButton.addEventListener("click", function() {
-  addWater(-1);
-});
-
-walkButtons.forEach(function(button) {
-  button.addEventListener("click", function() {
-    const minutes = Number(button.dataset.minutes);
-    addWalkingMinutes(minutes);
-  });
-});
-
-taskCheckboxes.forEach(function(task) {
-  task.addEventListener("change", updateCompletedTasks);
-});
-
-/* ---------- Apply Touch Feedback ---------- */
-
-const allButtons = document.querySelectorAll("button");
-
-allButtons.forEach(function(button) {
-  addTouchFeedback(button);
-});
-
-/* ---------- Start App ---------- */
-
-loadDashboard();
+refreshDashboard();
