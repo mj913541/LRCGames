@@ -177,3 +177,18 @@ button:disabled {
 
     background: var(--primary-dark);
 }
+
+
+/* ---------- Touch Feedback ---------- */
+
+button {
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button.is-pressed {
+  transform: scale(0.96);
+}
+
