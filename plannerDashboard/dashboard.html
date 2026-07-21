@@ -30,13 +30,6 @@
   </header>
 
   <main class="page-shell">
-    <nav class="view-switcher" aria-label="Planner view">
-      <button id="dailyViewBtn" class="view-button active" type="button">Daily spread</button>
-      <button id="calendarViewBtn" class="view-button" type="button">Calendar</button>
-      <button id="todayOnlyBtn" class="view-button" type="button">Today only</button>
-    </nav>
-
-    <div id="dailyView">
     <section id="contextCard" class="card context-card">
       <div class="card-heading">
         <div>
@@ -69,50 +62,6 @@
       </form>
     </section>
 
-    <section id="commandCenter" class="command-center hidden" aria-label="Today command center">
-      <article class="welcome-card card">
-        <div>
-          <p class="eyebrow">TODAY'S COMMAND CENTER</p>
-          <h2 id="greetingText">Good morning, MJ 🌿</h2>
-          <p id="daySummaryText" class="subtle">Your day at a glance.</p>
-        </div>
-        <div class="welcome-actions">
-          <button id="beginDayBtn" class="button primary" type="button">Begin my day</button>
-          <button id="focusModeBtn" class="button secondary" type="button">Focus mode</button>
-        </div>
-      </article>
-
-      <div class="command-grid">
-        <article class="card next-card">
-          <p class="eyebrow">NEXT THING</p>
-          <div id="nextThingContent" class="next-thing-content"></div>
-        </article>
-
-        <article class="card focus-card">
-          <label for="dailyFocusInput" class="eyebrow">TODAY'S FOCUS</label>
-          <textarea id="dailyFocusInput" rows="2" placeholder="What would make today feel successful?"></textarea>
-          <p class="subtle">One focus is enough. Everything else can be extra.</p>
-        </article>
-
-        <article class="card score-card">
-          <div class="score-ring" id="dailyScoreRing"><span id="dailyScoreValue">0%</span></div>
-          <div>
-            <p class="eyebrow">DAILY PROGRESS</p>
-            <h3 id="dailyScoreLabel">A fresh start</h3>
-            <p id="dailyScoreDetails" class="subtle"></p>
-          </div>
-        </article>
-      </div>
-
-      <article class="card live-timeline-card">
-        <div class="card-heading live-heading">
-          <div><p class="eyebrow">LIVE TIMELINE</p><h3>Where am I in the day?</h3></div>
-          <span id="liveClock" class="live-clock"></span>
-        </div>
-        <div id="liveTimeline" class="live-timeline"></div>
-      </article>
-    </section>
-
     <section id="dashboardContent" class="dashboard-layout hidden">
       <div class="main-column">
         <article class="card collapsible-card" data-card="merged">
@@ -126,6 +75,24 @@
               <button id="addTodayTaskBtn" class="button ghost" type="button">+ Task</button>
             </div>
             <div id="timeline" class="timeline"></div>
+          </div>
+        </article>
+
+
+        <article class="card collapsible-card" data-card="brainDump">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">✦</span> Brain Dump Inbox</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <p class="subtle">Capture it now. Decide where it belongs later.</p>
+            <div class="quick-capture">
+              <input id="brainDumpInput" type="text" placeholder="I just remembered…" aria-label="Brain dump thought">
+              <select id="brainDumpCategory" aria-label="Brain dump category">
+                <option>Unsorted</option><option>Work</option><option>Home</option><option>Lincoln</option><option>Shopping</option><option>Idea</option>
+              </select>
+              <button id="addBrainDumpBtn" class="button primary" type="button">Capture</button>
+            </div>
+            <div id="brainDumpList" class="brain-dump-list"></div>
           </div>
         </article>
 
@@ -160,10 +127,33 @@
             </section>
           </div>
         </article>
+
+        <article class="card collapsible-card" data-card="recurring">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">⟳</span> Recurring Tasks</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <div class="toolbar compact-toolbar"><button id="addRecurringBtn" class="button ghost" type="button">+ Recurring task</button></div>
+            <p class="subtle">Active tasks automatically join the daily timeline when their rule matches.</p>
+            <div id="recurringList" class="recurring-list"></div>
+          </div>
+        </article>
+
       </div>
 
       <aside class="side-column">
         <blockquote id="dailyQuote" class="quote-card"></blockquote>
+
+        <article class="card collapsible-card" data-card="specialDates">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">♡</span> Special Dates</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <div class="toolbar compact-toolbar"><button id="addSpecialDateBtn" class="button ghost" type="button">+ Birthday or anniversary</button></div>
+            <div id="specialDatesList" class="special-dates-list"></div>
+          </div>
+        </article>
+
 
         <article class="card collapsible-card" data-card="goals">
           <button class="collapse-trigger" type="button" aria-expanded="true">
@@ -189,33 +179,6 @@
         </article>
       </aside>
     </section>
-    </div>
-
-    <section id="calendarView" class="calendar-view hidden" aria-label="Monthly calendar">
-      <article class="card calendar-card">
-        <div class="calendar-toolbar">
-          <div>
-            <p class="eyebrow">MONTHLY VIEW</p>
-            <h2 id="calendarMonthLabel">Calendar</h2>
-            <p class="subtle">Tap a date to open its daily spread.</p>
-          </div>
-          <div class="calendar-actions">
-            <button id="previousMonthBtn" class="icon-button" type="button" aria-label="Previous month">‹</button>
-            <button id="todayMonthBtn" class="button secondary" type="button">Today</button>
-            <button id="nextMonthBtn" class="icon-button" type="button" aria-label="Next month">›</button>
-          </div>
-        </div>
-        <div class="calendar-weekdays" aria-hidden="true">
-          <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
-        </div>
-        <div id="calendarGrid" class="calendar-grid"></div>
-        <div class="calendar-legend">
-          <span><i class="legend-dot appointment-dot"></i> Appointment</span>
-          <span><i class="legend-dot daycare-dot"></i> Daycare</span>
-          <span><i class="legend-letter">A</i> Letter day</span>
-        </div>
-      </article>
-    </section>
   </main>
 
   <dialog id="itemDialog">
@@ -225,25 +188,6 @@
       <div class="dialog-actions"><button class="button secondary" value="cancel" type="button" id="dialogCancel">Cancel</button><button class="button primary" value="default" type="submit">Save</button></div>
     </form>
   </dialog>
-
-  <section id="focusOverlay" class="focus-overlay hidden" aria-label="Focus mode">
-    <div class="focus-panel">
-      <div class="focus-panel-heading">
-        <div><p class="eyebrow">FOCUS MODE</p><h2 id="focusTaskTitle">Choose the next small thing</h2></div>
-        <button id="closeFocusBtn" class="icon-button" type="button" aria-label="Close focus mode">×</button>
-      </div>
-      <p id="focusTaskMeta" class="subtle"></p>
-      <div id="focusTimer" class="focus-timer">25:00</div>
-      <div class="focus-controls">
-        <button id="startFocusTimerBtn" class="button primary" type="button">Start</button>
-        <button id="resetFocusTimerBtn" class="button secondary" type="button">Reset</button>
-        <button id="completeFocusTaskBtn" class="button secondary" type="button">Mark complete</button>
-      </div>
-      <label class="focus-notes-label">Quick focus notes
-        <textarea id="focusNotes" rows="5" placeholder="Keep only what you need for this task…"></textarea>
-      </label>
-    </div>
-  </section>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script type="module" src="dashboard.js"></script>
