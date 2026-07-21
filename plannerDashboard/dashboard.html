@@ -163,6 +163,16 @@
             <span><span class="card-icon">◒</span> Weekly Tasks Progress</span><span class="chevron">⌃</span>
           </button>
           <div class="collapsible-content weekly-stack">
+            <div class="weekly-range-toolbar">
+              <button id="previousWeekBtn" class="mini-button" type="button" aria-label="Previous week">‹</button>
+              <div>
+                <p class="eyebrow">SUNDAY–SATURDAY</p>
+                <h3 id="weeklyRangeLabel">This week</h3>
+              </div>
+              <button id="nextWeekBtn" class="mini-button" type="button" aria-label="Next week">›</button>
+              <button id="thisWeekBtn" class="mini-button" type="button">This week</button>
+            </div>
+            <div id="weeklyDateStrip" class="weekly-date-strip" aria-label="Days in this week"></div>
             <section class="mini-card">
               <div class="mini-card-heading">
                 <div><p class="eyebrow">WORK</p><h3>Work tasks</h3></div>

@@ -46,7 +46,7 @@ let weekData = null;
 let profileData = null;
 let saveTimer = null;
 let selectedDateKey = localDateKey(new Date());
-let selectedWeekKey = getISOWeekKey(new Date());
+let selectedWeekKey = getSundayWeekKey(new Date());
 let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let calendarData = new Map();
 let eventsBound = false;
@@ -70,6 +70,15 @@ function getISOWeekKey(date) {
   const week1=new Date(copy.getFullYear(),0,4);
   const week=1+Math.round(((copy-week1)/86400000-3+((week1.getDay()+6)%7))/7);
   return `${copy.getFullYear()}-W${String(week).padStart(2,"0")}`;
+}
+function getSundayStart(date) {
+  const start=new Date(date);
+  start.setHours(12,0,0,0);
+  start.setDate(start.getDate()-start.getDay());
+  return start;
+}
+function getSundayWeekKey(date) {
+  return `SUN-${localDateKey(getSundayStart(date))}`;
 }
 function dayDoc(dateKey=selectedDateKey) { return doc(db,"plannerDashboardUsers",user.uid,"days",dateKey); }
 function weekDoc(weekKey=selectedWeekKey) { return doc(db,"plannerDashboardUsers",user.uid,"weeks",weekKey); }
@@ -173,14 +182,16 @@ function defaultDayData(profileParking="") {
 
 async function loadSelectedDate(dateKey) {
   selectedDateKey=dateKey;
-  selectedWeekKey=getISOWeekKey(dateFromKey(dateKey));
-  const [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
+  const selectedDate=dateFromKey(dateKey);
+  selectedWeekKey=getSundayWeekKey(selectedDate);
+  const legacyWeekKey=getISOWeekKey(selectedDate);
+  const [daySnap,weekSnap,legacyWeekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(weekDoc(legacyWeekKey)),getDoc(profileDoc())]);
   profileData = profileSnap.exists() ? profileSnap.data() : {};
   profileData.brainDump ||= [];
   profileData.recurringTasks ||= [];
   profileData.specialDates ||= [];
   dayData = daySnap.exists() ? daySnap.data() : defaultDayData(profileData.parkingLot || "");
-  weekData = weekSnap.exists() ? weekSnap.data() : {week:selectedWeekKey,workTasks:[],homeTasks:DEFAULT_HOME_TASKS.map(name=>({id:uid(),name,status:"planned"}))};
+  weekData = weekSnap.exists() ? weekSnap.data() : legacyWeekSnap.exists() ? {...legacyWeekSnap.data(),week:selectedWeekKey} : {week:selectedWeekKey,workTasks:[],homeTasks:DEFAULT_HOME_TASKS.map(name=>({id:uid(),name,status:"planned"}))};
   dayData.completed ||= {};
   dayData.customItems ||= [];
   dayData.goals ||= [];
@@ -269,6 +280,9 @@ function bindEvents() {
   $("dailyViewBtn").addEventListener("click",()=>switchView("daily"));
   $("calendarViewBtn").addEventListener("click",()=>switchView("calendar"));
   $("weeklyViewBtn").addEventListener("click",()=>switchView("weekly"));
+  $("previousWeekBtn")?.addEventListener("click",()=>changeWeek(-1));
+  $("nextWeekBtn")?.addEventListener("click",()=>changeWeek(1));
+  $("thisWeekBtn")?.addEventListener("click",()=>openWeekForDate(new Date()));
   $("todayOnlyBtn").addEventListener("click",toggleTodayOnly);
   $("previousMonthBtn").addEventListener("click",()=>changeCalendarMonth(-1));
   $("nextMonthBtn").addEventListener("click",()=>changeCalendarMonth(1));
@@ -303,6 +317,20 @@ async function switchView(view) {
     $("dashboardContent").classList.remove("hidden");
   }
   if(isCalendar) await renderCalendar();
+}
+
+
+async function changeWeek(delta) {
+  const d=dateFromKey(selectedDateKey);
+  d.setDate(d.getDate()+delta*7);
+  await openWeekForDate(d);
+}
+async function openWeekForDate(date) {
+  await loadSelectedDate(localDateKey(date));
+  populateDailyControls();
+  renderAll();
+  restoreCollapsed();
+  await switchView("weekly");
 }
 
 async function changeCalendarMonth(delta) {
@@ -457,7 +485,28 @@ function renderSpecialDates() {
   $("specialDatesList").querySelectorAll("[data-special-delete]").forEach(btn=>btn.addEventListener("click",()=>{profileData.specialDates=profileData.specialDates.filter(i=>i.id!==btn.dataset.specialDelete);renderSpecialDates();renderTimeline();queueSave();}));
 }
 
-function renderWeekly() { renderWeeklyList("workTaskList",weekData.workTasks,"work"); renderWeeklyList("homeTaskList",weekData.homeTasks,"home"); }
+function renderWeekly() {
+  renderWeeklyHeader();
+  renderWeeklyList("workTaskList",weekData.workTasks,"work");
+  renderWeeklyList("homeTaskList",weekData.homeTasks,"home");
+}
+function renderWeeklyHeader() {
+  const strip=$("weeklyDateStrip");
+  const label=$("weeklyRangeLabel");
+  if(!strip || !label) return;
+  const start=getSundayStart(dateFromKey(selectedDateKey));
+  const end=new Date(start); end.setDate(end.getDate()+6);
+  const sameMonth=start.getMonth()===end.getMonth();
+  label.textContent=sameMonth
+    ? `${start.toLocaleDateString("en-US",{month:"long",day:"numeric"})}–${end.getDate()}, ${end.getFullYear()}`
+    : `${start.toLocaleDateString("en-US",{month:"short",day:"numeric"})}–${end.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`;
+  strip.innerHTML=Array.from({length:7},(_,i)=>{
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const key=localDateKey(d);
+    return `<button class="weekly-date-button ${key===selectedDateKey?"selected":""} ${key===localDateKey(new Date())?"today":""}" data-week-date="${key}" type="button"><span>${d.toLocaleDateString("en-US",{weekday:"short"})}</span><strong>${d.getDate()}</strong></button>`;
+  }).join("");
+  strip.querySelectorAll("[data-week-date]").forEach(btn=>btn.addEventListener("click",async()=>{ await loadSelectedDate(btn.dataset.weekDate); populateDailyControls(); renderAll(); restoreCollapsed(); switchView("daily"); }));
+}
 function renderWeeklyList(id,tasks,kind) {
   const el=$(id); if(!tasks.length) { el.innerHTML='<div class="empty-state">No tasks yet. Add one when you are ready.</div>'; return; }
   const steps={planned:34,prepped:67,completed:100};
