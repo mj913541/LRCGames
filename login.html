@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>LRC Quest Sign In</title>
+  <style>
+    :root{font-family:system-ui,sans-serif;color:#26332f;background:#edf3ef}*{box-sizing:border-box}body{min-height:100vh;margin:0;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at top left,#fffdf8,transparent 42%),linear-gradient(145deg,#edf3ef,#f7f3ec)}main{width:min(440px,100%);padding:36px;border:1px solid #dce6e0;border-radius:26px;background:rgba(255,255,255,.9);box-shadow:0 20px 55px rgba(66,85,77,.13);text-align:center}h1{font-family:Georgia,serif;font-weight:500}p{color:#6d7c76;line-height:1.5}button{width:100%;min-height:52px;margin-top:14px;border:0;border-radius:15px;color:white;background:#506c62;font:700 1rem system-ui;cursor:pointer}#message{min-height:24px;margin-top:16px;color:#9a514b;font-size:.9rem}
+  </style>
+</head>
+<body><main><p style="letter-spacing:.12em;font-size:.72rem;font-weight:700;color:#506c62">LRC QUEST</p><h1>Welcome back, Mrs. A</h1><p>Sign in with one of your approved Google accounts to open your personal planner dashboard.</p><button id="googleSignIn">Continue with Google</button><div id="message" role="status"></div></main>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+const config={apiKey:"AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",authDomain:"lrcquest-3039e.firebaseapp.com",projectId:"lrcquest-3039e",storageBucket:"lrcquest-3039e.firebasestorage.app",messagingSenderId:"72063656342",appId:"1:72063656342:web:bc08c6538437f50b53bdb7",measurementId:"G-5VXRYJ733C"};
+const auth=getAuth(initializeApp(config)), provider=new GoogleAuthProvider(), allowed=new Set(["malbrecht@sd308.org","malbrecht3317@gmail.com"]), message=document.getElementById("message"); provider.setCustomParameters({prompt:"select_account"});
+const params=new URLSearchParams(location.search), redirect=params.get("redirect")||"questHub.html"; if(params.get("reason")==="unauthorized") message.textContent="That Google account is not approved for this dashboard.";
+async function finish(result){if(!result)return;const email=(result.user.email||"").toLowerCase();if(!allowed.has(email)){await signOut(auth);message.textContent="That Google account is not approved for this dashboard.";return;}location.replace(redirect);}
+getRedirectResult(auth).then(finish).catch(e=>message.textContent=e.message);
+document.getElementById("googleSignIn").onclick=async()=>{message.textContent="";try{await finish(await signInWithPopup(auth,provider));}catch(e){if(["auth/popup-blocked","auth/cancelled-popup-request","auth/operation-not-supported-in-this-environment"].includes(e.code))await signInWithRedirect(auth,provider);else message.textContent=e.message;}};
+</script></body></html>

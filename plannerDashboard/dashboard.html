@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#edf3ef">
+  <title>Mrs. A's Calm Day Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div id="loadingScreen" class="loading-screen" aria-live="polite">
+    <div class="loading-orb"></div>
+    <p>Opening your calm dashboard…</p>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">LRC QUEST • PERSONAL PLANNER</p>
+      <h1>Today, gently.</h1>
+      <p id="todayLabel" class="subtle"></p>
+    </div>
+    <div class="topbar-actions">
+      <span id="saveStatus" class="save-status">Saved</span>
+      <button id="editContextBtn" class="button secondary" type="button">Update day</button>
+      <button id="signOutBtn" class="icon-button" type="button" aria-label="Sign out" title="Sign out">↪</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section id="contextCard" class="card context-card">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">SET THE CONTEXT</p>
+          <h2>What kind of day is today?</h2>
+          <p class="subtle">Your answers build the rest of the dashboard. You can change them anytime.</p>
+        </div>
+      </div>
+      <form id="contextForm" class="context-grid">
+        <label>
+          Day of week
+          <select id="dayOfWeek" required>
+            <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option><option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option><option value="Friday">Friday</option><option value="Saturday">Saturday</option><option value="Sunday">Sunday</option>
+          </select>
+        </label>
+        <label>
+          School letter day
+          <select id="letterDay" required>
+            <option value="A">A Day</option><option value="B">B Day</option><option value="C">C Day</option><option value="D">D Day</option><option value="E">E Day</option><option value="No School">No School</option>
+          </select>
+        </label>
+        <fieldset>
+          <legend>Is it a daycare day?</legend>
+          <div class="segmented">
+            <label><input type="radio" name="daycare" value="yes"><span>Yes</span></label>
+            <label><input type="radio" name="daycare" value="no" checked><span>No</span></label>
+          </div>
+        </fieldset>
+        <button class="button primary context-submit" type="submit">Build my day</button>
+      </form>
+    </section>
+
+    <section id="dashboardContent" class="dashboard-layout hidden">
+      <div class="main-column">
+        <article class="card collapsible-card" data-card="merged">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">☼</span> Merged Tasks &amp; Appointments</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <div class="toolbar compact-toolbar">
+              <label class="toggle"><input id="hideCheckedTasks" type="checkbox"><span></span>Hide checked</label>
+              <button id="addAppointmentBtn" class="button ghost" type="button">+ Appointment</button>
+              <button id="addTodayTaskBtn" class="button ghost" type="button">+ Task</button>
+            </div>
+            <div id="timeline" class="timeline"></div>
+          </div>
+        </article>
+
+        <article class="card collapsible-card" data-card="parking">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">✎</span> Parking Lot</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <p class="subtle">A safe place to put thoughts without losing them. This rolls into tomorrow.</p>
+            <textarea id="parkingLot" class="parking-area" placeholder="Ideas, reminders, things to revisit…"></textarea>
+          </div>
+        </article>
+
+        <article class="card collapsible-card" data-card="weekly">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">◒</span> Weekly Tasks Progress</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content weekly-stack">
+            <section class="mini-card">
+              <div class="mini-card-heading">
+                <div><p class="eyebrow">WORK</p><h3>Work tasks</h3></div>
+                <div class="mini-actions"><button id="addWorkTaskBtn" class="mini-button" type="button">+ Add</button><button class="mini-button mini-hide" data-target="workTaskList" type="button">Hide</button></div>
+              </div>
+              <div id="workTaskList" class="weekly-list"></div>
+            </section>
+            <section class="mini-card">
+              <div class="mini-card-heading">
+                <div><p class="eyebrow">HOME</p><h3>Home tasks</h3></div>
+                <div class="mini-actions"><button id="addHomeTaskBtn" class="mini-button" type="button">+ Add</button><button class="mini-button mini-hide" data-target="homeTaskList" type="button">Hide</button></div>
+              </div>
+              <div id="homeTaskList" class="weekly-list"></div>
+            </section>
+          </div>
+        </article>
+      </div>
+
+      <aside class="side-column">
+        <blockquote id="dailyQuote" class="quote-card"></blockquote>
+
+        <article class="card collapsible-card" data-card="goals">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">◎</span> How many did I do today?</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <div class="toolbar compact-toolbar">
+              <label class="toggle"><input id="hideCompletedGoals" type="checkbox"><span></span>Hide completed</label>
+              <button id="addGoalBtn" class="button ghost" type="button">+ Goal</button>
+            </div>
+            <div id="goalList" class="goal-list"></div>
+          </div>
+        </article>
+
+        <article class="card collapsible-card" data-card="lastTime">
+          <button class="collapse-trigger" type="button" aria-expanded="true">
+            <span><span class="card-icon">↻</span> When was the last time I…?</span><span class="chevron">⌃</span>
+          </button>
+          <div class="collapsible-content">
+            <div class="toolbar right-align"><button id="addLastTimeBtn" class="button ghost" type="button">+ Item</button></div>
+            <div id="lastTimeList" class="last-time-list"></div>
+          </div>
+        </article>
+      </aside>
+    </section>
+  </main>
+
+  <dialog id="itemDialog">
+    <form id="itemDialogForm" method="dialog" class="dialog-form">
+      <div class="dialog-heading"><h2 id="dialogTitle">Add item</h2><button id="dialogClose" class="icon-button" value="cancel" type="button">×</button></div>
+      <div id="dialogFields"></div>
+      <div class="dialog-actions"><button class="button secondary" value="cancel" type="button" id="dialogCancel">Cancel</button><button class="button primary" value="default" type="submit">Save</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
