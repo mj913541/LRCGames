@@ -1,0 +1,154 @@
+/* ==========================================================
+   PERSONAL DASHBOARD
+   Cards
+   ========================================================== */
+
+/* ---------- Standard Card ---------- */
+
+.dashboard-card {
+
+    background: var(--card-background);
+
+    border: 1px solid var(--card-border);
+
+    border-radius: var(--radius-large);
+
+    padding: 22px;
+
+    margin-bottom: 20px;
+
+    box-shadow: var(--shadow-small);
+
+    transition:
+        transform var(--transition),
+        box-shadow var(--transition),
+        border-color var(--transition);
+}
+
+/* ---------- Hover ---------- */
+
+.dashboard-card:hover {
+
+    transform: translateY(-2px);
+
+    box-shadow: var(--shadow-medium);
+
+    border-color: var(--primary-light);
+}
+
+/* ---------- Card Titles ---------- */
+
+.dashboard-card h2 {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin-bottom: 16px;
+
+    color: var(--text-primary);
+}
+
+/* ---------- Paragraphs ---------- */
+
+.dashboard-card p {
+
+    margin-bottom: 12px;
+}
+
+/* ---------- Dividers ---------- */
+
+.dashboard-divider {
+
+    height: 1px;
+
+    margin: 18px 0;
+
+    background: var(--card-border);
+}
+
+/* ---------- Stat Rows ---------- */
+
+.card-stat-row {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 10px;
+}
+
+.card-stat-label {
+
+    color: var(--text-secondary);
+
+    font-size: .95rem;
+}
+
+.card-stat-value {
+
+    font-weight: 700;
+
+    color: var(--primary-dark);
+}
+
+/* ---------- Score Card ---------- */
+
+.score-card {
+
+    text-align: center;
+
+    background: linear-gradient(
+        180deg,
+        #ffffff,
+        #faf6ef
+    );
+}
+
+.score-card h2 {
+
+    justify-content: center;
+}
+
+.score-card p {
+
+    margin: 0;
+}
+
+/* ---------- Accent Card (future use) ---------- */
+
+.dashboard-card.accent {
+
+    border-left: 6px solid var(--primary);
+}
+
+/* ---------- Success Card (future use) ---------- */
+
+.dashboard-card.success {
+
+    background: #f6fff6;
+
+    border-color: #cfe9cf;
+}
+
+/* ---------- Warning Card (future use) ---------- */
+
+.dashboard-card.warning {
+
+    background: #fffaf1;
+
+    border-color: #f0dfb5;
+}
+
+/* ---------- Danger Card (future use) ---------- */
+
+.dashboard-card.danger {
+
+    background: #fff5f5;
+
+    border-color: #efc4c4;
+}

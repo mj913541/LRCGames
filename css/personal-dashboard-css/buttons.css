@@ -1,0 +1,194 @@
+/* ==========================================================
+   PERSONAL DASHBOARD
+   Buttons
+   ========================================================== */
+
+/* ---------- Base Button ---------- */
+
+button {
+
+    display: inline-flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+    gap: 8px;
+
+    padding: 12px 18px;
+
+    border: none;
+
+    border-radius: var(--radius-medium);
+
+    background: var(--primary);
+
+    color: white;
+
+    font-size: .95rem;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background var(--transition),
+        transform var(--transition),
+        box-shadow var(--transition);
+}
+
+/* ---------- Hover ---------- */
+
+button:hover {
+
+    background: var(--primary-dark);
+
+    transform: translateY(-2px);
+
+    box-shadow: var(--shadow-small);
+}
+
+/* ---------- Active ---------- */
+
+button:active {
+
+    transform: scale(.97);
+}
+
+/* ---------- Disabled ---------- */
+
+button:disabled {
+
+    opacity: .45;
+
+    cursor: not-allowed;
+
+    transform: none;
+
+    box-shadow: none;
+}
+
+/* ---------- Secondary Button ---------- */
+
+.secondary-button {
+
+    background: #F1ECE4;
+
+    color: var(--text-primary);
+}
+
+.secondary-button:hover {
+
+    background: #E8DED2;
+}
+
+/* ---------- Energy Buttons ---------- */
+
+.energy-button {
+
+    width: 100%;
+
+    min-height: 56px;
+
+    padding: 14px;
+
+    background: white;
+
+    color: var(--text-primary);
+
+    border: 2px solid var(--card-border);
+
+    border-radius: var(--radius-medium);
+
+    font-weight: 600;
+
+    text-align: center;
+}
+
+.energy-button:hover {
+
+    background: var(--primary-light);
+
+    border-color: var(--primary);
+}
+
+/* ---------- Selected Energy ---------- */
+
+.energy-button.selected {
+
+    background: var(--primary);
+
+    color: white;
+
+    border-color: var(--primary-dark);
+}
+
+/* ---------- Walking Buttons ---------- */
+
+.walk-button {
+
+    flex: 1;
+
+    min-width: 70px;
+}
+
+/* ---------- Water Button ---------- */
+
+#add-water-button {
+
+    flex: 1;
+}
+
+#remove-water-button {
+
+    width: 80px;
+}
+
+/* ---------- Future Floating Button ---------- */
+
+.floating-action-button {
+
+    position: fixed;
+
+    right: 24px;
+
+    bottom: 24px;
+
+    width: 64px;
+
+    height: 64px;
+
+    border-radius: 50%;
+
+    background: var(--primary);
+
+    color: white;
+
+    font-size: 1.8rem;
+
+    box-shadow: var(--shadow-medium);
+
+    z-index: 100;
+}
+
+.floating-action-button:hover {
+
+    transform: scale(1.05);
+
+    background: var(--primary-dark);
+}
+
+
+/* ---------- Touch Feedback ---------- */
+
+button {
+  min-height: 44px;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+button.is-pressed {
+  transform: scale(0.96);
+}
+

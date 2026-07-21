@@ -1,0 +1,166 @@
+/* ==========================================================
+   PERSONAL DASHBOARD
+   Base Styles
+   ========================================================== */
+
+/* ---------- Reset ---------- */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ---------- Root Theme ---------- */
+
+:root {
+
+    /* Backgrounds */
+    --background-primary: #F7F3EC;
+    --background-secondary: #FFFDF8;
+
+    /* Cards */
+    --card-background: #FFFFFF;
+    --card-border: #E8DED2;
+
+    /* Primary Colors */
+    --primary: #7E9C78;
+    --primary-dark: #5F7C59;
+    --primary-light: #DCE9D8;
+
+    /* Accent */
+    --accent: #C7A977;
+
+    /* Text */
+    --text-primary: #2F3A2F;
+    --text-secondary: #6B7568;
+    --text-light: #8E958B;
+
+    /* Status */
+    --success: #8CBF8A;
+    --warning: #E8C46A;
+    --danger: #D98989;
+
+    /* Border Radius */
+    --radius-small: 10px;
+    --radius-medium: 18px;
+    --radius-large: 28px;
+
+    /* Shadows */
+    --shadow-small: 0 2px 8px rgba(0,0,0,.05);
+    --shadow-medium: 0 6px 20px rgba(0,0,0,.08);
+
+    /* Animation */
+
+    --transition: .25s ease;
+}
+
+/* ---------- Body ---------- */
+
+body {
+
+    background: var(--background-primary);
+
+    color: var(--text-primary);
+
+    font-family:
+        "Segoe UI",
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        sans-serif;
+
+    min-height: 100vh;
+
+    line-height: 1.5;
+}
+
+/* ---------- Images ---------- */
+
+img {
+
+    display: block;
+
+    max-width: 100%;
+}
+
+/* ---------- Links ---------- */
+
+a {
+
+    color: inherit;
+
+    text-decoration: none;
+}
+
+/* ---------- Lists ---------- */
+
+ul,
+ol {
+
+    list-style: none;
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+
+    font: inherit;
+
+    cursor: pointer;
+
+    border: none;
+
+    background: none;
+}
+
+/* ---------- Inputs ---------- */
+
+input,
+textarea,
+select {
+
+    font: inherit;
+}
+
+/* ---------- Headings ---------- */
+
+h1 {
+
+    font-size: 2.25rem;
+
+    font-weight: 700;
+}
+
+h2 {
+
+    font-size: 1.35rem;
+
+    font-weight: 600;
+}
+
+h3 {
+
+    font-size: 1.1rem;
+
+    font-weight: 600;
+}
+
+p {
+
+    color: var(--text-secondary);
+}
+
+/* ---------- Utility ---------- */
+
+.hidden {
+
+    display: none !important;
+}
+
+.center {
+
+    text-align: center;
+}
