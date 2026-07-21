@@ -49,6 +49,11 @@ let selectedWeekKey = getISOWeekKey(new Date());
 let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 let calendarData = new Map();
 let eventsBound = false;
+let commandTimer = null;
+let focusTimerInterval = null;
+let focusSecondsRemaining = 25 * 60;
+let focusTimerRunning = false;
+let focusedItemKey = null;
 const $ = (id) => document.getElementById(id);
 
 function localDateKey(date) {
@@ -113,7 +118,9 @@ function defaultDayData(profileParking="") {
     goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),
     lastTime:DEFAULT_LAST_TIME.map(i=>({...i,id:uid(),lastDone:null})),
     parkingLot:profileParking,
-    ui:{hideChecked:false,hideCompletedGoals:false,collapsed:{}}
+    dailyFocus:"",
+    focusNotes:"",
+    ui:{hideChecked:false,hideCompletedGoals:false,collapsed:{},todayOnly:false}
   };
 }
 
@@ -127,7 +134,10 @@ async function loadSelectedDate(dateKey) {
   dayData.customItems ||= [];
   dayData.goals ||= [];
   dayData.lastTime ||= [];
-  dayData.ui ||= {hideChecked:false,hideCompletedGoals:false,collapsed:{}};
+  dayData.ui ||= {hideChecked:false,hideCompletedGoals:false,collapsed:{},todayOnly:false};
+  dayData.dailyFocus ||= "";
+  dayData.focusNotes ||= "";
+  dayData.ui.todayOnly ||= false;
   dayData.ui.collapsed ||= {};
   updateSelectedDateUI();
 }
@@ -141,10 +151,11 @@ function updateSelectedDateUI() {
 
 function setupUI() {
   populateDailyControls();
-  if(dayData.context) showDashboard(); else { $("contextCard").classList.remove("hidden"); $("dashboardContent").classList.add("hidden"); }
+  if(dayData.context) showDashboard(); else { $("contextCard").classList.remove("hidden"); $("commandCenter").classList.add("hidden"); $("dashboardContent").classList.add("hidden"); }
   restoreCollapsed();
   if(!eventsBound) bindEvents();
   renderAll();
+  startCommandClock();
 }
 
 function populateDailyControls() {
@@ -155,6 +166,10 @@ function populateDailyControls() {
   $("parkingLot").value=dayData.parkingLot || "";
   $("hideCheckedTasks").checked=!!dayData.ui.hideChecked;
   $("hideCompletedGoals").checked=!!dayData.ui.hideCompletedGoals;
+  $("dailyFocusInput").value=dayData.dailyFocus || "";
+  $("focusNotes").value=dayData.focusNotes || "";
+  document.body.classList.toggle("today-only-active",!!dayData.ui.todayOnly);
+  $("todayOnlyBtn").classList.toggle("active",!!dayData.ui.todayOnly);
 }
 
 function bindEvents() {
@@ -162,11 +177,19 @@ function bindEvents() {
   $("contextForm").addEventListener("submit", e=>{
     e.preventDefault();
     dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value};
-    showDashboard(); renderTimeline(); queueSave();
+    showDashboard(); renderAll(); queueSave();
   });
   $("editContextBtn").addEventListener("click",()=>{ switchView("daily"); $("contextCard").classList.remove("hidden"); $("contextCard").scrollIntoView({behavior:"smooth"}); });
   $("signOutBtn").addEventListener("click",async()=>{ await signOut(auth); });
   $("parkingLot").addEventListener("input",e=>{ dayData.parkingLot=e.target.value; queueSave(); });
+  $("dailyFocusInput").addEventListener("input",e=>{ dayData.dailyFocus=e.target.value; queueSave(); });
+  $("focusNotes").addEventListener("input",e=>{ dayData.focusNotes=e.target.value; queueSave(); });
+  $("beginDayBtn").addEventListener("click",()=>$("dashboardContent").scrollIntoView({behavior:"smooth"}));
+  $("focusModeBtn").addEventListener("click",openFocusMode);
+  $("closeFocusBtn").addEventListener("click",closeFocusMode);
+  $("startFocusTimerBtn").addEventListener("click",toggleFocusTimer);
+  $("resetFocusTimerBtn").addEventListener("click",resetFocusTimer);
+  $("completeFocusTaskBtn").addEventListener("click",completeFocusedTask);
   $("hideCheckedTasks").addEventListener("change",e=>{ dayData.ui.hideChecked=e.target.checked; renderTimeline(); queueSave(); });
   $("hideCompletedGoals").addEventListener("change",e=>{ dayData.ui.hideCompletedGoals=e.target.checked; renderGoals(); queueSave(); });
   document.querySelectorAll(".collapse-trigger").forEach(btn=>btn.addEventListener("click",()=>{
@@ -189,6 +212,7 @@ function bindEvents() {
   $("dialogCancel").addEventListener("click",()=>$("itemDialog").close());
   $("dailyViewBtn").addEventListener("click",()=>switchView("daily"));
   $("calendarViewBtn").addEventListener("click",()=>switchView("calendar"));
+  $("todayOnlyBtn").addEventListener("click",toggleTodayOnly);
   $("previousMonthBtn").addEventListener("click",()=>changeCalendarMonth(-1));
   $("nextMonthBtn").addEventListener("click",()=>changeCalendarMonth(1));
   $("todayMonthBtn").addEventListener("click",()=>{ const now=new Date(); calendarCursor=new Date(now.getFullYear(),now.getMonth(),1); renderCalendar(); });
@@ -200,8 +224,8 @@ function restoreCollapsed() {
     card.querySelector(".collapse-trigger").setAttribute("aria-expanded",String(!card.classList.contains("collapsed")));
   });
 }
-function showDashboard() { $("contextCard").classList.add("hidden"); $("dashboardContent").classList.remove("hidden"); }
-function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); }
+function showDashboard() { $("contextCard").classList.add("hidden"); $("commandCenter").classList.remove("hidden"); $("dashboardContent").classList.remove("hidden"); }
+function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); renderCommandCenter(); }
 
 async function switchView(view) {
   const calendar=view==="calendar";
@@ -209,6 +233,7 @@ async function switchView(view) {
   $("calendarView").classList.toggle("hidden",!calendar);
   $("dailyViewBtn").classList.toggle("active",!calendar);
   $("calendarViewBtn").classList.toggle("active",calendar);
+  if(calendar) $("todayOnlyBtn").classList.remove("active"); else $("todayOnlyBtn").classList.toggle("active",!!dayData.ui.todayOnly);
   if(calendar) {
     clearTimeout(saveTimer);
     await saveAll();
@@ -265,7 +290,7 @@ async function openCalendarDate(dateKey) {
   await loadSelectedDate(dateKey);
   populateDailyControls();
   restoreCollapsed();
-  if(dayData.context) showDashboard(); else { $("contextCard").classList.remove("hidden"); $("dashboardContent").classList.add("hidden"); }
+  if(dayData.context) showDashboard(); else { $("contextCard").classList.remove("hidden"); $("commandCenter").classList.add("hidden"); $("dashboardContent").classList.add("hidden"); }
   renderAll();
   switchView("daily");
   window.scrollTo({top:0,behavior:"smooth"});
@@ -304,7 +329,7 @@ function renderTimeline() {
     });
   });
   $("timeline").innerHTML=html;
-  $("timeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",()=>{ const key=btn.closest(".timeline-item").dataset.key; dayData.completed[key]=!dayData.completed[key]; renderTimeline(); queueSave(); }));
+  $("timeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",()=>{ const key=btn.closest(".timeline-item").dataset.key; dayData.completed[key]=!dayData.completed[key]; renderTimeline(); renderCommandCenter(); queueSave(); }));
   $("timeline").querySelectorAll("[data-delete-custom]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.deleteCustom); renderTimeline(); queueSave(); }));
 }
 
@@ -325,7 +350,7 @@ function renderGoals() {
   $("goalList").querySelectorAll("[data-goal-minus]").forEach(btn=>btn.addEventListener("click",()=>changeGoal(btn.dataset.goalMinus,-1)));
   $("goalList").querySelectorAll("[data-goal-delete]").forEach(btn=>btn.addEventListener("click",()=>{dayData.goals=dayData.goals.filter(g=>g.id!==btn.dataset.goalDelete);renderGoals();queueSave();}));
 }
-function changeGoal(id,delta) { const g=dayData.goals.find(x=>x.id===id); if(g) g.count=Math.max(0,g.count+delta); renderGoals(); queueSave(); }
+function changeGoal(id,delta) { const g=dayData.goals.find(x=>x.id===id); if(g) g.count=Math.max(0,g.count+delta); renderGoals(); renderCommandCenter(); queueSave(); }
 
 function urgency(item) {
   if(!item.lastDone) return {level:"red",text:"Not recorded yet",days:99999};
@@ -366,4 +391,120 @@ function saveDialog(type) {
   if(type==="goal") dayData.goals.push({id:uid(),name:title,goal:Number($("itemNumber").value),count:0});
   if(type==="lastTime") dayData.lastTime.push({id:uid(),name:title,greenDays:Number($("greenDays").value),yellowDays:Number($("yellowDays").value),lastDone:null});
   renderAll(); queueSave();
+}
+
+
+function startCommandClock() {
+  clearInterval(commandTimer);
+  renderCommandCenter();
+  commandTimer=setInterval(renderCommandCenter,60000);
+}
+
+function minutesFor(time24) { const [h,m]=time24.split(":").map(Number); return h*60+m; }
+function nowMinutes() { const n=new Date(); return n.getHours()*60+n.getMinutes(); }
+function isSelectedToday() { return selectedDateKey===localDateKey(new Date()); }
+
+function getNextIncompleteItem() {
+  const items=buildTimelineItems().filter(i=>!dayData.completed[i.key]);
+  if(!items.length) return null;
+  if(!isSelectedToday()) return items[0];
+  const now=nowMinutes();
+  return items.find(i=>minutesFor(i.time24)>=now-5) || items[0];
+}
+
+function renderCommandCenter() {
+  if(!dayData?.context || !$("commandCenter")) return;
+  const hour=new Date().getHours();
+  const greeting=hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
+  $("greetingText").textContent=`${greeting}, MJ 🌿`;
+  const schedule=SCHEDULE_BY_LETTER_DAY[dayData.context.letterDay]||[];
+  const all=buildTimelineItems();
+  const appointments=dayData.customItems.filter(i=>i.type==="Appointment").length;
+  const unfinished=all.filter(i=>!dayData.completed[i.key]).length;
+  $("daySummaryText").textContent=`${dayData.context.dayOfWeek} • ${dayData.context.letterDay} ${dayData.context.letterDay==="No School"?"":"Day"} • ${schedule.length} scheduled ${schedule.length===1?"class/item":"classes/items"} • ${unfinished} things left • ${appointments} ${appointments===1?"appointment":"appointments"}`;
+  renderNextThing(all);
+  renderDailyScore(all);
+  renderLiveTimeline(all);
+}
+
+function renderNextThing(items) {
+  const next=getNextIncompleteItem();
+  if(!next) {
+    $("nextThingContent").innerHTML='<div class="next-empty">You completed everything visible for this day. That is enough. 🌿</div>';
+    focusedItemKey=null;
+    return;
+  }
+  focusedItemKey=next.key;
+  let countdown="Next on your list";
+  if(isSelectedToday()) {
+    const diff=minutesFor(next.time24)-nowMinutes();
+    countdown=diff>1?`Starts in ${diff} minutes`:diff>=-5?"Happening now":`Scheduled for ${formatTime(next.time24)}`;
+  }
+  $("nextThingContent").innerHTML=`<div class="next-time">${formatTime(next.time24)}</div><div class="next-title">${esc(next.title)}</div><div class="next-countdown">${countdown}</div><button class="button ghost next-focus-button" type="button">Start focus</button>`;
+  $("nextThingContent").querySelector(".next-focus-button").addEventListener("click",openFocusMode);
+}
+
+function renderDailyScore(items) {
+  const taskTotal=items.length;
+  const taskDone=items.filter(i=>dayData.completed[i.key]).length;
+  const goalTotal=dayData.goals.reduce((sum,g)=>sum+Math.max(1,g.goal),0);
+  const goalDone=dayData.goals.reduce((sum,g)=>sum+Math.min(g.count,g.goal),0);
+  const total=taskTotal+goalTotal;
+  const done=taskDone+goalDone;
+  const score=total?Math.round(done/total*100):0;
+  $("dailyScoreValue").textContent=`${score}%`;
+  $("dailyScoreRing").style.setProperty("--score",`${score*3.6}deg`);
+  $("dailyScoreLabel").textContent=score===100?"Day complete":score>=70?"Strong progress":score>=35?"Moving forward":"A fresh start";
+  $("dailyScoreDetails").textContent=`${taskDone} of ${taskTotal} tasks • ${dayData.goals.filter(g=>g.count>=g.goal).length} of ${dayData.goals.length} goals`;
+}
+
+function renderLiveTimeline(items) {
+  $("liveClock").textContent=new Date().toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"});
+  if(!items.length) { $("liveTimeline").innerHTML='<div class="empty-state">Set up this day to see its live timeline.</div>'; return; }
+  const grouped=[];
+  items.forEach(item=>{ if(!grouped.some(g=>g.time24===item.time24)) grouped.push(item); });
+  const now=nowMinutes();
+  let lineAdded=!isSelectedToday(), html="";
+  grouped.forEach((item,index)=>{
+    const mins=minutesFor(item.time24);
+    if(!lineAdded && mins>=now) { html+='<div class="now-line"><span>Now</span><i class="live-dot"></i></div>'; lineAdded=true; }
+    const nextMins=index<grouped.length-1?minutesFor(grouped[index+1].time24):1440;
+    const state=isSelectedToday()?(now>=mins&&now<nextMins?"current":now>=nextMins?"past":"future"):"future";
+    html+=`<div class="live-item ${state}"><span class="live-item-time">${formatTime(item.time24)}</span><i class="live-dot"></i><span class="live-item-title">${esc(item.title)}</span></div>`;
+  });
+  if(!lineAdded) html+='<div class="now-line"><span>Now</span><i class="live-dot"></i></div>';
+  $("liveTimeline").innerHTML=html;
+}
+
+function toggleTodayOnly() {
+  switchView("daily");
+  dayData.ui.todayOnly=!dayData.ui.todayOnly;
+  document.body.classList.toggle("today-only-active",dayData.ui.todayOnly);
+  $("todayOnlyBtn").classList.toggle("active",dayData.ui.todayOnly);
+  if(dayData.ui.todayOnly) $("commandCenter").scrollIntoView({behavior:"smooth"});
+  queueSave();
+}
+
+function openFocusMode() {
+  const item=buildTimelineItems().find(i=>i.key===focusedItemKey) || getNextIncompleteItem();
+  focusedItemKey=item?.key||null;
+  $("focusTaskTitle").textContent=item?.title || dayData.dailyFocus || "Choose the next small thing";
+  $("focusTaskMeta").textContent=item?`${formatTime(item.time24)} • ${item.type}`:"Use this quiet space for your chosen focus.";
+  $("focusNotes").value=dayData.focusNotes||"";
+  $("focusOverlay").classList.remove("hidden");
+  document.body.style.overflow="hidden";
+}
+function closeFocusMode() { $("focusOverlay").classList.add("hidden"); document.body.style.overflow=""; }
+function toggleFocusTimer() {
+  focusTimerRunning=!focusTimerRunning;
+  $("startFocusTimerBtn").textContent=focusTimerRunning?"Pause":"Start";
+  clearInterval(focusTimerInterval);
+  if(focusTimerRunning) focusTimerInterval=setInterval(()=>{ focusSecondsRemaining=Math.max(0,focusSecondsRemaining-1); updateFocusTimer(); if(!focusSecondsRemaining){ focusTimerRunning=false; clearInterval(focusTimerInterval); $("startFocusTimerBtn").textContent="Start"; showToast("Focus session complete 🌿"); } },1000);
+}
+function updateFocusTimer() { const m=Math.floor(focusSecondsRemaining/60),s=focusSecondsRemaining%60; $("focusTimer").textContent=`${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`; }
+function resetFocusTimer() { focusTimerRunning=false; clearInterval(focusTimerInterval); focusSecondsRemaining=25*60; $("startFocusTimerBtn").textContent="Start"; updateFocusTimer(); }
+function completeFocusedTask() {
+  if(!focusedItemKey) return showToast("There is no active task to complete.");
+  dayData.completed[focusedItemKey]=true;
+  renderAll(); queueSave(); closeFocusMode(); showToast("Marked complete. Beautiful work.");
 }
