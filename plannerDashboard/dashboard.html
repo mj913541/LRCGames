@@ -46,6 +46,7 @@
           <h2>What kind of day is today?</h2>
           <p class="subtle">Your answers build the rest of the dashboard. You can change them anytime.</p>
         </div>
+        <button id="hideContextBtn" class="button ghost" type="button">Hide</button>
       </div>
       <form id="contextForm" class="context-grid">
         <label>
@@ -185,6 +186,25 @@
       </aside>
     </section>
     </div>
+
+
+    <section id="weeklyView" class="weekly-spread-view hidden" aria-label="Weekly appointment spread">
+      <article class="card weekly-spread-card">
+        <div class="weekly-spread-toolbar">
+          <div>
+            <p class="eyebrow">WEEKLY APPOINTMENTS</p>
+            <h2 id="weeklySpreadLabel">This week</h2>
+            <p class="subtle">Appointments and assigned A–E classes only. Tasks stay in the Daily Spread.</p>
+          </div>
+          <div class="calendar-actions">
+            <button id="previousWeekBtn" class="icon-button" type="button" aria-label="Previous week">‹</button>
+            <button id="thisWeekBtn" class="button secondary" type="button">This week</button>
+            <button id="nextWeekBtn" class="icon-button" type="button" aria-label="Next week">›</button>
+          </div>
+        </div>
+        <div id="weeklyAppointmentGrid" class="weekly-appointment-grid" aria-live="polite"></div>
+      </article>
+    </section>
 
     <section id="calendarView" class="calendar-view hidden" aria-label="Monthly calendar">
       <article class="card calendar-card">

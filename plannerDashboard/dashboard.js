@@ -47,10 +47,12 @@ let weekData = null;
 let plannerSettings = null;
 let saveTimer = null;
 let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let weeklyCursor = startOfWeek(new Date());
 const todayKey = localDateKey(new Date());
 const weekKey = getISOWeekKey(new Date());
 const $ = (id) => document.getElementById(id);
 
+function startOfWeek(date) { const d=new Date(date); d.setHours(0,0,0,0); d.setDate(d.getDate()-d.getDay()); return d; }
 function localDateKey(date) { const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,"0"), d=String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function getISOWeekKey(date) { const copy=new Date(date); copy.setHours(0,0,0,0); copy.setDate(copy.getDate()+3-((copy.getDay()+6)%7)); const week1=new Date(copy.getFullYear(),0,4); const week=1+Math.round(((copy-week1)/86400000-3+((week1.getDay()+6)%7))/7); return `${copy.getFullYear()}-W${String(week).padStart(2,"0")}`; }
@@ -113,6 +115,7 @@ async function loadData() {
   };
   plannerSettings.classSchedule ||= structuredClone(DEFAULT_SCHEDULE_BY_LETTER_DAY);
   plannerSettings.futureAssignments ||= {};
+  plannerSettings.ui ||= {contextHidden:false};
   const assignedToday = plannerSettings.futureAssignments[todayKey] || null;
   dayData = daySnap.exists() ? daySnap.data() : {
     date:todayKey,
@@ -145,8 +148,9 @@ function setupUI() {
 }
 
 function bindEvents() {
-  $("contextForm").addEventListener("submit", e=>{ e.preventDefault(); dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value}; showDashboard(); renderTimeline(); queueSave(); });
-  $("editContextBtn").addEventListener("click",()=>{ $("contextCard").classList.remove("hidden"); $("contextCard").scrollIntoView({behavior:"smooth"}); });
+  $("contextForm").addEventListener("submit", e=>{ e.preventDefault(); dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value}; plannerSettings.ui.contextHidden=false; showDashboard(); renderTimeline(); queueSave(); });
+  $("editContextBtn").addEventListener("click",()=>{ plannerSettings.ui.contextHidden=false; $("contextCard").classList.remove("hidden"); $("contextCard").scrollIntoView({behavior:"smooth"}); queueSave(); });
+  $("hideContextBtn")?.addEventListener("click",()=>{ plannerSettings.ui.contextHidden=true; $("contextCard").classList.add("hidden"); queueSave(); });
   $("signOutBtn").addEventListener("click",async()=>{ await signOut(auth); });
   $("parkingLot").addEventListener("input",e=>{ dayData.parkingLot=e.target.value; queueSave(); });
   $("hideCompletedGoals").addEventListener("change",e=>{ dayData.ui.hideCompletedGoals=e.target.checked; renderGoals(); queueSave(); });
@@ -165,15 +169,21 @@ function bindEvents() {
   $("previousMonthBtn")?.addEventListener("click",()=>{ calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1); renderCalendar(); });
   $("nextMonthBtn")?.addEventListener("click",()=>{ calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1); renderCalendar(); });
   $("todayMonthBtn")?.addEventListener("click",()=>{ const n=new Date(); calendarCursor=new Date(n.getFullYear(),n.getMonth(),1); renderCalendar(); });
+  $("previousWeekBtn")?.addEventListener("click",()=>{ weeklyCursor=new Date(weeklyCursor); weeklyCursor.setDate(weeklyCursor.getDate()-7); renderWeeklyAppointments(); });
+  $("nextWeekBtn")?.addEventListener("click",()=>{ weeklyCursor=new Date(weeklyCursor); weeklyCursor.setDate(weeklyCursor.getDate()+7); renderWeeklyAppointments(); });
+  $("thisWeekBtn")?.addEventListener("click",()=>{ weeklyCursor=startOfWeek(new Date()); renderWeeklyAppointments(); });
   $("dialogClose").addEventListener("click",()=>$("itemDialog").close()); $("dialogCancel").addEventListener("click",()=>$("itemDialog").close());
 }
 function switchView(view) {
+  const daily=view==="daily";
   const calendar=view==="calendar";
-  $("dailyView").classList.toggle("hidden",calendar);
+  const weekly=view==="weekly";
+  $("dailyView").classList.toggle("hidden",!daily);
   $("calendarView").classList.toggle("hidden",!calendar);
+  $("weeklyView").classList.toggle("hidden",!weekly);
   ["daily","calendar","weekly"].forEach(v=>$(v+"ViewBtn")?.classList.toggle("active",v===view));
-  if(view==="calendar") renderCalendar();
-  if(view==="weekly") { $("dailyView").classList.remove("hidden"); $("calendarView").classList.add("hidden"); document.querySelector('[data-card="weekly"]')?.scrollIntoView({behavior:"smooth",block:"start"}); }
+  if(calendar) renderCalendar();
+  if(weekly) renderWeeklyAppointments();
 }
 function renderCalendar() {
   const grid=$("calendarGrid"); if(!grid) return;
@@ -191,6 +201,35 @@ function renderCalendar() {
   grid.innerHTML=html;
 }
 
+
+async function renderWeeklyAppointments() {
+  const grid=$("weeklyAppointmentGrid"); if(!grid) return;
+  const weekStart=startOfWeek(weeklyCursor);
+  const weekEnd=new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
+  $("weeklySpreadLabel").textContent=`${weekStart.toLocaleDateString("en-US",{month:"short",day:"numeric"})} – ${weekEnd.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`;
+  grid.innerHTML='<div class="weekly-loading">Loading appointments…</div>';
+  const dates=Array.from({length:7},(_,i)=>{ const d=new Date(weekStart); d.setDate(d.getDate()+i); return d; });
+  const snaps=await Promise.all(dates.map(d=>getDoc(doc(db,"plannerDashboardUsers",PLANNER_PROFILE_ID,"days",localDateKey(d)))));
+  grid.innerHTML=dates.map((date,i)=>renderWeeklyDayColumn(date,snaps[i].exists()?snaps[i].data():null)).join("");
+}
+function renderWeeklyDayColumn(date,storedDay) {
+  const key=localDateKey(date), assignment=plannerSettings.futureAssignments[key] || null;
+  const isToday=key===todayKey;
+  const context=assignment ? {letterDay:assignment.letterDay,daycare:assignment.daycare} : (isToday?dayData.context:storedDay?.context);
+  const events=[];
+  if(context?.letterDay && context.letterDay!=="No School") {
+    (plannerSettings.classSchedule[context.letterDay]||[]).forEach((item,index)=>events.push({id:`class-${index}`,time24:item.time24,title:item.title,type:`${context.letterDay} Day`,custom:false}));
+  }
+  const customSource=isToday?dayData.customItems:(storedDay?.customItems||[]);
+  customSource.filter(x=>x.type==="Appointment").forEach(x=>events.push({...x,custom:true}));
+  events.sort((a,b)=>a.time24.localeCompare(b.time24));
+  const slotHeight=8, totalMinutes=13*60, height=(totalMinutes/10)*slotHeight;
+  let lines="";
+  for(let min=0;min<=totalMinutes;min+=10){ const top=(min/10)*slotHeight, hour=min%60===0; const half=min%30===0; const actual=360+min; const h=Math.floor(actual/60), m=actual%60; lines+=`<div class="week-slot ${hour?"hour":half?"half":""}" style="top:${top}px">${hour?`<span>${formatTime(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`)}</span>`:""}</div>`; }
+  const blocks=events.map(e=>{ const [h,m]=e.time24.split(":").map(Number); const offset=(h*60+m)-360; if(offset<0||offset>totalMinutes) return ""; const top=(offset/10)*slotHeight; return `<div class="week-grid-event ${e.custom?"custom":""}" style="top:${top}px" title="${esc(formatTime(e.time24)+" "+e.title)}"><time>${formatTime(e.time24)}</time><strong>${esc(e.title)}</strong></div>`; }).join("");
+  return `<section class="weekly-day-column ${isToday?"today":""}"><header><span>${date.toLocaleDateString("en-US",{weekday:"short"})}</span><strong>${date.getDate()}</strong>${context?.letterDay&&context.letterDay!=="No School"?`<em>${esc(context.letterDay)}</em>`:""}</header><div class="weekly-day-timeline" style="height:${height}px">${lines}${blocks}</div></section>`;
+}
+
 function restoreCollapsed() { document.querySelectorAll(".collapsible-card").forEach(card=>{ if(dayData.ui.collapsed[card.dataset.card]) { card.classList.add("collapsed"); card.querySelector(".collapse-trigger").setAttribute("aria-expanded","false"); } }); }
 function showDayBuilder() {
   $("contextCard").classList.remove("hidden");
@@ -199,8 +238,7 @@ function showDayBuilder() {
   if (submit) submit.textContent = "Build my day";
 }
 function showDashboard() {
-  // Keep Build My Day visible at the top so MJ can adjust the day at any time.
-  $("contextCard").classList.remove("hidden");
+  $("contextCard").classList.toggle("hidden",!!plannerSettings?.ui?.contextHidden);
   $("dashboardContent").classList.remove("hidden");
   const submit = document.querySelector("#contextForm .context-submit");
   if (submit) submit.textContent = "Update my day";
