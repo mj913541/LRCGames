@@ -139,7 +139,7 @@ function setupUI() {
   document.querySelector(`input[name="daycare"][value="${dayData.context?.daycare || "no"}"]`).checked=true;
   $("parkingLot").value=dayData.parkingLot || "";
   $("hideCompletedGoals").checked=!!dayData.ui.hideCompletedGoals;
-  if(dayData.context) showDashboard(); else $("contextCard").classList.remove("hidden");
+  if(dayData.context) showDashboard(); else showDayBuilder();
   restoreCollapsed(); bindEvents(); renderAll();
 }
 
@@ -159,7 +159,19 @@ function bindEvents() {
   $("dialogClose").addEventListener("click",()=>$("itemDialog").close()); $("dialogCancel").addEventListener("click",()=>$("itemDialog").close());
 }
 function restoreCollapsed() { document.querySelectorAll(".collapsible-card").forEach(card=>{ if(dayData.ui.collapsed[card.dataset.card]) { card.classList.add("collapsed"); card.querySelector(".collapse-trigger").setAttribute("aria-expanded","false"); } }); }
-function showDashboard() { $("contextCard").classList.add("hidden"); $("dashboardContent").classList.remove("hidden"); }
+function showDayBuilder() {
+  $("contextCard").classList.remove("hidden");
+  $("dashboardContent").classList.add("hidden");
+  const submit = document.querySelector("#contextForm .context-submit");
+  if (submit) submit.textContent = "Build my day";
+}
+function showDashboard() {
+  // Keep Build My Day visible at the top so MJ can adjust the day at any time.
+  $("contextCard").classList.remove("hidden");
+  $("dashboardContent").classList.remove("hidden");
+  const submit = document.querySelector("#contextForm .context-submit");
+  if (submit) submit.textContent = "Update my day";
+}
 function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); renderScheduleSettings(); }
 
 function buildTimelineItems() {

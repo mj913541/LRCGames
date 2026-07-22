@@ -83,3 +83,22 @@ dialog { width: min(480px, calc(100% - 28px)); padding: 0; border: 0; border-rad
 .schedule-entry .delete-button { align-self:center; }
 .override-note { display:grid; gap:6px; }
 @media (max-width:700px){ .future-row{grid-template-columns:1fr 34px}.future-date,.future-meta{grid-column:1}.schedule-entry{grid-template-columns:88px 1fr 34px} }
+
+/* Keep the Build My Day command center available after the day is built. */
+#contextCard {
+  scroll-margin-top: 1rem;
+}
+
+#contextCard:not(.hidden) + #dashboardContent:not(.hidden) {
+  margin-top: 1rem;
+}
+
+#contextCard .context-submit {
+  min-height: 48px;
+}
+
+@media (min-width: 900px) {
+  #contextCard .context-grid {
+    align-items: end;
+  }
+}
