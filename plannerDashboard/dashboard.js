@@ -28,11 +28,11 @@ const DEFAULT_SCHEDULE_BY_LETTER_DAY = {
 const AM_DAILY = ["Switch Dishwasher","Clean Glasses","Deodorant","Eat Breakfast","Levothyroxine","Brush teeth","Floss","Get Dressed","Wash Face","Style Hair","Feed Cat & Refresh Water"];
 const PM_DAILY = ["Brush teeth","Floss","Wash Face","Water Bottle & Lunch dishes in dishwasher","Clothes for tomorrow"];
 const SCHOOL_AM = ["Water Bottle","Pack Lunch","Pack School bag"];
-const DAYCARE_AM = ["Lincoln Diaper Changed","Lincoln Bottle","Lincoln Morning Routine","Daycare bag packed","Daycare Notebook Filled Out"];
+const DAYCARE_AM = ["Lincoln Diaper Changed","Lincoln Breakfast","Lincoln Morning Routine","Daycare bag packed","Daycare Notebook Filled Out"];
 const WORK_OPEN = ["Projector on","Lunch in fridge","Sign into laptops & pull up Destiny","Name tags out"];
 const WORK_CLOSE = ["Sign out / projector off","Collect name tags","5 minutes classroom straighten","Clear desk"];
 const DEFAULT_HOME_TASKS = ["Meal planning","Grocery list & Walmart runs","Meal prep / leftovers cleanup","Cleaning zone: workout room","Cleaning zone: living room","Cleaning zone: kitchen","Cleaning zone: downstairs bathroom","Cleaning zone: dining room / baby changing station","Cleaning zone: upstairs bathroom","Cleaning zone: nursery","Cleaning zone: upstairs hallway","Cleaning zone: adult bedroom","Diaper inventory & baby supplies","Litter box","Trash / recycling (Thursday)","Mail (Tuesday and Thursday)"];
-const DEFAULT_GOALS = [{name:"Cups of water",goal:8},{name:"Minutes walked",goal:20},{name:"Fruits / vegetables",goal:5}];
+const DEFAULT_GOALS = [{name:"Cups of water",goal:8},{name:"Minutes walked",goal:20}];
 const DEFAULT_LAST_TIME = [{name:"Change sheets",greenDays:7,yellowDays:10},{name:"Clean litter box",greenDays:1,yellowDays:2},{name:"Check diaper inventory",greenDays:5,yellowDays:7},{name:"Clean bathroom floor",greenDays:7,yellowDays:10}];
 const QUOTES = [
   ["You do not need to finish everything. You only need to choose the next kind thing.","A gentle reminder"],
@@ -46,6 +46,7 @@ let dayData = null;
 let weekData = null;
 let plannerSettings = null;
 let saveTimer = null;
+let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 const todayKey = localDateKey(new Date());
 const weekKey = getISOWeekKey(new Date());
 const $ = (id) => document.getElementById(id);
@@ -157,8 +158,39 @@ function bindEvents() {
   $("addFutureDayBtn").addEventListener("click",openFutureAssignmentDialog);
   $("addWorkTaskBtn").addEventListener("click",()=>openDialog("workTask")); $("addHomeTaskBtn").addEventListener("click",()=>openDialog("homeTask"));
   $("addGoalBtn").addEventListener("click",()=>openDialog("goal")); $("addLastTimeBtn").addEventListener("click",()=>openDialog("lastTime"));
+  $("dailyViewBtn")?.addEventListener("click",()=>switchView("daily"));
+  $("calendarViewBtn")?.addEventListener("click",()=>switchView("calendar"));
+  $("weeklyViewBtn")?.addEventListener("click",()=>switchView("weekly"));
+  $("todayOnlyBtn")?.addEventListener("click",()=>{ switchView("daily"); $("contextCard").scrollIntoView({behavior:"smooth",block:"start"}); });
+  $("previousMonthBtn")?.addEventListener("click",()=>{ calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1); renderCalendar(); });
+  $("nextMonthBtn")?.addEventListener("click",()=>{ calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1); renderCalendar(); });
+  $("todayMonthBtn")?.addEventListener("click",()=>{ const n=new Date(); calendarCursor=new Date(n.getFullYear(),n.getMonth(),1); renderCalendar(); });
   $("dialogClose").addEventListener("click",()=>$("itemDialog").close()); $("dialogCancel").addEventListener("click",()=>$("itemDialog").close());
 }
+function switchView(view) {
+  const calendar=view==="calendar";
+  $("dailyView").classList.toggle("hidden",calendar);
+  $("calendarView").classList.toggle("hidden",!calendar);
+  ["daily","calendar","weekly"].forEach(v=>$(v+"ViewBtn")?.classList.toggle("active",v===view));
+  if(view==="calendar") renderCalendar();
+  if(view==="weekly") { $("dailyView").classList.remove("hidden"); $("calendarView").classList.add("hidden"); document.querySelector('[data-card="weekly"]')?.scrollIntoView({behavior:"smooth",block:"start"}); }
+}
+function renderCalendar() {
+  const grid=$("calendarGrid"); if(!grid) return;
+  const y=calendarCursor.getFullYear(), m=calendarCursor.getMonth();
+  $("calendarMonthLabel").textContent=calendarCursor.toLocaleDateString("en-US",{month:"long",year:"numeric"});
+  const first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
+  let html="";
+  for(let i=0;i<42;i++){
+    const d=new Date(start); d.setDate(start.getDate()+i);
+    const key=localDateKey(d), assignment=plannerSettings?.futureAssignments?.[key];
+    const isToday=key===todayKey;
+    const todaysAppointments=isToday?(dayData?.customItems||[]).filter(x=>x.type==="Appointment").slice(0,2):[];
+    html+=`<div class="calendar-day ${d.getMonth()!==m?"outside-month":""} ${isToday?"today":""}"><div class="calendar-date-row"><span class="calendar-number">${d.getDate()}</span>${assignment?.letterDay&&assignment.letterDay!=="No School"?`<span class="letter-badge">${esc(assignment.letterDay)}</span>`:""}</div>${assignment?.daycare==="yes"?'<span class="calendar-daycare">Daycare</span>':""}${todaysAppointments.map(a=>`<span class="calendar-event">${formatTime(a.time24)} ${esc(a.title)}</span>`).join("")}</div>`;
+  }
+  grid.innerHTML=html;
+}
+
 function restoreCollapsed() { document.querySelectorAll(".collapsible-card").forEach(card=>{ if(dayData.ui.collapsed[card.dataset.card]) { card.classList.add("collapsed"); card.querySelector(".collapse-trigger").setAttribute("aria-expanded","false"); } }); }
 function showDayBuilder() {
   $("contextCard").classList.remove("hidden");
@@ -208,22 +240,23 @@ function buildAppointmentItems() {
 
 function renderAppointmentRail() {
   const rail=$("appointmentRail"); if(!rail) return;
-  if(!dayData.context) { rail.innerHTML='<div class="rail-empty">Build your day to see appointments.</div>'; return; }
-  const items=buildAppointmentItems();
-  if(!items.length) { rail.innerHTML='<div class="rail-empty">No appointments today.</div>'; return; }
-  rail.innerHTML=items.map(item=>`<div class="rail-event ${item.custom?"custom":"class-event"}">
-    <span class="rail-dot" aria-hidden="true"></span>
-    <div class="rail-event-body">
-      <time>${formatTime(item.time24)}</time>
-      <strong>${esc(item.title)}</strong>
-      <span>${esc(item.type)}</span>
-    </div>
-    ${item.custom?`<button class="rail-delete" data-rail-delete="${esc(item.key)}" type="button" aria-label="Delete ${esc(item.title)}">×</button>`:""}
-  </div>`).join("");
-  rail.querySelectorAll("[data-rail-delete]").forEach(btn=>btn.addEventListener("click",()=>{
-    dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.railDelete);
-    renderTimeline(); renderAppointmentRail(); queueSave();
-  }));
+  const startMinutes=6*60, endMinutes=19*60, slotHeight=24;
+  const totalSlots=(endMinutes-startMinutes)/10;
+  const items=dayData.context ? buildAppointmentItems().filter(item=>{ const [h,m]=item.time24.split(":").map(Number); const n=h*60+m; return n>=startMinutes && n<=endMinutes; }) : [];
+  let html='<div class="rail-time-grid" style="height:'+((totalSlots+1)*slotHeight)+'px">';
+  for(let slot=0;slot<=totalSlots;slot++){
+    const mins=startMinutes+slot*10, h=Math.floor(mins/60), m=mins%60;
+    const label=m===0||m===30 ? formatTime(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`) : '';
+    html+=`<div class="rail-slot ${m===0?'hour':'ten'}" style="top:${slot*slotHeight}px"><span>${label}</span></div>`;
+  }
+  items.forEach(item=>{
+    const [h,m]=item.time24.split(":").map(Number), offset=((h*60+m-startMinutes)/10)*slotHeight;
+    html+=`<div class="rail-grid-event ${item.custom?'custom':'class-event'}" style="top:${offset}px"><strong>${esc(item.title)}</strong><time>${formatTime(item.time24)}</time>${item.custom?`<button class="rail-delete" data-rail-delete="${esc(item.key)}" type="button" aria-label="Delete ${esc(item.title)}">×</button>`:''}</div>`;
+  });
+  html+='</div>'; rail.innerHTML=html;
+  rail.querySelectorAll("[data-rail-delete]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.railDelete); renderTimeline(); renderAppointmentRail(); queueSave(); }));
+  const now=new Date(), nowM=now.getHours()*60+now.getMinutes();
+  if(localDateKey(now)===todayKey && nowM>=startMinutes && nowM<=endMinutes) rail.scrollTop=Math.max(0,((nowM-startMinutes)/10)*slotHeight-180);
 }
 
 function addMinutes(time,mins) { const [h,m]=time.split(":").map(Number), total=h*60+m+mins; return `${String(Math.floor(total/60)%24).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`; }

@@ -30,6 +30,15 @@
   </header>
 
   <main class="page-shell">
+
+    <nav class="view-switcher" aria-label="Planner view">
+      <button id="dailyViewBtn" class="view-button active" type="button">Daily spread</button>
+      <button id="calendarViewBtn" class="view-button" type="button">Calendar</button>
+      <button id="weeklyViewBtn" class="view-button" type="button">Weekly view</button>
+      <button id="todayOnlyBtn" class="view-button" type="button">Today</button>
+    </nav>
+
+    <div id="dailyView">
     <section id="contextCard" class="card context-card">
       <div class="card-heading">
         <div>
@@ -174,6 +183,18 @@
           </div>
         </article>
       </aside>
+    </section>
+    </div>
+
+    <section id="calendarView" class="calendar-view hidden" aria-label="Monthly calendar">
+      <article class="card calendar-card">
+        <div class="calendar-toolbar">
+          <div><p class="eyebrow">MONTHLY VIEW</p><h2 id="calendarMonthLabel">Calendar</h2><p class="subtle">Future letter days, daycare days, and appointments at a glance.</p></div>
+          <div class="calendar-actions"><button id="previousMonthBtn" class="icon-button" type="button" aria-label="Previous month">‹</button><button id="todayMonthBtn" class="button secondary" type="button">Today</button><button id="nextMonthBtn" class="icon-button" type="button" aria-label="Next month">›</button></div>
+        </div>
+        <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+        <div id="calendarGrid" class="calendar-grid"></div>
+      </article>
     </section>
   </main>
 
