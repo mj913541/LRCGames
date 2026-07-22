@@ -28,11 +28,11 @@ const DEFAULT_SCHEDULE_BY_LETTER_DAY = {
 const AM_DAILY = ["Switch Dishwasher","Clean Glasses","Deodorant","Eat Breakfast","Levothyroxine","Brush teeth","Floss","Get Dressed","Wash Face","Style Hair","Feed Cat & Refresh Water"];
 const PM_DAILY = ["Brush teeth","Floss","Wash Face","Water Bottle & Lunch dishes in dishwasher","Clothes for tomorrow"];
 const SCHOOL_AM = ["Water Bottle","Pack Lunch","Pack School bag"];
-const DAYCARE_AM = ["Lincoln Diaper Changed","Lincoln Breakfast","Lincoln Morning Routine","Daycare bag packed","Daycare Notebook Filled Out"];
+const DAYCARE_AM = ["Lincoln Diaper Changed","Lincoln Bottle","Lincoln Morning Routine","Daycare bag packed","Daycare Notebook Filled Out"];
 const WORK_OPEN = ["Projector on","Lunch in fridge","Sign into laptops & pull up Destiny","Name tags out"];
 const WORK_CLOSE = ["Sign out / projector off","Collect name tags","5 minutes classroom straighten","Clear desk"];
 const DEFAULT_HOME_TASKS = ["Meal planning","Grocery list & Walmart runs","Meal prep / leftovers cleanup","Cleaning zone: workout room","Cleaning zone: living room","Cleaning zone: kitchen","Cleaning zone: downstairs bathroom","Cleaning zone: dining room / baby changing station","Cleaning zone: upstairs bathroom","Cleaning zone: nursery","Cleaning zone: upstairs hallway","Cleaning zone: adult bedroom","Diaper inventory & baby supplies","Litter box","Trash / recycling (Thursday)","Mail (Tuesday and Thursday)"];
-const DEFAULT_GOALS = [{name:"Cups of water",goal:8},{name:"Minutes walked",goal:20}];
+const DEFAULT_GOALS = [{name:"Cups of water",goal:8},{name:"Minutes walked",goal:20},{name:"Fruits / vegetables",goal:5}];
 const DEFAULT_LAST_TIME = [{name:"Change sheets",greenDays:7,yellowDays:10},{name:"Clean litter box",greenDays:1,yellowDays:2},{name:"Check diaper inventory",greenDays:5,yellowDays:7},{name:"Clean bathroom floor",greenDays:7,yellowDays:10}];
 const QUOTES = [
   ["You do not need to finish everything. You only need to choose the next kind thing.","A gentle reminder"],
