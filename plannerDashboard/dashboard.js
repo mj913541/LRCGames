@@ -407,20 +407,30 @@ function buildTimelineItems() {
   return items.sort((a,b)=>a.time24.localeCompare(b.time24) || a.type.localeCompare(b.type));
 }
 function addMinutes(time,mins) { const [h,m]=time.split(":").map(Number), total=h*60+m+mins; return `${String(Math.floor(total/60)%24).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`; }
-function periodFor(time) { const h=Number(time.split(":")[0]); return h<10?"AM":h<17?"Midday":"PM"; }
+function periodForItem(item) {
+  if(item.type === "Work arrive") return "Work Arrive";
+  const h=Number(item.time24.split(":")[0]);
+  return h<10?"AM":h<17?"Midday":"PM";
+}
 function renderTimeline() {
   if(!dayData.context) { $("timeline").innerHTML=""; return; }
-  const items=buildTimelineItems(), groups={AM:[],Midday:[],PM:[]}; items.forEach(i=>groups[periodFor(i.time24)].push(i));
+  const items=buildTimelineItems();
+  const groups={AM:[],"Work Arrive":[],Midday:[],PM:[]};
+  items.forEach(i=>groups[periodForItem(i)].push(i));
   let html="";
   Object.entries(groups).forEach(([period,list])=>{
-    html+=`<div class="period-heading">${period}</div>`;
-    if(period==="Midday" && dayData.context.letterDay!=="No School") html+=`<div class="arrive-divider">Work arrive • open the LRC and begin the school-day flow</div>`;
-    if(!list.length) html+=`<div class="empty-state">No ${period.toLowerCase()} items today.</div>`;
-    list.forEach(item=>{
-      const done=!!dayData.completed[item.key]; if(dayData.ui.hideChecked && done) return;
+    const unfinished=list.filter(item=>!dayData.completed[item.key]);
+    if(!unfinished.length) return;
+    const visible=list.filter(item=>!(dayData.ui.hideChecked && dayData.completed[item.key]));
+    if(!visible.length) return;
+    html+=`<section class="timeline-period" data-period="${esc(period)}"><div class="period-heading">${period}</div>`;
+    visible.forEach(item=>{
+      const done=!!dayData.completed[item.key];
       html+=`<div class="timeline-item ${done?"done":""}" data-key="${esc(item.key)}"><span class="timeline-time">${formatTime(item.time24)}</span><button class="check-button" type="button" aria-label="Toggle ${esc(item.title)}">${done?"✓":""}</button><div><div class="timeline-title">${esc(item.title)}</div><div class="timeline-type">${esc(item.type)}</div></div>${item.custom?`<button class="delete-button" data-delete-custom="${esc(item.key)}" type="button" aria-label="Delete">×</button>`:"<span></span>"}</div>`;
     });
+    html+='</section>';
   });
+  if(!html) html='<div class="empty-state">Everything in today’s timeline is complete. Beautiful work. 🌿</div>';
   $("timeline").innerHTML=html;
   $("timeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",async()=>{
     const key=btn.closest(".timeline-item").dataset.key;
@@ -510,9 +520,29 @@ function renderWeeklyHeader() {
 function renderWeeklyList(id,tasks,kind) {
   const el=$(id); if(!tasks.length) { el.innerHTML='<div class="empty-state">No tasks yet. Add one when you are ready.</div>'; return; }
   const steps={planned:34,prepped:67,completed:100};
-  el.innerHTML=tasks.map(t=>`<div class="weekly-task"><div class="weekly-name">${esc(t.name)}</div><div class="status-control">${["planned","prepped","completed"].map(s=>`<button class="${t.status===s?"active":""}" data-status="${s}" data-id="${t.id}" type="button">${s}</button>`).join("")}</div><button class="delete-button" data-week-delete="${t.id}" type="button">×</button><div class="weekly-progress"><span style="width:${steps[t.status]||34}%"></span></div></div>`).join("");
+  el.innerHTML=tasks.map(t=>`<div class="weekly-task"><div class="weekly-name">${esc(t.name)}</div><div class="status-control">${["planned","prepped","completed"].map(s=>`<button class="${t.status===s?"active":""}" data-status="${s}" data-id="${t.id}" type="button">${s}</button>`).join("")}</div><div class="weekly-task-actions"><button class="edit-button" data-week-edit="${t.id}" type="button">Edit</button><button class="delete-button" data-week-delete="${t.id}" type="button">×</button></div><div class="weekly-progress"><span style="width:${steps[t.status]||34}%"></span></div></div>`).join("");
   el.querySelectorAll("[data-status]").forEach(btn=>btn.addEventListener("click",()=>{ const arr=kind==="work"?weekData.workTasks:weekData.homeTasks; const task=arr.find(t=>t.id===btn.dataset.id); if(task) task.status=btn.dataset.status; renderWeekly(); queueSave(); }));
+  el.querySelectorAll("[data-week-edit]").forEach(btn=>btn.addEventListener("click",()=>openWeeklyTaskEditor(kind,btn.dataset.weekEdit)));
   el.querySelectorAll("[data-week-delete]").forEach(btn=>btn.addEventListener("click",()=>{ const key=kind==="work"?"workTasks":"homeTasks"; weekData[key]=weekData[key].filter(t=>t.id!==btn.dataset.weekDelete); renderWeekly(); queueSave(); }));
+}
+function openWeeklyTaskEditor(kind,id) {
+  const arr=kind==="work"?weekData.workTasks:weekData.homeTasks;
+  const task=arr.find(t=>t.id===id);
+  if(!task) return;
+  const dialog=$("itemDialog"), fields=$("dialogFields"), form=$("itemDialogForm");
+  $("dialogTitle").textContent=`Edit ${kind} task`;
+  fields.innerHTML=`<div class="field-stack"><label>Task<input id="itemTitle" type="text" value="${esc(task.name)}" required></label></div>`;
+  form.dataset.type="weeklyEdit";
+  form.onsubmit=e=>{
+    e.preventDefault();
+    const value=$("itemTitle").value.trim();
+    if(value) task.name=value;
+    renderWeekly();
+    queueSave();
+    dialog.close();
+  };
+  dialog.showModal();
+  setTimeout(()=>$("itemTitle")?.select(),50);
 }
 
 function renderGoals() {

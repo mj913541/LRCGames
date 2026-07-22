@@ -173,20 +173,22 @@
               <button id="thisWeekBtn" class="mini-button" type="button">This week</button>
             </div>
             <div id="weeklyDateStrip" class="weekly-date-strip" aria-label="Days in this week"></div>
-            <section class="mini-card">
-              <div class="mini-card-heading">
-                <div><p class="eyebrow">WORK</p><h3>Work tasks</h3></div>
-                <div class="mini-actions"><button id="addWorkTaskBtn" class="mini-button" type="button">+ Add</button><button class="mini-button mini-hide" data-target="workTaskList" type="button">Hide</button></div>
-              </div>
-              <div id="workTaskList" class="weekly-list"></div>
-            </section>
-            <section class="mini-card">
-              <div class="mini-card-heading">
-                <div><p class="eyebrow">HOME</p><h3>Home tasks</h3></div>
-                <div class="mini-actions"><button id="addHomeTaskBtn" class="mini-button" type="button">+ Add</button><button class="mini-button mini-hide" data-target="homeTaskList" type="button">Hide</button></div>
-              </div>
-              <div id="homeTaskList" class="weekly-list"></div>
-            </section>
+            <div class="weekly-columns">
+              <section class="mini-card weekly-column-card">
+                <div class="mini-card-heading">
+                  <div><p class="eyebrow">WORK</p><h3>Work tasks</h3></div>
+                  <div class="mini-actions"><button id="addWorkTaskBtn" class="mini-button" type="button">+ Add</button><button class="mini-button mini-hide" data-target="workTaskList" type="button">Hide</button></div>
+                </div>
+                <div id="workTaskList" class="weekly-list"></div>
+              </section>
+              <section class="mini-card weekly-column-card">
+                <div class="mini-card-heading">
+                  <div><p class="eyebrow">HOME</p><h3>Home tasks</h3></div>
+                  <div class="mini-actions"><button id="addHomeTaskBtn" class="mini-button" type="button">+ Add</button><button class="mini-button mini-hide" data-target="homeTaskList" type="button">Hide</button></div>
+                </div>
+                <div id="homeTaskList" class="weekly-list"></div>
+              </section>
+            </div>
           </div>
         </article>
 
