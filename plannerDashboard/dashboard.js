@@ -12,6 +12,8 @@ const firebaseConfig = {
   measurementId: "G-5VXRYJ733C"
 };
 const ALLOWED_EMAILS = new Set(["malbrecht@sd308.org", "malbrecht3317@gmail.com"]);
+// Both approved Google logins are aliases for one shared MJ planner profile.
+const PLANNER_PROFILE_ID = "mj";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -51,9 +53,9 @@ const $ = (id) => document.getElementById(id);
 function localDateKey(date) { const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,"0"), d=String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function getISOWeekKey(date) { const copy=new Date(date); copy.setHours(0,0,0,0); copy.setDate(copy.getDate()+3-((copy.getDay()+6)%7)); const week1=new Date(copy.getFullYear(),0,4); const week=1+Math.round(((copy-week1)/86400000-3+((week1.getDay()+6)%7))/7); return `${copy.getFullYear()}-W${String(week).padStart(2,"0")}`; }
-function dayDoc() { return doc(db,"plannerDashboardUsers",user.uid,"days",todayKey); }
-function weekDoc() { return doc(db,"plannerDashboardUsers",user.uid,"weeks",weekKey); }
-function profileDoc() { return doc(db,"plannerDashboardUsers",user.uid); }
+function dayDoc(profileId=PLANNER_PROFILE_ID) { return doc(db,"plannerDashboardUsers",profileId,"days",todayKey); }
+function weekDoc(profileId=PLANNER_PROFILE_ID) { return doc(db,"plannerDashboardUsers",profileId,"weeks",weekKey); }
+function profileDoc(profileId=PLANNER_PROFILE_ID) { return doc(db,"plannerDashboardUsers",profileId); }
 function esc(v="") { const d=document.createElement("div"); d.textContent=v; return d.innerHTML; }
 function formatTime(time24) { const [h,m]=time24.split(":").map(Number); return new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit"}).format(new Date(2000,0,1,h,m)); }
 function showToast(message) { const t=$("toast"); t.textContent=message; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
@@ -66,7 +68,7 @@ async function saveAll() {
     await Promise.all([
       setDoc(dayDoc(), {...dayData, updatedAt:serverTimestamp()}, {merge:true}),
       setDoc(weekDoc(), {...weekData, updatedAt:serverTimestamp()}, {merge:true}),
-      setDoc(profileDoc(), {email:user.email, parkingLot:dayData.parkingLot || "", lastOpenedDay:todayKey, plannerSettings, updatedAt:serverTimestamp()}, {merge:true})
+      setDoc(profileDoc(), {ownerName:"MJ", allowedEmails:[...ALLOWED_EMAILS], lastSignedInEmail:user.email, parkingLot:dayData.parkingLot || "", lastOpenedDay:todayKey, plannerSettings, updatedAt:serverTimestamp()}, {merge:true})
     ]);
     markSaved();
   } catch(err) { console.error(err); $("saveStatus").textContent="Save failed"; showToast("Could not save. Check your connection."); }
@@ -82,7 +84,26 @@ onAuthStateChanged(auth, async currentUser => {
 });
 
 async function loadData() {
-  const [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
+  let [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
+
+  // One-time compatibility bridge: if the shared MJ profile is empty, import the
+  // data belonging to whichever approved Firebase UID signs in first.
+  if (!daySnap.exists() && !weekSnap.exists() && !profileSnap.exists() && user.uid !== PLANNER_PROFILE_ID) {
+    const [legacyDaySnap, legacyWeekSnap, legacyProfileSnap] = await Promise.all([
+      getDoc(dayDoc(user.uid)),
+      getDoc(weekDoc(user.uid)),
+      getDoc(profileDoc(user.uid))
+    ]);
+    if (legacyDaySnap.exists() || legacyWeekSnap.exists() || legacyProfileSnap.exists()) {
+      await Promise.all([
+        legacyDaySnap.exists() ? setDoc(dayDoc(), {...legacyDaySnap.data(), migratedFromUid:user.uid, migratedAt:serverTimestamp()}, {merge:true}) : Promise.resolve(),
+        legacyWeekSnap.exists() ? setDoc(weekDoc(), {...legacyWeekSnap.data(), migratedFromUid:user.uid, migratedAt:serverTimestamp()}, {merge:true}) : Promise.resolve(),
+        legacyProfileSnap.exists() ? setDoc(profileDoc(), {...legacyProfileSnap.data(), migratedFromUid:user.uid, migratedAt:serverTimestamp()}, {merge:true}) : Promise.resolve()
+      ]);
+      [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
+    }
+  }
+
   const now = new Date();
   const profileData = profileSnap.exists() ? profileSnap.data() : {};
   plannerSettings = profileData.plannerSettings || {
