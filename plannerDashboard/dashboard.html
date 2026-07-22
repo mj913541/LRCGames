@@ -63,6 +63,18 @@
     </section>
 
     <section id="dashboardContent" class="dashboard-layout hidden">
+      <aside class="appointment-rail" aria-label="Today’s appointments">
+        <div class="appointment-rail-card">
+          <div class="appointment-rail-heading">
+            <div>
+              <p class="eyebrow">TODAY</p>
+              <h2>Appointments</h2>
+            </div>
+            <button id="railAddAppointmentBtn" class="rail-add-button" type="button" aria-label="Add appointment" title="Add appointment">+</button>
+          </div>
+          <div id="appointmentRail" class="appointment-rail-list"></div>
+        </div>
+      </aside>
       <div class="main-column">
         <article class="card collapsible-card" data-card="merged">
           <button class="collapse-trigger" type="button" aria-expanded="true">

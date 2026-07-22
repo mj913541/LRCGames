@@ -102,3 +102,50 @@ dialog { width: min(480px, calc(100% - 28px)); padding: 0; border: 0; border-rad
     align-items: end;
   }
 }
+
+/* Appointment-only margin timeline */
+.dashboard-layout {
+  grid-template-columns: minmax(180px, .52fr) minmax(0, 2fr) minmax(300px, 1fr);
+}
+.appointment-rail { min-width: 0; align-self: stretch; }
+.appointment-rail-card {
+  position: sticky;
+  top: 112px;
+  max-height: calc(100vh - 136px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 18px 14px;
+  border: 1px solid rgba(214,226,219,.9);
+  border-radius: 22px;
+  background: rgba(255,255,255,.76);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+}
+.appointment-rail-heading { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:0 4px 12px; border-bottom:1px solid var(--line); }
+.appointment-rail-heading h2 { margin:0; font-size:1.05rem; }
+.rail-add-button { width:38px; height:38px; flex:0 0 auto; padding:0; border:0; border-radius:12px; color:#fff; background:var(--sage-dark); font-size:1.35rem; font-weight:700; }
+.appointment-rail-list { position:relative; min-height:120px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding:14px 2px 18px 4px; scrollbar-width:thin; scrollbar-color:#b6c8be transparent; }
+.appointment-rail-list::before { content:""; position:absolute; top:14px; bottom:18px; left:13px; width:2px; border-radius:2px; background:linear-gradient(var(--line), #c4d6cc, var(--line)); }
+.rail-event { position:relative; display:grid; grid-template-columns:20px minmax(0,1fr) auto; gap:8px; align-items:start; padding:0 0 18px; }
+.rail-event:last-child { padding-bottom:2px; }
+.rail-dot { z-index:1; width:11px; height:11px; margin:7px 0 0 4px; border:3px solid #fff; border-radius:50%; background:var(--sage); box-shadow:0 0 0 2px #b8cec2; }
+.rail-event.custom .rail-dot { background:var(--gold); box-shadow:0 0 0 2px #d8c19e; }
+.rail-event-body { min-width:0; display:grid; gap:2px; padding:7px 8px; border:1px solid var(--line); border-radius:13px; background:rgba(250,252,250,.94); }
+.rail-event-body time { color:var(--sage-dark); font-size:.72rem; font-weight:800; }
+.rail-event-body strong { overflow-wrap:anywhere; font-size:.82rem; line-height:1.2; }
+.rail-event-body span { color:var(--muted); font-size:.67rem; }
+.rail-delete { width:28px; height:28px; margin-top:7px; padding:0; border:0; border-radius:9px; color:var(--muted); background:transparent; }
+.rail-empty { position:relative; z-index:1; margin:8px 0 0 20px; padding:14px 10px; color:var(--muted); border:1px dashed var(--line); border-radius:13px; background:rgba(255,255,255,.82); font-size:.78rem; text-align:center; }
+@media (max-width: 1240px) {
+  .dashboard-layout { grid-template-columns: minmax(165px,.48fr) minmax(0,2fr); }
+  .side-column { grid-column:1/-1; grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .quote-card { grid-column:1/-1; }
+}
+@media (max-width: 850px) {
+  .dashboard-layout { grid-template-columns:1fr; }
+  .appointment-rail { grid-column:1; }
+  .appointment-rail-card { position:relative; top:auto; max-height:none; }
+  .appointment-rail-list { max-height:310px; }
+  .main-column, .side-column { grid-column:1; }
+}

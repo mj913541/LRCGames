@@ -152,6 +152,7 @@ function bindEvents() {
   document.querySelectorAll(".collapse-trigger").forEach(btn=>btn.addEventListener("click",()=>{ const card=btn.closest(".collapsible-card"), key=card.dataset.card; card.classList.toggle("collapsed"); btn.setAttribute("aria-expanded",String(!card.classList.contains("collapsed"))); dayData.ui.collapsed[key]=card.classList.contains("collapsed"); queueSave(); }));
   document.querySelectorAll(".mini-hide").forEach(btn=>btn.addEventListener("click",()=>{ const el=$(btn.dataset.target); el.classList.toggle("hidden"); btn.textContent=el.classList.contains("hidden")?"Show":"Hide"; }));
   $("addAppointmentBtn").addEventListener("click",()=>openDialog("appointment")); $("addTodayTaskBtn").addEventListener("click",()=>openDialog("todayTask"));
+  $("railAddAppointmentBtn")?.addEventListener("click",()=>openDialog("appointment"));
   $("editClassScheduleBtn").addEventListener("click",openClassScheduleEditor);
   $("addFutureDayBtn").addEventListener("click",openFutureAssignmentDialog);
   $("addWorkTaskBtn").addEventListener("click",()=>openDialog("workTask")); $("addHomeTaskBtn").addEventListener("click",()=>openDialog("homeTask"));
@@ -172,7 +173,7 @@ function showDashboard() {
   const submit = document.querySelector("#contextForm .context-submit");
   if (submit) submit.textContent = "Update my day";
 }
-function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); renderScheduleSettings(); }
+function renderAll() { renderTimeline(); renderAppointmentRail(); renderWeekly(); renderGoals(); renderLastTime(); renderScheduleSettings(); }
 
 function buildTimelineItems() {
   const c=dayData.context; if(!c) return [];
@@ -191,6 +192,40 @@ function buildTimelineItems() {
   dayData.customItems.forEach(item=>add(item.time24,item.title,item.type,item.id,true));
   return items.sort((a,b)=>a.time24.localeCompare(b.time24) || a.type.localeCompare(b.type));
 }
+function buildAppointmentItems() {
+  const c=dayData.context; if(!c) return [];
+  const items=[];
+  if(c.letterDay!=="No School") {
+    (plannerSettings.classSchedule[c.letterDay]||[]).forEach((s,i)=>items.push({
+      key:`class-${c.letterDay}-${i}`, time24:s.time24, title:s.title, type:`${c.letterDay} Day class`, custom:false
+    }));
+  }
+  dayData.customItems
+    .filter(item=>item.type==="Appointment")
+    .forEach(item=>items.push({key:item.id,time24:item.time24,title:item.title,type:"Appointment",custom:true}));
+  return items.sort((a,b)=>a.time24.localeCompare(b.time24)||a.title.localeCompare(b.title));
+}
+
+function renderAppointmentRail() {
+  const rail=$("appointmentRail"); if(!rail) return;
+  if(!dayData.context) { rail.innerHTML='<div class="rail-empty">Build your day to see appointments.</div>'; return; }
+  const items=buildAppointmentItems();
+  if(!items.length) { rail.innerHTML='<div class="rail-empty">No appointments today.</div>'; return; }
+  rail.innerHTML=items.map(item=>`<div class="rail-event ${item.custom?"custom":"class-event"}">
+    <span class="rail-dot" aria-hidden="true"></span>
+    <div class="rail-event-body">
+      <time>${formatTime(item.time24)}</time>
+      <strong>${esc(item.title)}</strong>
+      <span>${esc(item.type)}</span>
+    </div>
+    ${item.custom?`<button class="rail-delete" data-rail-delete="${esc(item.key)}" type="button" aria-label="Delete ${esc(item.title)}">×</button>`:""}
+  </div>`).join("");
+  rail.querySelectorAll("[data-rail-delete]").forEach(btn=>btn.addEventListener("click",()=>{
+    dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.railDelete);
+    renderTimeline(); renderAppointmentRail(); queueSave();
+  }));
+}
+
 function addMinutes(time,mins) { const [h,m]=time.split(":").map(Number), total=h*60+m+mins; return `${String(Math.floor(total/60)%24).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`; }
 function periodFor(time) { const h=Number(time.split(":")[0]); return h<10?"AM":h<17?"Midday":"PM"; }
 function renderTimeline() {
@@ -211,11 +246,12 @@ function renderTimeline() {
     const key=btn.closest(".timeline-item").dataset.key;
     dayData.completed[key]=true;
     renderTimeline();
+    renderAppointmentRail();
     markSaving();
     try { await setDoc(dayDoc(), {completed:dayData.completed,updatedAt:serverTimestamp()}, {merge:true}); markSaved(); }
     catch(err){ console.error(err); $("saveStatus").textContent="Save failed"; }
   }));
-  $("timeline").querySelectorAll("[data-delete-custom]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.deleteCustom); renderTimeline(); queueSave(); }));
+  $("timeline").querySelectorAll("[data-delete-custom]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.deleteCustom); renderTimeline(); renderAppointmentRail(); queueSave(); }));
 }
 
 function renderWeekly() { renderWeeklyList("workTaskList",weekData.workTasks,"work"); renderWeeklyList("homeTaskList",weekData.homeTasks,"home"); }
