@@ -13,7 +13,9 @@ const DAYS=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 function startOfWeek(d){const x=new Date(d);x.setHours(0,0,0,0);const day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);return x}
 function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
 function localDateKey(d){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`}
-function workoutDoc(){return doc(db,"plannerDashboardUsers",user.uid,"workoutWeeks",weekKey)}
+const PLANNER_PROFILE_ID="mj";
+function workoutDoc(){return doc(db,"plannerDashboardUsers",PLANNER_PROFILE_ID,"workoutWeeks",weekKey)}
+function legacyWorkoutDoc(){return doc(db,"plannerDashboardUsers",user.uid,"workoutWeeks",weekKey)}
 function defaultData(){return{weekStart:weekKey,lifting:[],cardio:[],daily:{},stretch:{},dailyNotes:{},stretchSessions:[],updatedAt:null}}
 function uid(){return crypto.randomUUID?crypto.randomUUID():`${Date.now()}-${Math.random()}`}
 function showToast(msg){$("toast").textContent=msg;$("toast").classList.add("show");setTimeout(()=>$("toast").classList.remove("show"),1800)}
@@ -23,7 +25,7 @@ async function save(){try{await setDoc(workoutDoc(),{...data,updatedAt:serverTim
 function esc(v=""){const d=document.createElement("div");d.textContent=v;return d.innerHTML}
 function fmtDate(key){const d=new Date(`${key}T12:00:00`);return d.toLocaleDateString("en-US",{month:"short",day:"numeric"})}
 
-onAuthStateChanged(auth,async current=>{if(!current){location.replace("../login.html?redirect=plannerDashboard/workout.html");return}if(!ALLOWED_EMAILS.has((current.email||"").toLowerCase())){await signOut(auth);location.replace("../login.html?reason=unauthorized");return}user=current;const snap=await getDoc(workoutDoc());data=snap.exists()?{...defaultData(),...snap.data()}:defaultData();bind();render();$("loadingScreen").classList.add("done")});
+onAuthStateChanged(auth,async current=>{if(!current){location.replace("../login.html?redirect=plannerDashboard/workout.html");return}if(!ALLOWED_EMAILS.has((current.email||"").toLowerCase())){await signOut(auth);location.replace("../login.html?reason=unauthorized");return}user=current;let snap=await getDoc(workoutDoc());if(!snap.exists()){const legacy=await getDoc(legacyWorkoutDoc());if(legacy.exists()){await setDoc(workoutDoc(),legacy.data(),{merge:true});snap=await getDoc(workoutDoc());}}data=snap.exists()?{...defaultData(),...snap.data()}:defaultData();bind();render();$("loadingScreen").classList.add("done")});
 
 function bind(){
   $("signOutBtn").onclick=()=>signOut(auth);

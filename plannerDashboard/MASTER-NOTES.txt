@@ -1,0 +1,13 @@
+MJ Personal Planner — Master Build
+
+Integrated:
+- Daily Spread setup/editor
+- Monthly Calendar date navigation
+- Weekly 6:00 AM–7:00 PM appointment timelines in 10-minute intervals
+- Daily selected-date view
+- Hideable Set the Context card
+- Shared planner profile: plannerDashboardUsers/mj
+- Workout Tracker integrated and migrated to shared MJ profile
+- Official 2026–2027 A/B/C/D/E/SIP/NS calendar baked into the planner
+- Official 2026–2027 A–E class/PHH appointment schedule baked into the planner
+- Manual date edits remain available as overrides

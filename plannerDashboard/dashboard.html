@@ -30,7 +30,15 @@
     </div>
   </header>
 
+  <nav class="planner-nav" aria-label="Planner views">
+    <button class="planner-tab active" data-view="setup" type="button">Daily Spread</button>
+    <button class="planner-tab" data-view="calendar" type="button">Monthly Calendar</button>
+    <button class="planner-tab" data-view="weekly" type="button">Weekly View</button>
+    <button class="planner-tab" data-view="daily" type="button">Daily View</button>
+  </nav>
+
   <main class="page-shell">
+    <section id="setupView" class="planner-view">
     <section id="contextCard" class="card context-card">
       <div class="card-heading">
         <div>
@@ -38,6 +46,7 @@
           <h2>What kind of day is today?</h2>
           <p class="subtle">Your answers build the rest of the dashboard. You can change them anytime.</p>
         </div>
+        <button id="hideContextBtn" class="button ghost" type="button">Hide</button>
       </div>
       <form id="contextForm" class="context-grid">
         <label>
@@ -49,7 +58,7 @@
         <label>
           School letter day
           <select id="letterDay" required>
-            <option value="A">A Day</option><option value="B">B Day</option><option value="C">C Day</option><option value="D">D Day</option><option value="E">E Day</option><option value="No School">No School</option>
+            <option value="A">A Day</option><option value="B">B Day</option><option value="C">C Day</option><option value="D">D Day</option><option value="E">E Day</option><option value="SIP">SIP</option><option value="No School">No School</option>
           </select>
         </label>
         <fieldset>
@@ -138,6 +147,36 @@
           </div>
         </article>
       </aside>
+    </section>
+    </section>
+
+    <section id="calendarView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">MONTHLY CALENDAR</p><h2 id="calendarTitle">Month</h2></div>
+        <div class="view-controls"><button id="prevMonthBtn" class="button secondary" type="button">←</button><button id="todayMonthBtn" class="button ghost" type="button">Today</button><button id="nextMonthBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div id="monthCalendar" class="month-calendar"></div>
+    </section>
+
+    <section id="weeklyView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">WEEKLY VIEW</p><h2 id="weekTitle">Week</h2></div>
+        <div class="view-controls"><button id="prevWeekBtn" class="button secondary" type="button">←</button><button id="thisWeekBtn" class="button ghost" type="button">This week</button><button id="nextWeekBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <p class="subtle">Select any day to open its Daily View.</p>
+      <div id="weekDateGrid" class="week-date-grid"></div>
+    </section>
+
+    <section id="dailyView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">DAILY VIEW</p><h2 id="dailyViewTitle">Selected day</h2><p id="dailyViewMeta" class="subtle"></p></div>
+        <div class="view-controls"><button id="prevDayBtn" class="button secondary" type="button">←</button><button id="todayDayBtn" class="button ghost" type="button">Today</button><button id="nextDayBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <div class="daily-page-grid">
+        <article class="card daily-agenda-card"><div class="daily-card-heading"><h3>Appointments &amp; timeline</h3><button id="dailyAddAppointmentBtn" class="button ghost" type="button">+ Appointment</button></div><div id="dailyPageTimeline" class="timeline"></div></article>
+        <article class="card daily-summary-card"><h3>Day setup</h3><div id="dailyContextSummary"></div><button id="editSelectedDayBtn" class="button primary" type="button">Edit this day in Daily Spread</button></article>
+      </div>
     </section>
   </main>
 
