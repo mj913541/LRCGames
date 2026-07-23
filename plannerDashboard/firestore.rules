@@ -1,0 +1,633 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /* -----------------------------
+      Helpers
+    ------------------------------*/
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Only these two Google accounts may access the personal planner.
+    function isPlannerOwner() {
+      return isSignedIn()
+        && request.auth.token.email != null
+        && request.auth.token.email in [
+          "malbrecht@sd308.org",
+          "malbrecht3317@gmail.com"
+        ];
+    }
+
+    function authUid() {
+      return isSignedIn() ? request.auth.uid : null;
+    }
+
+    function tokenSchoolId() {
+      return isSignedIn() ? request.auth.token.schoolId : null;
+    }
+
+    function tokenUserId() {
+      return isSignedIn() ? request.auth.token.userId : null;
+    }
+
+    function tokenRole() {
+      return isSignedIn() ? request.auth.token.role : null;
+    }
+
+    function isSchool(schoolId) {
+      return isSignedIn() && tokenSchoolId() == schoolId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && tokenRole() == "admin";
+    }
+
+    function isStaff() {
+      return isSignedIn() && tokenRole() == "staff";
+    }
+
+    function isStudent() {
+      return isSignedIn() && tokenRole() == "student";
+    }
+
+    function isSelf(userId) {
+      return isSignedIn() && (
+        authUid() == userId ||
+        tokenUserId() == userId
+      );
+    }
+
+    // staffId_studentId doc must exist AND be active
+    function staffLinkActive(schoolId, staffId, studentId) {
+      return exists(/databases/$(database)/documents/readathonV2_schools/$(schoolId)/staffStudentLinks/$(staffId + "_" + studentId))
+        && get(/databases/$(database)/documents/readathonV2_schools/$(schoolId)/staffStudentLinks/$(staffId + "_" + studentId)).data.active == true;
+    }
+
+    function canReadTargetUser(schoolId, targetUserId) {
+      return isSchool(schoolId) && (
+        isAdmin()
+        || isSelf(targetUserId)
+        || (isStaff() && staffLinkActive(schoolId, tokenUserId(), targetUserId))
+      );
+    }
+
+    /* -----------------------------
+      Root: Multi-school
+      readathonV2_schools/{schoolId}/...
+    ------------------------------*/
+    match /readathonV2_schools/{schoolId} {
+
+      // Default: no direct access to the school root doc
+      allow read, write: if false;
+
+      /* -----------------------------
+        AVATAR CATALOG (Avatar World)
+        /avatarCatalog/catalog/items/{itemId}
+      ------------------------------*/
+      match /avatarCatalog/catalog/items/{itemId} {
+        allow read: if isSchool(schoolId);
+        allow write: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        AVATAR ROOM STATE (top-level)
+        Used by updated avatar-world.js
+        /userRoomState/{userId}
+      ------------------------------*/
+      match /userRoomState/{userId} {
+        allow get: if canReadTargetUser(schoolId, userId);
+        allow list: if false;
+
+        allow create, update: if isSchool(schoolId) && isSelf(userId);
+        allow delete: if false;
+      }
+
+      /* -----------------------------
+        Users
+        /users/{userId}
+      ------------------------------*/
+      match /users/{userId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || isSelf(userId)
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), userId))
+        );
+        allow list: if isAdmin() && isSchool(schoolId);
+
+        // Clients should not write users directly
+        allow create, update, delete: if false;
+
+        /* -----------------------------
+          AVATAR ROOM STATE (legacy/nested)
+          /users/{userId}/avatarRoom/state
+        ------------------------------*/
+        match /avatarRoom/state {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if false;
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+
+        /* -----------------------------
+          Readathon Summary
+          /users/{userId}/readathon/summary
+        ------------------------------*/
+        match /readathon/summary {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if false;
+
+          // Summary totals are function-owned
+          allow create, update, delete: if false;
+
+          /* -----------------------------
+            Inventory
+            /users/{userId}/readathon/summary/inventory/{itemId}
+          ------------------------------*/
+          match /inventory/{itemId} {
+            allow get: if canReadTargetUser(schoolId, userId);
+            allow list: if canReadTargetUser(schoolId, userId);
+
+            // Inventory writes are function-owned
+            allow create, update, delete: if false;
+          }
+        }
+
+        /* -----------------------------
+          MONARCH QUEST USER SUMMARY
+          /users/{userId}/monarchQuest/summary
+        ------------------------------*/
+        match /monarchQuest/summary {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if false;
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+
+        /* -----------------------------
+          MONARCH QUEST TASK PROGRESS
+          /users/{userId}/monarchQuest/taskProgress/{taskId}
+        ------------------------------*/
+        match /monarchQuest/taskProgress/{taskId} {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if isSchool(schoolId) && isSelf(userId);
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+
+        /* -----------------------------
+          MONARCH QUEST VOTES
+          /users/{userId}/monarchQuest/votes/{matchupId}
+        ------------------------------*/
+        match /monarchQuest/votes/{matchupId} {
+          allow get: if canReadTargetUser(schoolId, userId);
+          allow list: if isSchool(schoolId) && isSelf(userId);
+
+          allow create, update: if isSchool(schoolId) && isSelf(userId);
+          allow delete: if false;
+        }
+
+match /monarchQuest/rewardFlags/{rewardKey} {
+    allow get: if canReadTargetUser(schoolId, userId);
+    allow list: if isSchool(schoolId) && isSelf(userId);
+
+    allow create, update: if isSchool(schoolId) && isSelf(userId);
+    allow delete: if false;
+  }
+
+  // 👇👇👇 PUT YOUR VIDEO BLOCK RIGHT HERE
+
+  /* -----------------------------
+    VIDEO LIBRARY SUMMARY
+  ------------------------------*/
+  match /videoLibrary/summary {
+    allow get: if canReadTargetUser(schoolId, userId);
+    allow list: if false;
+
+    allow create, update: if isSchool(schoolId) && isSelf(userId);
+    allow delete: if false;
+  }
+
+  /* -----------------------------
+    VIDEO PROGRESS
+  ------------------------------*/
+  match /videoProgress/{videoKey} {
+    allow get: if canReadTargetUser(schoolId, userId);
+    allow list: if isSchool(schoolId) && isSelf(userId);
+
+    allow create, update: if isSchool(schoolId) && isSelf(userId);
+    allow delete: if false;
+  }
+  
+    /* -----------------------------
+    VIDEO VOTES
+    /users/{userId}/videoVotes/{matchupId}
+  ------------------------------*/
+  match /videoVotes/{matchupId} {
+    allow get: if canReadTargetUser(schoolId, userId);
+    allow list: if isSchool(schoolId) && isSelf(userId);
+
+    allow create, update: if isSchool(schoolId) && isSelf(userId);
+    allow delete: if false;
+  }
+  
+    /* -----------------------------
+    skill Games
+  ------------------------------*/
+  match /skillGames/{gameId} {
+  allow get: if canReadTargetUser(schoolId, userId);
+  allow list: if false;
+
+  allow create, update: if isSchool(schoolId) && isSelf(userId);
+  allow delete: if false;
+}
+
+} // 👈 closes users/{userId}
+      /* -----------------------------
+        MONARCH QUEST SCHOOL-LEVEL EVENT
+        /monarchQuest/{eventId}
+      ------------------------------*/
+      match /monarchQuest/{eventId} {
+        allow get: if isSchool(schoolId);
+        allow list: if false;
+
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+
+        /* -----------------------------
+          MONARCH TASKS
+          /monarchQuest/{eventId}/tasks/{taskId}
+        ------------------------------*/
+        match /tasks/{taskId} {
+          allow get: if isSchool(schoolId);
+          allow list: if isSchool(schoolId);
+
+          allow create, update, delete: if isSchool(schoolId) && isAdmin();
+        }
+
+        /* -----------------------------
+          MONARCH NOMINEES
+          /monarchQuest/{eventId}/nominees/{nomineeId}
+        ------------------------------*/
+        match /nominees/{nomineeId} {
+          allow get: if isSchool(schoolId);
+          allow list: if isSchool(schoolId);
+
+          allow create, update, delete: if isSchool(schoolId) && isAdmin();
+        }
+
+        /* -----------------------------
+          MONARCH REWARDS
+          /monarchQuest/{eventId}/rewards/{rewardKey}
+        ------------------------------*/
+        match /rewards/{rewardKey} {
+          allow get: if isSchool(schoolId);
+          allow list: if isSchool(schoolId);
+
+          allow create, update, delete: if isSchool(schoolId) && isAdmin();
+        }
+      }
+
+      /* -----------------------------
+        PRIZE CATALOG
+        /prizeCatalog/{prizeId}
+      ------------------------------*/
+      match /prizeCatalog/{prizeId} {
+        allow get: if isSchool(schoolId);
+        allow list: if isSchool(schoolId);
+
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        PRIZE ORDERS
+        /prizeOrders/{orderId}
+      ------------------------------*/
+      match /prizeOrders/{orderId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.userId == authUid())
+          || (resource.data.userId == tokenUserId())
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), resource.data.userId))
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        // Orders are function-owned
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        LEGACY PRIZE REDEMPTIONS
+        /prizeRedemptions/{redemptionId}
+        Keep read-only for older data during transition
+      ------------------------------*/
+      match /prizeRedemptions/{redemptionId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.userId == authUid())
+          || (resource.data.userId == tokenUserId())
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), resource.data.userId))
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        Secrets (PIN hashes)
+        /secrets/{userId}
+      ------------------------------*/
+      match /secrets/{userId} {
+        allow read, write: if false;
+      }
+
+      /* -----------------------------
+        Public student picker (pre-login)
+        /publicStudents/{studentId}
+      ------------------------------*/
+      match /publicStudents/{studentId} {
+        allow get: if resource.data.active == true;
+        allow list: if resource.data.active == true;
+
+        allow create, update, delete: if isAdmin() && isSchool(schoolId);
+      }
+
+      /* -----------------------------
+        Public Leaderboard
+        /leaderboards/{docId}
+      ------------------------------*/
+      match /leaderboards/{docId} {
+        allow get: if isSchool(schoolId);
+        allow list: if false;
+
+        // Only server functions should write
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        Public Homeroom Names
+        /publicHomerooms/{homeroomId}
+      ------------------------------*/
+      match /publicHomerooms/{homeroomId} {
+        allow get: if isSchool(schoolId);
+        allow list: if isSchool(schoolId);
+
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        Homerooms (Private)
+        /homerooms/{homeroomId}
+      ------------------------------*/
+      match /homerooms/{homeroomId} {
+        allow get: if isSchool(schoolId) && (isAdmin() || isStaff());
+        allow list: if isSchool(schoolId) && (isAdmin() || isStaff());
+
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        Staff ↔ Student Links
+        /staffStudentLinks/{staffId}_{studentId}
+      ------------------------------*/
+      match /staffStudentLinks/{linkId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (isStaff() && resource.data.staffId == tokenUserId())
+          || (isStudent() && resource.data.studentId == tokenUserId())
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+      }
+
+      /* -----------------------------
+        Transactions Audit Log
+        /transactions/{txId}
+      ------------------------------*/
+      match /transactions/{txId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.targetUserId == tokenUserId())
+          || (resource.data.targetUserId == authUid())
+          || (isStaff() && staffLinkActive(schoolId, tokenUserId(), resource.data.targetUserId))
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if false;
+      }
+            /* -----------------------------
+        BOOK BRACKET EVENT
+        /bookBracketEvents/{eventId}
+      ------------------------------*/
+      match /bookBracketEvents/{eventId} {
+        allow get: if isSchool(schoolId);
+        allow list: if false;
+
+        // Only admin can create/update/delete event config or advance rounds
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        BOOK BRACKET BOOKS
+        /bookBracketBooks/{bookId}
+      ------------------------------*/
+      match /bookBracketBooks/{bookId} {
+        allow get: if isSchool(schoolId);
+        allow list: if isSchool(schoolId);
+
+        // Seed/config only
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        BOOK BRACKET MATCHUPS
+        /bookBracketMatchups/{matchupId}
+      ------------------------------*/
+      match /bookBracketMatchups/{matchupId} {
+        allow get: if isSchool(schoolId);
+        allow list: if isSchool(schoolId);
+
+        // Only admin can lock/unlock rounds, set winners, or advance bracket state
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+
+      /* -----------------------------
+        BOOK BRACKET VOTES
+        /bookBracketVotes/{voteId}
+      ------------------------------*/
+      match /bookBracketVotes/{voteId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource != null && resource.data.userId == tokenUserId())
+          || (resource != null && resource.data.userId == authUid())
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        // Any signed-in user in the school can create/update ONLY their own vote
+        allow create: if isSchool(schoolId)
+          && request.resource.data.userId is string
+          && (
+            request.resource.data.userId == tokenUserId()
+            || request.resource.data.userId == authUid()
+          );
+
+        allow update: if isSchool(schoolId)
+          && resource.data.userId is string
+          && (
+            resource.data.userId == tokenUserId()
+            || resource.data.userId == authUid()
+          )
+          && request.resource.data.userId == resource.data.userId;
+
+        allow delete: if false;
+      }
+
+      /* -----------------------------
+        BOOK BRACKET USER PROGRESS
+        /bookBracketUserProgress/{userId}
+      ------------------------------*/
+      match /bookBracketUserProgress/{userId} {
+        allow get: if canReadTargetUser(schoolId, userId);
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        // User can manage only their own progress
+        allow create, update: if isSchool(schoolId) && isSelf(userId);
+        allow delete: if false;
+      }
+
+      /* -----------------------------
+        BOOK BRACKET USER ACTIONS
+        /bookBracketUserActions/{actionId}
+      ------------------------------*/
+      match /bookBracketUserActions/{actionId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.userId == tokenUserId())
+          || (resource.data.userId == authUid())
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        // Users may log only their own actions
+        allow create: if isSchool(schoolId)
+          && request.resource.data.userId is string
+          && (
+            request.resource.data.userId == tokenUserId()
+            || request.resource.data.userId == authUid()
+          );
+
+        allow update, delete: if false;
+      }
+
+      /* -----------------------------
+        BOOK BRACKET USER REWARDS
+        /bookBracketUserRewards/{rewardId}
+      ------------------------------*/
+      match /bookBracketUserRewards/{rewardId} {
+        allow get: if isSchool(schoolId) && (
+          isAdmin()
+          || (resource.data.userId == tokenUserId())
+          || (resource.data.userId == authUid())
+        );
+
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        // If rewards are being written directly by client helper code,
+        // allow users to create/update only their own reward docs.
+        allow create, update: if isSchool(schoolId)
+          && request.resource.data.userId is string
+          && (
+            request.resource.data.userId == tokenUserId()
+            || request.resource.data.userId == authUid()
+          );
+
+        allow delete: if false;
+      }
+
+      /* -----------------------------
+        BOOK BRACKET ADMIN ACTIONS
+        /bookBracketAdminActions/{actionId}
+      ------------------------------*/
+      match /bookBracketAdminActions/{actionId} {
+        allow get: if isSchool(schoolId) && isAdmin();
+        allow list: if isSchool(schoolId) && isAdmin();
+
+        allow create, update, delete: if isSchool(schoolId) && isAdmin();
+      }
+    }
+
+
+
+    /* -----------------------------
+      PERSONAL PLANNER DASHBOARD
+      Shared profile:
+      /plannerDashboardUsers/mj/...
+
+      Approved accounts:
+      - malbrecht@sd308.org
+      - malbrecht3317@gmail.com
+
+      Allows Dashboard, Lesson Planning, Workout, and future
+      planner subcollections beneath the shared MJ profile.
+    ------------------------------*/
+    match /plannerDashboardUsers/{userId} {
+
+      // Shared MJ planner plus temporary access to the signed-in user's
+      // legacy UID planner path for migration/import purposes.
+      function isAllowedPlannerPath() {
+        return isPlannerOwner()
+          && (
+            userId == "mj"
+            || userId == request.auth.uid
+          );
+      }
+
+      // Root planner profile document:
+      // /plannerDashboardUsers/mj
+      allow get: if isAllowedPlannerPath();
+      allow list: if false;
+      allow create, update: if isAllowedPlannerPath();
+      allow delete: if false;
+
+      // Every nested planner document beneath the allowed profile.
+      //
+      // Current examples:
+      // /plannerDashboardUsers/mj/days/{dateKey}
+      // /plannerDashboardUsers/mj/weeks/{weekKey}
+      // /plannerDashboardUsers/mj/workoutWeeks/{weekKey}
+      // /plannerDashboardUsers/mj/workoutPrograms/{programId}
+      // /plannerDashboardUsers/mj/lessonPlanning/progress
+      //
+      // This recursive wildcard also covers future planner modules.
+      match /{plannerDocument=**} {
+        allow read, write: if isAllowedPlannerPath();
+      }
+    }
+
+    /* -----------------------------
+      OLD STANDALONE LESSON PLANNER
+      No longer used. Lesson Planning now lives at:
+      /plannerDashboardUsers/mj/lessonPlanning/progress
+    ------------------------------*/
+    match /plannerDashboard/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /lrcquest/{schoolId}/users/{userId} {
+      allow get: if request.auth != null
+        && request.auth.uid == userId;
+
+      allow list: if false;
+      allow create, update, delete: if false;
+    }
+
+  }
+}

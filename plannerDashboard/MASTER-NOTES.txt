@@ -23,9 +23,27 @@ Firestore data paths:
 
 Lesson planner:
 - lessonPlanning.html = grade selection / overview
-- firstGrade.html / secondGrade.html = 10 Core + 20 Monarch
-- thirdGrade.html / fourthGrade.html / fifthGrade.html = 10 Core + 20 Spiral Practice
+- 1st.html / 2nd.html = 10 Core + 20 Monarch
+- 3rd.html / 4th.html / 5th.html = 10 Core + 20 Spiral Practice
 - Class counts: 1st 3, 2nd 3, 3rd 3, 4th 4, 5th 3
 
 All three modules use the same Firebase Web App configuration and the same two-account access check.
 Lesson Planning also keeps localStorage as a temporary fallback, but Firestore is the shared source when connected.
+
+
+CURRENT LESSON PLANNING FILES
+- lessonPlanning.html = grade-level landing page
+- 1st.html
+- 2nd.html
+- 3rd.html
+- 4th.html
+- 5th.html
+- lessonPlanning.css
+- lessonPlanning.js
+
+Lesson Planning Firestore:
+plannerDashboardUsers/mj/lessonPlanning/progress
+
+Lesson Planning uses Firebase modular SDK imports from lessonPlanning.js.
+All lesson-planning HTML pages load:
+<script type="module" src="lessonPlanning.js"></script>
