@@ -44,17 +44,15 @@ let dayData = null;
 let weekData = null;
 let saveTimer = null;
 const todayKey = localDateKey(new Date());
-let selectedDateKey = todayKey;
-let weekKey = getISOWeekKey(new Date());
-let calendarCursor = new Date();
+const weekKey = getISOWeekKey(new Date());
 const $ = (id) => document.getElementById(id);
 
 function localDateKey(date) { const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,"0"), d=String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function getISOWeekKey(date) { const copy=new Date(date); copy.setHours(0,0,0,0); copy.setDate(copy.getDate()+3-((copy.getDay()+6)%7)); const week1=new Date(copy.getFullYear(),0,4); const week=1+Math.round(((copy-week1)/86400000-3+((week1.getDay()+6)%7))/7); return `${copy.getFullYear()}-W${String(week).padStart(2,"0")}`; }
-function dayDoc(dateKey=selectedDateKey) { return doc(db,"plannerDashboardUsers","mj","days",dateKey); }
-function weekDoc(key=weekKey) { return doc(db,"plannerDashboardUsers","mj","weeks",key); }
-function profileDoc() { return doc(db,"plannerDashboardUsers","mj"); }
+function dayDoc() { return doc(db,"plannerDashboardUsers",user.uid,"days",todayKey); }
+function weekDoc() { return doc(db,"plannerDashboardUsers",user.uid,"weeks",weekKey); }
+function profileDoc() { return doc(db,"plannerDashboardUsers",user.uid); }
 function esc(v="") { const d=document.createElement("div"); d.textContent=v; return d.innerHTML; }
 function formatTime(time24) { const [h,m]=time24.split(":").map(Number); return new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit"}).format(new Date(2000,0,1,h,m)); }
 function showToast(message) { const t=$("toast"); t.textContent=message; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
@@ -67,7 +65,7 @@ async function saveAll() {
     await Promise.all([
       setDoc(dayDoc(), {...dayData, updatedAt:serverTimestamp()}, {merge:true}),
       setDoc(weekDoc(), {...weekData, updatedAt:serverTimestamp()}, {merge:true}),
-      setDoc(profileDoc(), {email:user.email, parkingLot:dayData.parkingLot || "", lastOpenedDay:selectedDateKey, updatedAt:serverTimestamp()}, {merge:true})
+      setDoc(profileDoc(), {email:user.email, parkingLot:dayData.parkingLot || "", lastOpenedDay:todayKey, updatedAt:serverTimestamp()}, {merge:true})
     ]);
     markSaved();
   } catch(err) { console.error(err); $("saveStatus").textContent="Save failed"; showToast("Could not save. Check your connection."); }
@@ -84,9 +82,9 @@ onAuthStateChanged(auth, async currentUser => {
 
 async function loadData() {
   const [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
-  const now = new Date(selectedDateKey+"T12:00:00");
+  const now = new Date();
   dayData = daySnap.exists() ? daySnap.data() : {
-    date:selectedDateKey, context:null, completed:{}, customItems:[], goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),
+    date:todayKey, context:null, completed:{}, customItems:[], goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),
     lastTime:DEFAULT_LAST_TIME.map(i=>({...i,id:uid(),lastDone:null})), parkingLot:profileSnap.exists() ? profileSnap.data().parkingLot || "" : "",
     ui:{hideChecked:false,hideCompletedGoals:false,collapsed:{}}
   };
@@ -105,11 +103,11 @@ function setupUI() {
   $("hideCheckedTasks").checked=!!dayData.ui.hideChecked;
   $("hideCompletedGoals").checked=!!dayData.ui.hideCompletedGoals;
   if(dayData.context) showDashboard(); else $("contextCard").classList.remove("hidden");
-  restoreCollapsed(); bindEvents(); bindPlannerViews(); renderAll(); renderPlannerViews();
+  restoreCollapsed(); bindEvents(); renderAll();
 }
 
 function bindEvents() {
-  $("contextForm").addEventListener("submit", e=>{ e.preventDefault(); dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value}; showDashboard(); renderTimeline(); renderDailyPage(); queueSave(); });
+  $("contextForm").addEventListener("submit", e=>{ e.preventDefault(); dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value}; showDashboard(); renderTimeline(); queueSave(); });
   $("editContextBtn").addEventListener("click",()=>{ $("contextCard").classList.remove("hidden"); $("contextCard").scrollIntoView({behavior:"smooth"}); });
   $("signOutBtn").addEventListener("click",async()=>{ await signOut(auth); });
   $("parkingLot").addEventListener("input",e=>{ dayData.parkingLot=e.target.value; queueSave(); });
@@ -124,7 +122,7 @@ function bindEvents() {
 }
 function restoreCollapsed() { document.querySelectorAll(".collapsible-card").forEach(card=>{ if(dayData.ui.collapsed[card.dataset.card]) { card.classList.add("collapsed"); card.querySelector(".collapse-trigger").setAttribute("aria-expanded","false"); } }); }
 function showDashboard() { $("contextCard").classList.add("hidden"); $("dashboardContent").classList.remove("hidden"); }
-function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); renderDailyPage(); }
+function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); }
 
 function buildTimelineItems() {
   const c=dayData.context; if(!c) return [];
@@ -177,100 +175,11 @@ function renderGoals() {
 }
 function changeGoal(id,delta) { const g=dayData.goals.find(x=>x.id===id); if(g) g.count=Math.max(0,g.count+delta); renderGoals(); queueSave(); }
 
-function urgency(item) { if(!item.lastDone) return {level:"red",text:"Not recorded yet",days:99999}; const days=Math.floor((new Date(selectedDateKey+"T12:00:00")-new Date(item.lastDone+"T12:00:00"))/86400000); if(days<=item.greenDays) return {level:"green",text:days===0?"Done today":`${days} day${days===1?"":"s"} ago`,days}; if(days<=item.yellowDays) return {level:"yellow",text:`${days} days ago • due soon`,days}; return {level:"red",text:`${days} days ago • overdue`,days}; }
+function urgency(item) { if(!item.lastDone) return {level:"red",text:"Not recorded yet",days:99999}; const days=Math.floor((new Date(todayKey+"T12:00:00")-new Date(item.lastDone+"T12:00:00"))/86400000); if(days<=item.greenDays) return {level:"green",text:days===0?"Done today":`${days} day${days===1?"":"s"} ago`,days}; if(days<=item.yellowDays) return {level:"yellow",text:`${days} days ago • due soon`,days}; return {level:"red",text:`${days} days ago • overdue`,days}; }
 function renderLastTime() {
   const sorted=[...dayData.lastTime].sort((a,b)=>urgency(b).days-urgency(a).days);
   $("lastTimeList").innerHTML=sorted.length?sorted.map(i=>{const u=urgency(i);return `<div class="last-time-row"><span class="urgency-dot urgency-${u.level}"></span><div><div class="goal-name">${esc(i.name)}</div><div class="last-meta">${u.text} • Green ${i.greenDays}d, yellow through ${i.yellowDays}d</div></div><button class="just-did" data-just-did="${i.id}" type="button">Just did it</button><button class="delete-button" data-last-delete="${i.id}" type="button">×</button></div>`}).join(""):'<div class="empty-state">Add a recurring item to track it here.</div>';
-  $("lastTimeList").querySelectorAll("[data-just-did]").forEach(btn=>btn.addEventListener("click",()=>{const i=dayData.lastTime.find(x=>x.id===btn.dataset.justDid);if(i)i.lastDone=selectedDateKey;renderLastTime();queueSave();showToast("Marked as done today.");})); $("lastTimeList").querySelectorAll("[data-last-delete]").forEach(btn=>btn.addEventListener("click",()=>{dayData.lastTime=dayData.lastTime.filter(i=>i.id!==btn.dataset.lastDelete);renderLastTime();queueSave();}));
-}
-
-
-function blankDayData(dateKey, profile={}) {
-  return {date:dateKey,context:null,completed:{},customItems:[],goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),lastTime:DEFAULT_LAST_TIME.map(i=>({...i,id:uid(),lastDone:null})),parkingLot:profile.parkingLot||"",ui:{hideChecked:false,hideCompletedGoals:false,collapsed:{}}};
-}
-
-function bindPlannerViews() {
-  document.querySelectorAll(".planner-tab").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.view)));
-  $("prevMonthBtn")?.addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderMonthCalendar();});
-  $("nextMonthBtn")?.addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderMonthCalendar();});
-  $("todayMonthBtn")?.addEventListener("click",()=>{calendarCursor=new Date();renderMonthCalendar();});
-  $("prevWeekBtn")?.addEventListener("click",()=>shiftWeek(-7));
-  $("nextWeekBtn")?.addEventListener("click",()=>shiftWeek(7));
-  $("thisWeekBtn")?.addEventListener("click",async()=>{await loadSelectedDate(todayKey,false);renderWeekView();});
-  $("prevDayBtn")?.addEventListener("click",()=>shiftSelectedDay(-1));
-  $("nextDayBtn")?.addEventListener("click",()=>shiftSelectedDay(1));
-  $("todayDayBtn")?.addEventListener("click",()=>openDate(todayKey));
-  $("editSelectedDayBtn")?.addEventListener("click",()=>switchView("setup"));
-  $("dailyAddAppointmentBtn")?.addEventListener("click",()=>openDialog("appointment"));
-}
-
-function switchView(view) {
-  document.querySelectorAll(".planner-view").forEach(v=>v.classList.add("hidden"));
-  $(view+"View")?.classList.remove("hidden");
-  document.querySelectorAll(".planner-tab").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
-  if(view==="calendar") renderMonthCalendar();
-  if(view==="weekly") renderWeekView();
-  if(view==="daily") renderDailyPage();
-  window.scrollTo({top:0,behavior:"smooth"});
-}
-
-async function loadSelectedDate(dateKey, saveCurrent=true) {
-  if(saveCurrent && dayData && weekData) await saveAll();
-  selectedDateKey=dateKey;
-  weekKey=getISOWeekKey(new Date(dateKey+"T12:00:00"));
-  const [daySnap,weekSnap,profileSnap]=await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
-  const profile=profileSnap.exists()?profileSnap.data():{};
-  dayData=daySnap.exists()?daySnap.data():blankDayData(dateKey,profile);
-  weekData=weekSnap.exists()?weekSnap.data():{week:weekKey,workTasks:[],homeTasks:DEFAULT_HOME_TASKS.map(name=>({id:uid(),name,status:"planned"}))};
-  dayData.completed||={};dayData.customItems||=[];dayData.goals||=[];dayData.lastTime||=[];dayData.ui||={hideChecked:false,hideCompletedGoals:false,collapsed:{}};dayData.ui.collapsed||={};
-  const d=new Date(dateKey+"T12:00:00");
-  $("todayLabel").textContent=d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
-  $("dayOfWeek").value=dayData.context?.dayOfWeek||d.toLocaleDateString("en-US",{weekday:"long"});
-  $("letterDay").value=dayData.context?.letterDay||"No School";
-  document.querySelector(`input[name="daycare"][value="${dayData.context?.daycare||"no"}"]`).checked=true;
-  $("parkingLot").value=dayData.parkingLot||"";
-  $("hideCheckedTasks").checked=!!dayData.ui.hideChecked;$("hideCompletedGoals").checked=!!dayData.ui.hideCompletedGoals;
-  if(dayData.context) showDashboard(); else {$("contextCard").classList.remove("hidden");$("dashboardContent").classList.add("hidden");}
-  renderAll();
-}
-
-async function openDate(dateKey) { await loadSelectedDate(dateKey); switchView("daily"); }
-async function shiftSelectedDay(delta) { const d=new Date(selectedDateKey+"T12:00:00");d.setDate(d.getDate()+delta);await openDate(localDateKey(d)); }
-async function shiftWeek(delta) { const d=new Date(selectedDateKey+"T12:00:00");d.setDate(d.getDate()+delta);await loadSelectedDate(localDateKey(d));renderWeekView(); }
-
-function renderPlannerViews(){renderMonthCalendar();renderWeekView();renderDailyPage();}
-
-async function getDaySummary(dateKey){const snap=await getDoc(dayDoc(dateKey));return snap.exists()?snap.data():null;}
-
-async function renderMonthCalendar(){
-  const first=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1,12);
-  $("calendarTitle").textContent=first.toLocaleDateString("en-US",{month:"long",year:"numeric"});
-  const start=new Date(first);start.setDate(1-first.getDay());
-  const dates=Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
-  const data=await Promise.all(dates.map(d=>getDaySummary(localDateKey(d))));
-  $("monthCalendar").innerHTML=dates.map((d,i)=>{const key=localDateKey(d),ctx=data[i]?.context,items=(data[i]?.customItems||[]).filter(x=>x.type==="Appointment");return `<button class="calendar-day ${d.getMonth()!==first.getMonth()?"outside":""} ${key===todayKey?"today":""} ${key===selectedDateKey?"selected":""}" data-open-date="${key}" type="button"><span class="calendar-number">${d.getDate()}</span>${ctx?.letterDay?`<span class="calendar-badge">${esc(ctx.letterDay==="No School"?"NS":ctx.letterDay+" Day")}</span>`:""}${ctx?.daycare==="yes"?'<span class="calendar-badge">Daycare</span>':""}${items.slice(0,2).map(x=>`<span class="calendar-note">${formatTime(x.time24)} ${esc(x.title)}</span>`).join("")}</button>`;}).join("");
-  $("monthCalendar").querySelectorAll("[data-open-date]").forEach(b=>b.addEventListener("click",()=>openDate(b.dataset.openDate)));
-}
-
-function sundayFor(dateKey){const d=new Date(dateKey+"T12:00:00");d.setDate(d.getDate()-d.getDay());return d;}
-async function renderWeekView(){
-  const start=sundayFor(selectedDateKey);const dates=Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
-  const data=await Promise.all(dates.map(d=>getDaySummary(localDateKey(d))));
-  const end=dates[6];$("weekTitle").textContent=`${start.toLocaleDateString("en-US",{month:"short",day:"numeric"})}–${end.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`;
-  $("weekDateGrid").innerHTML=dates.map((d,i)=>{const key=localDateKey(d),ctx=data[i]?.context,appts=(data[i]?.customItems||[]).filter(x=>x.type==="Appointment").sort((a,b)=>a.time24.localeCompare(b.time24));return `<button class="week-day-card ${key===todayKey?"today":""} ${key===selectedDateKey?"selected":""}" data-open-date="${key}" type="button"><div class="week-day-name">${d.toLocaleDateString("en-US",{weekday:"long"})}</div><div class="week-day-number">${d.getDate()}</div>${ctx?.letterDay?`<span class="calendar-badge">${esc(ctx.letterDay==="No School"?"No School":ctx.letterDay+" Day")}</span>`:""}${appts.length?appts.map(a=>`<div class="week-appointment"><strong>${formatTime(a.time24)}</strong><br>${esc(a.title)}</div>`).join(""):'<div class="empty-state">No appointments</div>'}</button>`;}).join("");
-  $("weekDateGrid").querySelectorAll("[data-open-date]").forEach(b=>b.addEventListener("click",()=>openDate(b.dataset.openDate)));
-}
-
-function renderDailyPage(){
-  if(!dayData)return;const d=new Date(selectedDateKey+"T12:00:00");
-  $("dailyViewTitle") && ($("dailyViewTitle").textContent=d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}));
-  const c=dayData.context;$("dailyViewMeta") && ($("dailyViewMeta").textContent=c?`${c.letterDay}${c.daycare==="yes"?" • Daycare":""}`:"This day has not been set up yet.");
-  if($("dailyContextSummary")) $("dailyContextSummary").innerHTML=c?`<div class="context-summary-row"><span>Day</span><strong>${esc(c.dayOfWeek)}</strong></div><div class="context-summary-row"><span>Letter day</span><strong>${esc(c.letterDay)}</strong></div><div class="context-summary-row"><span>Daycare</span><strong>${c.daycare==="yes"?"Yes":"No"}</strong></div>`:'<div class="empty-state">Use Daily Spread to set up this date.</div>';
-  if(!$("dailyPageTimeline"))return;
-  if(!c){$("dailyPageTimeline").innerHTML='<div class="empty-state">This date has not been set up yet.</div>';return;}
-  const items=buildTimelineItems();
-  $("dailyPageTimeline").innerHTML=items.length?items.map(item=>`<div class="timeline-item ${dayData.completed[item.key]?"done":""}" data-key="${esc(item.key)}"><span class="timeline-time">${formatTime(item.time24)}</span><button class="check-button" type="button">${dayData.completed[item.key]?"✓":""}</button><div><div class="timeline-title">${esc(item.title)}</div><div class="timeline-type">${esc(item.type)}</div></div><span></span></div>`).join(""):'<div class="empty-state">Nothing scheduled.</div>';
-  $("dailyPageTimeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",()=>{const key=btn.closest(".timeline-item").dataset.key;dayData.completed[key]=!dayData.completed[key];renderTimeline();renderDailyPage();queueSave();}));
+  $("lastTimeList").querySelectorAll("[data-just-did]").forEach(btn=>btn.addEventListener("click",()=>{const i=dayData.lastTime.find(x=>x.id===btn.dataset.justDid);if(i)i.lastDone=todayKey;renderLastTime();queueSave();showToast("Marked as done today.");})); $("lastTimeList").querySelectorAll("[data-last-delete]").forEach(btn=>btn.addEventListener("click",()=>{dayData.lastTime=dayData.lastTime.filter(i=>i.id!==btn.dataset.lastDelete);renderLastTime();queueSave();}));
 }
 
 function openDialog(type) {
