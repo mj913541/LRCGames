@@ -12,7 +12,7 @@
     <div>
       <p class="eyebrow">LESSON PLANNING</p>
       <h1>🌱 1st Grade</h1>
-      <p class="subtitle">Track lesson prep and class completion without losing your place.</p>
+      <p class="subtitle">Track lesson prep and class completion without losing your place. <span class="sync-status" data-sync-status>☁️ Connecting…</span></p>
     </div>
   </header>
 
@@ -50,6 +50,17 @@
         <span id="monarchCount" class="pill"></span>
       </div>
       <div id="monarchLessons" class="lesson-list"></div>
+    </section>
+
+    <section id="spiralSection" class="lesson-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">SPIRAL PRACTICE</p>
+          <h2>Authentic Library Challenges & Projects</h2>
+        </div>
+        <span id="spiralCount" class="pill"></span>
+      </div>
+      <div id="spiralLessons" class="lesson-list"></div>
     </section>
   </main>
 
@@ -114,14 +125,8 @@
 
       <fieldset class="class-progress">
         <legend>Class Progress</legend>
-        <p class="helper-text">Use these as your A–E class completion checks.</p>
-        <div class="class-checks">
-          <label><input type="checkbox" data-class="A"> A</label>
-          <label><input type="checkbox" data-class="B"> B</label>
-          <label><input type="checkbox" data-class="C"> C</label>
-          <label><input type="checkbox" data-class="D"> D</label>
-          <label><input type="checkbox" data-class="E"> E</label>
-        </div>
+        <p class="helper-text">Check off each class after they complete this lesson.</p>
+        <div class="class-checks" id="classChecks"></div>
       </fieldset>
 
       <div class="dialog-actions">
@@ -131,6 +136,10 @@
     </form>
   </dialog>
 
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
+  <script src="firebaseConfig.js"></script>
   <script src="lessonPlanning.js"></script>
   <script>
     LessonPlanner.renderGrade("1");

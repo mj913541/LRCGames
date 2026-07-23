@@ -94,3 +94,22 @@ textarea{resize:vertical}
   .grade-summary-grid{grid-template-columns:1fr}
   .completion-grid{grid-template-columns:1fr}
 }
+
+.sync-status{
+  display:inline-block;
+  margin-left:8px;
+  padding:4px 8px;
+  border-radius:999px;
+  background:var(--accent-soft);
+  color:var(--accent);
+  font-size:.78rem;
+  font-weight:800;
+  white-space:nowrap;
+}
+
+.lesson-meta{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:.8rem;
+  line-height:1.35;
+}
