@@ -6,9 +6,9 @@
   <title>1st Grade Lesson Planning</title>
   <link rel="stylesheet" href="lessonPlanning.css">
 </head>
-<body class="planner-body" data-grade="1">
+<body class="planner-body" data-page="grade" data-grade="1">
   <header class="topbar">
-    <a class="back-link" href="index.html">← All Grades</a>
+    <a class="back-link" href="lessonPlanning.html">← All Grades</a>
     <div>
       <p class="eyebrow">LESSON PLANNING</p>
       <h1>🌱 1st Grade</h1>
@@ -135,14 +135,6 @@
       </div>
     </form>
   </dialog>
-
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebaseConfig.js"></script>
-  <script src="lessonPlanning.js"></script>
-  <script>
-    LessonPlanner.renderGrade("1");
-  </script>
+  <script type="module" src="lessonPlanning.js"></script>
 </body>
 </html>

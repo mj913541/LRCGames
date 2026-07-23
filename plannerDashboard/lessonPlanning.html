@@ -6,9 +6,9 @@
   <title>Lesson Planning</title>
   <link rel="stylesheet" href="lessonPlanning.css">
 </head>
-<body class="planner-body">
+<body class="planner-body" data-page="home">
   <header class="topbar">
-    <a class="back-link" href="../dashboard.html">← Planner Dashboard</a>
+    <a class="back-link" href="dashboard.html">← Planner Dashboard</a>
     <div>
       <p class="eyebrow">LRC PLANNER</p>
       <h1>📚 Lesson Planning</h1>
@@ -36,14 +36,6 @@
       <div id="gradeGrid" class="grade-grid"></div>
     </section>
   </main>
-
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore-compat.js"></script>
-  <script src="firebaseConfig.js"></script>
-  <script src="lessonPlanning.js"></script>
-  <script>
-    LessonPlanner.renderHome();
-  </script>
+  <script type="module" src="lessonPlanning.js"></script>
 </body>
 </html>

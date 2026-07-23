@@ -11,3 +11,10 @@ Integrated:
 - Official 2026–2027 A/B/C/D/E/SIP/NS calendar baked into the planner
 - Official 2026–2027 A–E class/PHH appointment schedule baked into the planner
 - Manual date edits remain available as overrides
+
+- Lesson Planning flattened into plannerDashboard folder
+- Lesson Planning home renamed lessonPlanning.html
+- Lesson Planner migrated to Firebase modular SDK 12.1.0
+- Lesson Planner shared data: plannerDashboardUsers/mj/lessonPlanning/progress
+- Legacy plannerDashboard/lessonPlanning data migrates automatically if present
+- Dashboard header now links directly to Lesson Planning
