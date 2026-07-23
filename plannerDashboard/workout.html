@@ -52,7 +52,8 @@
 
       <article class="card daily-card">
         <div class="card-heading"><div><p class="eyebrow">✓ DAILY</p><h2>Daily exercises</h2></div></div>
-        <p class="subtle">Tap a day when you did intentional movement — even a short workout counts.</p>
+        <p class="subtle">Daily goal: 10 reps of each movement. Check off each exercise as you finish it.</p>
+        <div id="dailyExerciseList" class="daily-exercise-list"></div>
         <div id="dailyWeek" class="day-checks"></div>
         <label class="field-label">Today's note
           <textarea id="dailyNote" rows="4" placeholder="Walk, core work, YouTube workout, stairs…"></textarea>
@@ -71,6 +72,23 @@
         </div>
         <div id="stretchRecent" class="recent-stretch"></div>
       </article>
+    </section>
+
+    <section class="card abs-plan-card">
+      <div class="card-heading abs-plan-heading">
+        <div>
+          <p class="eyebrow">◎ ABS / CORE REPAIR</p>
+          <h2>28-Day Diastasis Recti Repair Plan</h2>
+          <p class="subtle">Ten-minute guided workouts from Nourish Move Love. Tap the workout title to open the guided video page, then check it off when complete.</p>
+        </div>
+        <div class="abs-plan-progress" aria-live="polite">
+          <span>Workouts complete</span>
+          <strong id="absPlanProgress">0 / 24</strong>
+        </div>
+      </div>
+      <div class="abs-week-labels" aria-hidden="true"><span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span></div>
+      <div id="absPlanCalendar" class="abs-plan-calendar"></div>
+      <p class="abs-plan-credit subtle">Plan based on the uploaded Nourish Move Love Diastasis Recti Repair Plan.</p>
     </section>
 
     <section class="card glance-card">
