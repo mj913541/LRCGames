@@ -29,16 +29,15 @@
     </div>
   </header>
 
+  <nav class="planner-nav" aria-label="Planner views">
+    <button class="planner-tab active" data-view="setup" type="button">Daily Spread</button>
+    <button class="planner-tab" data-view="calendar" type="button">Monthly Calendar</button>
+    <button class="planner-tab" data-view="weekly" type="button">Weekly View</button>
+    <button class="planner-tab" data-view="daily" type="button">Daily View</button>
+  </nav>
+
   <main class="page-shell">
-
-    <nav class="view-switcher" aria-label="Planner view">
-      <button id="dailyViewBtn" class="view-button active" type="button">Daily spread</button>
-      <button id="calendarViewBtn" class="view-button" type="button">Calendar</button>
-      <button id="weeklyViewBtn" class="view-button" type="button">Weekly view</button>
-      <button id="todayOnlyBtn" class="view-button" type="button">Today</button>
-    </nav>
-
-    <div id="dailyView">
+    <section id="setupView" class="planner-view">
     <section id="contextCard" class="card context-card">
       <div class="card-heading">
         <div>
@@ -46,7 +45,6 @@
           <h2>What kind of day is today?</h2>
           <p class="subtle">Your answers build the rest of the dashboard. You can change them anytime.</p>
         </div>
-        <button id="hideContextBtn" class="button ghost" type="button">Hide</button>
       </div>
       <form id="contextForm" class="context-grid">
         <label>
@@ -73,18 +71,6 @@
     </section>
 
     <section id="dashboardContent" class="dashboard-layout hidden">
-      <aside class="appointment-rail" aria-label="Today’s appointments">
-        <div class="appointment-rail-card">
-          <div class="appointment-rail-heading">
-            <div>
-              <p class="eyebrow">TODAY</p>
-              <h2>Appointments</h2>
-            </div>
-            <button id="railAddAppointmentBtn" class="rail-add-button" type="button" aria-label="Add appointment" title="Add appointment">+</button>
-          </div>
-          <div id="appointmentRail" class="appointment-rail-list"></div>
-        </div>
-      </aside>
       <div class="main-column">
         <article class="card collapsible-card" data-card="merged">
           <button class="collapse-trigger" type="button" aria-expanded="true">
@@ -92,36 +78,11 @@
           </button>
           <div class="collapsible-content">
             <div class="toolbar compact-toolbar">
-              <span class="subtle">Completed tasks disappear automatically.</span>
+              <label class="toggle"><input id="hideCheckedTasks" type="checkbox"><span></span>Hide checked</label>
               <button id="addAppointmentBtn" class="button ghost" type="button">+ Appointment</button>
               <button id="addTodayTaskBtn" class="button ghost" type="button">+ Task</button>
             </div>
             <div id="timeline" class="timeline"></div>
-          </div>
-        </article>
-
-
-        <article class="card collapsible-card" data-card="scheduleSettings">
-          <button class="collapse-trigger" type="button" aria-expanded="true">
-            <span><span class="card-icon">⌚</span> Schedule Settings</span><span class="chevron">⌃</span>
-          </button>
-          <div class="collapsible-content schedule-settings">
-            <section class="mini-card">
-              <div class="mini-card-heading">
-                <div><p class="eyebrow">SCHOOL YEAR</p><h3>A–E class times</h3></div>
-                <button id="editClassScheduleBtn" class="mini-button" type="button">Edit times</button>
-              </div>
-              <p class="subtle">Change class names and start times without editing code.</p>
-              <div id="classSchedulePreview" class="schedule-preview"></div>
-            </section>
-            <section class="mini-card">
-              <div class="mini-card-heading">
-                <div><p class="eyebrow">FUTURE DATES</p><h3>Letter days &amp; daycare</h3></div>
-                <button id="addFutureDayBtn" class="mini-button" type="button">+ Assign date</button>
-              </div>
-              <p class="subtle">Assign future dates. A date-specific assignment overrides the normal pattern.</p>
-              <div id="futureAssignmentsList" class="future-assignments"></div>
-            </section>
           </div>
         </article>
 
@@ -185,36 +146,35 @@
         </article>
       </aside>
     </section>
-    </div>
-
-
-    <section id="weeklyView" class="weekly-spread-view hidden" aria-label="Weekly appointment spread">
-      <article class="card weekly-spread-card">
-        <div class="weekly-spread-toolbar">
-          <div>
-            <p class="eyebrow">WEEKLY APPOINTMENTS</p>
-            <h2 id="weeklySpreadLabel">This week</h2>
-            <p class="subtle">Appointments and assigned A–E classes only. Tasks stay in the Daily Spread.</p>
-          </div>
-          <div class="calendar-actions">
-            <button id="previousWeekBtn" class="icon-button" type="button" aria-label="Previous week">‹</button>
-            <button id="thisWeekBtn" class="button secondary" type="button">This week</button>
-            <button id="nextWeekBtn" class="icon-button" type="button" aria-label="Next week">›</button>
-          </div>
-        </div>
-        <div id="weeklyAppointmentGrid" class="weekly-appointment-grid" aria-live="polite"></div>
-      </article>
     </section>
 
-    <section id="calendarView" class="calendar-view hidden" aria-label="Monthly calendar">
-      <article class="card calendar-card">
-        <div class="calendar-toolbar">
-          <div><p class="eyebrow">MONTHLY VIEW</p><h2 id="calendarMonthLabel">Calendar</h2><p class="subtle">Future letter days, daycare days, and appointments at a glance.</p></div>
-          <div class="calendar-actions"><button id="previousMonthBtn" class="icon-button" type="button" aria-label="Previous month">‹</button><button id="todayMonthBtn" class="button secondary" type="button">Today</button><button id="nextMonthBtn" class="icon-button" type="button" aria-label="Next month">›</button></div>
-        </div>
-        <div class="calendar-weekdays" aria-hidden="true"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
-        <div id="calendarGrid" class="calendar-grid"></div>
-      </article>
+    <section id="calendarView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">MONTHLY CALENDAR</p><h2 id="calendarTitle">Month</h2></div>
+        <div class="view-controls"><button id="prevMonthBtn" class="button secondary" type="button">←</button><button id="todayMonthBtn" class="button ghost" type="button">Today</button><button id="nextMonthBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div id="monthCalendar" class="month-calendar"></div>
+    </section>
+
+    <section id="weeklyView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">WEEKLY VIEW</p><h2 id="weekTitle">Week</h2></div>
+        <div class="view-controls"><button id="prevWeekBtn" class="button secondary" type="button">←</button><button id="thisWeekBtn" class="button ghost" type="button">This week</button><button id="nextWeekBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <p class="subtle">Select any day to open its Daily View.</p>
+      <div id="weekDateGrid" class="week-date-grid"></div>
+    </section>
+
+    <section id="dailyView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">DAILY VIEW</p><h2 id="dailyViewTitle">Selected day</h2><p id="dailyViewMeta" class="subtle"></p></div>
+        <div class="view-controls"><button id="prevDayBtn" class="button secondary" type="button">←</button><button id="todayDayBtn" class="button ghost" type="button">Today</button><button id="nextDayBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <div class="daily-page-grid">
+        <article class="card daily-agenda-card"><div class="daily-card-heading"><h3>Appointments &amp; timeline</h3><button id="dailyAddAppointmentBtn" class="button ghost" type="button">+ Appointment</button></div><div id="dailyPageTimeline" class="timeline"></div></article>
+        <article class="card daily-summary-card"><h3>Day setup</h3><div id="dailyContextSummary"></div><button id="editSelectedDayBtn" class="button primary" type="button">Edit this day in Daily Spread</button></article>
+      </div>
     </section>
   </main>
 

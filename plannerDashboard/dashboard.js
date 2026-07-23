@@ -12,13 +12,11 @@ const firebaseConfig = {
   measurementId: "G-5VXRYJ733C"
 };
 const ALLOWED_EMAILS = new Set(["malbrecht@sd308.org", "malbrecht3317@gmail.com"]);
-// Both approved Google logins are aliases for one shared MJ planner profile.
-const PLANNER_PROFILE_ID = "mj";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const DEFAULT_SCHEDULE_BY_LETTER_DAY = {
+const SCHEDULE_BY_LETTER_DAY = {
   A: [{time24:"09:05",title:"4th Rosenthal"},{time24:"10:05",title:"2nd Peterson"},{time24:"11:05",title:"3rd Hossain"},{time24:"13:45",title:"5th Altruismo"},{time24:"14:45",title:"1st Rogers"}],
   B: [{time24:"09:05",title:"4th Cavello"},{time24:"10:05",title:"2nd Schmidt"},{time24:"13:45",title:"5th Isibindi"}],
   C: [{time24:"08:45",title:"AM Duty"},{time24:"10:05",title:"2nd Adams"},{time24:"11:05",title:"3rd Pulsa"},{time24:"13:45",title:"5th Amistad"}],
@@ -44,21 +42,19 @@ const QUOTES = [
 let user = null;
 let dayData = null;
 let weekData = null;
-let plannerSettings = null;
 let saveTimer = null;
-let calendarCursor = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-let weeklyCursor = startOfWeek(new Date());
 const todayKey = localDateKey(new Date());
-const weekKey = getISOWeekKey(new Date());
+let selectedDateKey = todayKey;
+let weekKey = getISOWeekKey(new Date());
+let calendarCursor = new Date();
 const $ = (id) => document.getElementById(id);
 
-function startOfWeek(date) { const d=new Date(date); d.setHours(0,0,0,0); d.setDate(d.getDate()-d.getDay()); return d; }
 function localDateKey(date) { const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,"0"), d=String(date.getDate()).padStart(2,"0"); return `${y}-${m}-${d}`; }
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function getISOWeekKey(date) { const copy=new Date(date); copy.setHours(0,0,0,0); copy.setDate(copy.getDate()+3-((copy.getDay()+6)%7)); const week1=new Date(copy.getFullYear(),0,4); const week=1+Math.round(((copy-week1)/86400000-3+((week1.getDay()+6)%7))/7); return `${copy.getFullYear()}-W${String(week).padStart(2,"0")}`; }
-function dayDoc(profileId=PLANNER_PROFILE_ID) { return doc(db,"plannerDashboardUsers",profileId,"days",todayKey); }
-function weekDoc(profileId=PLANNER_PROFILE_ID) { return doc(db,"plannerDashboardUsers",profileId,"weeks",weekKey); }
-function profileDoc(profileId=PLANNER_PROFILE_ID) { return doc(db,"plannerDashboardUsers",profileId); }
+function dayDoc(dateKey=selectedDateKey) { return doc(db,"plannerDashboardUsers","mj","days",dateKey); }
+function weekDoc(key=weekKey) { return doc(db,"plannerDashboardUsers","mj","weeks",key); }
+function profileDoc() { return doc(db,"plannerDashboardUsers","mj"); }
 function esc(v="") { const d=document.createElement("div"); d.textContent=v; return d.innerHTML; }
 function formatTime(time24) { const [h,m]=time24.split(":").map(Number); return new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit"}).format(new Date(2000,0,1,h,m)); }
 function showToast(message) { const t=$("toast"); t.textContent=message; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
@@ -71,7 +67,7 @@ async function saveAll() {
     await Promise.all([
       setDoc(dayDoc(), {...dayData, updatedAt:serverTimestamp()}, {merge:true}),
       setDoc(weekDoc(), {...weekData, updatedAt:serverTimestamp()}, {merge:true}),
-      setDoc(profileDoc(), {ownerName:"MJ", allowedEmails:[...ALLOWED_EMAILS], lastSignedInEmail:user.email, parkingLot:dayData.parkingLot || "", lastOpenedDay:todayKey, plannerSettings, updatedAt:serverTimestamp()}, {merge:true})
+      setDoc(profileDoc(), {email:user.email, parkingLot:dayData.parkingLot || "", lastOpenedDay:selectedDateKey, updatedAt:serverTimestamp()}, {merge:true})
     ]);
     markSaved();
   } catch(err) { console.error(err); $("saveStatus").textContent="Save failed"; showToast("Could not save. Check your connection."); }
@@ -87,49 +83,13 @@ onAuthStateChanged(auth, async currentUser => {
 });
 
 async function loadData() {
-  let [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
-
-  // One-time compatibility bridge: if the shared MJ profile is empty, import the
-  // data belonging to whichever approved Firebase UID signs in first.
-  if (!daySnap.exists() && !weekSnap.exists() && !profileSnap.exists() && user.uid !== PLANNER_PROFILE_ID) {
-    const [legacyDaySnap, legacyWeekSnap, legacyProfileSnap] = await Promise.all([
-      getDoc(dayDoc(user.uid)),
-      getDoc(weekDoc(user.uid)),
-      getDoc(profileDoc(user.uid))
-    ]);
-    if (legacyDaySnap.exists() || legacyWeekSnap.exists() || legacyProfileSnap.exists()) {
-      await Promise.all([
-        legacyDaySnap.exists() ? setDoc(dayDoc(), {...legacyDaySnap.data(), migratedFromUid:user.uid, migratedAt:serverTimestamp()}, {merge:true}) : Promise.resolve(),
-        legacyWeekSnap.exists() ? setDoc(weekDoc(), {...legacyWeekSnap.data(), migratedFromUid:user.uid, migratedAt:serverTimestamp()}, {merge:true}) : Promise.resolve(),
-        legacyProfileSnap.exists() ? setDoc(profileDoc(), {...legacyProfileSnap.data(), migratedFromUid:user.uid, migratedAt:serverTimestamp()}, {merge:true}) : Promise.resolve()
-      ]);
-      [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
-    }
-  }
-
-  const now = new Date();
-  const profileData = profileSnap.exists() ? profileSnap.data() : {};
-  plannerSettings = profileData.plannerSettings || {
-    classSchedule: structuredClone(DEFAULT_SCHEDULE_BY_LETTER_DAY),
-    futureAssignments: {}
-  };
-  plannerSettings.classSchedule ||= structuredClone(DEFAULT_SCHEDULE_BY_LETTER_DAY);
-  plannerSettings.futureAssignments ||= {};
-  plannerSettings.ui ||= {contextHidden:false};
-  const assignedToday = plannerSettings.futureAssignments[todayKey] || null;
+  const [daySnap,weekSnap,profileSnap] = await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
+  const now = new Date(selectedDateKey+"T12:00:00");
   dayData = daySnap.exists() ? daySnap.data() : {
-    date:todayKey,
-    context: assignedToday ? {dayOfWeek:now.toLocaleDateString("en-US",{weekday:"long"}), letterDay:assignedToday.letterDay, daycare:assignedToday.daycare} : null,
-    completed:{}, customItems:[], goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),
-    lastTime:DEFAULT_LAST_TIME.map(i=>({...i,id:uid(),lastDone:null})), parkingLot:profileData.parkingLot || "",
+    date:selectedDateKey, context:null, completed:{}, customItems:[], goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),
+    lastTime:DEFAULT_LAST_TIME.map(i=>({...i,id:uid(),lastDone:null})), parkingLot:profileSnap.exists() ? profileSnap.data().parkingLot || "" : "",
     ui:{hideChecked:false,hideCompletedGoals:false,collapsed:{}}
   };
-  if(assignedToday && assignedToday.override !== false) {
-    dayData.context ||= {};
-    dayData.context.dayOfWeek = now.toLocaleDateString("en-US",{weekday:"long"});
-    dayData.context.letterDay = assignedToday.letterDay;
-    dayData.context.daycare = assignedToday.daycare;
-  }
   weekData = weekSnap.exists() ? weekSnap.data() : {week:weekKey,workTasks:[],homeTasks:DEFAULT_HOME_TASKS.map(name=>({id:uid(),name,status:"planned"}))};
   dayData.completed ||= {}; dayData.customItems ||= []; dayData.goals ||= []; dayData.lastTime ||= []; dayData.ui ||= {hideChecked:false,hideCompletedGoals:false,collapsed:{}}; dayData.ui.collapsed ||= {};
   $("todayLabel").textContent = now.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
@@ -142,108 +102,29 @@ function setupUI() {
   $("letterDay").value=dayData.context?.letterDay || "No School";
   document.querySelector(`input[name="daycare"][value="${dayData.context?.daycare || "no"}"]`).checked=true;
   $("parkingLot").value=dayData.parkingLot || "";
+  $("hideCheckedTasks").checked=!!dayData.ui.hideChecked;
   $("hideCompletedGoals").checked=!!dayData.ui.hideCompletedGoals;
-  if(dayData.context) showDashboard(); else showDayBuilder();
-  restoreCollapsed(); bindEvents(); renderAll();
+  if(dayData.context) showDashboard(); else $("contextCard").classList.remove("hidden");
+  restoreCollapsed(); bindEvents(); bindPlannerViews(); renderAll(); renderPlannerViews();
 }
 
 function bindEvents() {
-  $("contextForm").addEventListener("submit", e=>{ e.preventDefault(); dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value}; plannerSettings.ui.contextHidden=false; showDashboard(); renderTimeline(); queueSave(); });
-  $("editContextBtn").addEventListener("click",()=>{ plannerSettings.ui.contextHidden=false; $("contextCard").classList.remove("hidden"); $("contextCard").scrollIntoView({behavior:"smooth"}); queueSave(); });
-  $("hideContextBtn")?.addEventListener("click",()=>{ plannerSettings.ui.contextHidden=true; $("contextCard").classList.add("hidden"); queueSave(); });
+  $("contextForm").addEventListener("submit", e=>{ e.preventDefault(); dayData.context={dayOfWeek:$("dayOfWeek").value,letterDay:$("letterDay").value,daycare:document.querySelector('input[name="daycare"]:checked').value}; showDashboard(); renderTimeline(); renderDailyPage(); queueSave(); });
+  $("editContextBtn").addEventListener("click",()=>{ $("contextCard").classList.remove("hidden"); $("contextCard").scrollIntoView({behavior:"smooth"}); });
   $("signOutBtn").addEventListener("click",async()=>{ await signOut(auth); });
   $("parkingLot").addEventListener("input",e=>{ dayData.parkingLot=e.target.value; queueSave(); });
+  $("hideCheckedTasks").addEventListener("change",e=>{ dayData.ui.hideChecked=e.target.checked; renderTimeline(); queueSave(); });
   $("hideCompletedGoals").addEventListener("change",e=>{ dayData.ui.hideCompletedGoals=e.target.checked; renderGoals(); queueSave(); });
   document.querySelectorAll(".collapse-trigger").forEach(btn=>btn.addEventListener("click",()=>{ const card=btn.closest(".collapsible-card"), key=card.dataset.card; card.classList.toggle("collapsed"); btn.setAttribute("aria-expanded",String(!card.classList.contains("collapsed"))); dayData.ui.collapsed[key]=card.classList.contains("collapsed"); queueSave(); }));
   document.querySelectorAll(".mini-hide").forEach(btn=>btn.addEventListener("click",()=>{ const el=$(btn.dataset.target); el.classList.toggle("hidden"); btn.textContent=el.classList.contains("hidden")?"Show":"Hide"; }));
   $("addAppointmentBtn").addEventListener("click",()=>openDialog("appointment")); $("addTodayTaskBtn").addEventListener("click",()=>openDialog("todayTask"));
-  $("railAddAppointmentBtn")?.addEventListener("click",()=>openDialog("appointment"));
-  $("editClassScheduleBtn").addEventListener("click",openClassScheduleEditor);
-  $("addFutureDayBtn").addEventListener("click",openFutureAssignmentDialog);
   $("addWorkTaskBtn").addEventListener("click",()=>openDialog("workTask")); $("addHomeTaskBtn").addEventListener("click",()=>openDialog("homeTask"));
   $("addGoalBtn").addEventListener("click",()=>openDialog("goal")); $("addLastTimeBtn").addEventListener("click",()=>openDialog("lastTime"));
-  $("dailyViewBtn")?.addEventListener("click",()=>switchView("daily"));
-  $("calendarViewBtn")?.addEventListener("click",()=>switchView("calendar"));
-  $("weeklyViewBtn")?.addEventListener("click",()=>switchView("weekly"));
-  $("todayOnlyBtn")?.addEventListener("click",()=>{ switchView("daily"); $("contextCard").scrollIntoView({behavior:"smooth",block:"start"}); });
-  $("previousMonthBtn")?.addEventListener("click",()=>{ calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()-1,1); renderCalendar(); });
-  $("nextMonthBtn")?.addEventListener("click",()=>{ calendarCursor=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth()+1,1); renderCalendar(); });
-  $("todayMonthBtn")?.addEventListener("click",()=>{ const n=new Date(); calendarCursor=new Date(n.getFullYear(),n.getMonth(),1); renderCalendar(); });
-  $("previousWeekBtn")?.addEventListener("click",()=>{ weeklyCursor=new Date(weeklyCursor); weeklyCursor.setDate(weeklyCursor.getDate()-7); renderWeeklyAppointments(); });
-  $("nextWeekBtn")?.addEventListener("click",()=>{ weeklyCursor=new Date(weeklyCursor); weeklyCursor.setDate(weeklyCursor.getDate()+7); renderWeeklyAppointments(); });
-  $("thisWeekBtn")?.addEventListener("click",()=>{ weeklyCursor=startOfWeek(new Date()); renderWeeklyAppointments(); });
   $("dialogClose").addEventListener("click",()=>$("itemDialog").close()); $("dialogCancel").addEventListener("click",()=>$("itemDialog").close());
 }
-function switchView(view) {
-  const daily=view==="daily";
-  const calendar=view==="calendar";
-  const weekly=view==="weekly";
-  $("dailyView").classList.toggle("hidden",!daily);
-  $("calendarView").classList.toggle("hidden",!calendar);
-  $("weeklyView").classList.toggle("hidden",!weekly);
-  ["daily","calendar","weekly"].forEach(v=>$(v+"ViewBtn")?.classList.toggle("active",v===view));
-  if(calendar) renderCalendar();
-  if(weekly) renderWeeklyAppointments();
-}
-function renderCalendar() {
-  const grid=$("calendarGrid"); if(!grid) return;
-  const y=calendarCursor.getFullYear(), m=calendarCursor.getMonth();
-  $("calendarMonthLabel").textContent=calendarCursor.toLocaleDateString("en-US",{month:"long",year:"numeric"});
-  const first=new Date(y,m,1), start=new Date(y,m,1-first.getDay());
-  let html="";
-  for(let i=0;i<42;i++){
-    const d=new Date(start); d.setDate(start.getDate()+i);
-    const key=localDateKey(d), assignment=plannerSettings?.futureAssignments?.[key];
-    const isToday=key===todayKey;
-    const todaysAppointments=isToday?(dayData?.customItems||[]).filter(x=>x.type==="Appointment").slice(0,2):[];
-    html+=`<div class="calendar-day ${d.getMonth()!==m?"outside-month":""} ${isToday?"today":""}"><div class="calendar-date-row"><span class="calendar-number">${d.getDate()}</span>${assignment?.letterDay&&assignment.letterDay!=="No School"?`<span class="letter-badge">${esc(assignment.letterDay)}</span>`:""}</div>${assignment?.daycare==="yes"?'<span class="calendar-daycare">Daycare</span>':""}${todaysAppointments.map(a=>`<span class="calendar-event">${formatTime(a.time24)} ${esc(a.title)}</span>`).join("")}</div>`;
-  }
-  grid.innerHTML=html;
-}
-
-
-async function renderWeeklyAppointments() {
-  const grid=$("weeklyAppointmentGrid"); if(!grid) return;
-  const weekStart=startOfWeek(weeklyCursor);
-  const weekEnd=new Date(weekStart); weekEnd.setDate(weekEnd.getDate()+6);
-  $("weeklySpreadLabel").textContent=`${weekStart.toLocaleDateString("en-US",{month:"short",day:"numeric"})} – ${weekEnd.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`;
-  grid.innerHTML='<div class="weekly-loading">Loading appointments…</div>';
-  const dates=Array.from({length:7},(_,i)=>{ const d=new Date(weekStart); d.setDate(d.getDate()+i); return d; });
-  const snaps=await Promise.all(dates.map(d=>getDoc(doc(db,"plannerDashboardUsers",PLANNER_PROFILE_ID,"days",localDateKey(d)))));
-  grid.innerHTML=dates.map((date,i)=>renderWeeklyDayColumn(date,snaps[i].exists()?snaps[i].data():null)).join("");
-}
-function renderWeeklyDayColumn(date,storedDay) {
-  const key=localDateKey(date), assignment=plannerSettings.futureAssignments[key] || null;
-  const isToday=key===todayKey;
-  const context=assignment ? {letterDay:assignment.letterDay,daycare:assignment.daycare} : (isToday?dayData.context:storedDay?.context);
-  const events=[];
-  if(context?.letterDay && context.letterDay!=="No School") {
-    (plannerSettings.classSchedule[context.letterDay]||[]).forEach((item,index)=>events.push({id:`class-${index}`,time24:item.time24,title:item.title,type:`${context.letterDay} Day`,custom:false}));
-  }
-  const customSource=isToday?dayData.customItems:(storedDay?.customItems||[]);
-  customSource.filter(x=>x.type==="Appointment").forEach(x=>events.push({...x,custom:true}));
-  events.sort((a,b)=>a.time24.localeCompare(b.time24));
-  const slotHeight=8, totalMinutes=13*60, height=(totalMinutes/10)*slotHeight;
-  let lines="";
-  for(let min=0;min<=totalMinutes;min+=10){ const top=(min/10)*slotHeight, hour=min%60===0; const half=min%30===0; const actual=360+min; const h=Math.floor(actual/60), m=actual%60; lines+=`<div class="week-slot ${hour?"hour":half?"half":""}" style="top:${top}px">${hour?`<span>${formatTime(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`)}</span>`:""}</div>`; }
-  const blocks=events.map(e=>{ const [h,m]=e.time24.split(":").map(Number); const offset=(h*60+m)-360; if(offset<0||offset>totalMinutes) return ""; const top=(offset/10)*slotHeight; return `<div class="week-grid-event ${e.custom?"custom":""}" style="top:${top}px" title="${esc(formatTime(e.time24)+" "+e.title)}"><time>${formatTime(e.time24)}</time><strong>${esc(e.title)}</strong></div>`; }).join("");
-  return `<section class="weekly-day-column ${isToday?"today":""}"><header><span>${date.toLocaleDateString("en-US",{weekday:"short"})}</span><strong>${date.getDate()}</strong>${context?.letterDay&&context.letterDay!=="No School"?`<em>${esc(context.letterDay)}</em>`:""}</header><div class="weekly-day-timeline" style="height:${height}px">${lines}${blocks}</div></section>`;
-}
-
 function restoreCollapsed() { document.querySelectorAll(".collapsible-card").forEach(card=>{ if(dayData.ui.collapsed[card.dataset.card]) { card.classList.add("collapsed"); card.querySelector(".collapse-trigger").setAttribute("aria-expanded","false"); } }); }
-function showDayBuilder() {
-  $("contextCard").classList.remove("hidden");
-  $("dashboardContent").classList.add("hidden");
-  const submit = document.querySelector("#contextForm .context-submit");
-  if (submit) submit.textContent = "Build my day";
-}
-function showDashboard() {
-  $("contextCard").classList.toggle("hidden",!!plannerSettings?.ui?.contextHidden);
-  $("dashboardContent").classList.remove("hidden");
-  const submit = document.querySelector("#contextForm .context-submit");
-  if (submit) submit.textContent = "Update my day";
-}
-function renderAll() { renderTimeline(); renderAppointmentRail(); renderWeekly(); renderGoals(); renderLastTime(); renderScheduleSettings(); }
+function showDashboard() { $("contextCard").classList.add("hidden"); $("dashboardContent").classList.remove("hidden"); }
+function renderAll() { renderTimeline(); renderWeekly(); renderGoals(); renderLastTime(); renderDailyPage(); }
 
 function buildTimelineItems() {
   const c=dayData.context; if(!c) return [];
@@ -254,75 +135,29 @@ function buildTimelineItems() {
   if(c.daycare==="yes") DAYCARE_AM.forEach((t,i)=>add("06:00",t,"Daycare morning",`daycare-${i}`));
   if(c.letterDay!=="No School") {
     WORK_OPEN.forEach((t,i)=>add("09:00",t,"Work arrive",`open-${i}`));
-    (plannerSettings.classSchedule[c.letterDay]||[]).forEach((s,i)=>add(s.time24,s.title,`${c.letterDay} Day class`,`class-${c.letterDay}-${i}`));
-    const schedule=plannerSettings.classSchedule[c.letterDay]||[]; const last=schedule[schedule.length-1]; const closeTime=last ? addMinutes(last.time24,45) : "15:20";
+    (SCHEDULE_BY_LETTER_DAY[c.letterDay]||[]).forEach((s,i)=>add(s.time24,s.title,`${c.letterDay} Day class`,`class-${c.letterDay}-${i}`));
+    const schedule=SCHEDULE_BY_LETTER_DAY[c.letterDay]||[]; const last=schedule[schedule.length-1]; const closeTime=last ? addMinutes(last.time24,45) : "15:20";
     WORK_CLOSE.forEach((t,i)=>add(closeTime,t,"Work close",`close-${i}`));
   }
   PM_DAILY.forEach((t,i)=>add("20:00",t,"PM routine",`pm-${i}`));
   dayData.customItems.forEach(item=>add(item.time24,item.title,item.type,item.id,true));
   return items.sort((a,b)=>a.time24.localeCompare(b.time24) || a.type.localeCompare(b.type));
 }
-function buildAppointmentItems() {
-  const c=dayData.context; if(!c) return [];
-  const items=[];
-  if(c.letterDay!=="No School") {
-    (plannerSettings.classSchedule[c.letterDay]||[]).forEach((s,i)=>items.push({
-      key:`class-${c.letterDay}-${i}`, time24:s.time24, title:s.title, type:`${c.letterDay} Day class`, custom:false
-    }));
-  }
-  dayData.customItems
-    .filter(item=>item.type==="Appointment")
-    .forEach(item=>items.push({key:item.id,time24:item.time24,title:item.title,type:"Appointment",custom:true}));
-  return items.sort((a,b)=>a.time24.localeCompare(b.time24)||a.title.localeCompare(b.title));
-}
-
-function renderAppointmentRail() {
-  const rail=$("appointmentRail"); if(!rail) return;
-  const startMinutes=6*60, endMinutes=19*60, slotHeight=24;
-  const totalSlots=(endMinutes-startMinutes)/10;
-  const items=dayData.context ? buildAppointmentItems().filter(item=>{ const [h,m]=item.time24.split(":").map(Number); const n=h*60+m; return n>=startMinutes && n<=endMinutes; }) : [];
-  let html='<div class="rail-time-grid" style="height:'+((totalSlots+1)*slotHeight)+'px">';
-  for(let slot=0;slot<=totalSlots;slot++){
-    const mins=startMinutes+slot*10, h=Math.floor(mins/60), m=mins%60;
-    const label=m===0||m===30 ? formatTime(`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`) : '';
-    html+=`<div class="rail-slot ${m===0?'hour':'ten'}" style="top:${slot*slotHeight}px"><span>${label}</span></div>`;
-  }
-  items.forEach(item=>{
-    const [h,m]=item.time24.split(":").map(Number), offset=((h*60+m-startMinutes)/10)*slotHeight;
-    html+=`<div class="rail-grid-event ${item.custom?'custom':'class-event'}" style="top:${offset}px"><strong>${esc(item.title)}</strong><time>${formatTime(item.time24)}</time>${item.custom?`<button class="rail-delete" data-rail-delete="${esc(item.key)}" type="button" aria-label="Delete ${esc(item.title)}">×</button>`:''}</div>`;
-  });
-  html+='</div>'; rail.innerHTML=html;
-  rail.querySelectorAll("[data-rail-delete]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.railDelete); renderTimeline(); renderAppointmentRail(); queueSave(); }));
-  const now=new Date(), nowM=now.getHours()*60+now.getMinutes();
-  if(localDateKey(now)===todayKey && nowM>=startMinutes && nowM<=endMinutes) rail.scrollTop=Math.max(0,((nowM-startMinutes)/10)*slotHeight-180);
-}
-
 function addMinutes(time,mins) { const [h,m]=time.split(":").map(Number), total=h*60+m+mins; return `${String(Math.floor(total/60)%24).padStart(2,"0")}:${String(total%60).padStart(2,"0")}`; }
 function periodFor(time) { const h=Number(time.split(":")[0]); return h<10?"AM":h<17?"Midday":"PM"; }
 function renderTimeline() {
   if(!dayData.context) return;
-  const unfinished = buildTimelineItems().filter(item => !dayData.completed[item.key]);
-  const groups={AM:[],Midday:[],PM:[]};
-  unfinished.forEach(i=>groups[periodFor(i.time24)].push(i));
+  const items=buildTimelineItems(); const groups={AM:[],Midday:[],PM:[]}; items.forEach(i=>groups[periodFor(i.time24)].push(i));
   let html="";
   Object.entries(groups).forEach(([period,list])=>{
-    if(!list.length) return;
     html+=`<div class="period-heading">${period}</div>`;
     if(period==="Midday" && dayData.context.letterDay!=="No School") html+=`<div class="arrive-divider">Work arrive • open the LRC and begin the school-day flow</div>`;
-    list.forEach(item=>{ html+=`<div class="timeline-item" data-key="${esc(item.key)}"><span class="timeline-time">${formatTime(item.time24)}</span><button class="check-button" type="button" aria-label="Complete ${esc(item.title)}"></button><div><div class="timeline-title">${esc(item.title)}</div><div class="timeline-type">${esc(item.type)}</div></div>${item.custom?`<button class="delete-button" data-delete-custom="${esc(item.key)}" type="button" aria-label="Delete">×</button>`:"<span></span>"}</div>`; });
+    if(!list.length) html+=`<div class="empty-state">No ${period.toLowerCase()} items today.</div>`;
+    list.forEach(item=>{ const done=!!dayData.completed[item.key]; if(dayData.ui.hideChecked && done) return; html+=`<div class="timeline-item ${done?"done":""}" data-key="${esc(item.key)}"><span class="timeline-time">${formatTime(item.time24)}</span><button class="check-button" type="button" aria-label="Toggle ${esc(item.title)}">${done?"✓":""}</button><div><div class="timeline-title">${esc(item.title)}</div><div class="timeline-type">${esc(item.type)}</div></div>${item.custom?`<button class="delete-button" data-delete-custom="${esc(item.key)}" type="button" aria-label="Delete">×</button>`:"<span></span>"}</div>`; });
   });
-  if(!html) html='<div class="empty-state">Everything on today’s timeline is complete. Beautiful work!</div>';
   $("timeline").innerHTML=html;
-  $("timeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",async()=>{
-    const key=btn.closest(".timeline-item").dataset.key;
-    dayData.completed[key]=true;
-    renderTimeline();
-    renderAppointmentRail();
-    markSaving();
-    try { await setDoc(dayDoc(), {completed:dayData.completed,updatedAt:serverTimestamp()}, {merge:true}); markSaved(); }
-    catch(err){ console.error(err); $("saveStatus").textContent="Save failed"; }
-  }));
-  $("timeline").querySelectorAll("[data-delete-custom]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.deleteCustom); renderTimeline(); renderAppointmentRail(); queueSave(); }));
+  $("timeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",()=>{ const key=btn.closest(".timeline-item").dataset.key; dayData.completed[key]=!dayData.completed[key]; renderTimeline(); queueSave(); }));
+  $("timeline").querySelectorAll("[data-delete-custom]").forEach(btn=>btn.addEventListener("click",()=>{ dayData.customItems=dayData.customItems.filter(i=>i.id!==btn.dataset.deleteCustom); renderTimeline(); queueSave(); }));
 }
 
 function renderWeekly() { renderWeeklyList("workTaskList",weekData.workTasks,"work"); renderWeeklyList("homeTaskList",weekData.homeTasks,"home"); }
@@ -342,54 +177,100 @@ function renderGoals() {
 }
 function changeGoal(id,delta) { const g=dayData.goals.find(x=>x.id===id); if(g) g.count=Math.max(0,g.count+delta); renderGoals(); queueSave(); }
 
-function urgency(item) { if(!item.lastDone) return {level:"red",text:"Not recorded yet",days:99999}; const days=Math.floor((new Date(todayKey+"T12:00:00")-new Date(item.lastDone+"T12:00:00"))/86400000); if(days<=item.greenDays) return {level:"green",text:days===0?"Done today":`${days} day${days===1?"":"s"} ago`,days}; if(days<=item.yellowDays) return {level:"yellow",text:`${days} days ago • due soon`,days}; return {level:"red",text:`${days} days ago • overdue`,days}; }
+function urgency(item) { if(!item.lastDone) return {level:"red",text:"Not recorded yet",days:99999}; const days=Math.floor((new Date(selectedDateKey+"T12:00:00")-new Date(item.lastDone+"T12:00:00"))/86400000); if(days<=item.greenDays) return {level:"green",text:days===0?"Done today":`${days} day${days===1?"":"s"} ago`,days}; if(days<=item.yellowDays) return {level:"yellow",text:`${days} days ago • due soon`,days}; return {level:"red",text:`${days} days ago • overdue`,days}; }
 function renderLastTime() {
   const sorted=[...dayData.lastTime].sort((a,b)=>urgency(b).days-urgency(a).days);
   $("lastTimeList").innerHTML=sorted.length?sorted.map(i=>{const u=urgency(i);return `<div class="last-time-row"><span class="urgency-dot urgency-${u.level}"></span><div><div class="goal-name">${esc(i.name)}</div><div class="last-meta">${u.text} • Green ${i.greenDays}d, yellow through ${i.yellowDays}d</div></div><button class="just-did" data-just-did="${i.id}" type="button">Just did it</button><button class="delete-button" data-last-delete="${i.id}" type="button">×</button></div>`}).join(""):'<div class="empty-state">Add a recurring item to track it here.</div>';
-  $("lastTimeList").querySelectorAll("[data-just-did]").forEach(btn=>btn.addEventListener("click",()=>{const i=dayData.lastTime.find(x=>x.id===btn.dataset.justDid);if(i)i.lastDone=todayKey;renderLastTime();queueSave();showToast("Marked as done today.");})); $("lastTimeList").querySelectorAll("[data-last-delete]").forEach(btn=>btn.addEventListener("click",()=>{dayData.lastTime=dayData.lastTime.filter(i=>i.id!==btn.dataset.lastDelete);renderLastTime();queueSave();}));
+  $("lastTimeList").querySelectorAll("[data-just-did]").forEach(btn=>btn.addEventListener("click",()=>{const i=dayData.lastTime.find(x=>x.id===btn.dataset.justDid);if(i)i.lastDone=selectedDateKey;renderLastTime();queueSave();showToast("Marked as done today.");})); $("lastTimeList").querySelectorAll("[data-last-delete]").forEach(btn=>btn.addEventListener("click",()=>{dayData.lastTime=dayData.lastTime.filter(i=>i.id!==btn.dataset.lastDelete);renderLastTime();queueSave();}));
 }
 
-function renderScheduleSettings() {
-  const preview=$("classSchedulePreview");
-  if(preview) preview.innerHTML=["A","B","C","D","E"].map(letter=>{
-    const classes=plannerSettings.classSchedule[letter]||[];
-    return `<div class="schedule-day-row"><div class="schedule-letter">${letter} Day</div><div class="schedule-class-list">${classes.length?classes.map(c=>`<span class="schedule-chip">${formatTime(c.time24)} · ${esc(c.title)}</span>`).join(""):'<span class="subtle">No classes</span>'}</div></div>`;
-  }).join("");
-  const future=$("futureAssignmentsList");
-  if(!future) return;
-  const entries=Object.entries(plannerSettings.futureAssignments).sort(([a],[b])=>a.localeCompare(b));
-  future.innerHTML=entries.length?entries.map(([date,a])=>`<div class="future-row"><div class="future-date">${new Date(date+"T12:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}</div><div><div>${esc(a.letterDay)} · Daycare ${a.daycare==="yes"?"Yes":"No"}</div><div class="future-meta">${a.override!==false?"Date override":"Planned assignment"}${a.note?` · ${esc(a.note)}`:""}</div></div><button class="delete-button" data-future-delete="${date}" type="button">×</button></div>`).join(""):'<div class="empty-state">No future dates assigned yet.</div>';
-  future.querySelectorAll("[data-future-delete]").forEach(btn=>btn.addEventListener("click",()=>{ delete plannerSettings.futureAssignments[btn.dataset.futureDelete]; renderScheduleSettings(); queueSave(); }));
+
+function blankDayData(dateKey, profile={}) {
+  return {date:dateKey,context:null,completed:{},customItems:[],goals:DEFAULT_GOALS.map(g=>({...g,id:uid(),count:0})),lastTime:DEFAULT_LAST_TIME.map(i=>({...i,id:uid(),lastDone:null})),parkingLot:profile.parkingLot||"",ui:{hideChecked:false,hideCompletedGoals:false,collapsed:{}}};
 }
 
-function openClassScheduleEditor() {
-  const dialog=$("itemDialog"), fields=$("dialogFields"), form=$("itemDialogForm");
-  $("dialogTitle").textContent="Edit A–E class times";
-  fields.innerHTML=`<div class="schedule-editor">${["A","B","C","D","E"].map(letter=>`<section class="schedule-editor-day" data-letter="${letter}"><h3>${letter} Day</h3><div class="schedule-entry-list">${(plannerSettings.classSchedule[letter]||[]).map(c=>scheduleEntryHTML(c)).join("")}</div><button class="mini-button add-schedule-entry" type="button">+ Add class</button></section>`).join("")}</div>`;
-  fields.querySelectorAll(".add-schedule-entry").forEach(btn=>btn.addEventListener("click",()=>{ btn.previousElementSibling.insertAdjacentHTML("beforeend",scheduleEntryHTML({time24:"09:00",title:"New class"})); bindScheduleDeleteButtons(fields); }));
-  bindScheduleDeleteButtons(fields);
-  form.dataset.type="classSchedule";
-  form.onsubmit=e=>{
-    e.preventDefault();
-    const next={};
-    fields.querySelectorAll(".schedule-editor-day").forEach(section=>{
-      next[section.dataset.letter]=[...section.querySelectorAll(".schedule-entry")].map(row=>({time24:row.querySelector("[data-time]").value,title:row.querySelector("[data-title]").value.trim()})).filter(x=>x.time24&&x.title).sort((a,b)=>a.time24.localeCompare(b.time24));
-    });
-    plannerSettings.classSchedule=next;
-    renderAll(); queueSave(); dialog.close(); showToast("Class times updated.");
-  };
-  dialog.showModal();
+function bindPlannerViews() {
+  document.querySelectorAll(".planner-tab").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.view)));
+  $("prevMonthBtn")?.addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderMonthCalendar();});
+  $("nextMonthBtn")?.addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderMonthCalendar();});
+  $("todayMonthBtn")?.addEventListener("click",()=>{calendarCursor=new Date();renderMonthCalendar();});
+  $("prevWeekBtn")?.addEventListener("click",()=>shiftWeek(-7));
+  $("nextWeekBtn")?.addEventListener("click",()=>shiftWeek(7));
+  $("thisWeekBtn")?.addEventListener("click",async()=>{await loadSelectedDate(todayKey,false);renderWeekView();});
+  $("prevDayBtn")?.addEventListener("click",()=>shiftSelectedDay(-1));
+  $("nextDayBtn")?.addEventListener("click",()=>shiftSelectedDay(1));
+  $("todayDayBtn")?.addEventListener("click",()=>openDate(todayKey));
+  $("editSelectedDayBtn")?.addEventListener("click",()=>switchView("setup"));
+  $("dailyAddAppointmentBtn")?.addEventListener("click",()=>openDialog("appointment"));
 }
-function scheduleEntryHTML(c){ return `<div class="schedule-entry"><input data-time type="time" value="${esc(c.time24)}" required><input data-title type="text" value="${esc(c.title)}" required><button class="delete-button remove-schedule-entry" type="button">×</button></div>`; }
-function bindScheduleDeleteButtons(root){ root.querySelectorAll(".remove-schedule-entry").forEach(btn=>btn.onclick=()=>btn.closest(".schedule-entry").remove()); }
 
-function openFutureAssignmentDialog() {
-  const dialog=$("itemDialog"), fields=$("dialogFields"), form=$("itemDialogForm");
-  $("dialogTitle").textContent="Assign a future date";
-  fields.innerHTML=`<div class="field-stack"><label>Date<input id="futureDate" type="date" min="${todayKey}" required></label><label>Letter day<select id="futureLetter"><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>No School</option></select></label><fieldset><legend>Daycare day?</legend><div class="segmented"><label><input type="radio" name="futureDaycare" value="yes"><span>Yes</span></label><label><input type="radio" name="futureDaycare" value="no" checked><span>No</span></label></div></fieldset><label class="toggle"><input id="futureOverride" type="checkbox" checked><span></span>Override any normal pattern for this date</label><label class="override-note">Optional note<input id="futureNote" type="text" placeholder="Assembly, holiday, changed daycare…"></label></div>`;
-  form.dataset.type="futureAssignment";
-  form.onsubmit=e=>{ e.preventDefault(); const date=$("futureDate").value; plannerSettings.futureAssignments[date]={letterDay:$("futureLetter").value,daycare:document.querySelector('input[name="futureDaycare"]:checked').value,override:$("futureOverride").checked,note:$("futureNote").value.trim()}; renderScheduleSettings(); queueSave(); dialog.close(); showToast("Future date assigned."); };
-  dialog.showModal();
+function switchView(view) {
+  document.querySelectorAll(".planner-view").forEach(v=>v.classList.add("hidden"));
+  $(view+"View")?.classList.remove("hidden");
+  document.querySelectorAll(".planner-tab").forEach(b=>b.classList.toggle("active",b.dataset.view===view));
+  if(view==="calendar") renderMonthCalendar();
+  if(view==="weekly") renderWeekView();
+  if(view==="daily") renderDailyPage();
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+async function loadSelectedDate(dateKey, saveCurrent=true) {
+  if(saveCurrent && dayData && weekData) await saveAll();
+  selectedDateKey=dateKey;
+  weekKey=getISOWeekKey(new Date(dateKey+"T12:00:00"));
+  const [daySnap,weekSnap,profileSnap]=await Promise.all([getDoc(dayDoc()),getDoc(weekDoc()),getDoc(profileDoc())]);
+  const profile=profileSnap.exists()?profileSnap.data():{};
+  dayData=daySnap.exists()?daySnap.data():blankDayData(dateKey,profile);
+  weekData=weekSnap.exists()?weekSnap.data():{week:weekKey,workTasks:[],homeTasks:DEFAULT_HOME_TASKS.map(name=>({id:uid(),name,status:"planned"}))};
+  dayData.completed||={};dayData.customItems||=[];dayData.goals||=[];dayData.lastTime||=[];dayData.ui||={hideChecked:false,hideCompletedGoals:false,collapsed:{}};dayData.ui.collapsed||={};
+  const d=new Date(dateKey+"T12:00:00");
+  $("todayLabel").textContent=d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+  $("dayOfWeek").value=dayData.context?.dayOfWeek||d.toLocaleDateString("en-US",{weekday:"long"});
+  $("letterDay").value=dayData.context?.letterDay||"No School";
+  document.querySelector(`input[name="daycare"][value="${dayData.context?.daycare||"no"}"]`).checked=true;
+  $("parkingLot").value=dayData.parkingLot||"";
+  $("hideCheckedTasks").checked=!!dayData.ui.hideChecked;$("hideCompletedGoals").checked=!!dayData.ui.hideCompletedGoals;
+  if(dayData.context) showDashboard(); else {$("contextCard").classList.remove("hidden");$("dashboardContent").classList.add("hidden");}
+  renderAll();
+}
+
+async function openDate(dateKey) { await loadSelectedDate(dateKey); switchView("daily"); }
+async function shiftSelectedDay(delta) { const d=new Date(selectedDateKey+"T12:00:00");d.setDate(d.getDate()+delta);await openDate(localDateKey(d)); }
+async function shiftWeek(delta) { const d=new Date(selectedDateKey+"T12:00:00");d.setDate(d.getDate()+delta);await loadSelectedDate(localDateKey(d));renderWeekView(); }
+
+function renderPlannerViews(){renderMonthCalendar();renderWeekView();renderDailyPage();}
+
+async function getDaySummary(dateKey){const snap=await getDoc(dayDoc(dateKey));return snap.exists()?snap.data():null;}
+
+async function renderMonthCalendar(){
+  const first=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1,12);
+  $("calendarTitle").textContent=first.toLocaleDateString("en-US",{month:"long",year:"numeric"});
+  const start=new Date(first);start.setDate(1-first.getDay());
+  const dates=Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
+  const data=await Promise.all(dates.map(d=>getDaySummary(localDateKey(d))));
+  $("monthCalendar").innerHTML=dates.map((d,i)=>{const key=localDateKey(d),ctx=data[i]?.context,items=(data[i]?.customItems||[]).filter(x=>x.type==="Appointment");return `<button class="calendar-day ${d.getMonth()!==first.getMonth()?"outside":""} ${key===todayKey?"today":""} ${key===selectedDateKey?"selected":""}" data-open-date="${key}" type="button"><span class="calendar-number">${d.getDate()}</span>${ctx?.letterDay?`<span class="calendar-badge">${esc(ctx.letterDay==="No School"?"NS":ctx.letterDay+" Day")}</span>`:""}${ctx?.daycare==="yes"?'<span class="calendar-badge">Daycare</span>':""}${items.slice(0,2).map(x=>`<span class="calendar-note">${formatTime(x.time24)} ${esc(x.title)}</span>`).join("")}</button>`;}).join("");
+  $("monthCalendar").querySelectorAll("[data-open-date]").forEach(b=>b.addEventListener("click",()=>openDate(b.dataset.openDate)));
+}
+
+function sundayFor(dateKey){const d=new Date(dateKey+"T12:00:00");d.setDate(d.getDate()-d.getDay());return d;}
+async function renderWeekView(){
+  const start=sundayFor(selectedDateKey);const dates=Array.from({length:7},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
+  const data=await Promise.all(dates.map(d=>getDaySummary(localDateKey(d))));
+  const end=dates[6];$("weekTitle").textContent=`${start.toLocaleDateString("en-US",{month:"short",day:"numeric"})}–${end.toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"})}`;
+  $("weekDateGrid").innerHTML=dates.map((d,i)=>{const key=localDateKey(d),ctx=data[i]?.context,appts=(data[i]?.customItems||[]).filter(x=>x.type==="Appointment").sort((a,b)=>a.time24.localeCompare(b.time24));return `<button class="week-day-card ${key===todayKey?"today":""} ${key===selectedDateKey?"selected":""}" data-open-date="${key}" type="button"><div class="week-day-name">${d.toLocaleDateString("en-US",{weekday:"long"})}</div><div class="week-day-number">${d.getDate()}</div>${ctx?.letterDay?`<span class="calendar-badge">${esc(ctx.letterDay==="No School"?"No School":ctx.letterDay+" Day")}</span>`:""}${appts.length?appts.map(a=>`<div class="week-appointment"><strong>${formatTime(a.time24)}</strong><br>${esc(a.title)}</div>`).join(""):'<div class="empty-state">No appointments</div>'}</button>`;}).join("");
+  $("weekDateGrid").querySelectorAll("[data-open-date]").forEach(b=>b.addEventListener("click",()=>openDate(b.dataset.openDate)));
+}
+
+function renderDailyPage(){
+  if(!dayData)return;const d=new Date(selectedDateKey+"T12:00:00");
+  $("dailyViewTitle") && ($("dailyViewTitle").textContent=d.toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}));
+  const c=dayData.context;$("dailyViewMeta") && ($("dailyViewMeta").textContent=c?`${c.letterDay}${c.daycare==="yes"?" • Daycare":""}`:"This day has not been set up yet.");
+  if($("dailyContextSummary")) $("dailyContextSummary").innerHTML=c?`<div class="context-summary-row"><span>Day</span><strong>${esc(c.dayOfWeek)}</strong></div><div class="context-summary-row"><span>Letter day</span><strong>${esc(c.letterDay)}</strong></div><div class="context-summary-row"><span>Daycare</span><strong>${c.daycare==="yes"?"Yes":"No"}</strong></div>`:'<div class="empty-state">Use Daily Spread to set up this date.</div>';
+  if(!$("dailyPageTimeline"))return;
+  if(!c){$("dailyPageTimeline").innerHTML='<div class="empty-state">This date has not been set up yet.</div>';return;}
+  const items=buildTimelineItems();
+  $("dailyPageTimeline").innerHTML=items.length?items.map(item=>`<div class="timeline-item ${dayData.completed[item.key]?"done":""}" data-key="${esc(item.key)}"><span class="timeline-time">${formatTime(item.time24)}</span><button class="check-button" type="button">${dayData.completed[item.key]?"✓":""}</button><div><div class="timeline-title">${esc(item.title)}</div><div class="timeline-type">${esc(item.type)}</div></div><span></span></div>`).join(""):'<div class="empty-state">Nothing scheduled.</div>';
+  $("dailyPageTimeline").querySelectorAll(".check-button").forEach(btn=>btn.addEventListener("click",()=>{const key=btn.closest(".timeline-item").dataset.key;dayData.completed[key]=!dayData.completed[key];renderTimeline();renderDailyPage();queueSave();}));
 }
 
 function openDialog(type) {
