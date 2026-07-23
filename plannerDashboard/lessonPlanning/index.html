@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson Planning</title>
+  <link rel="stylesheet" href="lessonPlanning.css">
+</head>
+<body class="planner-body">
+  <header class="topbar">
+    <a class="back-link" href="../dashboard.html">← Planner Dashboard</a>
+    <div>
+      <p class="eyebrow">LRC PLANNER</p>
+      <h1>📚 Lesson Planning</h1>
+      <p class="subtitle">Plan it. Prep it. Teach it. Keep moving.</p>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-panel">
+      <div>
+        <span class="summary-label">Overall readiness</span>
+        <strong id="overallPercent">0%</strong>
+      </div>
+      <div class="progress-track"><div id="overallBar" class="progress-bar"></div></div>
+      <p id="overallDetail" class="summary-detail">Loading lesson progress…</p>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">CURRICULUM</p>
+          <h2>Choose a grade level</h2>
+        </div>
+      </div>
+      <div id="gradeGrid" class="grade-grid"></div>
+    </section>
+  </main>
+
+  <script src="lessonPlanning.js"></script>
+  <script>
+    LessonPlanner.renderHome();
+  </script>
+</body>
+</html>

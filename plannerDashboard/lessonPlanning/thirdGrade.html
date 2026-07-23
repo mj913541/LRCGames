@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3rd Grade Lesson Planning</title>
+  <link rel="stylesheet" href="lessonPlanning.css">
+</head>
+<body class="planner-body" data-grade="3">
+  <header class="topbar">
+    <a class="back-link" href="index.html">← All Grades</a>
+    <div>
+      <p class="eyebrow">LESSON PLANNING</p>
+      <h1>📘 3rd Grade</h1>
+      <p class="subtitle">Track lesson prep and class completion without losing your place.</p>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="grade-summary-grid">
+      <article class="mini-summary">
+        <span>Prep Ready</span>
+        <strong id="prepPercent">0%</strong>
+        <div class="progress-track small"><div id="prepBar" class="progress-bar"></div></div>
+      </article>
+      <article class="mini-summary">
+        <span>Lessons Fully Taught</span>
+        <strong id="taughtCount">0 / 0</strong>
+        <div class="progress-track small"><div id="taughtBar" class="progress-bar"></div></div>
+      </article>
+    </section>
+
+    <section id="coreSection" class="lesson-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">CORE CURRICULUM</p>
+          <h2>Core Lessons</h2>
+        </div>
+        <span id="coreCount" class="pill"></span>
+      </div>
+      <div id="coreLessons" class="lesson-list"></div>
+    </section>
+
+    <section id="monarchSection" class="lesson-section">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">MONARCH</p>
+          <h2>Monarch Lessons</h2>
+        </div>
+        <span id="monarchCount" class="pill"></span>
+      </div>
+      <div id="monarchLessons" class="lesson-list"></div>
+    </section>
+  </main>
+
+  <dialog id="lessonDialog" class="lesson-dialog">
+    <form method="dialog" class="dialog-card" id="lessonForm">
+      <div class="dialog-header">
+        <div>
+          <p id="dialogType" class="eyebrow"></p>
+          <h2 id="dialogTitle">Lesson</h2>
+        </div>
+        <button class="icon-button" value="cancel" aria-label="Close">✕</button>
+      </div>
+
+      <div class="completion-grid">
+        <label class="check-tile">
+          <input type="checkbox" id="planned">
+          <span>🧠</span><strong>Lesson Planned</strong>
+        </label>
+        <label class="check-tile">
+          <input type="checkbox" id="slides">
+          <span>🖥️</span><strong>Slides Ready</strong>
+        </label>
+        <label class="check-tile">
+          <input type="checkbox" id="supplies">
+          <span>✂️</span><strong>Supplies Ready</strong>
+        </label>
+        <label class="check-tile">
+          <input type="checkbox" id="website">
+          <span>🌐</span><strong>Website Ready</strong>
+        </label>
+      </div>
+
+      <div class="form-grid">
+        <label>
+          Lesson title
+          <input id="lessonTitleInput" type="text">
+        </label>
+        <label>
+          Standard
+          <input id="standard" type="text" placeholder="Example: 1.A.1">
+        </label>
+        <label>
+          Target week / ABCDE week
+          <input id="targetWeek" type="text" placeholder="Example: Week 4">
+        </label>
+      </div>
+
+      <label>
+        Lesson notes
+        <textarea id="notes" rows="5" placeholder="Key teaching points, timing, read-aloud notes, differentiation…"></textarea>
+      </label>
+
+      <label>
+        Supplies / materials notes
+        <textarea id="materials" rows="3" placeholder="Books, printables, manipulatives, pencils, devices…"></textarea>
+      </label>
+
+      <label>
+        Links / resources
+        <textarea id="links" rows="3" placeholder="One link per line"></textarea>
+      </label>
+
+      <fieldset class="class-progress">
+        <legend>Class Progress</legend>
+        <p class="helper-text">Use these as your A–E class completion checks.</p>
+        <div class="class-checks">
+          <label><input type="checkbox" data-class="A"> A</label>
+          <label><input type="checkbox" data-class="B"> B</label>
+          <label><input type="checkbox" data-class="C"> C</label>
+          <label><input type="checkbox" data-class="D"> D</label>
+          <label><input type="checkbox" data-class="E"> E</label>
+        </div>
+      </fieldset>
+
+      <div class="dialog-actions">
+        <button type="button" class="danger-button" id="resetLesson">Reset lesson</button>
+        <button type="button" class="primary-button" id="saveLesson">Save lesson</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="lessonPlanning.js"></script>
+  <script>
+    LessonPlanner.renderGrade("3");
+  </script>
+</body>
+</html>
