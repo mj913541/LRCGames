@@ -545,3 +545,10 @@ el("prevRotationBtn").addEventListener("click", () => {
   waveIndex = (waveIndex + 2) % 3;
   renderRotationBoard();
 });
+
+
+el("controlsToggleBtn").addEventListener("click", () => {
+  const panel = el("teacherControlsPanel");
+  const isHidden = panel.classList.toggle("hidden");
+  el("controlsToggleBtn").textContent = isHidden ? "⚙️ Controls" : "✕ Close Controls";
+});

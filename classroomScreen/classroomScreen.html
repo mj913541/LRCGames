@@ -7,19 +7,21 @@
   <link rel="stylesheet" href="classroomScreen.css" />
 </head>
 <body>
-  <main class="app-shell">
+  <main class="app-shell viewport-app">
     <header class="topbar">
       <div>
         <p class="eyebrow">LONG BEACH LRC</p>
         <h1 id="classTitle">Classroom Screen</h1>
       </div>
+      <button id="controlsToggleBtn" class="controls-toggle" type="button">⚙️ Controls</button>
       <div class="time-panel">
         <div id="clock" class="clock">--:--</div>
         <div id="timer" class="timer">45:00</div>
       </div>
     </header>
 
-    <section class="control-strip">
+    <section id="teacherControlsPanel" class="teacher-controls hidden">
+      <section class="control-strip">
       <label>
         Class
         <select id="classSelect">
@@ -78,6 +80,9 @@
     <section id="classSummary" class="class-summary hidden">
       <strong id="activeLetters">Active letters: —</strong>
       <span id="groupSummary">3 groups: —</span>
+    </section>
+
+    
     </section>
 
     <section class="screen-grid">
