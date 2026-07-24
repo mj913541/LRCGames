@@ -22,7 +22,34 @@
     <section class="control-strip">
       <label>
         Class
-        <input id="classNameInput" type="text" placeholder="e.g. 3rd Grade — Smith" />
+        <select id="classSelect">
+          <option value="">Choose a class</option>
+          <optgroup label="Kindergarten">
+            <option value="K-Johnson">Johnson — 16</option>
+            <option value="K-Mederich">Mederich — 17</option>
+            <option value="K-Stukel">Stukel — 17</option>
+          </optgroup>
+          <optgroup label="1st Grade">
+            <option value="1-Day">Day — 24</option>
+            <option value="1-Rogers">Rogers — 24</option>
+            <option value="1-Wilson">Wilson — 24</option>
+          </optgroup>
+          <optgroup label="2nd Grade">
+            <option value="2-Adams">Adams — 16</option>
+            <option value="2-Peterson">Peterson — 18</option>
+            <option value="2-Schmidt">Schmidt — 18</option>
+          </optgroup>
+          <optgroup label="3rd Grade">
+            <option value="3-Carroll">Carroll — 24</option>
+            <option value="3-Cocco">Cocco — 23</option>
+            <option value="3-Hossain">Hossain — 23</option>
+          </optgroup>
+          <optgroup label="5th Grade">
+            <option value="5-Basic">Basic — 23</option>
+            <option value="5-Daleiden">Daleiden — 24</option>
+            <option value="5-Szwaya">Szwaya — 23</option>
+          </optgroup>
+        </select>
       </label>
 
       <label>
@@ -34,6 +61,23 @@
       <button id="pauseTimerBtn">Pause</button>
       <button id="resetTimerBtn">Reset</button>
       <button id="cleanupNowBtn" class="cleanup-button">Start Cleanup</button>
+    </section>
+
+    <section id="autoStatus" class="auto-status">
+      <div>
+        <span class="status-label">TODAY</span>
+        <strong id="letterDayStatus">Checking rotation…</strong>
+      </div>
+      <div>
+        <span class="status-label">CURRENT BLOCK</span>
+        <strong id="blockStatus">Checking schedule…</strong>
+      </div>
+      <button id="useAutoBtn" class="primary" type="button">Use Automatic Class</button>
+    </section>
+
+    <section id="classSummary" class="class-summary hidden">
+      <strong id="activeLetters">Active letters: —</strong>
+      <span id="groupSummary">3 groups: —</span>
     </section>
 
     <section class="screen-grid">

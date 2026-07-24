@@ -1,3 +1,263 @@
+const CLASSES = {
+  "K-Johnson":  { teacher: "Johnson",  grade: "Kindergarten", students: 16 },
+  "K-Mederich": { teacher: "Mederich", grade: "Kindergarten", students: 17 },
+  "K-Stukel":   { teacher: "Stukel",   grade: "Kindergarten", students: 17 },
+
+  "1-Day":      { teacher: "Day",      grade: "1st Grade", students: 24 },
+  "1-Rogers":   { teacher: "Rogers",   grade: "1st Grade", students: 24 },
+  "1-Wilson":   { teacher: "Wilson",   grade: "1st Grade", students: 24 },
+
+  "2-Adams":    { teacher: "Adams",    grade: "2nd Grade", students: 16 },
+  "2-Peterson": { teacher: "Peterson", grade: "2nd Grade", students: 18 },
+  "2-Schmidt":  { teacher: "Schmidt",  grade: "2nd Grade", students: 18 },
+
+  "3-Carroll":  { teacher: "Carroll",  grade: "3rd Grade", students: 24 },
+  "3-Cocco":    { teacher: "Cocco",    grade: "3rd Grade", students: 23 },
+  "3-Hossain":  { teacher: "Hossain",  grade: "3rd Grade", students: 23 },
+
+  "5-Basic":    { teacher: "Basic",    grade: "5th Grade", students: 23 },
+  "5-Daleiden": { teacher: "Daleiden", grade: "5th Grade", students: 24 },
+  "5-Szwaya":   { teacher: "Szwaya",   grade: "5th Grade", students: 23 }
+};
+
+const LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+let currentClass = null;
+let dynamicWaveGroups = [];
+
+function buildBalancedGroups(studentCount) {
+  const active = LETTERS.slice(0, studentCount);
+  const baseSize = Math.floor(studentCount / 3);
+  const remainder = studentCount % 3;
+  const sizes = [0, 1, 2].map(i => baseSize + (i < remainder ? 1 : 0));
+
+  const groups = [];
+  let cursor = 0;
+  sizes.forEach(size => {
+    groups.push(active.slice(cursor, cursor + size));
+    cursor += size;
+  });
+  return groups;
+}
+
+function groupRange(group) {
+  if (!group.length) return "—";
+  return group.length === 1 ? group[0] : `${group[0]}–${group[group.length - 1]}`;
+}
+
+function selectClass(classKey) {
+  currentClass = CLASSES[classKey] || null;
+  if (!currentClass) {
+    dynamicWaveGroups = [];
+    el("classTitle").textContent = "Classroom Screen";
+    el("classSummary").classList.add("hidden");
+    return;
+  }
+
+  dynamicWaveGroups = buildBalancedGroups(currentClass.students);
+  waveIndex = 0;
+
+  el("classTitle").textContent =
+    `${currentClass.grade} — ${currentClass.teacher} (${currentClass.students})`;
+
+  const lastLetter = LETTERS[currentClass.students - 1];
+  el("activeLetters").textContent = `Active letters: A–${lastLetter}`;
+
+  el("groupSummary").textContent =
+    `3 groups: ${dynamicWaveGroups.map(g => `${groupRange(g)} (${g.length})`).join(" • ")}`;
+
+  el("classSummary").classList.remove("hidden");
+
+  if (waveType) renderWave();
+}
+
+
+// ============================================================
+// AUTOMATIC SCHOOL-DAY + CLASS-BLOCK CONFIG
+// ============================================================
+
+// These fixed LRC instructional blocks come from Mrs. Albrecht's current schedule.
+// Change these times here if the master schedule changes.
+const LRC_BLOCKS = [
+  { id: "4th", grade: "4th Grade", start: "09:05", end: "09:50" },
+  { id: "2nd", grade: "2nd Grade", start: "10:05", end: "10:50" },
+  { id: "5th", grade: "5th Grade", start: "11:05", end: "11:50" },
+  { id: "K",   grade: "Kindergarten", start: "12:45", end: "13:30" },
+  { id: "3rd", grade: "3rd Grade", start: "13:45", end: "14:30" },
+  { id: "1st", grade: "1st Grade", start: "14:45", end: "15:30" }
+];
+
+// IMPORTANT:
+// Put the actual homeroom/house assigned to each A–E day here.
+// I am NOT guessing this mapping. Once populated, the screen will select
+// the exact class automatically with no clicks.
+//
+// Example shape:
+// "A": { "1st": "1-Day", "2nd": "2-Adams", "3rd": "3-Carroll", "5th": "5-Basic" }
+//
+// Fourth grade is intentionally omitted until house rosters are finalized.
+const ROTATION_CLASS_MAP = {
+  A: {},
+  B: {},
+  C: {},
+  D: {},
+  E: {}
+};
+
+// School dates that do NOT advance the A–E rotation.
+// This list covers known no-school / institute / break dates in the 2026–27 calendar.
+// It is kept in one place so unusual calendar changes are easy to edit.
+const SKIP_DATES = new Set([
+  "2026-09-07",
+  "2026-10-09","2026-10-12",
+  "2026-11-02","2026-11-03",
+  "2026-11-23","2026-11-24","2026-11-25","2026-11-26","2026-11-27",
+  "2026-12-21","2026-12-22","2026-12-23","2026-12-24","2026-12-25",
+  "2026-12-28","2026-12-29","2026-12-30","2026-12-31",
+  "2027-01-01","2027-01-04","2027-01-18",
+  "2027-02-15","2027-02-26",
+  "2027-03-22","2027-03-23","2027-03-24","2027-03-25","2027-03-26","2027-03-29",
+  "2027-04-06",
+  "2027-05-31"
+]);
+
+const SCHOOL_START = "2026-08-20";
+const SCHOOL_END = "2027-05-28";
+const ROTATION = ["A","B","C","D","E"];
+
+function localDateKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function parseLocalDate(key) {
+  const [y,m,d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0);
+}
+
+function isWeekday(date) {
+  const day = date.getDay();
+  return day !== 0 && day !== 6;
+}
+
+function getLetterDay(date = new Date()) {
+  const key = localDateKey(date);
+  if (key < SCHOOL_START || key > SCHOOL_END) return null;
+  if (!isWeekday(date) || SKIP_DATES.has(key)) return null;
+
+  const start = parseLocalDate(SCHOOL_START);
+  const target = parseLocalDate(key);
+  let instructionalDays = 0;
+
+  for (let cursor = new Date(start); cursor <= target; cursor.setDate(cursor.getDate() + 1)) {
+    const cursorKey = localDateKey(cursor);
+    if (isWeekday(cursor) && !SKIP_DATES.has(cursorKey)) {
+      instructionalDays++;
+    }
+  }
+
+  return ROTATION[(instructionalDays - 1) % ROTATION.length];
+}
+
+function minutesSinceMidnight(date = new Date()) {
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+function hhmmToMinutes(hhmm) {
+  const [h,m] = hhmm.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function getCurrentBlock(date = new Date()) {
+  const mins = minutesSinceMidnight(date);
+  return LRC_BLOCKS.find(block =>
+    mins >= hhmmToMinutes(block.start) &&
+    mins < hhmmToMinutes(block.end)
+  ) || null;
+}
+
+function getMappedClassKey(letterDay, block) {
+  if (!letterDay || !block) return null;
+  return ROTATION_CLASS_MAP[letterDay]?.[block.id] || null;
+}
+
+function updateAutomaticStatus() {
+  const now = new Date();
+  const letterDay = getLetterDay(now);
+  const block = getCurrentBlock(now);
+
+  el("letterDayStatus").textContent =
+    letterDay ? `${letterDay} Day` : "No scheduled rotation today";
+
+  if (!block) {
+    el("blockStatus").textContent = "Between LRC classes";
+    return { letterDay, block: null, classKey: null };
+  }
+
+  const classKey = getMappedClassKey(letterDay, block);
+  const mappedClass = classKey ? CLASSES[classKey] : null;
+
+  if (mappedClass) {
+    el("blockStatus").textContent =
+      `${block.start}–${block.end} • ${mappedClass.grade} — ${mappedClass.teacher}`;
+  } else {
+    el("blockStatus").textContent =
+      `${block.start}–${block.end} • ${block.grade} • homeroom mapping needed`;
+  }
+
+  return { letterDay, block, classKey };
+}
+
+function useAutomaticClass() {
+  const auto = updateAutomaticStatus();
+
+  if (!auto.letterDay) {
+    alert("There is no regular A–E rotation scheduled for today.");
+    return;
+  }
+
+  if (!auto.block) {
+    alert("It is currently between scheduled LRC class blocks.");
+    return;
+  }
+
+  if (!auto.classKey) {
+    alert(
+      `I know it is ${auto.letterDay} Day and the ${auto.block.grade} block, ` +
+      `but the homeroom-to-letter-day mapping still needs to be added in classroomScreen.js.`
+    );
+    return;
+  }
+
+  el("classSelect").value = auto.classKey;
+  selectClass(auto.classKey);
+
+  // Set the class timer to the exact amount of time remaining in this block.
+  const nowMinutes = minutesSinceMidnight(new Date());
+  const endMinutes = hhmmToMinutes(auto.block.end);
+  timerSeconds = Math.max(0, (endMinutes - nowMinutes) * 60 - new Date().getSeconds());
+  cleanupTriggered = timerSeconds <= CLEANUP_LEAD_SECONDS;
+  renderTimer();
+
+  // Choose a sensible mode from where we are in the class.
+  const blockStart = hhmmToMinutes(auto.block.start);
+  const elapsed = nowMinutes - blockStart;
+
+  if (timerSeconds <= 60) {
+    renderMode("lineup");
+  } else if (timerSeconds <= CLEANUP_LEAD_SECONDS) {
+    renderMode("cleanup");
+  } else if (elapsed < 5) {
+    renderMode("enter");
+  }
+
+  startTimer();
+}
+
+// Refresh the automatic date/time status every 15 seconds.
+setInterval(updateAutomaticStatus, 15000);
+
 const MODES = {
   enter: {
     title: "ENTER",
@@ -138,13 +398,6 @@ const MODES = {
   }
 };
 
-const WAVE_GROUPS = [
-  ["A","B","C","D","E","F","G"],
-  ["H","I","J","K","L","M","N"],
-  ["O","P","Q","R","S","T","U"],
-  ["V","W","X","Y","Z","AA","AB","AC","AD"]
-];
-
 let currentMode = "enter";
 let waveIndex = 0;
 let waveType = null;
@@ -176,11 +429,15 @@ function renderMode(modeKey) {
 function renderWave() {
   const title = waveType === "chromebook" ? "💻 CHROMEBOOKS — YOUR TURN" : "📚 BOOK SHOPPING — YOUR TURN";
   el("waveLabel").textContent = title;
-  el("waveLetters").textContent = WAVE_GROUPS[waveIndex].join(" ");
+  el("waveLetters").textContent = (dynamicWaveGroups[waveIndex] || []).join(" ");
   el("wavePanel").classList.remove("hidden");
 }
 
 function setWaveType(type) {
+  if (!currentClass) {
+    alert("Choose a class first so I can build its three groups.");
+    return;
+  }
   waveType = type;
   waveIndex = 0;
   renderWave();
@@ -248,18 +505,16 @@ el("shoppingWaveBtn").addEventListener("click", () => setWaveType("shopping"));
 el("hideWaveBtn").addEventListener("click", () => el("wavePanel").classList.add("hidden"));
 
 el("nextWaveBtn").addEventListener("click", () => {
-  waveIndex = (waveIndex + 1) % WAVE_GROUPS.length;
+  waveIndex = (waveIndex + 1) % Math.max(dynamicWaveGroups.length, 1);
   renderWave();
 });
 
 el("prevWaveBtn").addEventListener("click", () => {
-  waveIndex = (waveIndex - 1 + WAVE_GROUPS.length) % WAVE_GROUPS.length;
+  waveIndex = (waveIndex - 1 + Math.max(dynamicWaveGroups.length, 1)) % Math.max(dynamicWaveGroups.length, 1);
   renderWave();
 });
 
-el("classNameInput").addEventListener("input", e => {
-  el("classTitle").textContent = e.target.value.trim() || "Classroom Screen";
-});
+el("classSelect").addEventListener("change", e => selectClass(e.target.value));
 
 el("startTimerBtn").addEventListener("click", startTimer);
 el("pauseTimerBtn").addEventListener("click", pauseTimer);
@@ -271,3 +526,7 @@ tickClock();
 setInterval(tickClock, 1000);
 renderMode("enter");
 renderTimer();
+
+
+el("useAutoBtn").addEventListener("click", useAutomaticClass);
+updateAutomaticStatus();
