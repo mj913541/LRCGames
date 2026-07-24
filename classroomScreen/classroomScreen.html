@@ -98,13 +98,35 @@
           <div>👀 Ready to Learn</div>
         </div>
 
-        <div id="wavePanel" class="wave-panel hidden">
-          <p id="waveLabel" class="wave-label">YOUR TURN</p>
-          <div id="waveLetters" class="wave-letters">A B C D E F G</div>
-          <p id="waveWait" class="wave-wait">Everyone else: WAIT ON YOUR LETTER</p>
-          <div class="wave-controls">
-            <button id="prevWaveBtn">← Previous</button>
-            <button id="nextWaveBtn" class="primary">Next Group →</button>
+        <div id="rotationBoard" class="rotation-board hidden">
+          <section class="work-zone">
+            <div class="zone-heading">
+              <span class="zone-icon">💻</span>
+              <div>
+                <p class="eyebrow">KEEP GOING</p>
+                <h3>WORK</h3>
+              </div>
+            </div>
+            <div id="workLetters" class="zone-letters"></div>
+            <p class="zone-note">Keep working until your letter moves to SHOP.</p>
+          </section>
+
+          <section class="shop-zone">
+            <div class="zone-heading">
+              <span class="zone-icon">📚</span>
+              <div>
+                <p class="eyebrow">YOUR TURN</p>
+                <h3>SHOP</h3>
+              </div>
+            </div>
+            <div id="shopLetters" class="zone-letters shop-letters"></div>
+            <p class="zone-note">Choose up to 2 • Self-checkout • Then return to work.</p>
+          </section>
+
+          <div class="rotation-footer">
+            <button id="prevRotationBtn" type="button">← Previous</button>
+            <strong id="rotationLabel">Shopping Group 1 of 3</strong>
+            <button id="nextRotationBtn" class="primary" type="button">Next Shopping Group →</button>
           </div>
         </div>
       </article>
@@ -126,9 +148,8 @@
     </section>
 
     <section class="wave-mode-buttons">
-      <button id="chromebookWaveBtn">💻 Chromebook Waves</button>
-      <button id="shoppingWaveBtn">📚 Shopping Waves</button>
-      <button id="hideWaveBtn">Hide Waves</button>
+      <button id="showRotationBtn">📚 Show Work + Shop</button>
+      <button id="hideRotationBtn">Hide Work + Shop</button>
     </section>
 
     <section id="cleanupOverlay" class="cleanup-overlay hidden" role="dialog" aria-modal="true">

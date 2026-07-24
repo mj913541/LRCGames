@@ -317,3 +317,102 @@ h1 {
 @media (max-width: 900px) {
   .auto-status { grid-template-columns: 1fr; }
 }
+
+
+.rotation-board {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(260px, 1fr);
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
+  min-height: 0;
+}
+
+.work-zone,
+.shop-zone {
+  border-radius: 22px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.work-zone {
+  background: #e8f3ee;
+}
+
+.shop-zone {
+  background: #fff3c9;
+}
+
+.zone-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.zone-icon {
+  font-size: clamp(2rem, 4vh, 3.4rem);
+}
+
+.zone-heading h3 {
+  margin: 0;
+  font-size: clamp(2rem, 5vh, 4rem);
+  line-height: 1;
+}
+
+.zone-letters {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: clamp(8px, 1.2vw, 16px);
+  padding: 12px 4px;
+}
+
+.letter-chip {
+  display: grid;
+  place-items: center;
+  width: clamp(48px, 5.2vw, 78px);
+  aspect-ratio: 1;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 5px 12px rgba(22,48,36,.10);
+  font-size: clamp(1.5rem, 3vw, 2.7rem);
+  font-weight: 1000;
+}
+
+.shop-zone .letter-chip {
+  border: 3px solid rgba(114, 92, 22, .22);
+}
+
+.zone-note {
+  margin: 0;
+  text-align: center;
+  font-weight: 900;
+  color: var(--muted);
+  font-size: clamp(.9rem, 1.4vw, 1.2rem);
+}
+
+.rotation-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.rotation-footer strong {
+  min-width: 180px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .rotation-board {
+    grid-template-columns: 1fr 0.7fr;
+  }
+  .letter-chip {
+    width: clamp(42px, 8vw, 62px);
+  }
+}

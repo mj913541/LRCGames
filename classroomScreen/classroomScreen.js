@@ -67,7 +67,7 @@ function selectClass(classKey) {
 
   el("classSummary").classList.remove("hidden");
 
-  if (waveType) renderWave();
+  if (!el("rotationBoard").classList.contains("hidden")) renderRotationBoard();
 }
 
 
@@ -426,21 +426,31 @@ function renderMode(modeKey) {
   });
 }
 
-function renderWave() {
-  const title = waveType === "chromebook" ? "💻 CHROMEBOOKS — YOUR TURN" : "📚 BOOK SHOPPING — YOUR TURN";
-  el("waveLabel").textContent = title;
-  el("waveLetters").textContent = (dynamicWaveGroups[waveIndex] || []).join(" ");
-  el("wavePanel").classList.remove("hidden");
+function renderRotationBoard() {
+  if (!currentClass || dynamicWaveGroups.length !== 3) return;
+
+  const shopGroup = dynamicWaveGroups[waveIndex] || [];
+  const workGroup = dynamicWaveGroups
+    .filter((_, index) => index !== waveIndex)
+    .flat();
+
+  const chips = letters => letters
+    .map(letter => `<span class="letter-chip">${letter}</span>`)
+    .join("");
+
+  el("shopLetters").innerHTML = chips(shopGroup);
+  el("workLetters").innerHTML = chips(workGroup);
+  el("rotationLabel").textContent = `Shopping Group ${waveIndex + 1} of 3`;
+  el("rotationBoard").classList.remove("hidden");
 }
 
-function setWaveType(type) {
+function showRotationBoard() {
   if (!currentClass) {
     alert("Choose a class first so I can build its three groups.");
     return;
   }
-  waveType = type;
-  waveIndex = 0;
-  renderWave();
+  waveIndex = Math.min(waveIndex, 2);
+  renderRotationBoard();
 }
 
 function formatTime(totalSeconds) {
@@ -500,19 +510,8 @@ document.querySelectorAll(".mode-buttons button").forEach(btn => {
   btn.addEventListener("click", () => renderMode(btn.dataset.mode));
 });
 
-el("chromebookWaveBtn").addEventListener("click", () => setWaveType("chromebook"));
-el("shoppingWaveBtn").addEventListener("click", () => setWaveType("shopping"));
-el("hideWaveBtn").addEventListener("click", () => el("wavePanel").classList.add("hidden"));
 
-el("nextWaveBtn").addEventListener("click", () => {
-  waveIndex = (waveIndex + 1) % Math.max(dynamicWaveGroups.length, 1);
-  renderWave();
-});
 
-el("prevWaveBtn").addEventListener("click", () => {
-  waveIndex = (waveIndex - 1 + Math.max(dynamicWaveGroups.length, 1)) % Math.max(dynamicWaveGroups.length, 1);
-  renderWave();
-});
 
 el("classSelect").addEventListener("change", e => selectClass(e.target.value));
 
@@ -530,3 +529,19 @@ renderTimer();
 
 el("useAutoBtn").addEventListener("click", useAutomaticClass);
 updateAutomaticStatus();
+
+
+el("showRotationBtn").addEventListener("click", showRotationBoard);
+el("hideRotationBtn").addEventListener("click", () => {
+  el("rotationBoard").classList.add("hidden");
+});
+
+el("nextRotationBtn").addEventListener("click", () => {
+  waveIndex = (waveIndex + 1) % 3;
+  renderRotationBoard();
+});
+
+el("prevRotationBtn").addEventListener("click", () => {
+  waveIndex = (waveIndex + 2) % 3;
+  renderRotationBoard();
+});
