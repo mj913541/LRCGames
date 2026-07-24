@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LRC Classroom Screen</title>
+  <link rel="stylesheet" href="classroomScreen.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">LONG BEACH LRC</p>
+        <h1 id="classTitle">Classroom Screen</h1>
+      </div>
+      <div class="time-panel">
+        <div id="clock" class="clock">--:--</div>
+        <div id="timer" class="timer">45:00</div>
+      </div>
+    </header>
+
+    <section class="control-strip">
+      <label>
+        Class
+        <input id="classNameInput" type="text" placeholder="e.g. 3rd Grade — Smith" />
+      </label>
+
+      <label>
+        Minutes
+        <input id="minutesInput" type="number" min="1" max="90" value="45" />
+      </label>
+
+      <button id="startTimerBtn" class="primary">Start Class</button>
+      <button id="pauseTimerBtn">Pause</button>
+      <button id="resetTimerBtn">Reset</button>
+      <button id="cleanupNowBtn" class="cleanup-button">Start Cleanup</button>
+    </section>
+
+    <section class="screen-grid">
+      <article class="main-card">
+        <div class="mode-header">
+          <span id="modeIcon" class="mode-icon">🚪</span>
+          <div>
+            <p class="eyebrow">CURRENT ROUTINE</p>
+            <h2 id="modeTitle">ENTER</h2>
+          </div>
+        </div>
+
+        <div id="studentDirections" class="student-directions">
+          <div>📚 Return Books</div>
+          <div>🔤 Check Your Letter</div>
+          <div>💼 Check Your Job</div>
+          <div>🪑 Sit on Your Letter</div>
+          <div>👀 Ready to Learn</div>
+        </div>
+
+        <div id="wavePanel" class="wave-panel hidden">
+          <p id="waveLabel" class="wave-label">YOUR TURN</p>
+          <div id="waveLetters" class="wave-letters">A B C D E F G</div>
+          <p id="waveWait" class="wave-wait">Everyone else: WAIT ON YOUR LETTER</p>
+          <div class="wave-controls">
+            <button id="prevWaveBtn">← Previous</button>
+            <button id="nextWaveBtn" class="primary">Next Group →</button>
+          </div>
+        </div>
+      </article>
+
+      <aside class="champs-card">
+        <p class="eyebrow">CHAMPS</p>
+        <div id="champsList" class="champs-list"></div>
+      </aside>
+    </section>
+
+    <section class="mode-buttons" aria-label="Routine selection">
+      <button data-mode="enter">🚪 Enter</button>
+      <button data-mode="learn">👩‍🏫 Learn</button>
+      <button data-mode="work">💻 Work</button>
+      <button data-mode="shop">📚 Shop</button>
+      <button data-mode="bathroom">🚻 Bathroom</button>
+      <button data-mode="cleanup">🎵 Clean Up</button>
+      <button data-mode="lineup">🚪 Line Up</button>
+    </section>
+
+    <section class="wave-mode-buttons">
+      <button id="chromebookWaveBtn">💻 Chromebook Waves</button>
+      <button id="shoppingWaveBtn">📚 Shopping Waves</button>
+      <button id="hideWaveBtn">Hide Waves</button>
+    </section>
+
+    <section id="cleanupOverlay" class="cleanup-overlay hidden" role="dialog" aria-modal="true">
+      <div class="cleanup-content">
+        <p class="eyebrow">CLEANUP TIME</p>
+        <h2>🎵 FOOTLOOSE!</h2>
+        <div class="cleanup-steps">
+          <span>🛑 Stop</span>
+          <span>💻 Return Tech</span>
+          <span>🎧 Hang Headphones</span>
+          <span>📚 Grab Books</span>
+          <span>🧹 Reset Your Space</span>
+          <span>🚶 Go to the Line</span>
+        </div>
+        <button id="closeCleanupBtn">Return to Screen</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="classroomScreen.js"></script>
+</body>
+</html>
