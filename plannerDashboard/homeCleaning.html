@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#edf3ef">
+  <title>Home Cleaning • Personal Planner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Lora:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="homeCleaning.css">
+</head>
+<body>
+  <div id="loadingScreen" class="loading-screen" aria-live="polite">
+    <div class="loading-orb"></div>
+    <p>Checking what your home needs…</p>
+  </div>
+
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">LRC QUEST • PERSONAL PLANNER</p>
+      <h1>Home, gently. 🏡</h1>
+      <p class="subtle" id="todayLabel"></p>
+    </div>
+    <div class="topbar-actions">
+      <a class="button secondary" href="dashboard.html">← Planner</a>
+      <a class="button secondary" href="workout.html">🏋️ Workout</a>
+      <span id="saveStatus" class="save-status">Saved</span>
+      <button id="signOutBtn" class="icon-button" type="button" aria-label="Sign out" title="Sign out">↪</button>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="summary-grid" aria-label="Cleaning summary">
+      <article class="summary-card due-card"><span>NEEDS ATTENTION</span><strong id="dueCount">0</strong><small>due today</small></article>
+      <article class="summary-card overdue-card"><span>OVERDUE</span><strong id="overdueCount">0</strong><small>no guilt attached</small></article>
+      <article class="summary-card done-card"><span>DONE TODAY</span><strong id="doneTodayCount">0</strong><small>tiny wins count</small></article>
+    </section>
+
+    <section class="card today-card">
+      <div class="card-heading">
+        <div>
+          <p class="eyebrow">TODAY'S RESET</p>
+          <h2>What actually needs attention?</h2>
+          <p class="subtle">Daily items appear today. Weekly and quarterly tasks only surface when they are due.</p>
+        </div>
+        <div class="filter-row" role="group" aria-label="Today's task filter">
+          <button class="filter-chip active" data-filter="all" type="button">All due</button>
+          <button class="filter-chip" data-filter="main" type="button">Main floor</button>
+          <button class="filter-chip" data-filter="upstairs" type="button">Upstairs</button>
+        </div>
+      </div>
+      <div id="todayTasks" class="today-list"></div>
+    </section>
+
+    <section class="floor-stack">
+      <article class="floor-card card">
+        <button class="floor-trigger" type="button" data-floor="main" aria-expanded="true">
+          <span><strong>🏡 Main Floor</strong><small id="mainFloorStatus"></small></span><span class="chevron">⌃</span>
+        </button>
+        <div class="floor-content" id="mainFloorRooms"></div>
+      </article>
+
+      <article class="floor-card card">
+        <button class="floor-trigger" type="button" data-floor="upstairs" aria-expanded="true">
+          <span><strong>⬆️ Upstairs</strong><small id="upstairsStatus"></small></span><span class="chevron">⌃</span>
+        </button>
+        <div class="floor-content" id="upstairsRooms"></div>
+      </article>
+    </section>
+
+    <section class="card setup-note">
+      <p><strong>Fresh-start behavior:</strong> daily resets begin due today. Weekly and quarterly chores start their countdown today, so the first screen does not dump every deep-clean task on you at once.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="homeCleaning.js"></script>
+</body>
+</html>
