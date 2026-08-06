@@ -509,7 +509,7 @@ body {
   min-height: 0;
   height: 100%;
   display: grid;
-  grid-template-columns: minmax(0, 2.2fr) minmax(250px, .8fr);
+  grid-template-columns: minmax(0, 1fr) 104px;
   gap: 10px;
   overflow: hidden;
 }
@@ -566,32 +566,40 @@ body {
 .champs-card {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  padding-inline: 10px;
 }
 
 .champs-card > .eyebrow {
   flex: 0 0 auto;
+  text-align: center;
 }
 
 .champs-list {
   flex: 1 1 auto;
+  width: 100%;
   min-height: 0;
-  gap: 7px;
+  display: grid;
+  grid-template-rows: repeat(6, minmax(0, 1fr));
+  gap: 8px;
   overflow: hidden;
 }
 
 .champ-row {
   min-height: 0;
-  grid-template-columns: 38px 1fr;
-  gap: 8px;
-  padding: 8px 9px;
-  border-radius: 13px;
-  font-size: clamp(.73rem, 1.45vh, 1rem);
+  display: grid;
+  place-items: center;
+  padding: 4px;
+  border-radius: 16px;
+  font-size: clamp(1.65rem, 4.2vh, 2.65rem);
 }
 
-.champ-letter {
-  width: 34px;
-  height: 34px;
-  font-size: 1rem;
+.champ-icon {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
 }
 
 .mode-buttons,
@@ -715,11 +723,7 @@ body {
 
 @media (max-width: 1100px) {
   .screen-grid {
-    grid-template-columns: minmax(0, 1.8fr) minmax(220px, .9fr);
-  }
-
-  .champ-row {
-    font-size: clamp(.7rem, 1.3vh, .9rem);
+    grid-template-columns: minmax(0, 1fr) 92px;
   }
 }
 
@@ -755,14 +759,8 @@ body {
   }
 
   .champ-row {
-    padding: 5px 7px;
-    gap: 6px;
-  }
-
-  .champ-letter {
-    width: 28px;
-    height: 28px;
-    font-size: .9rem;
+    padding: 3px;
+    font-size: clamp(1.35rem, 3.7vh, 2rem);
   }
 
   .mode-buttons button {
@@ -794,6 +792,15 @@ body {
   .champs-card {
     height: auto;
     overflow: visible;
+  }
+
+  .champs-card {
+    align-items: stretch;
+  }
+
+  .champs-list {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-rows: 64px;
   }
 
   .mode-buttons {

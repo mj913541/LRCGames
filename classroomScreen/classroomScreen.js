@@ -40,8 +40,8 @@ function buildBalancedGroups(studentCount) {
 }
 
 function groupRange(group) {
-  if (!group.length) return "—";
-  return group.length === 1 ? group[0] : `${group[0]}–${group[group.length - 1]}`;
+  if (!group.length) return "â€”";
+  return group.length === 1 ? group[0] : `${group[0]}â€“${group[group.length - 1]}`;
 }
 
 function selectClass(classKey) {
@@ -57,13 +57,13 @@ function selectClass(classKey) {
   waveIndex = 0;
 
   el("classTitle").textContent =
-    `${currentClass.grade} — ${currentClass.teacher} (${currentClass.students})`;
+    `${currentClass.grade} â€” ${currentClass.teacher} (${currentClass.students})`;
 
   const lastLetter = LETTERS[currentClass.students - 1];
-  el("activeLetters").textContent = `Active letters: A–${lastLetter}`;
+  el("activeLetters").textContent = `Active letters: Aâ€“${lastLetter}`;
 
   el("groupSummary").textContent =
-    `3 groups: ${dynamicWaveGroups.map(g => `${groupRange(g)} (${g.length})`).join(" • ")}`;
+    `3 groups: ${dynamicWaveGroups.map(g => `${groupRange(g)} (${g.length})`).join(" â€¢ ")}`;
 
   el("classSummary").classList.remove("hidden");
 
@@ -87,7 +87,7 @@ const LRC_BLOCKS = [
 ];
 
 // IMPORTANT:
-// Put the actual homeroom/house assigned to each A–E day here.
+// Put the actual homeroom/house assigned to each Aâ€“E day here.
 // I am NOT guessing this mapping. Once populated, the screen will select
 // the exact class automatically with no clicks.
 //
@@ -103,8 +103,8 @@ const ROTATION_CLASS_MAP = {
   E: {}
 };
 
-// School dates that do NOT advance the A–E rotation.
-// This list covers known no-school / institute / break dates in the 2026–27 calendar.
+// School dates that do NOT advance the Aâ€“E rotation.
+// This list covers known no-school / institute / break dates in the 2026â€“27 calendar.
 // It is kept in one place so unusual calendar changes are easy to edit.
 const SKIP_DATES = new Set([
   "2026-09-07",
@@ -200,10 +200,10 @@ function updateAutomaticStatus() {
 
   if (mappedClass) {
     el("blockStatus").textContent =
-      `${block.start}–${block.end} • ${mappedClass.grade} — ${mappedClass.teacher}`;
+      `${block.start}â€“${block.end} â€¢ ${mappedClass.grade} â€” ${mappedClass.teacher}`;
   } else {
     el("blockStatus").textContent =
-      `${block.start}–${block.end} • ${block.grade} • homeroom mapping needed`;
+      `${block.start}â€“${block.end} â€¢ ${block.grade} â€¢ homeroom mapping needed`;
   }
 
   return { letterDay, block, classKey };
@@ -213,7 +213,7 @@ function useAutomaticClass() {
   const auto = updateAutomaticStatus();
 
   if (!auto.letterDay) {
-    alert("There is no regular A–E rotation scheduled for today.");
+    alert("There is no regular Aâ€“E rotation scheduled for today.");
     return;
   }
 
@@ -261,16 +261,16 @@ setInterval(updateAutomaticStatus, 15000);
 const MODES = {
   enter: {
     title: "ENTER",
-    icon: "🚪",
+    icon: "ðŸšª",
     directions: [
-      "📚 Return Books",
-      "🔤 Check Your Letter",
-      "💼 Check Your Job",
-      "🪑 Sit on Your Letter",
-      "👀 Ready to Learn"
+      "ðŸ“š Return Books",
+      "ðŸ”¤ Check Your Letter",
+      "ðŸ’¼ Check Your Job",
+      "ðŸª‘ Sit on Your Letter",
+      "ðŸ‘€ Ready to Learn"
     ],
     champs: {
-      C: ["Conversation", "Level 0–1"],
+      C: ["Conversation", "Level 0â€“1"],
       H: ["Help", "Check the ABC chart first; ask if you still need help."],
       A: ["Activity", "Return books, check your letter/job, sit on your letter."],
       M: ["Movement", "Walk directly to the return station or rug."],
@@ -280,13 +280,13 @@ const MODES = {
   },
   learn: {
     title: "LEARN",
-    icon: "👩‍🏫",
+    icon: "ðŸ‘©â€ðŸ«",
     directions: [
-      "👀 Look",
-      "👂 Listen",
-      "🧠 Think",
-      "✋ Participate",
-      "🔤 Stay on Your Letter"
+      "ðŸ‘€ Look",
+      "ðŸ‘‚ Listen",
+      "ðŸ§  Think",
+      "âœ‹ Participate",
+      "ðŸ”¤ Stay on Your Letter"
     ],
     champs: {
       C: ["Conversation", "Level 0 unless invited to talk."],
@@ -299,13 +299,13 @@ const MODES = {
   },
   work: {
     title: "WORK",
-    icon: "💻",
+    icon: "ðŸ’»",
     directions: [
-      "💻 Stay On Task",
-      "🎧 Use Your Headphones",
-      "🤔 Try First",
-      "🤫 Level 1",
-      "👀 Follow the Screen"
+      "ðŸ’» Stay On Task",
+      "ðŸŽ§ Use Your Headphones",
+      "ðŸ¤” Try First",
+      "ðŸ¤« Level 1",
+      "ðŸ‘€ Follow the Screen"
     ],
     champs: {
       C: ["Conversation", "Level 1."],
@@ -318,14 +318,14 @@ const MODES = {
   },
   shop: {
     title: "SHOP",
-    icon: "📚",
+    icon: "ðŸ“š",
     directions: [
-      "👀 Follow the Screen",
-      "🚶 Walk",
-      "📚 Choose Up to 2",
-      "🤫 Level 1",
-      "🖥️ Scan Your Books",
-      "🔤 Return to Your Letter"
+      "ðŸ‘€ Follow the Screen",
+      "ðŸš¶ Walk",
+      "ðŸ“š Choose Up to 2",
+      "ðŸ¤« Level 1",
+      "ðŸ–¥ï¸ Scan Your Books",
+      "ðŸ”¤ Return to Your Letter"
     ],
     champs: {
       C: ["Conversation", "Level 1."],
@@ -338,17 +338,17 @@ const MODES = {
   },
   bathroom: {
     title: "BATHROOM",
-    icon: "🚻",
+    icon: "ðŸš»",
     directions: [
-      "✏️ Write Your Name",
-      "⏳ Wait Your Turn",
-      "📎 Take the Pass",
-      "🚻 Go",
-      "🧽 Erase Your Name",
-      "📎 Return the Pass"
+      "âœï¸ Write Your Name",
+      "â³ Wait Your Turn",
+      "ðŸ“Ž Take the Pass",
+      "ðŸš» Go",
+      "ðŸ§½ Erase Your Name",
+      "ðŸ“Ž Return the Pass"
     ],
     champs: {
-      C: ["Conversation", "Level 0–1."],
+      C: ["Conversation", "Level 0â€“1."],
       H: ["Help", "Use the bathroom queue without interrupting."],
       A: ["Activity", "Write name, wait, take pass, go, return, erase."],
       M: ["Movement", "Only the student whose turn it is leaves."],
@@ -358,17 +358,17 @@ const MODES = {
   },
   cleanup: {
     title: "CLEAN UP",
-    icon: "🎵",
+    icon: "ðŸŽµ",
     directions: [
-      "🛑 Stop",
-      "💻 Return Tech",
-      "🎧 Hang Headphones",
-      "📚 Grab Books",
-      "🧹 Reset Your Space",
-      "🚶 Go to the Line"
+      "ðŸ›‘ Stop",
+      "ðŸ’» Return Tech",
+      "ðŸŽ§ Hang Headphones",
+      "ðŸ“š Grab Books",
+      "ðŸ§¹ Reset Your Space",
+      "ðŸš¶ Go to the Line"
     ],
     champs: {
-      C: ["Conversation", "Level 0–1."],
+      C: ["Conversation", "Level 0â€“1."],
       H: ["Help", "Ask only if something is missing, broken, or needs adult help."],
       A: ["Activity", "Stop, clean, return materials, gather books."],
       M: ["Movement", "Return materials, then walk to lineup."],
@@ -378,14 +378,14 @@ const MODES = {
   },
   lineup: {
     title: "LINE UP",
-    icon: "🚪",
+    icon: "ðŸšª",
     directions: [
-      "👣 Feet on the Line",
-      "➡️ Face Forward",
-      "🙌 Hands to Yourself",
-      "📚 Books With You",
-      "🤫 Voice 0",
-      "🚪 Wait for Mrs. Albrecht"
+      "ðŸ‘£ Feet on the Line",
+      "âž¡ï¸ Face Forward",
+      "ðŸ™Œ Hands to Yourself",
+      "ðŸ“š Books With You",
+      "ðŸ¤« Voice 0",
+      "ðŸšª Wait for Mrs. Albrecht"
     ],
     champs: {
       C: ["Conversation", "Level 0."],
@@ -408,6 +408,15 @@ const CLEANUP_LEAD_SECONDS = 4 * 60;
 
 const el = id => document.getElementById(id);
 
+const CHAMPS_ICONS = {
+  C: "ðŸ’¬",
+  H: "ðŸ™‹",
+  A: "ðŸŽ¯",
+  M: "ðŸš¶",
+  P: "âœ‹",
+  S: "â­"
+};
+
 function renderMode(modeKey) {
   currentMode = modeKey;
   const mode = MODES[modeKey];
@@ -415,9 +424,13 @@ function renderMode(modeKey) {
   el("modeIcon").textContent = mode.icon;
   el("studentDirections").innerHTML = mode.directions.map(d => `<div>${d}</div>`).join("");
   el("champsList").innerHTML = Object.entries(mode.champs).map(([letter, [label, text]]) => `
-    <div class="champ-row">
-      <span class="champ-letter">${letter}</span>
-      <span><strong>${label}</strong>${text}</span>
+    <div
+      class="champ-row"
+      role="img"
+      aria-label="${label}: ${text}"
+      title="${label}: ${text}"
+    >
+      <span class="champ-icon" aria-hidden="true">${CHAMPS_ICONS[letter]}</span>
     </div>
   `).join("");
 
@@ -550,5 +563,5 @@ el("prevRotationBtn").addEventListener("click", () => {
 el("controlsToggleBtn").addEventListener("click", () => {
   const panel = el("teacherControlsPanel");
   const isHidden = panel.classList.toggle("hidden");
-  el("controlsToggleBtn").textContent = isHidden ? "⚙️ Controls" : "✕ Close Controls";
+  el("controlsToggleBtn").textContent = isHidden ? "âš™ï¸ Controls" : "âœ• Close Controls";
 });
