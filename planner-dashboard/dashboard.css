@@ -1,8 +1,97 @@
 body {
     background-color: #e8efe5;
     font-family: Arial, sans-serif;
+    margin: 0;
 }
 
-h1 {
-    text-align: center;
+
+/* Entire dashboard area */
+
+.dashboard-layout {
+    display: grid;
+
+    grid-template-columns: 2fr 1fr;
+
+    gap: 20px;
+
+    padding: 20px;
+}
+
+
+/* Left side */
+
+.dashboard-left {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+/* Notebook and To-Do cards */
+
+.notebook,
+.todo,
+.timeline {
+    background-color: white;
+
+    border-radius: 16px;
+
+    padding: 20px;
+}
+
+
+/* Notebook */
+
+.notebook textarea {
+    width: 100%;
+    min-height: 300px;
+
+    box-sizing: border-box;
+
+    border: none;
+    outline: none;
+
+    resize: vertical;
+
+    font-family: inherit;
+    font-size: 16px;
+
+    background-color: #fafcf9;
+
+    border-radius: 10px;
+
+    padding: 15px;
+}
+
+
+/* To-do list */
+
+.todo-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+/* Timeline */
+
+.timeline {
+    min-height: 600px;
+}
+
+.timeline-item {
+    display: grid;
+
+    grid-template-columns: 70px 1fr;
+
+    gap: 12px;
+
+    padding: 14px 0;
+
+    border-bottom: 1px solid #e8efe5;
+}
+
+.timeline-time {
+    font-weight: 600;
+    color: #607563;
 }
