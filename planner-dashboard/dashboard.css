@@ -1,9 +1,8 @@
 body {
-    background-color: #e8efe5;
+    background-color: #cfdcc8;
     font-family: Arial, sans-serif;
     margin: 0;
 }
-
 
 /* Entire dashboard area */
 
@@ -33,10 +32,10 @@ body {
 .todo,
 .timeline {
     background-color: white;
-
     border-radius: 16px;
-
     padding: 20px;
+    height: 700px;
+    overflow-y: auto;
 }
 
 
