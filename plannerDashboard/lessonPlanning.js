@@ -469,3 +469,6 @@ if (page === "home") {
 } else if (page === "grade") {
   LessonPlanner.renderGrade(document.body.dataset.grade);
 }
+
+
+  <script src="/js/load-header.js"></script>

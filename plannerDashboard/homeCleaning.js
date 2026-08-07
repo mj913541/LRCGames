@@ -437,3 +437,7 @@ onAuthStateChanged(auth,async current=>{
   render();
   $("loadingScreen").classList.add("done");
 });
+
+
+
+  <script src="/js/load-header.js"></script>
