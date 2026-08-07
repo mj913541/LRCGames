@@ -21,26 +21,38 @@
       <p class="eyebrow">LRC QUEST • PERSONAL PLANNER</p>
       <h1>Today, gently.</h1>
       <p id="todayLabel" class="subtle"></p>
-      <p id="calendarStatus" class="calendar-status"></p>
     </div>
     <div class="topbar-actions">
-      <a class="button secondary" href="lessonPlanning.html">📚 Lesson Planning</a>
       <a class="button secondary workout-link" href="workout.html">🏋️ Workout</a>
-      <a class="button secondary" href="homeCleaning.html">🏡 Home Cleaning</a>
       <span id="saveStatus" class="save-status">Saved</span>
       <button id="editContextBtn" class="button secondary" type="button">Update day</button>
       <button id="signOutBtn" class="icon-button" type="button" aria-label="Sign out" title="Sign out">↪</button>
     </div>
   </header>
 
-  <main class="page-shell">
+  <aside class="paper-tab-rail month-tab-rail" aria-label="School year months">
+    <div class="paper-tab-label">2026–27</div>
+    <button class="month-tab" data-month="2026-08" type="button" aria-label="Open AUG">AUG</button><button class="month-tab" data-month="2026-09" type="button" aria-label="Open SEP">SEP</button><button class="month-tab" data-month="2026-10" type="button" aria-label="Open OCT">OCT</button><button class="month-tab" data-month="2026-11" type="button" aria-label="Open NOV">NOV</button><button class="month-tab" data-month="2026-12" type="button" aria-label="Open DEC">DEC</button><button class="month-tab" data-month="2027-01" type="button" aria-label="Open JAN">JAN</button><button class="month-tab" data-month="2027-02" type="button" aria-label="Open FEB">FEB</button><button class="month-tab" data-month="2027-03" type="button" aria-label="Open MAR">MAR</button><button class="month-tab" data-month="2027-04" type="button" aria-label="Open APR">APR</button><button class="month-tab" data-month="2027-05" type="button" aria-label="Open MAY">MAY</button><button class="month-tab" data-month="2027-06" type="button" aria-label="Open JUN">JUN</button><button class="month-tab" data-month="2027-07" type="button" aria-label="Open JUL">JUL</button>
+  </aside>
+
+  <aside class="paper-tab-rail view-tab-rail" aria-label="Planner sections">
+    <button class="planner-tab paper-view-tab" data-view="daily" type="button"><span>DAY</span></button>
+    <button class="planner-tab paper-view-tab" data-view="weekly" type="button"><span>WEEK</span></button>
+    <button class="planner-tab paper-view-tab" data-view="calendar" type="button"><span>MONTH</span></button>
+    <button class="planner-tab paper-view-tab active" data-view="setup" type="button"><span>SETUP</span></button>
+    <button id="paperTodayBtn" class="paper-today-tab" type="button" title="Open today">TODAY</button>
+  </aside>
+
+  <main class="page-shell paper-planner-shell">
+    <section id="setupView" class="planner-view">
     <section id="contextCard" class="card context-card">
       <div class="card-heading">
         <div>
           <p class="eyebrow">SET THE CONTEXT</p>
           <h2>What kind of day is today?</h2>
-          <p class="subtle">The 2026–2027 school calendar fills this in automatically. Change it only when today needs an exception.</p>
+          <p class="subtle">Your answers build the rest of the dashboard. You can change them anytime.</p>
         </div>
+        <button id="hideContextBtn" class="button ghost" type="button">Hide</button>
       </div>
       <form id="contextForm" class="context-grid">
         <label>
@@ -52,7 +64,7 @@
         <label>
           School letter day
           <select id="letterDay" required>
-            <option value="A">A Day</option><option value="B">B Day</option><option value="C">C Day</option><option value="D">D Day</option><option value="E">E Day</option><option value="SIP">SIP / Institute Day</option><option value="No School">No School</option>
+            <option value="A">A Day</option><option value="B">B Day</option><option value="C">C Day</option><option value="D">D Day</option><option value="E">E Day</option><option value="SIP">SIP</option><option value="No School">No School</option>
           </select>
         </label>
         <fieldset>
@@ -62,7 +74,7 @@
             <label><input type="radio" name="daycare" value="no" checked><span>No</span></label>
           </div>
         </fieldset>
-        <div class="context-actions"><button class="button primary context-submit" type="submit">Use my changes</button><button id="useCalendarBtn" class="button secondary" type="button">Use school calendar</button></div>
+        <button class="button primary context-submit" type="submit">Build my day</button>
       </form>
     </section>
 
@@ -141,6 +153,36 @@
           </div>
         </article>
       </aside>
+    </section>
+    </section>
+
+    <section id="calendarView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">MONTHLY CALENDAR</p><h2 id="calendarTitle">Month</h2></div>
+        <div class="view-controls"><button id="prevMonthBtn" class="button secondary" type="button">←</button><button id="todayMonthBtn" class="button ghost" type="button">Today</button><button id="nextMonthBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <div class="calendar-weekdays"><span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span></div>
+      <div id="monthCalendar" class="month-calendar"></div>
+    </section>
+
+    <section id="weeklyView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">WEEKLY VIEW</p><h2 id="weekTitle">Week</h2></div>
+        <div class="view-controls"><button id="prevWeekBtn" class="button secondary" type="button">←</button><button id="thisWeekBtn" class="button ghost" type="button">This week</button><button id="nextWeekBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <p class="subtle">Select any day to open its Daily View.</p>
+      <div id="weekDateGrid" class="week-date-grid"></div>
+    </section>
+
+    <section id="dailyView" class="planner-view hidden">
+      <div class="view-heading">
+        <div><p class="eyebrow">DAILY VIEW</p><h2 id="dailyViewTitle">Selected day</h2><p id="dailyViewMeta" class="subtle"></p></div>
+        <div class="view-controls"><button id="prevDayBtn" class="button secondary" type="button">←</button><button id="todayDayBtn" class="button ghost" type="button">Today</button><button id="nextDayBtn" class="button secondary" type="button">→</button></div>
+      </div>
+      <div class="daily-page-grid">
+        <article class="card daily-agenda-card"><div class="daily-card-heading"><h3>Appointments &amp; timeline</h3><button id="dailyAddAppointmentBtn" class="button ghost" type="button">+ Appointment</button></div><div id="dailyPageTimeline" class="timeline"></div></article>
+        <article class="card daily-summary-card"><h3>Day setup</h3><div id="dailyContextSummary"></div><button id="editSelectedDayBtn" class="button primary" type="button">Edit this day in Daily Spread</button></article>
+      </div>
     </section>
   </main>
 

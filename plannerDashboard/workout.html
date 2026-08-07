@@ -11,10 +11,7 @@
   <link rel="stylesheet" href="workout.css">
 </head>
 <body>
-  <div id="loadingScreen" class="loading-screen">
-    <div class="loading-orb"></div>
-    <p>Opening your workout tracker…</p>
-  </div>
+  <div id="loadingScreen" class="loading-screen"><div class="loading-orb"></div><p>Opening your workout tracker…</p></div>
 
   <header class="topbar">
     <div>
@@ -37,48 +34,10 @@
       <article class="summary-card stretch"><div class="summary-icon">❀</div><div><span>STRETCHING</span><strong id="stretchDays">0 / 7</strong><small>days</small></div></article>
     </section>
 
-    <!-- Rolling lifting program -->
-    <section class="card rolling-lift-card">
-      <div class="rolling-header">
-        <div>
-          <p class="eyebrow">🏋️ ROLLING LIFT</p>
-          <h2 id="nextWorkoutTitle">Today's Lift</h2>
-          <p id="nextWorkoutSubtitle" class="subtle">Loading your next workout…</p>
-        </div>
-        <div class="rolling-actions">
-          <button id="minimumWorkoutBtn" class="button secondary" type="button">⚡ Minimum mode</button>
-          <button id="resetWorkoutBtn" class="button ghost danger-ghost" type="button">Reset current</button>
-        </div>
-      </div>
-
-      <div class="rotation-strip" id="rotationStrip" aria-label="Rolling workout rotation"></div>
-
-      <div class="lift-progress-wrap">
-        <div class="lift-progress-copy">
-          <span id="liftProgressLabel">0 of 0 exercises complete</span>
-          <strong id="liftProgressPercent">0%</strong>
-        </div>
-        <div class="lift-progress-track"><div id="liftProgressFill" class="lift-progress-fill"></div></div>
-      </div>
-
-      <div id="activeWorkoutList" class="active-workout-list"></div>
-
-      <div class="finish-row">
-        <div>
-          <strong id="finishHint">Complete your workout when you're ready.</strong>
-          <span id="sessionVolume" class="subtle">Session volume: 0 lb</span>
-        </div>
-        <button id="finishWorkoutBtn" class="button primary finish-workout" type="button">Finish Workout ✓</button>
-      </div>
-    </section>
-
-    <section class="tracker-grid lower-grid">
-      <article class="card lift-history-card">
-        <div class="card-heading">
-          <div><p class="eyebrow">LIFT HISTORY</p><h2>Recent lifting</h2></div>
-          <button id="addLiftBtn" class="button soft" type="button">+ Extra exercise</button>
-        </div>
-        <div class="mini-stat"><span>This week's volume</span><strong id="totalVolume">0 lbs</strong></div>
+    <section class="tracker-grid">
+      <article class="card lift-card">
+        <div class="card-heading"><div><p class="eyebrow">🏋️ LIFTING</p><h2>Lifting exercises</h2></div><button id="addLiftBtn" class="button soft" type="button">+ Exercise</button></div>
+        <div class="mini-stat"><span>Total volume</span><strong id="totalVolume">0 lbs</strong></div>
         <div id="liftingList" class="entry-list"></div>
       </article>
 
@@ -129,6 +88,7 @@
       </div>
       <div class="abs-week-labels" aria-hidden="true"><span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span></div>
       <div id="absPlanCalendar" class="abs-plan-calendar"></div>
+      <p class="abs-plan-credit subtle">Plan based on the uploaded Nourish Move Love Diastasis Recti Repair Plan.</p>
     </section>
 
     <section class="card glance-card">

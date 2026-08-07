@@ -117,3 +117,70 @@ dialog { width: min(480px, calc(100% - 28px)); padding: 0; border: 0; border-rad
 .week-grid-event.custom{border-left-color:#b88b5a;background:#f3eadf}
 .week-grid-event time{display:block;color:var(--muted);font-size:.52rem}.week-grid-event strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:700px){.week-date-grid{grid-template-columns:repeat(7,155px)}}
+
+
+/* =========================================================
+   PAPER PLANNER SIDE TABS — MASTER NAVIGATION
+   ========================================================= */
+:root{
+  --paper-page:#fbfaf5;
+  --paper-edge:#e8e1d5;
+  --tab-shadow:0 6px 18px rgba(76,91,82,.12);
+}
+body{background:linear-gradient(90deg,#eef3ef 0,#f5f7f3 9%,#f7f8f5 91%,#eef3ef 100%)}
+.paper-planner-shell{
+  position:relative;
+  width:min(1480px,calc(100% - 178px));
+  margin:22px auto 70px;
+  padding:28px clamp(18px,3vw,42px) 68px;
+  border:1px solid rgba(214,211,199,.9);
+  border-radius:22px;
+  background:
+    linear-gradient(rgba(255,255,255,.74),rgba(255,255,255,.74)),
+    repeating-linear-gradient(0deg,transparent 0 31px,rgba(117,138,126,.035) 31px 32px),
+    var(--paper-page);
+  box-shadow:0 16px 40px rgba(73,88,79,.09);
+}
+.paper-planner-shell::before{
+  content:"";position:absolute;inset:12px auto 12px 50%;width:1px;
+  background:linear-gradient(transparent,rgba(167,160,146,.18) 8%,rgba(167,160,146,.18) 92%,transparent);
+  pointer-events:none;
+}
+.paper-tab-rail{position:fixed;z-index:30;display:flex;flex-direction:column;gap:5px;top:150px}
+.month-tab-rail{left:max(0px,calc((100vw - min(1480px,calc(100vw - 178px)))/2 - 56px));align-items:flex-end}
+.view-tab-rail{right:max(0px,calc((100vw - min(1480px,calc(100vw - 178px)))/2 - 62px));align-items:flex-start}
+.paper-tab-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:.65rem;letter-spacing:.16em;color:#748179;padding:7px 4px 9px;text-transform:uppercase}
+.month-tab,.paper-view-tab,.paper-today-tab{
+  border:1px solid rgba(190,203,195,.95);font:600 .72rem/1 "DM Sans",sans-serif;letter-spacing:.08em;
+  color:#617069;background:#e8f0eb;box-shadow:var(--tab-shadow);cursor:pointer;transition:.18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.month-tab{width:50px;height:39px;border-radius:10px 0 0 10px;text-align:center;padding:0}
+.month-tab:nth-of-type(3n+1){background:#e9efe8}.month-tab:nth-of-type(3n+2){background:#edf0e7}.month-tab:nth-of-type(3n){background:#e7efef}
+.month-tab:hover,.paper-view-tab:hover,.paper-today-tab:hover{filter:brightness(.985);transform:translateX(0)}
+.month-tab.active{width:59px;background:#cddfd4;color:#344b40;border-color:#aabfb1;font-weight:700}
+.paper-view-tab{width:61px;min-height:64px;border-radius:0 12px 12px 0;padding:0 7px;display:grid;place-items:center}
+.paper-view-tab span{writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.13em}
+.paper-view-tab.active{width:72px;background:#c8dccf;color:#30483c;border-color:#9fb9aa;font-weight:700}
+.paper-today-tab{width:66px;height:42px;margin-top:8px;border-radius:0 12px 12px 0;background:#efe3d8;color:#765c49}
+/* old website-style nav is intentionally gone in paper mode */
+.planner-nav{display:none!important}
+
+@media(max-width:1100px){
+  .paper-planner-shell{width:calc(100% - 138px)}
+  .month-tab-rail{left:0}.view-tab-rail{right:0}
+}
+@media(max-width:760px){
+  body{padding-bottom:104px;background:#f5f7f3}
+  .paper-planner-shell{width:100%;margin:0;padding:16px 12px 126px;border:0;border-radius:0;box-shadow:none}
+  .paper-planner-shell::before{display:none}
+  .month-tab-rail{left:0;right:0;top:auto;bottom:58px;height:44px;display:flex;flex-direction:row;align-items:center;gap:4px;overflow-x:auto;padding:5px 8px;background:rgba(247,249,246,.96);border-top:1px solid rgba(207,218,211,.9);backdrop-filter:blur(14px)}
+  .paper-tab-label{writing-mode:horizontal-tb;transform:none;white-space:nowrap;padding:0 6px 0 1px}
+  .month-tab{flex:0 0 46px;width:46px;height:32px;border-radius:9px}
+  .month-tab.active{width:50px;flex-basis:50px}
+  .view-tab-rail{left:0;right:0;top:auto;bottom:0;height:59px;display:grid;grid-template-columns:repeat(5,1fr);gap:0;background:rgba(241,246,242,.98);border-top:1px solid rgba(194,209,200,.95);box-shadow:0 -8px 24px rgba(74,89,80,.08);backdrop-filter:blur(16px)}
+  .paper-view-tab,.paper-today-tab{width:auto!important;height:58px;min-height:58px;margin:0;border:0;border-right:1px solid rgba(203,214,207,.8);border-radius:0;box-shadow:none;background:transparent}
+  .paper-view-tab span{writing-mode:horizontal-tb;letter-spacing:.05em}
+  .paper-view-tab.active{background:#dce9e0;color:#314b3e}
+  .paper-today-tab{border-right:0;background:#f2e7dd}
+}

@@ -1,49 +1,19 @@
-MJ Personal Planner — Firestore Complete Build
+MJ Personal Planner — Master Build
 
-All files live together in: LRCGames/plannerDashboard/
+Integrated:
+- Daily Spread setup/editor
+- Monthly Calendar date navigation
+- Weekly 6:00 AM–7:00 PM appointment timelines in 10-minute intervals
+- Daily selected-date view
+- Hideable Set the Context card
+- Shared planner profile: plannerDashboardUsers/mj
+- Workout Tracker integrated and migrated to shared MJ profile
+- Official 2026–2027 A/B/C/D/E/SIP/NS calendar baked into the planner
+- Official 2026–2027 A–E class/PHH appointment schedule baked into the planner
+- Manual date edits remain available as overrides
 
-Shared Firebase project:
-- Project: lrcquest-3039e
-- Authorized emails: malbrecht@sd308.org, malbrecht3317@gmail.com
-- Shared planner profile ID: mj
+Workout v3: Daily exercises are now 10 reps each of Push-ups, Squats, Glute bridges, Backpack rows, Calf raises, and Bird dog. Individual exercise completion is saved per date.
 
-Firestore data paths:
-- plannerDashboardUsers/mj
-  Profile metadata / parking lot / last opened day
-- plannerDashboardUsers/mj/days/{YYYY-MM-DD}
-  Daily context, completed routines, appointments, goals, last-time tracking
-- plannerDashboardUsers/mj/weeks/{YYYY-W##}
-  Weekly work and home tasks
-- plannerDashboardUsers/mj/workoutWeeks/{YYYY-MM-DD}
-  Weekly workout tracking
-- plannerDashboardUsers/mj/workoutPrograms/diastasisRecti28
-  28-day core plan completion
-- plannerDashboardUsers/mj/lessonPlanning/progress
-  All grades, lesson prep checks, notes, links, and class completion
+Workout v4: Added a 28-day Diastasis Recti Abs/Core Repair calendar based on the uploaded Nourish Move Love plan. Includes all 24 linked 10-minute workout days, 4 rest days, equipment labels, and shared MJ Firestore completion tracking under workoutPrograms/diastasisRecti28.
 
-Lesson planner:
-- lessonPlanning.html = grade selection / overview
-- 1st.html / 2nd.html = 10 Core + 20 Monarch
-- 3rd.html / 4th.html / 5th.html = 10 Core + 20 Spiral Practice
-- Class counts: 1st 3, 2nd 3, 3rd 3, 4th 4, 5th 3
-
-All three modules use the same Firebase Web App configuration and the same two-account access check.
-Lesson Planning also keeps localStorage as a temporary fallback, but Firestore is the shared source when connected.
-
-
-CURRENT LESSON PLANNING FILES
-- lessonPlanning.html = grade-level landing page
-- 1st.html
-- 2nd.html
-- 3rd.html
-- 4th.html
-- 5th.html
-- lessonPlanning.css
-- lessonPlanning.js
-
-Lesson Planning Firestore:
-plannerDashboardUsers/mj/lessonPlanning/progress
-
-Lesson Planning uses Firebase modular SDK imports from lessonPlanning.js.
-All lesson-planning HTML pages load:
-<script type="module" src="lessonPlanning.js"></script>
+Paper Tabs update: desktop side tabs now provide DAY / WEEK / MONTH / SETUP / TODAY navigation. Opposite-side AUG–JUL tabs jump directly to school-year months. On iPhone/iPad narrow screens, the tabs become two touch-friendly bottom rails.

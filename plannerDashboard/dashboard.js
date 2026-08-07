@@ -12,7 +12,6 @@ const firebaseConfig = {
   measurementId: "G-5VXRYJ733C"
 };
 const ALLOWED_EMAILS = new Set(["malbrecht@sd308.org", "malbrecht3317@gmail.com"]);
-const PLANNER_PROFILE_ID = "mj";
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -364,9 +363,9 @@ function effectiveContext(dateKey, storedDay=null) { const official=defaultConte
 
 function uid() { return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`; }
 function getISOWeekKey(date) { const copy=new Date(date); copy.setHours(0,0,0,0); copy.setDate(copy.getDate()+3-((copy.getDay()+6)%7)); const week1=new Date(copy.getFullYear(),0,4); const week=1+Math.round(((copy-week1)/86400000-3+((week1.getDay()+6)%7))/7); return `${copy.getFullYear()}-W${String(week).padStart(2,"0")}`; }
-function dayDoc(dateKey=selectedDateKey) { return doc(db,"plannerDashboardUsers",PLANNER_PROFILE_ID,"days",dateKey); }
-function weekDoc(key=weekKey) { return doc(db,"plannerDashboardUsers",PLANNER_PROFILE_ID,"weeks",key); }
-function profileDoc() { return doc(db,"plannerDashboardUsers",PLANNER_PROFILE_ID); }
+function dayDoc(dateKey=selectedDateKey) { return doc(db,"plannerDashboardUsers","mj","days",dateKey); }
+function weekDoc(key=weekKey) { return doc(db,"plannerDashboardUsers","mj","weeks",key); }
+function profileDoc() { return doc(db,"plannerDashboardUsers","mj"); }
 function esc(v="") { const d=document.createElement("div"); d.textContent=v; return d.innerHTML; }
 function formatTime(time24) { const [h,m]=time24.split(":").map(Number); return new Intl.DateTimeFormat("en-US",{hour:"numeric",minute:"2-digit"}).format(new Date(2000,0,1,h,m)); }
 function showToast(message) { const t=$("toast"); t.textContent=message; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2200); }
@@ -506,6 +505,12 @@ function blankDayData(dateKey, profile={}) {
 
 function bindPlannerViews() {
   document.querySelectorAll(".planner-tab").forEach(btn=>btn.addEventListener("click",()=>switchView(btn.dataset.view)));
+  document.querySelectorAll(".month-tab").forEach(btn=>btn.addEventListener("click",()=>{
+    const [year,month]=btn.dataset.month.split("-").map(Number);
+    calendarCursor=new Date(year,month-1,1,12);
+    switchView("calendar");
+  }));
+  $("paperTodayBtn")?.addEventListener("click",()=>openDate(todayKey));
   $("prevMonthBtn")?.addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()-1);renderMonthCalendar();});
   $("nextMonthBtn")?.addEventListener("click",()=>{calendarCursor.setMonth(calendarCursor.getMonth()+1);renderMonthCalendar();});
   $("todayMonthBtn")?.addEventListener("click",()=>{calendarCursor=new Date();renderMonthCalendar();});
@@ -558,8 +563,14 @@ function renderPlannerViews(){renderMonthCalendar();renderWeekView();renderDaily
 
 async function getDaySummary(dateKey){const snap=await getDoc(dayDoc(dateKey));return snap.exists()?snap.data():null;}
 
+function updatePaperMonthTabs(){
+  const key=`${calendarCursor.getFullYear()}-${String(calendarCursor.getMonth()+1).padStart(2,"0")}`;
+  document.querySelectorAll(".month-tab").forEach(btn=>btn.classList.toggle("active",btn.dataset.month===key));
+}
+
 async function renderMonthCalendar(){
   const first=new Date(calendarCursor.getFullYear(),calendarCursor.getMonth(),1,12);
+  updatePaperMonthTabs();
   $("calendarTitle").textContent=first.toLocaleDateString("en-US",{month:"long",year:"numeric"});
   const start=new Date(first);start.setDate(1-first.getDay());
   const dates=Array.from({length:42},(_,i)=>{const d=new Date(start);d.setDate(start.getDate()+i);return d;});
