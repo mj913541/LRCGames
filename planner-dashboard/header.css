@@ -5,14 +5,88 @@ header {
     margin: 16px;
 }
 
-nav {
+.main-nav {
     display: flex;
     justify-content: center;
-    gap: 20px;
+    align-items: center;
+    gap: 12px;
 }
 
-nav a {
+
+/* Main navigation buttons */
+
+.nav-link {
+    display: block;
+    padding: 10px 16px;
+
     text-decoration: none;
     color: #4f6252;
     font-weight: 600;
+
+    border-radius: 10px;
+
+    transition: background-color 0.2s;
+}
+
+
+/* What happens when your mouse is over a button */
+
+.nav-link:hover {
+    background-color: #e8efe5;
+}
+
+
+/* The container holding a dropdown */
+
+.dropdown {
+    position: relative;
+}
+
+
+/* The menu is hidden normally */
+
+.dropdown-menu {
+    display: none;
+
+    position: absolute;
+    top: 100%;
+    left: 0;
+
+    background-color: white;
+
+    min-width: 180px;
+
+    padding: 8px;
+
+    border-radius: 10px;
+
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+
+/* Show the menu when hovering over its dropdown */
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+}
+
+
+/* Links inside the dropdown */
+
+.dropdown-menu a {
+    display: block;
+
+    padding: 9px 12px;
+
+    text-decoration: none;
+    color: #4f6252;
+
+    border-radius: 7px;
+}
+
+
+/* Hover effect for dropdown choices */
+
+.dropdown-menu a:hover {
+    background-color: #e8efe5;
 }
