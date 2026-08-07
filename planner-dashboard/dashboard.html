@@ -13,68 +13,52 @@
 </head>
 
 <body>
-    <div id="site-header">
-        PUT THE HEADER HERE
-    </div>
-<main class="dashboard-layout">
 
-    <div class="dashboard-left">
-
-        <section class="notebook">
-            <h2>Notebook</h2>
-
-            <textarea
-                id="notebook"
-                placeholder="Write anything you need to remember..."
-            ></textarea>
-        </section>
-
-
-        <section class="todo">
-            <h2>To-Do</h2>
-
-            <div class="todo-list">
-
-                <label>
-                    <input type="checkbox">
-                    Example task
-                </label>
-
-            </div>
-        </section>
-
-    </div>
-
-
-    <aside class="timeline">
-
-        <h2>Today</h2>
-
-        <div class="timeline-item">
-            <span class="timeline-time">8:00</span>
-            <span class="timeline-event">Start the day</span>
-        </div>
-
-        <div class="timeline-item">
-            <span class="timeline-time">9:00</span>
-            <span class="timeline-event">Morning</span>
-        </div>
-
-        <div class="timeline-item">
-            <span class="timeline-time">10:00</span>
-            <span class="timeline-event">Work</span>
-        </div>
-
-    </aside>
-
-</main>
+    <div id="site-header"></div>
 
     <h1>Planner Dashboard</h1>
 
-    <p>This is my planner dashboard.</p>
+    <main class="dashboard-layout">
+
+        <div class="dashboard-left">
+
+            <section class="notebook">
+                <h2>Notebook</h2>
+
+                <textarea
+                    id="notebook"
+                    placeholder="Write anything you need to remember..."
+                ></textarea>
+            </section>
+
+            <section class="todo">
+                <h2>To-Do</h2>
+
+                <div class="todo-list">
+
+                    <label>
+                        <input type="checkbox">
+                        Example task
+                    </label>
+
+                </div>
+            </section>
+
+        </div>
+
+        <aside class="timeline">
+
+            <h2>Today</h2>
+
+            <div id="timeline-list"></div>
+
+        </aside>
+
+    </main>
 
     <script src="./header.js"></script>
     <script src="./dashboard.js"></script>
+
 </body>
 
 </html>
