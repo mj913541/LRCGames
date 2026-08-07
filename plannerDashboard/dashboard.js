@@ -630,3 +630,9 @@ function saveDialog(type) {
   if(type==="lastTime") dayData.lastTime.push({id:uid(),name:title,greenDays:Number($("greenDays").value),yellowDays:Number($("yellowDays").value),lastDone:null});
   renderAll(); queueSave();
 }
+
+  fetch("header.html")
+    .then(response => response.text())
+    .then(data => {
+      document.getElementById("site-header").innerHTML = data;
+    });
