@@ -1,0 +1,693 @@
+/* =====================================================
+   BASE
+===================================================== */
+
+:root {
+    --sage-bg: #b9caaa;
+    --paper: #fffdf6;
+    --paper-soft: #fffef9;
+    --paper-muted: #f4f6f1;
+
+    --ink: #3f5142;
+    --muted: #7b8b7c;
+
+    --sage: #91aa8b;
+    --sage-dark: #5f7563;
+    --sage-soft: #e8efe5;
+
+    --line: #dce5d8;
+
+    --danger: #a85c5c;
+    --danger-soft: #f6e8e8;
+
+    --shadow: 0 6px 20px rgba(57, 74, 59, 0.12);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    background-color: var(--sage-bg);
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background-color: var(--sage-bg);
+    color: var(--ink);
+}
+
+button,
+input,
+textarea,
+select {
+    font: inherit;
+}
+
+button {
+    touch-action: manipulation;
+}
+
+
+/* =====================================================
+   PAGE
+===================================================== */
+
+.tasks-page {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 32px 38px 50px;
+    background-color: var(--paper);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+}
+
+.tasks-page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    padding-bottom: 20px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--line);
+}
+
+.tasks-page-header h1 {
+    margin: 3px 0 5px;
+    font-size: 30px;
+}
+
+.tasks-eyebrow {
+    margin: 0 0 4px;
+    color: var(--sage-dark);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+}
+
+.tasks-subtitle,
+.helper-text {
+    margin: 0;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.tasks-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+/* =====================================================
+   SAVE STATUS
+===================================================== */
+
+.task-save-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 14px;
+    border-radius: 10px;
+    background-color: var(--sage-soft);
+    color: var(--sage-dark);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
+.primary-button,
+.secondary-button,
+.danger-button {
+    min-height: 42px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.primary-button {
+    border: none;
+    background-color: var(--sage);
+    color: white;
+}
+
+.primary-button:hover {
+    background-color: #7f9b79;
+}
+
+.secondary-button {
+    border: 1px solid var(--line);
+    background-color: white;
+    color: var(--sage-dark);
+}
+
+.secondary-button:hover {
+    background-color: var(--sage-soft);
+}
+
+.danger-button {
+    border: none;
+    background-color: var(--danger-soft);
+    color: var(--danger);
+}
+
+.danger-button:hover {
+    background-color: #efd8d8;
+}
+
+
+/* =====================================================
+   SUMMARY CARDS
+===================================================== */
+
+.task-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.task-summary-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    min-height: 105px;
+    padding: 17px;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background-color: var(--paper-soft);
+}
+
+.task-summary-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    flex: 0 0 46px;
+    border-radius: 50%;
+    background-color: var(--sage-soft);
+    font-size: 21px;
+}
+
+.task-summary-card p {
+    margin: 0;
+    color: var(--sage-dark);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.task-summary-card strong {
+    display: block;
+    margin-top: 5px;
+    font-size: 24px;
+}
+
+
+/* =====================================================
+   FILTER PANEL
+===================================================== */
+
+.task-filter-panel {
+    padding: 18px;
+    margin-bottom: 18px;
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    background-color: var(--paper-soft);
+}
+
+.task-filter-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 14px;
+    margin-bottom: 15px;
+}
+
+.task-filter-heading h2 {
+    margin: 2px 0 0;
+    font-size: 19px;
+}
+
+.task-filter-row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.task-filter-row label {
+    display: grid;
+    gap: 6px;
+    color: var(--ink);
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.task-filter-row select {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background-color: white;
+    color: var(--ink);
+    outline: none;
+}
+
+.task-filter-row select:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(145, 170, 139, 0.15);
+}
+
+
+/* =====================================================
+   TASK LIST
+===================================================== */
+
+.task-library-section {
+    margin-top: 18px;
+}
+
+.task-list {
+    display: grid;
+    gap: 10px;
+}
+
+.task-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 15px 16px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background-color: var(--paper-soft);
+    transition:
+        border-color 0.18s ease,
+        transform 0.18s ease;
+}
+
+.task-card:hover {
+    border-color: var(--sage);
+    transform: translateY(-1px);
+}
+
+.task-card.is-inactive {
+    opacity: 0.55;
+}
+
+.task-card-main {
+    min-width: 0;
+}
+
+.task-card-title-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.task-card-title {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.task-category-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background-color: var(--sage-soft);
+    color: var(--sage-dark);
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.task-card-schedule {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.schedule-chip {
+    display: inline-flex;
+    align-items: center;
+    min-height: 25px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background-color: var(--paper-muted);
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.task-card-notes {
+    margin-top: 8px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.task-card-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.task-edit-button {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background-color: white;
+    color: var(--sage-dark);
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.task-edit-button:hover {
+    background-color: var(--sage-soft);
+}
+
+.empty-message {
+    margin: 0;
+    padding: 22px;
+    border: 1px dashed var(--line);
+    border-radius: 13px;
+    color: var(--muted);
+    text-align: center;
+    font-size: 13px;
+}
+
+
+/* =====================================================
+   DIALOG
+===================================================== */
+
+.task-dialog {
+    width: min(760px, calc(100% - 28px));
+    max-height: 94vh;
+    padding: 0;
+    border: none;
+    border-radius: 20px;
+    background: transparent;
+}
+
+.task-dialog::backdrop {
+    background-color: rgba(47, 62, 51, 0.42);
+    backdrop-filter: blur(3px);
+}
+
+.task-dialog-card {
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 22px;
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    background-color: var(--paper);
+    box-shadow: 0 25px 60px rgba(57, 74, 59, 0.22);
+}
+
+.dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 18px;
+}
+
+.dialog-header h2 {
+    margin: 2px 0 0;
+}
+
+.icon-button {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+    border: none;
+    border-radius: 50%;
+    background-color: var(--sage-soft);
+    color: var(--sage-dark);
+    cursor: pointer;
+}
+
+
+/* =====================================================
+   FORM
+===================================================== */
+
+.task-form-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 12px;
+}
+
+.task-form-grid label,
+.task-notes-field {
+    display: grid;
+    gap: 6px;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.task-form-grid input,
+.task-notes-field textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background-color: white;
+    color: var(--ink);
+    outline: none;
+}
+
+.task-form-grid input:focus,
+.task-notes-field textarea:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(145, 170, 139, 0.15);
+}
+
+.task-notes-field {
+    margin-top: 16px;
+}
+
+.task-notes-field textarea {
+    resize: vertical;
+}
+
+
+/* =====================================================
+   WEEKDAY / MONTH GROUPS
+===================================================== */
+
+.task-option-group {
+    margin: 18px 0 0;
+    padding: 15px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+}
+
+.task-option-group legend {
+    padding: 0 6px;
+    font-weight: 700;
+}
+
+.task-option-group .helper-text {
+    margin-bottom: 12px;
+}
+
+.weekday-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.month-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+}
+
+.weekday-checkbox-grid label,
+.month-checkbox-grid label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 42px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    background-color: var(--paper-muted);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.weekday-checkbox-grid input,
+.month-checkbox-grid input {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+
+
+/* =====================================================
+   ACTIVE TOGGLE
+===================================================== */
+
+.active-task-toggle {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    margin-top: 18px;
+    padding: 13px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background-color: var(--sage-soft);
+    cursor: pointer;
+}
+
+.active-task-toggle input {
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+}
+
+.active-task-toggle strong {
+    display: block;
+    font-size: 13px;
+}
+
+.active-task-toggle span {
+    display: block;
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.35;
+}
+
+
+/* =====================================================
+   DIALOG ACTIONS
+===================================================== */
+
+.task-dialog-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.dialog-save-actions {
+    display: flex;
+    gap: 9px;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 900px) {
+    .task-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .task-filter-row {
+        grid-template-columns: 1fr;
+    }
+
+    .weekday-checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .month-checkbox-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+
+/* =====================================================
+   PHONE
+===================================================== */
+
+@media (max-width: 600px) {
+    .tasks-page {
+        margin: 10px;
+        padding: 20px 14px 35px;
+        border-radius: 14px;
+    }
+
+    .tasks-page-header {
+        flex-direction: column;
+    }
+
+    .tasks-header-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .task-summary-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+    }
+
+    .task-summary-card {
+        min-height: 92px;
+        padding: 12px;
+        gap: 9px;
+    }
+
+    .task-summary-icon {
+        width: 38px;
+        height: 38px;
+        flex-basis: 38px;
+        font-size: 18px;
+    }
+
+    .task-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .weekday-checkbox-grid,
+    .month-checkbox-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .task-card {
+        grid-template-columns: 1fr;
+    }
+
+    .task-card-actions {
+        justify-content: flex-end;
+    }
+
+    .task-dialog-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+
+    .dialog-save-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .danger-button {
+        width: 100%;
+    }
+}
