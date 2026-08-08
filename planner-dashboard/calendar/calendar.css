@@ -284,3 +284,82 @@ body {
 
     color: white;
 }
+
+/* ---------------------------------
+   Monthly planning spread
+--------------------------------- */
+
+.monthly-spread {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(220px, 1fr);
+
+    gap: 18px;
+}
+
+
+/* Calendar */
+
+.month-calendar {
+    min-height: 480px;
+}
+
+
+/* Important dates */
+
+.important-dates {
+    background-color: #f7f8f2;
+
+    border: 1px solid #dce5d8;
+
+    border-radius: 14px;
+
+    padding: 18px;
+}
+
+
+/* Bottom task sections */
+
+.month-tasks,
+.next-month-tasks {
+    min-height: 180px;
+
+    background-color: #fffef9;
+
+    border: 1px solid #dce5d8;
+
+    border-radius: 14px;
+
+    padding: 18px;
+}
+
+
+.monthly-spread h2 {
+    margin-top: 0;
+
+    color: #4f6252;
+
+    font-size: 18px;
+}
+
+
+.next-month-name {
+    margin-top: -6px;
+
+    color: #829183;
+
+    font-size: 13px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+}
+
+
+.empty-message {
+    color: #9aa59a;
+
+    font-size: 14px;
+}
