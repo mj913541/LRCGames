@@ -757,3 +757,54 @@ body {
     height: 350px;
     touch-action: none;
 }
+
+.daily-notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.drawing-tools {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.drawing-tools button {
+    border: none;
+    background-color: #e8efe5;
+    color: #3f5142;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.drawing-tools button:hover {
+    background-color: #d7e3d2;
+}
+
+.drawing-tools button.active {
+    background-color: #91aa8b;
+    color: white;
+}
+
+.daily-note-paper {
+    min-height: 350px;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: #fffef9;
+    background-image:
+        linear-gradient(#e4eadf 1px, transparent 1px),
+        linear-gradient(90deg, #e4eadf 1px, transparent 1px);
+    background-size: 22px 22px;
+}
+
+#daily-notes-canvas {
+    display: block;
+    width: 100%;
+    height: 350px;
+    touch-action: none;
+}

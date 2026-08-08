@@ -261,3 +261,11 @@ if (dayTimeline) {
 
     renderDay();
 }
+
+makeDrawingCanvas({
+    canvasId: "daily-notes-canvas",
+    penId: "daily-pen",
+    eraserId: "daily-eraser",
+    undoId: "daily-undo",
+    clearId: "daily-clear"
+});

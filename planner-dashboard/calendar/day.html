@@ -102,10 +102,22 @@
                     </section>
 
 
-                    <section class="daily-notes">
-                        <h2>Notes</h2>
-                        <div class="daily-note-paper"><canvas id="daily-notes-canvas"></canvas></div>
-                    </section>
+<section class="daily-notes">
+    <div class="daily-notes-header">
+        <h2>Notes</h2>
+
+        <div class="drawing-tools">
+            <button type="button" id="daily-pen">✏️ Pen</button>
+            <button type="button" id="daily-eraser">◯ Eraser</button>
+            <button type="button" id="daily-undo">↶ Undo</button>
+            <button type="button" id="daily-clear">Clear</button>
+        </div>
+    </div>
+
+    <div class="daily-note-paper">
+        <canvas id="daily-notes-canvas"></canvas>
+    </div>
+</section>
                 </div>
 
 
@@ -155,9 +167,9 @@
         window.headerPath = "../header.html";
     </script>
 
-    <script src="../header.js"></script>
-
-    <script src="./calendar.js"></script>
+<script src="../header.js"></script>
+<script src="../drawing.js"></script>
+<script src="./calendar.js"></script>
 
 </body>
 
