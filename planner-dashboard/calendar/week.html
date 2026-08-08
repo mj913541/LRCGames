@@ -41,53 +41,72 @@
                 </div>
 
             </div>
+<div class="weekly-drawing-tools">
+    <button type="button" id="week-pen">✏️ Pen</button>
+    <button type="button" id="week-eraser">◯ Eraser</button>
+    <button type="button" id="week-undo">↶ Undo</button>
+    <button type="button" id="week-clear">Clear</button>
+</div>
 
+<div class="weekly-spread" id="weekly-spread">
 
-            <div class="weekly-spread" id="weekly-spread">
+    <section class="week-day" data-day="monday">
+        <h2>Monday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="monday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day" data-day="monday">
-                    <h2>Monday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
+    <section class="week-day" data-day="tuesday">
+        <h2>Tuesday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="tuesday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day" data-day="tuesday">
-                    <h2>Tuesday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
+    <section class="week-day" data-day="wednesday">
+        <h2>Wednesday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="wednesday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day" data-day="wednesday">
-                    <h2>Wednesday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
+    <section class="week-day" data-day="thursday">
+        <h2>Thursday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="thursday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day" data-day="thursday">
-                    <h2>Thursday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
+    <section class="week-day" data-day="friday">
+        <h2>Friday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="friday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day" data-day="friday">
-                    <h2>Friday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
+    <section class="week-day weekend" data-day="saturday">
+        <h2>Saturday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="saturday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day weekend" data-day="saturday">
-                    <h2>Saturday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
+    <section class="week-day weekend" data-day="sunday">
+        <h2>Sunday</h2>
+        <p class="day-date"></p>
+        <div class="day-writing-area">
+            <canvas id="sunday-notes" class="week-notes-canvas"></canvas>
+        </div>
+    </section>
 
-                <section class="week-day weekend" data-day="sunday">
-                    <h2>Sunday</h2>
-                    <p class="day-date"></p>
-                    <div class="day-writing-area"></div>
-                </section>
-
-            </div>
+</div>
 
         </section>
 
@@ -116,8 +135,9 @@
 
 
     <script>window.headerPath = "../header.html";</script>
-    <script src="../header.js"></script>
-    <script src="./calendar.js"></script>
+<script src="../header.js"></script>
+<script src="../drawing.js"></script>
+<script src="./calendar.js"></script>
 
 </body>
 

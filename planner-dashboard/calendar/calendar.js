@@ -269,3 +269,4 @@ makeDrawingCanvas({
     undoId: "daily-undo",
     clearId: "daily-clear"
 });
+

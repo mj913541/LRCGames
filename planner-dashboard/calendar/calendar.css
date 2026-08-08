@@ -808,3 +808,36 @@ body {
     height: 350px;
     touch-action: none;
 }
+
+.week-notes-canvas {
+    display: block;
+    width: 100%;
+    height: 150px;
+    touch-action: none;
+}
+
+.weekly-drawing-tools {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+
+.weekly-drawing-tools button {
+    border: none;
+    background-color: #e8efe5;
+    color: #3f5142;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.weekly-drawing-tools button:hover {
+    background-color: #d7e3d2;
+}
+
+.weekly-drawing-tools button.active {
+    background-color: #91aa8b;
+    color: white;
+}
