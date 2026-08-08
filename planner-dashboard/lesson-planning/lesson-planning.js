@@ -592,7 +592,7 @@ function lessonPlannerDoc() {
         db,
         "plannerDashboardUsers",
         PLANNER_PROFILE_ID,
-        "lessonPlanning",
+        "lesson-planning",
         "progress"
     );
 }
@@ -610,7 +610,7 @@ function legacyLessonPlannerDoc() {
         db,
         "plannerDashboardUsers",
         currentUser.uid,
-        "lessonPlanning",
+        "lesson-planning",
         "progress"
     );
 }
@@ -738,7 +738,7 @@ async function loadPlannerData() {
                                 stateCache,
 
                             migratedFrom:
-                                `plannerDashboardUsers/${currentUser.uid}/lessonPlanning/progress`,
+                                `plannerDashboardUsers/${currentUser.uid}/lesson-planning/progress`,
 
                             updatedAt:
                                 serverTimestamp(),
