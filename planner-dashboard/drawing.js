@@ -6,7 +6,6 @@ function makeDrawingCanvas(options) {
     }
 
     const ctx = canvas.getContext("2d");
-
     const penButton = document.getElementById(options.penId);
     const eraserButton = document.getElementById(options.eraserId);
     const undoButton = document.getElementById(options.undoId);
@@ -25,17 +24,17 @@ function makeDrawingCanvas(options) {
         drawingHistory.push(canvas.toDataURL());
     }
 
-function restoreDrawingState(imageData) {
-    const image = new Image();
+    function restoreDrawingState(imageData) {
+        const image = new Image();
 
-    image.onload = () => {
-        ctx.globalCompositeOperation = "source-over";
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-    };
+        image.onload = () => {
+            ctx.globalCompositeOperation = "source-over";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        };
 
-    image.src = imageData;
-}
+        image.src = imageData;
+    }
 
     function selectTool(tool) {
         currentTool = tool;
@@ -119,4 +118,21 @@ function restoreDrawingState(imageData) {
         saveDrawingState();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     });
+
+    return {
+        canvas,
+        selectTool,
+        undo() {
+            if (drawingHistory.length === 0) {
+                return;
+            }
+
+            const previousDrawing = drawingHistory.pop();
+            restoreDrawingState(previousDrawing);
+        },
+        clear() {
+            saveDrawingState();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+    };
 }
