@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Daily Planner</title>
+
+    <link
+        rel="stylesheet"
+        href="../header.css"
+    >
+
+    <link
+        rel="stylesheet"
+        href="./calendar.css"
+    >
+
+</head>
+
+
+<body>
+
+    <div id="site-header"></div>
+
+
+    <main class="planner-shell">
+
+        <section
+            class="planner-page daily-page"
+        >
+
+            <div class="day-header">
+
+                <div>
+
+                    <p class="planner-eyebrow">
+                        Daily Planner
+                    </p>
+
+                    <h1 id="day-title">
+                        Today
+                    </h1>
+
+                </div>
+
+
+                <div class="day-controls">
+
+                    <button
+                        type="button"
+                        id="previous-day"
+                    >
+                        ←
+                    </button>
+
+                    <button
+                        type="button"
+                        id="today-day"
+                    >
+                        Today
+                    </button>
+
+                    <button
+                        type="button"
+                        id="next-day"
+                    >
+                        →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="daily-spread">
+
+
+                <section class="daily-timeline-panel">
+
+                    <h2>Schedule</h2>
+
+                    <div
+                        id="day-timeline"
+                        class="day-timeline"
+                    ></div>
+
+                </section>
+
+
+                <div class="daily-right">
+
+
+                    <section class="daily-priorities">
+
+                        <h2>Priorities</h2>
+
+                        <label>
+                            <input type="checkbox">
+                            Priority
+                        </label>
+
+                        <label>
+                            <input type="checkbox">
+                            Priority
+                        </label>
+
+                        <label>
+                            <input type="checkbox">
+                            Priority
+                        </label>
+
+                    </section>
+
+
+                    <section class="daily-notes">
+
+                        <h2>Notes</h2>
+
+                        <div class="daily-note-paper"></div>
+
+                    </section>
+
+
+                </div>
+
+
+            </div>
+
+        </section>
+
+
+        <nav class="planner-tabs">
+
+            <a href="./calendar.html">
+                Year
+            </a>
+
+            <a href="./august.html">
+                Month
+            </a>
+
+            <a href="./week.html">
+                Week
+            </a>
+
+            <a
+                href="./day.html"
+                class="active-tab"
+            >
+                Day
+            </a>
+
+        </nav>
+
+    </main>
+
+
+    <script>
+        window.headerPath =
+            "../header.html";
+    </script>
+
+    <script src="../header.js"></script>
+
+    <script src="./calendar.js"></script>
+
+</body>
+
+</html>

@@ -470,3 +470,195 @@ body {
 
     cursor: default;
 }
+
+/* ---------------------------------
+   Daily planner header
+--------------------------------- */
+
+.day-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 20px;
+
+    padding-bottom: 18px;
+
+    border-bottom:
+        1px solid
+        #dce5d8;
+}
+
+
+.day-controls {
+    display: flex;
+    gap: 8px;
+}
+
+
+.day-controls button {
+    border: none;
+
+    background-color:
+        #e4ecdf;
+
+    color:
+        #3f5142;
+
+    padding:
+        9px
+        13px;
+
+    border-radius:
+        10px;
+
+    font-family:
+        inherit;
+
+    cursor:
+        pointer;
+}
+
+
+/* ---------------------------------
+   Daily spread
+--------------------------------- */
+
+.daily-spread {
+    display: grid;
+
+    grid-template-columns:
+        minmax(0, 1.2fr)
+        minmax(250px, 0.8fr);
+
+    gap: 18px;
+
+    margin-top: 22px;
+}
+
+
+/* ---------------------------------
+   Timeline
+--------------------------------- */
+
+.daily-timeline-panel {
+    min-width: 0;
+}
+
+
+.day-timeline {
+    height: 650px;
+
+    overflow-y: auto;
+
+    border:
+        1px solid
+        #dce5d8;
+
+    border-radius:
+        12px;
+
+    background-color:
+        #fffef9;
+}
+
+
+.day-time-row {
+    display: grid;
+
+    grid-template-columns:
+        82px
+        1fr;
+
+    min-height:
+        22px;
+
+    border-bottom:
+        1px solid
+        #edf1eb;
+}
+
+
+.day-hour-row {
+    border-top:
+        2px solid
+        #9caf98;
+}
+
+
+.day-time {
+    padding:
+        3px
+        6px;
+
+    color:
+        #728474;
+
+    font-size:
+        11px;
+}
+
+
+.day-slot {
+    border-left:
+        1px solid
+        #edf1eb;
+}
+
+
+/* ---------------------------------
+   Right side
+--------------------------------- */
+
+.daily-right {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+.daily-priorities,
+.daily-notes {
+    padding: 18px;
+
+    border:
+        1px solid
+        #dce5d8;
+
+    border-radius:
+        12px;
+
+    background-color:
+        #fffef9;
+}
+
+
+.daily-priorities {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+}
+
+
+.daily-note-paper {
+    min-height: 350px;
+
+    background-image:
+        linear-gradient(
+            #e4eadf 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            #e4eadf 1px,
+            transparent 1px
+        );
+
+    background-size:
+        22px 22px;
+}
