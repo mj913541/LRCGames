@@ -13,6 +13,9 @@
     --sage-soft: #e8efe5;
     --line: #dce5d8;
     --shadow: 0 6px 20px rgba(57, 74, 59, 0.12);
+    --lavender: #eee9f6;
+    --peach: #f8ece3;
+    --blue-soft: #e8f2f4;
 }
 
 * {
@@ -92,21 +95,21 @@ textarea {
 
 
 /* =====================================================
-   SUMMARY CARDS
+   SUMMARY
 ===================================================== */
 
 .workout-summary {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 14px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
 }
 
 .summary-card {
     display: flex;
     align-items: center;
     gap: 14px;
-    min-height: 120px;
+    min-height: 115px;
     padding: 18px;
     border: 1px solid var(--line);
     border-radius: 15px;
@@ -130,13 +133,12 @@ textarea {
     font-size: 12px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.7px;
 }
 
 .summary-card strong {
     display: block;
     margin: 4px 0 2px;
-    font-size: 26px;
+    font-size: 25px;
 }
 
 .summary-card div > span {
@@ -146,15 +148,8 @@ textarea {
 
 
 /* =====================================================
-   MAIN GRID
+   CARDS
 ===================================================== */
-
-.workout-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 18px;
-    margin-bottom: 18px;
-}
 
 .workout-card {
     padding: 20px;
@@ -173,16 +168,368 @@ textarea {
 
 .card-header h2 {
     margin: 2px 0 0;
-    color: var(--ink);
     font-size: 18px;
 }
 
 
 /* =====================================================
-   BUTTONS
+   ROLLING LIFTING
 ===================================================== */
 
-.planner-button,
+.lifting-program-card {
+    margin-bottom: 18px;
+}
+
+.lifting-program-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.lifting-program-top h2 {
+    margin: 2px 0 4px;
+    font-size: 24px;
+}
+
+.lifting-program-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.secondary-button {
+    min-height: 40px;
+    padding: 8px 13px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background-color: white;
+    color: var(--sage-dark);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.secondary-button.is-active {
+    background-color: var(--sage);
+    color: white;
+    border-color: var(--sage);
+}
+
+.rotation-position {
+    min-width: 54px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background-color: var(--sage-soft);
+    color: var(--sage-dark);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   ROTATION STRIP
+===================================================== */
+
+.rotation-strip {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 6px;
+    margin-bottom: 18px;
+}
+
+.rotation-strip span {
+    padding: 8px 4px;
+    border-radius: 9px;
+    background-color: #f1f4ef;
+    color: var(--muted);
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.rotation-strip span.is-current {
+    background-color: var(--sage);
+    color: white;
+}
+
+
+/* =====================================================
+   WORKOUT PROGRESS
+===================================================== */
+
+.lifting-progress-wrap {
+    margin-bottom: 18px;
+}
+
+.lifting-progress-label {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 7px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.lifting-progress-track {
+    height: 10px;
+    overflow: hidden;
+    border-radius: 10px;
+    background-color: #edf1eb;
+}
+
+.lifting-progress-bar {
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background-color: var(--sage);
+    transition: width 0.2s ease;
+}
+
+
+/* =====================================================
+   LIFTING EXERCISE LIST
+===================================================== */
+
+.rolling-lifting-list {
+    display: grid;
+    gap: 12px;
+}
+
+.lifting-exercise {
+    padding: 15px;
+    border: 1px solid var(--line);
+    border-radius: 13px;
+    background-color: white;
+}
+
+.lifting-exercise.is-complete {
+    background-color: #f3f8f2;
+}
+
+.lifting-exercise.is-hidden {
+    display: none;
+}
+
+.lifting-exercise-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.exercise-title {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.exercise-range {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.minimum-badge {
+    display: inline-block;
+    margin-left: 7px;
+    padding: 3px 6px;
+    border-radius: 8px;
+    background-color: var(--sage-soft);
+    color: var(--sage-dark);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.previous-performance {
+    min-width: 135px;
+    color: var(--muted);
+    text-align: right;
+    font-size: 11px;
+}
+
+
+/* =====================================================
+   SET INPUTS
+===================================================== */
+
+.exercise-input-grid {
+    display: grid;
+    grid-template-columns: 90px repeat(3, minmax(70px, 1fr));
+    gap: 8px;
+    align-items: end;
+}
+
+.exercise-input-grid label {
+    display: grid;
+    gap: 5px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.exercise-input-grid input {
+    width: 100%;
+    min-height: 40px;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background-color: var(--paper-soft);
+    color: var(--ink);
+    outline: none;
+}
+
+.exercise-input-grid input:focus {
+    border-color: var(--sage);
+    box-shadow: 0 0 0 3px rgba(145, 170, 139, 0.15);
+}
+
+
+/* =====================================================
+   EFFORT
+===================================================== */
+
+.effort-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+.effort-button {
+    min-height: 34px;
+    padding: 6px 9px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background-color: #f8faf7;
+    color: var(--ink);
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.effort-button.is-selected {
+    background-color: var(--sage);
+    color: white;
+    border-color: var(--sage);
+}
+
+
+/* =====================================================
+   PROGRESSION
+===================================================== */
+
+.progression-note {
+    margin-top: 10px;
+    padding: 9px 10px;
+    border-radius: 9px;
+    background-color: var(--blue-soft);
+    color: var(--sage-dark);
+    font-size: 12px;
+}
+
+.progression-note.increase {
+    background-color: #edf7eb;
+}
+
+.progression-note.hold {
+    background-color: var(--lavender);
+}
+
+.progression-note.reduce {
+    background-color: var(--peach);
+}
+
+
+/* =====================================================
+   EXERCISE COMPLETE
+===================================================== */
+
+.exercise-complete-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+}
+
+.exercise-complete-button {
+    min-height: 36px;
+    padding: 7px 11px;
+    border: none;
+    border-radius: 9px;
+    background-color: var(--sage-soft);
+    color: var(--sage-dark);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.exercise-complete-button.is-done {
+    background-color: var(--sage);
+    color: white;
+}
+
+
+/* =====================================================
+   LIFTING FOOTER
+===================================================== */
+
+.lifting-workout-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--line);
+}
+
+.session-volume span {
+    display: block;
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.session-volume strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 20px;
+}
+
+.finish-workout-button {
+    min-height: 46px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 11px;
+    background-color: var(--sage);
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.finish-workout-button:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+
+/* =====================================================
+   CARDIO / DAILY / STRETCH / NOTES
+===================================================== */
+
+.workout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.quick-cardio {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 7px;
+    margin-bottom: 14px;
+}
+
 .quick-cardio button,
 .stretch-options button {
     min-height: 42px;
@@ -190,90 +537,20 @@ textarea {
     border-radius: 10px;
     background-color: var(--sage-soft);
     color: var(--sage-dark);
-    padding: 8px 13px;
     font-weight: 600;
     cursor: pointer;
-    touch-action: manipulation;
 }
 
-.planner-button:hover,
 .quick-cardio button:hover,
 .stretch-options button:hover {
     background-color: #d7e3d2;
 }
 
-.planner-button {
-    background-color: var(--sage);
-    color: white;
-}
-
-
-/* =====================================================
-   LIFTING
-===================================================== */
-
-.workout-list {
-    display: grid;
-    gap: 9px;
-}
-
-.workout-entry {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 10px;
-    align-items: center;
-    padding: 12px;
-    border-radius: 11px;
-    background-color: #f5f8f3;
-}
-
-.workout-entry-title {
-    font-weight: 700;
-}
-
-.workout-entry-meta {
-    margin-top: 3px;
-    color: var(--muted);
-    font-size: 12px;
-}
-
-.delete-workout {
-    width: 34px;
-    height: 34px;
-    border: none;
-    border-radius: 9px;
-    background-color: white;
-    color: var(--muted);
-    cursor: pointer;
-}
-
-.empty-message {
-    margin: 0;
-    padding: 14px;
-    border: 1px dashed var(--line);
-    border-radius: 10px;
-    color: var(--muted);
-    text-align: center;
-    font-size: 13px;
-}
-
-
-/* =====================================================
-   CARDIO
-===================================================== */
-
-.quick-cardio {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 7px;
-    margin-bottom: 16px;
-}
-
 .cardio-total {
     margin: 0;
-    padding: 14px;
-    border-radius: 11px;
-    background-color: #f4f7f2;
+    padding: 13px;
+    border-radius: 10px;
+    background-color: #f5f8f3;
     color: var(--muted);
 }
 
@@ -281,11 +558,6 @@ textarea {
     color: var(--ink);
     font-size: 20px;
 }
-
-
-/* =====================================================
-   DAILY EXERCISES
-===================================================== */
 
 .daily-exercises {
     display: grid;
@@ -297,9 +569,9 @@ textarea {
     grid-template-columns: auto 1fr auto;
     align-items: center;
     gap: 10px;
-    padding: 11px 12px;
+    padding: 11px;
     border: 1px solid var(--line);
-    border-radius: 11px;
+    border-radius: 10px;
     background-color: #f8faf7;
     cursor: pointer;
 }
@@ -320,19 +592,14 @@ textarea {
 
 .exercise-reps {
     color: var(--muted);
-    font-size: 12px;
+    font-size: 11px;
 }
-
-
-/* =====================================================
-   STRETCHING
-===================================================== */
 
 .stretch-options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
-    margin-bottom: 14px;
+    margin-bottom: 13px;
 }
 
 .stretch-options button.is-active {
@@ -340,24 +607,15 @@ textarea {
     color: white;
 }
 
-
-/* =====================================================
-   NOTES
-===================================================== */
-
-.workout-notes {
-    margin-bottom: 18px;
-}
-
 #workout-notes {
     width: 100%;
     min-height: 150px;
-    resize: vertical;
-    padding: 14px;
+    padding: 13px;
     border: 1px solid var(--line);
-    border-radius: 11px;
+    border-radius: 10px;
     background-color: white;
     color: var(--ink);
+    resize: vertical;
     outline: none;
 }
 
@@ -368,7 +626,129 @@ textarea {
 
 
 /* =====================================================
-   WEEK AT A GLANCE
+   DR CALENDAR
+===================================================== */
+
+.dr-calendar-card {
+    margin-bottom: 18px;
+}
+
+.dr-calendar-header {
+    align-items: flex-start;
+}
+
+.dr-progress {
+    min-width: 115px;
+    padding: 11px;
+    border-radius: 11px;
+    background-color: var(--sage-soft);
+    text-align: center;
+}
+
+.dr-progress span {
+    display: block;
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+}
+
+.dr-progress strong {
+    display: block;
+    margin-top: 3px;
+    font-size: 20px;
+}
+
+.dr-week-labels {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 7px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.dr-week-labels span {
+    text-align: center;
+}
+
+.dr-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.dr-day {
+    min-height: 130px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background-color: #f7faf6;
+}
+
+.dr-day.is-done {
+    background-color: #edf6ed;
+    border-color: var(--sage);
+}
+
+.dr-day-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dr-day-number {
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.dr-check {
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    background-color: white;
+    color: transparent;
+    cursor: pointer;
+}
+
+.dr-day.is-done .dr-check {
+    background-color: var(--sage);
+    color: white;
+}
+
+.dr-workout-link {
+    display: grid;
+    gap: 3px;
+    margin-top: 17px;
+    color: var(--ink);
+    text-decoration: none;
+    text-align: center;
+}
+
+.dr-workout-link strong {
+    font-size: 13px;
+}
+
+.dr-workout-link span {
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.dr-rest {
+    display: grid;
+    place-items: center;
+    min-height: 100px;
+    color: var(--muted);
+    font-style: italic;
+}
+
+
+/* =====================================================
+   WEEK GLANCE
 ===================================================== */
 
 .week-glance {
@@ -415,73 +795,6 @@ textarea {
 
 
 /* =====================================================
-   DIALOG
-===================================================== */
-
-dialog {
-    width: min(420px, calc(100% - 30px));
-    padding: 0;
-    border: none;
-    border-radius: 18px;
-    background-color: var(--paper);
-    box-shadow: 0 25px 60px rgba(57, 74, 59, 0.25);
-}
-
-dialog::backdrop {
-    background-color: rgba(47, 62, 51, 0.4);
-}
-
-#lifting-form {
-    display: grid;
-    gap: 14px;
-    padding: 22px;
-}
-
-.dialog-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.dialog-header h2 {
-    margin: 0;
-}
-
-.dialog-header button {
-    width: 36px;
-    height: 36px;
-    border: none;
-    border-radius: 9px;
-    background-color: var(--sage-soft);
-    color: var(--sage-dark);
-    cursor: pointer;
-}
-
-#lifting-form label {
-    display: grid;
-    gap: 6px;
-    color: var(--ink);
-    font-size: 13px;
-    font-weight: 600;
-}
-
-#lifting-form input {
-    width: 100%;
-    padding: 11px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background-color: white;
-    color: var(--ink);
-    outline: none;
-}
-
-#lifting-form input:focus {
-    border-color: var(--sage);
-    box-shadow: 0 0 0 3px rgba(145, 170, 139, 0.15);
-}
-
-
-/* =====================================================
    TABLET
 ===================================================== */
 
@@ -492,6 +805,22 @@ dialog::backdrop {
 
     .workout-grid {
         grid-template-columns: 1fr;
+    }
+
+    .rotation-strip {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .exercise-input-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dr-calendar {
+        grid-template-columns: repeat(4, minmax(120px, 1fr));
+    }
+
+    .dr-week-labels {
+        display: none;
     }
 
     .week-glance {
@@ -512,7 +841,9 @@ dialog::backdrop {
         border-radius: 14px;
     }
 
-    .workout-page-header {
+    .workout-page-header,
+    .lifting-program-top,
+    .lifting-workout-footer {
         flex-direction: column;
     }
 
@@ -534,8 +865,20 @@ dialog::backdrop {
         font-size: 18px;
     }
 
-    .summary-card strong {
-        font-size: 21px;
+    .rotation-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .exercise-input-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .previous-performance {
+        text-align: left;
+    }
+
+    .lifting-exercise-heading {
+        flex-direction: column;
     }
 
     .quick-cardio {
@@ -544,5 +887,13 @@ dialog::backdrop {
 
     .stretch-options {
         grid-template-columns: 1fr;
+    }
+
+    .dr-calendar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .finish-workout-button {
+        width: 100%;
     }
 }
