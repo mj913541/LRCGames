@@ -39,3 +39,60 @@ for (let hour = startHour; hour <= endHour; hour++) {
         timelineList.appendChild(row);
     }
 }
+
+
+// -------------------------
+// Notebook Drawing
+// -------------------------
+
+const canvas = document.getElementById("notebook-canvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+}
+
+resizeCanvas();
+
+let isDrawing = false;
+
+canvas.addEventListener("pointerdown", (event) => {
+
+    isDrawing = true;
+
+    ctx.beginPath();
+    ctx.moveTo(event.offsetX, event.offsetY);
+
+});
+
+canvas.addEventListener("pointermove", (event) => {
+
+    if (!isDrawing) {
+        return;
+    }
+
+    ctx.lineTo(event.offsetX, event.offsetY);
+
+    ctx.strokeStyle = "#3f5142";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.stroke();
+
+});
+
+canvas.addEventListener("pointerup", () => {
+
+    isDrawing = false;
+
+});
+
+canvas.addEventListener("pointerleave", () => {
+
+    isDrawing = false;
+
+});

@@ -41,24 +41,12 @@ body {
 
 /* Notebook */
 
-.notebook textarea {
+.notebook-paper {
     width: 100%;
-    min-height: 300px;
-
-    box-sizing: border-box;
-
-    border: none;
-    outline: none;
-
-    resize: vertical;
-
-    font-family: inherit;
-    font-size: 16px;
-    line-height: 24px;
-
-    padding: 15px;
+    height: 350px;
 
     border-radius: 10px;
+    overflow: hidden;
 
     background-color: #fffef9;
 
@@ -67,6 +55,15 @@ body {
         linear-gradient(90deg, #dce5d8 1px, transparent 1px);
 
     background-size: 24px 24px;
+}
+
+#notebook-canvas {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    touch-action: none;
 }
 
 
