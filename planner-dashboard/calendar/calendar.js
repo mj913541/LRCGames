@@ -270,3 +270,49 @@ makeDrawingCanvas({
     clearId: "daily-clear"
 });
 
+const weeklyCanvases = [
+    "monday-notes",
+    "tuesday-notes",
+    "wednesday-notes",
+    "thursday-notes",
+    "friday-notes",
+    "saturday-notes",
+    "sunday-notes"
+];
+
+let activeWeeklyDrawing = null;
+
+weeklyCanvases.forEach(canvasId => {
+    const drawing = makeDrawingCanvas({
+        canvasId: canvasId,
+        penId: "week-pen",
+        eraserId: "week-eraser",
+        undoId: "week-undo",
+        clearId: "week-clear"
+    });
+
+    if (!drawing) {
+        return;
+    }
+
+    drawing.canvas.addEventListener("pointerdown", () => {
+        activeWeeklyDrawing = drawing;
+    });
+});
+
+const weekUndoButton = document.getElementById("week-undo");
+const weekClearButton = document.getElementById("week-clear");
+
+if (weekUndoButton && weekClearButton) {
+    weekUndoButton.addEventListener("click", () => {
+        if (activeWeeklyDrawing) {
+            activeWeeklyDrawing.undo();
+        }
+    });
+
+    weekClearButton.addEventListener("click", () => {
+        if (activeWeeklyDrawing) {
+            activeWeeklyDrawing.clear();
+        }
+    });
+}
