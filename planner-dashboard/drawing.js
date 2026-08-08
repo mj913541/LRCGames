@@ -25,16 +25,17 @@ function makeDrawingCanvas(options) {
         drawingHistory.push(canvas.toDataURL());
     }
 
-    function restoreDrawingState(imageData) {
-        const image = new Image();
+function restoreDrawingState(imageData) {
+    const image = new Image();
 
-        image.onload = () => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        };
+    image.onload = () => {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    };
 
-        image.src = imageData;
-    }
+    image.src = imageData;
+}
 
     function selectTool(tool) {
         currentTool = tool;
