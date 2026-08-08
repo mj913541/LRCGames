@@ -1,724 +1,433 @@
 import { auth, db } from "../../js/firebase.js";
 
 import {
-  onAuthStateChanged,
-  signOut
+    onAuthStateChanged,
+    signOut
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
 import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-const ALLOWED_EMAILS = new Set([
-  "malbrecht@sd308.org",
-  "malbrecht3317@gmail.com"
+// =====================================================
+// SETTINGS
+// =====================================================
+
+const PLANNER_EMAILS = new Set([
+    "malbrecht@sd308.org",
+    "malbrecht3317@gmail.com"
 ]);
 
-const $ = id => document.getElementById(id);
-
-let user = null;
-let data = null;
-let saveTimer = null;
-let dialogMode = null;
-let absPlan = { completed: {} };
-let absSaveTimer = null;
-
-const today = new Date();
-const weekStart = startOfWeek(today);
-const weekKey = localDateKey(weekStart);
-const todayKey = localDateKey(today);
-
-const DAYS = [
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat",
-  "Sun"
-];
+const PLANNER_PROFILE_ID = "mj";
 
 const DAILY_EXERCISES = [
-  "Push-ups",
-  "Squats",
-  "Glute bridges",
-  "Backpack rows",
-  "Calf raises",
-  "Bird dog"
+    "Push-ups",
+    "Squats",
+    "Glute bridges",
+    "Backpack rows",
+    "Calf raises",
+    "Bird dog"
 ];
 
-const ABS_WORKOUTS = {
-  1: {
-    title: "DR #1",
-    equipment: "Bodyweight",
-    url: "https://www.nourishmovelove.com/5-postpartum-recovery-ab-exercises-beginner/"
-  },
-  2: {
-    title: "DR #2",
-    equipment: "Pilates Ball",
-    url: "https://www.nourishmovelove.com/5-pilates-ab-exercises-beginner/"
-  },
-  3: {
-    title: "DR #3",
-    equipment: "Long Band",
-    url: "https://www.nourishmovelove.com/5-postpartum-ab-exercises-resistance-band-beginner/"
-  },
-  4: {
-    title: "DR #4",
-    equipment: "Bodyweight",
-    url: "https://www.nourishmovelove.com/5-postpartum-recovery-ab-exercises-advanced/"
-  },
-  5: {
-    title: "DR #5",
-    equipment: "Pilates Ball",
-    url: "https://www.nourishmovelove.com/5-pilates-ab-exercises-advanced/"
-  },
-  6: {
-    title: "DR #6",
-    equipment: "Long Band",
-    url: "https://www.nourishmovelove.com/5-postpartum-ab-exercises-resistance-band-advanced/"
-  },
-  7: {
-    title: "DR #7",
-    equipment: "Bodyweight",
-    url: "https://www.nourishmovelove.com/postpartum-recovery-diastasis-recti-exercises/"
-  },
-  8: {
-    title: "DR #8",
-    equipment: "Pilates Ball",
-    url: "https://www.nourishmovelove.com/beginner-ab-workout/"
-  },
-  9: {
-    title: "DR #9",
-    equipment: "Mini Band",
-    url: "https://www.nourishmovelove.com/5-postpartum-ab-exercises-mini-band/"
-  }
-};
-
-const ABS_PLAN_DAYS = [
-  1, 2, 3, 1, 2, 3, null,
-  4, 5, 6, 4, 5, 6, null,
-  7, 8, 9, 7, 8, 9, null,
-  4, 5, 6, 7, 8, 9, null
+const DAYS = [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
 ];
+
+// =====================================================
+// STATE
+// =====================================================
+
+let currentUser = null;
+let workoutData = null;
+let saveTimer = null;
+
+const today = new Date();
+const todayKey = formatDateKey(today);
+const weekStart = getMonday(today);
+const weekKey = formatDateKey(weekStart);
+
+// =====================================================
+// DOM HELPERS
+// =====================================================
+
+const $ = id => document.getElementById(id);
 
 // =====================================================
 // DATE HELPERS
 // =====================================================
 
-function startOfWeek(d) {
-  const x = new Date(d);
+function formatDateKey(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
 
-  x.setHours(0, 0, 0, 0);
-
-  const day = (x.getDay() + 6) % 7;
-
-  x.setDate(x.getDate() - day);
-
-  return x;
+    return `${year}-${month}-${day}`;
 }
 
-function addDays(d, n) {
-  const x = new Date(d);
+function getMonday(date) {
+    const monday = new Date(date);
 
-  x.setDate(x.getDate() + n);
+    monday.setHours(0, 0, 0, 0);
 
-  return x;
+    const day = monday.getDay();
+    const difference = day === 0 ? -6 : 1 - day;
+
+    monday.setDate(monday.getDate() + difference);
+
+    return monday;
 }
 
-function localDateKey(d) {
-  return `${d.getFullYear()}-${String(
-    d.getMonth() + 1
-  ).padStart(2, "0")}-${String(
-    d.getDate()
-  ).padStart(2, "0")}`;
+function addDays(date, amount) {
+    const copy = new Date(date);
+
+    copy.setDate(copy.getDate() + amount);
+
+    return copy;
 }
 
-function fmtDate(key) {
-  const d = new Date(`${key}T12:00:00`);
-
-  return d.toLocaleDateString(
-    "en-US",
-    {
-      month: "short",
-      day: "numeric"
-    }
-  );
+function weekDateKeys() {
+    return DAYS.map((_, index) => {
+        return formatDateKey(
+            addDays(weekStart, index)
+        );
+    });
 }
 
-function weekKeys() {
-  return DAYS.map(
-    (_, i) =>
-      localDateKey(
-        addDays(weekStart, i)
-      )
-  );
+function displayDate(date) {
+    return date.toLocaleDateString(
+        "en-US",
+        {
+            weekday: "long",
+            month: "long",
+            day: "numeric"
+        }
+    );
+}
+
+function displayShortDate(dateKey) {
+    const date = new Date(
+        `${dateKey}T12:00:00`
+    );
+
+    return date.toLocaleDateString(
+        "en-US",
+        {
+            month: "short",
+            day: "numeric"
+        }
+    );
 }
 
 // =====================================================
-// FIRESTORE PATHS
+// FIRESTORE PATH
 // =====================================================
-
-const PLANNER_PROFILE_ID = "mj";
 
 function workoutDoc() {
-  return doc(
-    db,
-    "plannerDashboardUsers",
-    PLANNER_PROFILE_ID,
-    "workoutWeeks",
-    weekKey
-  );
-}
-
-function legacyWorkoutDoc() {
-  return doc(
-    db,
-    "plannerDashboardUsers",
-    user.uid,
-    "workoutWeeks",
-    weekKey
-  );
-}
-
-function absPlanDoc() {
-  return doc(
-    db,
-    "plannerDashboardUsers",
-    PLANNER_PROFILE_ID,
-    "workoutPrograms",
-    "diastasisRecti28"
-  );
+    return doc(
+        db,
+        "plannerDashboardUsers",
+        PLANNER_PROFILE_ID,
+        "workoutWeeks",
+        weekKey
+    );
 }
 
 // =====================================================
 // DEFAULT DATA
 // =====================================================
 
-function defaultData() {
-  return {
-    weekStart: weekKey,
-    lifting: [],
-    cardio: [],
-    daily: {},
-    dailyExercises: {},
-    stretch: {},
-    dailyNotes: {},
-    stretchSessions: [],
-    updatedAt: null
-  };
+function createDefaultWorkoutData() {
+    return {
+        weekStart: weekKey,
+        lifting: [],
+        cardio: [],
+        dailyExercises: {},
+        stretching: {},
+        notes: {},
+        updatedAt: null
+    };
 }
 
 // =====================================================
-// GENERAL HELPERS
+// AUTH
 // =====================================================
 
-function uid() {
-  return crypto.randomUUID
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random()}`;
-}
-
-function esc(v = "") {
-  const d = document.createElement("div");
-
-  d.textContent = v;
-
-  return d.innerHTML;
-}
-
-function showToast(msg) {
-  $("toast").textContent = msg;
-  $("toast").classList.add("show");
-
-  setTimeout(() => {
-    $("toast").classList.remove("show");
-  }, 1800);
-}
-
-// =====================================================
-// SAVE STATUS
-// =====================================================
-
-function markSaving() {
-  $("saveStatus").textContent =
-    "Saving…";
-}
-
-function markSaved() {
-  $("saveStatus").textContent =
-    "Saved";
-}
-
-function queueSave() {
-  markSaving();
-
-  clearTimeout(saveTimer);
-
-  saveTimer = setTimeout(
-    save,
-    400
-  );
-}
-
-function queueAbsSave() {
-  markSaving();
-
-  clearTimeout(absSaveTimer);
-
-  absSaveTimer = setTimeout(
-    saveAbsPlan,
-    350
-  );
-}
-
-// =====================================================
-// FIRESTORE SAVING
-// =====================================================
-
-async function save() {
-  try {
-    await setDoc(
-      workoutDoc(),
-      {
-        ...data,
-        updatedAt: serverTimestamp()
-      },
-      {
-        merge: true
-      }
-    );
-
-    markSaved();
-  } catch (error) {
-    console.error(
-      "Workout save failed:",
-      error
-    );
-
-    $("saveStatus").textContent =
-      "Save failed";
-
-    showToast(
-      "Could not save workout data."
-    );
-  }
-}
-
-async function saveAbsPlan() {
-  try {
-    await setDoc(
-      absPlanDoc(),
-      {
-        completed:
-          absPlan.completed || {},
-        updatedAt:
-          serverTimestamp()
-      },
-      {
-        merge: true
-      }
-    );
-
-    markSaved();
-  } catch (error) {
-    console.error(
-      "Abs plan save failed:",
-      error
-    );
-
-    $("saveStatus").textContent =
-      "Save failed";
-
-    showToast(
-      "Could not save abs plan progress."
-    );
-  }
-}
-
-// =====================================================
-// AUTH + INITIAL LOAD
-// =====================================================
-
-onAuthStateChanged(
-  auth,
-  async current => {
-    if (!current) {
-      location.replace(
-        "../../index.html"
-      );
-
-      return;
+onAuthStateChanged(auth, async user => {
+    if (!user) {
+        window.location.href = "../../index.html";
+        return;
     }
 
     const email =
-      (
-        current.email || ""
-      ).toLowerCase();
+        (user.email || "").toLowerCase();
 
-    if (
-      !ALLOWED_EMAILS.has(email)
-    ) {
-      await signOut(auth);
-
-      location.replace(
-        "../../index.html"
-      );
-
-      return;
+    if (!PLANNER_EMAILS.has(email)) {
+        await signOut(auth);
+        window.location.href = "../../index.html";
+        return;
     }
 
-    console.log(
-      "Workout signed in as:",
-      current.email
-    );
+    currentUser = user;
 
-    user = current;
+    await loadWorkoutData();
+
+    bindEvents();
+    renderEverything();
+});
+
+// =====================================================
+// LOAD
+// =====================================================
+
+async function loadWorkoutData() {
+    setSaveStatus("Loading…");
 
     try {
-      let snap =
-        await getDoc(
-          workoutDoc()
-        );
-
-      // ---------------------------------
-      // Check old UID-based storage
-      // ---------------------------------
-
-      if (!snap.exists()) {
-        const legacy =
-          await getDoc(
-            legacyWorkoutDoc()
-          );
-
-        if (legacy.exists()) {
-          console.log(
-            "Moving legacy workout data to shared planner profile."
-          );
-
-          await setDoc(
-            workoutDoc(),
-            legacy.data(),
-            {
-              merge: true
-            }
-          );
-
-          snap =
+        const snapshot =
             await getDoc(
-              workoutDoc()
+                workoutDoc()
             );
-        }
-      }
 
-      data = snap.exists()
-        ? {
-            ...defaultData(),
-            ...snap.data()
-          }
-        : defaultData();
-
-      // ---------------------------------
-      // Load abs program
-      // ---------------------------------
-
-      const absSnap =
-        await getDoc(
-          absPlanDoc()
-        );
-
-      absPlan =
-        absSnap.exists()
-          ? {
-              completed: {},
-              ...absSnap.data()
-            }
-          : {
-              completed: {}
+        if (snapshot.exists()) {
+            workoutData = {
+                ...createDefaultWorkoutData(),
+                ...snapshot.data()
             };
+        } else {
+            workoutData =
+                createDefaultWorkoutData();
+        }
 
-      absPlan.completed =
-        absPlan.completed || {};
+        workoutData.lifting =
+            workoutData.lifting || [];
 
-      bind();
-      render();
+        workoutData.cardio =
+            workoutData.cardio || [];
 
-      $("loadingScreen")
-        ?.classList.add("done");
+        workoutData.dailyExercises =
+            workoutData.dailyExercises || {};
 
-      console.log(
-        "Workout data loaded successfully."
-      );
+        workoutData.stretching =
+            workoutData.stretching || {};
+
+        workoutData.notes =
+            workoutData.notes || {};
+
+        setSaveStatus("Saved");
     } catch (error) {
-      console.error(
-        "Workout data failed to load:",
-        error
-      );
+        console.error(
+            "Workout load failed:",
+            error
+        );
 
-      $("loadingScreen")
-        ?.classList.add("done");
-
-      showToast(
-        "Could not load workout data."
-      );
+        setSaveStatus("Load failed");
     }
-  }
-);
+}
 
 // =====================================================
-// EVENT BINDINGS
+// SAVE
 // =====================================================
 
-function bind() {
-  $("signOutBtn").onclick =
-    async () => {
-      await signOut(auth);
+function queueSave() {
+    setSaveStatus("Saving…");
 
-      location.replace(
-        "../../index.html"
-      );
-    };
+    clearTimeout(saveTimer);
 
-  $("addLiftBtn").onclick =
-    () => openDialog("lift");
+    saveTimer = setTimeout(
+        saveWorkoutData,
+        500
+    );
+}
 
-  $("addCardioBtn").onclick =
-    () => openDialog("cardio");
+async function saveWorkoutData() {
+    if (!currentUser || !workoutData) {
+        return;
+    }
 
-  $("dialogClose").onclick =
-    closeDialog;
-
-  $("dialogCancel").onclick =
-    closeDialog;
-
-  $("entryForm").onsubmit =
-    submitDialog;
-
-  document
-    .querySelectorAll(
-      "[data-cardio-min]"
-    )
-    .forEach(button => {
-      button.onclick = () =>
-        quickCardio(
-          Number(
-            button.dataset.cardioMin
-          )
+    try {
+        await setDoc(
+            workoutDoc(),
+            {
+                ...workoutData,
+                updatedAt:
+                    serverTimestamp()
+            },
+            {
+                merge: true
+            }
         );
-    });
 
-  document
-    .querySelectorAll(
-      "[data-stretch]"
-    )
-    .forEach(button => {
-      button.onclick = () =>
-        quickStretch(
-          button.dataset.stretch
+        setSaveStatus("Saved");
+    } catch (error) {
+        console.error(
+            "Workout save failed:",
+            error
         );
-    });
 
-  $("dailyNote").oninput =
-    () => {
-      data.dailyNotes[todayKey] =
-        $("dailyNote").value;
+        setSaveStatus("Save failed");
+    }
+}
 
-      queueSave();
-    };
+function setSaveStatus(text) {
+    const status =
+        $("save-status");
+
+    if (status) {
+        status.textContent = text;
+    }
+}
+
+// =====================================================
+// EVENT BINDING
+// =====================================================
+
+function bindEvents() {
+    $("add-lift")?.addEventListener(
+        "click",
+        openLiftingDialog
+    );
+
+    $("close-lifting-dialog")?.addEventListener(
+        "click",
+        closeLiftingDialog
+    );
+
+    $("lifting-form")?.addEventListener(
+        "submit",
+        saveLiftingExercise
+    );
+
+    document
+        .querySelectorAll(
+            "[data-cardio]"
+        )
+        .forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    addCardio(
+                        Number(
+                            button.dataset.cardio
+                        )
+                    );
+                }
+            );
+        });
+
+    document
+        .querySelectorAll(
+            "[data-stretch]"
+        )
+        .forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    toggleStretch(
+                        button.dataset.stretch
+                    );
+                }
+            );
+        });
+
+    $("workout-notes")?.addEventListener(
+        "input",
+        event => {
+            workoutData.notes[todayKey] =
+                event.target.value;
+
+            queueSave();
+        }
+    );
 }
 
 // =====================================================
 // MAIN RENDER
 // =====================================================
 
-function render() {
-  const end =
-    addDays(
-      weekStart,
-      6
-    );
+function renderEverything() {
+    $("workout-date").textContent =
+        displayDate(today);
 
-  $("weekLabel").textContent =
-    `${weekStart.toLocaleDateString(
-      "en-US",
-      {
-        month: "long",
-        day: "numeric"
-      }
-    )} – ${end.toLocaleDateString(
-      "en-US",
-      {
-        month: "long",
-        day: "numeric",
-        year: "numeric"
-      }
-    )}`;
-
-  const liftDates =
-    new Set(
-      data.lifting.map(
-        x => x.date
-      )
-    );
-
-  $("liftingSessions").textContent =
-    liftDates.size;
-
-  $("cardioMinutes").textContent =
-    data.cardio.reduce(
-      (sum, x) =>
-        sum +
-        Number(
-          x.minutes || 0
-        ),
-      0
-    );
-
-  $("dailyDays").textContent =
-    `${
-      weekKeys().filter(
-        key => data.daily[key]
-      ).length
-    } / 7`;
-
-  $("stretchDays").textContent =
-    `${
-      weekKeys().filter(
-        key => data.stretch[key]
-      ).length
-    } / 7`;
-
-  const totalVolume =
-    data.lifting.reduce(
-      (sum, x) =>
-        sum +
-        (
-          Number(x.sets || 0) *
-          Number(x.reps || 0) *
-          Number(x.weight || 0)
-        ),
-      0
-    );
-
-  $("totalVolume").textContent =
-    `${Math.round(
-      totalVolume
-    ).toLocaleString()} lbs`;
-
-  $("dailyNote").value =
-    data.dailyNotes[todayKey] ||
-    "";
-
-  renderLifting();
-  renderCardio();
-  renderDailyExercises();
-
-  renderDayChecks(
-    "dailyWeek",
-    "daily"
-  );
-
-  renderDayChecks(
-    "stretchWeek",
-    "stretch"
-  );
-
-  renderStretchRecent();
-  renderAbsPlan();
-  renderGlance();
+    renderSummary();
+    renderLifting();
+    renderCardio();
+    renderDailyExercises();
+    renderStretching();
+    renderNotes();
+    renderWeekGlance();
 }
 
 // =====================================================
-// DAILY EXERCISES
+// SUMMARY
 // =====================================================
 
-function renderDailyExercises() {
-  data.dailyExercises =
-    data.dailyExercises || {};
+function renderSummary() {
+    const weekKeys =
+        weekDateKeys();
 
-  const dayState =
-    data.dailyExercises[
-      todayKey
-    ] || {};
+    const liftingDates =
+        new Set(
+            workoutData.lifting
+                .filter(entry =>
+                    weekKeys.includes(
+                        entry.date
+                    )
+                )
+                .map(
+                    entry => entry.date
+                )
+        );
 
-  const el =
-    $("dailyExerciseList");
+    const cardioMinutes =
+        workoutData.cardio
+            .filter(entry =>
+                weekKeys.includes(
+                    entry.date
+                )
+            )
+            .reduce(
+                (total, entry) =>
+                    total +
+                    Number(
+                        entry.minutes || 0
+                    ),
+                0
+            );
 
-  if (!el) {
-    return;
-  }
+    const dailyDays =
+        weekKeys.filter(dateKey => {
+            return areDailyExercisesComplete(
+                dateKey
+            );
+        }).length;
 
-  el.innerHTML =
-    DAILY_EXERCISES
-      .map(name => {
-        const done =
-          !!dayState[name];
+    const stretchDays =
+        weekKeys.filter(dateKey => {
+            return hasStretching(
+                dateKey
+            );
+        }).length;
 
-        return `
-          <label class="daily-exercise-row${done ? " is-done" : ""}">
-            <input
-              type="checkbox"
-              data-daily-exercise="${esc(name)}"
-              ${done ? "checked" : ""}
-            >
+    $("lifting-summary").textContent =
+        liftingDates.size;
 
-            <span class="daily-exercise-name">
-              ${esc(name)}
-            </span>
+    $("cardio-summary").textContent =
+        cardioMinutes;
 
-            <strong>
-              10 reps
-            </strong>
-          </label>
-        `;
-      })
-      .join("");
+    $("daily-summary").textContent =
+        `${dailyDays} / 7`;
 
-  el
-    .querySelectorAll(
-      "[data-daily-exercise]"
-    )
-    .forEach(input => {
-      input.onchange = () => {
-        const name =
-          input.dataset.dailyExercise;
-
-        data.dailyExercises[
-          todayKey
-        ] =
-          data.dailyExercises[
-            todayKey
-          ] || {};
-
-        data.dailyExercises[
-          todayKey
-        ][name] =
-          input.checked;
-
-        const allDone =
-          DAILY_EXERCISES.every(
-            exercise =>
-              !!data.dailyExercises[
-                todayKey
-              ][exercise]
-          );
-
-        data.daily[todayKey] =
-          allDone;
-
-        render();
-        queueSave();
-
-        if (allDone) {
-          showToast(
-            "Daily exercises complete!"
-          );
-        }
-      };
-    });
+    $("stretch-summary").textContent =
+        `${stretchDays} / 7`;
 }
 
 // =====================================================
@@ -726,770 +435,441 @@ function renderDailyExercises() {
 // =====================================================
 
 function renderLifting() {
-  const el =
-    $("liftingList");
+    const list =
+        $("lifting-list");
 
-  const rows =
-    [...data.lifting].sort(
-      (a, b) =>
-        b.date.localeCompare(
-          a.date
-        )
-    );
+    const todayEntries =
+        workoutData.lifting.filter(
+            entry =>
+                entry.date === todayKey
+        );
 
-  el.innerHTML =
-    rows.length
-      ? rows
-          .map(x => `
-            <div class="entry">
-              <div>
-                <div class="entry-title">
-                  ${esc(x.exercise)}
-                </div>
-
-                <div class="entry-meta">
-                  ${x.sets} × ${x.reps}
-                  ${
-                    Number(x.weight)
-                      ? ` @ ${x.weight} lb`
-                      : ""
-                  }
-                </div>
-              </div>
-
-              <span class="entry-date">
-                ${fmtDate(x.date)}
-              </span>
-
-              <button
-                class="delete-entry"
-                data-delete-lift="${x.id}"
-                aria-label="Delete"
-              >
-                ×
-              </button>
-            </div>
-          `)
-          .join("")
-      : `
-          <div class="empty">
-            No lifting logged yet.
-            Start with one exercise.
-          </div>
+    if (!todayEntries.length) {
+        list.innerHTML = `
+            <p class="empty-message">
+                No lifting exercises yet.
+            </p>
         `;
 
-  el
-    .querySelectorAll(
-      "[data-delete-lift]"
-    )
-    .forEach(button => {
-      button.onclick = () => {
-        data.lifting =
-          data.lifting.filter(
-            x =>
-              x.id !==
-              button.dataset.deleteLift
-          );
+        return;
+    }
 
-        render();
-        queueSave();
-      };
-    });
+    list.innerHTML =
+        todayEntries
+            .map(entry => {
+                return `
+                    <div class="workout-entry">
+                        <div>
+                            <div class="workout-entry-title">
+                                ${escapeHTML(entry.exercise)}
+                            </div>
+
+                            <div class="workout-entry-meta">
+                                ${entry.sets} × ${entry.reps}
+                                ${
+                                    Number(entry.weight)
+                                        ? ` @ ${entry.weight} lb`
+                                        : ""
+                                }
+                            </div>
+                        </div>
+
+                        <button
+                            class="delete-workout"
+                            type="button"
+                            data-delete-lift="${entry.id}"
+                            aria-label="Delete exercise"
+                        >
+                            ×
+                        </button>
+                    </div>
+                `;
+            })
+            .join("");
+
+    list
+        .querySelectorAll(
+            "[data-delete-lift]"
+        )
+        .forEach(button => {
+            button.addEventListener(
+                "click",
+                () => {
+                    workoutData.lifting =
+                        workoutData.lifting.filter(
+                            entry =>
+                                entry.id !==
+                                button.dataset.deleteLift
+                        );
+
+                    renderEverything();
+                    queueSave();
+                }
+            );
+        });
+}
+
+function openLiftingDialog() {
+    $("lifting-dialog")?.showModal();
+}
+
+function closeLiftingDialog() {
+    $("lifting-dialog")?.close();
+    $("lifting-form")?.reset();
+}
+
+function saveLiftingExercise(event) {
+    event.preventDefault();
+
+    const form =
+        new FormData(
+            event.currentTarget
+        );
+
+    const entry = {
+        id: makeId(),
+        date: todayKey,
+        exercise:
+            form
+                .get("exercise")
+                .trim(),
+        sets:
+            Number(
+                form.get("sets")
+            ),
+        reps:
+            Number(
+                form.get("reps")
+            ),
+        weight:
+            Number(
+                form.get("weight") || 0
+            )
+    };
+
+    workoutData.lifting.push(
+        entry
+    );
+
+    closeLiftingDialog();
+    renderEverything();
+    queueSave();
 }
 
 // =====================================================
 // CARDIO
 // =====================================================
 
-function renderCardio() {
-  const totals = {};
-
-  weekKeys().forEach(
-    key => {
-      totals[key] = 0;
-    }
-  );
-
-  data.cardio.forEach(x => {
-    if (x.date in totals) {
-      totals[x.date] +=
-        Number(
-          x.minutes || 0
-        );
-    }
-  });
-
-  const max =
-    Math.max(
-      30,
-      ...Object.values(
-        totals
-      )
-    );
-
-  $("cardioWeek").innerHTML =
-    weekKeys()
-      .map((key, i) => `
-        <div class="bar-row">
-          <b>
-            ${DAYS[i]}
-          </b>
-
-          <div class="bar-track">
-            <div
-              class="bar-fill"
-              style="width:${Math.min(
-                100,
-                totals[key] /
-                  max *
-                  100
-              )}%"
-            ></div>
-          </div>
-
-          <span>
-            ${totals[key]} min
-          </span>
-        </div>
-      `)
-      .join("");
-
-  const rows =
-    [...data.cardio].sort(
-      (a, b) =>
-        b.date.localeCompare(
-          a.date
-        )
-    );
-
-  $("cardioList").innerHTML =
-    rows.length
-      ? rows
-          .slice(0, 7)
-          .map(x => `
-            <div class="entry">
-              <div>
-                <div class="entry-title">
-                  ${esc(
-                    x.type ||
-                    "Cardio"
-                  )}
-                </div>
-
-                <div class="entry-meta">
-                  ${x.minutes}
-                  minutes
-                </div>
-              </div>
-
-              <span class="entry-date">
-                ${fmtDate(x.date)}
-              </span>
-
-              <button
-                class="delete-entry"
-                data-delete-cardio="${x.id}"
-              >
-                ×
-              </button>
-            </div>
-          `)
-          .join("")
-      : "";
-
-  $("cardioList")
-    .querySelectorAll(
-      "[data-delete-cardio]"
-    )
-    .forEach(button => {
-      button.onclick = () => {
-        data.cardio =
-          data.cardio.filter(
-            x =>
-              x.id !==
-              button.dataset.deleteCardio
-          );
-
-        render();
-        queueSave();
-      };
+function addCardio(minutes) {
+    workoutData.cardio.push({
+        id: makeId(),
+        date: todayKey,
+        minutes
     });
+
+    renderEverything();
+    queueSave();
+}
+
+function getCardioMinutes(dateKey) {
+    return workoutData.cardio
+        .filter(
+            entry =>
+                entry.date === dateKey
+        )
+        .reduce(
+            (total, entry) =>
+                total +
+                Number(
+                    entry.minutes || 0
+                ),
+            0
+        );
+}
+
+function renderCardio() {
+    $("today-cardio").textContent =
+        getCardioMinutes(
+            todayKey
+        );
 }
 
 // =====================================================
-// WEEKLY CHECKS
+// DAILY EXERCISES
 // =====================================================
 
-function renderDayChecks(
-  id,
-  kind
+function renderDailyExercises() {
+    const container =
+        $("daily-exercises");
+
+    const state =
+        workoutData.dailyExercises[
+            todayKey
+        ] || {};
+
+    container.innerHTML =
+        DAILY_EXERCISES
+            .map(exercise => {
+                const complete =
+                    !!state[exercise];
+
+                return `
+                    <label class="daily-exercise-row${complete ? " is-done" : ""}">
+                        <input
+                            type="checkbox"
+                            data-exercise="${escapeHTML(exercise)}"
+                            ${complete ? "checked" : ""}
+                        >
+
+                        <span class="daily-exercise-name">
+                            ${escapeHTML(exercise)}
+                        </span>
+
+                        <span class="exercise-reps">
+                            10 reps
+                        </span>
+                    </label>
+                `;
+            })
+            .join("");
+
+    container
+        .querySelectorAll(
+            "[data-exercise]"
+        )
+        .forEach(input => {
+            input.addEventListener(
+                "change",
+                () => {
+                    workoutData.dailyExercises[
+                        todayKey
+                    ] =
+                        workoutData.dailyExercises[
+                            todayKey
+                        ] || {};
+
+                    workoutData.dailyExercises[
+                        todayKey
+                    ][
+                        input.dataset.exercise
+                    ] =
+                        input.checked;
+
+                    renderEverything();
+                    queueSave();
+                }
+            );
+        });
+}
+
+function areDailyExercisesComplete(
+    dateKey
 ) {
-  const el = $(id);
+    const state =
+        workoutData.dailyExercises[
+            dateKey
+        ] || {};
 
-  el.innerHTML =
-    weekKeys()
-      .map((key, i) => `
-        <button
-          class="day-check ${data[kind][key] ? "done" : ""}"
-          data-kind="${kind}"
-          data-date="${key}"
-        >
-          <b>
-            ${DAYS[i]}
-          </b>
-
-          <span>
-            ${
-              data[kind][key]
-                ? "✓"
-                : new Date(
-                    `${key}T12:00:00`
-                  ).getDate()
-            }
-          </span>
-        </button>
-      `)
-      .join("");
-
-  el
-    .querySelectorAll(
-      ".day-check"
-    )
-    .forEach(button => {
-      button.onclick = () => {
-        const obj =
-          data[
-            button.dataset.kind
-          ];
-
-        obj[
-          button.dataset.date
-        ] =
-          !obj[
-            button.dataset.date
-          ];
-
-        render();
-        queueSave();
-      };
-    });
+    return DAILY_EXERCISES.every(
+        exercise =>
+            !!state[exercise]
+    );
 }
 
 // =====================================================
 // STRETCHING
 // =====================================================
 
-function renderStretchRecent() {
-  const rows =
-    [...data.stretchSessions]
-      .sort(
-        (a, b) =>
-          b.date.localeCompare(
-            a.date
-          )
-      )
-      .slice(0, 8);
+function toggleStretch(type) {
+    const current =
+        workoutData.stretching[
+            todayKey
+        ] || [];
 
-  const el =
-    $("stretchRecent");
-
-  el.innerHTML =
-    rows.length
-      ? rows
-          .map(x => `
-            <div class="recent-row">
-              <span>
-                ✓ ${esc(x.type)}
-              </span>
-
-              <span>
-                ${fmtDate(x.date)}
-              </span>
-
-              <button
-                class="delete-entry"
-                data-delete-stretch="${x.id}"
-                aria-label="Delete ${esc(x.type)} stretch"
-              >
-                ×
-              </button>
-            </div>
-          `)
-          .join("")
-      : `
-          <div class="empty">
-            No stretching logged yet.
-          </div>
-        `;
-
-  el
-    .querySelectorAll(
-      "[data-delete-stretch]"
-    )
-    .forEach(button => {
-      button.onclick = () => {
-        const session =
-          data.stretchSessions.find(
-            x =>
-              x.id ===
-              button.dataset.deleteStretch
-          );
-
-        data.stretchSessions =
-          data.stretchSessions.filter(
-            x =>
-              x.id !==
-              button.dataset.deleteStretch
-          );
-
-        if (
-          session &&
-          !data.stretchSessions.some(
-            x =>
-              x.date ===
-              session.date
-          )
-        ) {
-          data.stretch[
-            session.date
-          ] = false;
-        }
-
-        render();
-        queueSave();
-
-        showToast(
-          "Stretching entry deleted"
-        );
-      };
-    });
-}
-
-function quickStretch(type) {
-  data.stretch[
-    todayKey
-  ] = true;
-
-  data.stretchSessions.push({
-    id: uid(),
-    date: todayKey,
-    type
-  });
-
-  render();
-  queueSave();
-
-  showToast(
-    `${type} stretch logged`
-  );
-}
-
-// =====================================================
-// 28-DAY ABS PLAN
-// =====================================================
-
-function renderAbsPlan() {
-  const el =
-    $("absPlanCalendar");
-
-  if (!el) {
-    return;
-  }
-
-  absPlan.completed =
-    absPlan.completed || {};
-
-  const completedCount =
-    ABS_PLAN_DAYS.reduce(
-      (
-        sum,
-        workoutId,
-        index
-      ) =>
-        sum +
-        (
-          workoutId &&
-          absPlan.completed[
-            String(index + 1)
-          ]
-            ? 1
-            : 0
-        ),
-      0
-    );
-
-  $("absPlanProgress").textContent =
-    `${completedCount} / 24`;
-
-  el.innerHTML =
-    ABS_PLAN_DAYS
-      .map(
-        (
-          workoutId,
-          index
-        ) => {
-          const day =
-            index + 1;
-
-          if (!workoutId) {
-            return `
-              <article class="abs-day rest-day">
-                <div class="abs-day-number">
-                  ${String(day).padStart(2, "0")}
-                </div>
-
-                <div class="abs-rest">
-                  Rest Day
-                </div>
-              </article>
-            `;
-          }
-
-          const workout =
-            ABS_WORKOUTS[
-              workoutId
-            ];
-
-          const done =
-            !!absPlan.completed[
-              String(day)
-            ];
-
-          return `
-            <article class="abs-day${done ? " done" : ""}">
-              <div class="abs-day-top">
-                <span class="abs-day-number">
-                  ${String(day).padStart(2, "0")}
-                </span>
-
-                <label
-                  class="abs-complete"
-                  title="Mark Day ${day} complete"
-                >
-                  <input
-                    type="checkbox"
-                    data-abs-day="${day}"
-                    ${done ? "checked" : ""}
-                  >
-
-                  <span>
-                    ✓
-                  </span>
-                </label>
-              </div>
-
-              <a
-                class="abs-workout-link"
-                href="${workout.url}"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <strong>
-                  ${workout.title}
-                </strong>
-
-                <span>
-                  (${workout.equipment})
-                </span>
-              </a>
-
-              <div class="abs-duration">
-                10 Minutes
-                <span aria-hidden="true">
-                  ↗
-                </span>
-              </div>
-            </article>
-          `;
-        }
-      )
-      .join("");
-
-  el
-    .querySelectorAll(
-      "[data-abs-day]"
-    )
-    .forEach(input => {
-      input.onchange = () => {
-        absPlan.completed[
-          String(
-            input.dataset.absDay
-          )
+    if (current.includes(type)) {
+        workoutData.stretching[
+            todayKey
         ] =
-          input.checked;
+            current.filter(
+                item =>
+                    item !== type
+            );
+    } else {
+        workoutData.stretching[
+            todayKey
+        ] = [
+            ...current,
+            type
+        ];
+    }
 
-        renderAbsPlan();
-        queueAbsSave();
+    renderEverything();
+    queueSave();
+}
 
-        if (input.checked) {
-          showToast(
-            `Abs Day ${input.dataset.absDay} complete!`
-          );
-        }
-      };
-    });
+function hasStretching(dateKey) {
+    const stretches =
+        workoutData.stretching[
+            dateKey
+        ];
+
+    return (
+        Array.isArray(stretches) &&
+        stretches.length > 0
+    );
+}
+
+function renderStretching() {
+    const current =
+        workoutData.stretching[
+            todayKey
+        ] || [];
+
+    document
+        .querySelectorAll(
+            "[data-stretch]"
+        )
+        .forEach(button => {
+            button.classList.toggle(
+                "is-active",
+                current.includes(
+                    button.dataset.stretch
+                )
+            );
+        });
+
+    const status =
+        $("stretch-status");
+
+    if (!current.length) {
+        status.textContent =
+            "Nothing logged today.";
+    } else {
+        status.textContent =
+            `Logged: ${current.join(", ")}`;
+    }
+}
+
+// =====================================================
+// NOTES
+// =====================================================
+
+function renderNotes() {
+    $("workout-notes").value =
+        workoutData.notes[
+            todayKey
+        ] || "";
 }
 
 // =====================================================
 // WEEK AT A GLANCE
 // =====================================================
 
-function renderGlance() {
-  $("weekGlance").innerHTML =
-    weekKeys()
-      .map((key, i) => {
-        const lift =
-          data.lifting.some(
-            x =>
-              x.date === key
-          );
+function renderWeekGlance() {
+    const container =
+        $("week-glance");
 
-        const card =
-          data.cardio.some(
-            x =>
-              x.date === key
-          );
+    container.innerHTML =
+        weekDateKeys()
+            .map(
+                (dateKey, index) => {
+                    const hasLift =
+                        workoutData.lifting.some(
+                            entry =>
+                                entry.date ===
+                                dateKey
+                        );
 
-        const daily =
-          !!data.daily[key];
+                    const cardio =
+                        getCardioMinutes(
+                            dateKey
+                        );
 
-        const stretch =
-          !!data.stretch[key];
+                    const daily =
+                        areDailyExercisesComplete(
+                            dateKey
+                        );
 
-        const icons = [
-          lift ? "🏋️" : "",
-          card ? "♥" : "",
-          daily ? "✓" : "",
-          stretch ? "❀" : ""
-        ]
-          .filter(Boolean)
-          .join(" ");
+                    const stretch =
+                        hasStretching(
+                            dateKey
+                        );
 
-        const labels = [
-          lift ? "Lift" : "",
-          card ? "Cardio" : "",
-          daily ? "Move" : "",
-          stretch
-            ? "Stretch"
-            : ""
-        ]
-          .filter(Boolean)
-          .join(" • ") ||
-          "Rest / open";
+                    const icons = [
+                        hasLift
+                            ? "🏋️"
+                            : "",
+                        cardio
+                            ? "♥"
+                            : "",
+                        daily
+                            ? "✓"
+                            : "",
+                        stretch
+                            ? "❀"
+                            : ""
+                    ]
+                        .filter(Boolean)
+                        .join(" ");
 
-        return `
-          <div class="glance-day">
-            <strong>
-              ${DAYS[i]}
-            </strong>
+                    const labels = [
+                        hasLift
+                            ? "Lift"
+                            : "",
+                        cardio
+                            ? `${cardio} min`
+                            : "",
+                        daily
+                            ? "Daily"
+                            : "",
+                        stretch
+                            ? "Stretch"
+                            : ""
+                    ]
+                        .filter(Boolean)
+                        .join(" • ");
 
-            <span class="glance-date">
-              ${fmtDate(key)}
-            </span>
+                    return `
+                        <div class="glance-day">
+                            <strong>
+                                ${DAYS[index]}
+                            </strong>
 
-            <div class="glance-icons">
-              ${icons || "○"}
-            </div>
+                            <span class="glance-date">
+                                ${displayShortDate(dateKey)}
+                            </span>
 
-            <div class="glance-label">
-              ${labels}
-            </div>
-          </div>
-        `;
-      })
-      .join("");
+                            <div class="glance-icons">
+                                ${icons || "○"}
+                            </div>
+
+                            <div class="glance-label">
+                                ${labels || "Open"}
+                            </div>
+                        </div>
+                    `;
+                }
+            )
+            .join("");
 }
 
 // =====================================================
-// QUICK CARDIO
+// UTILITIES
 // =====================================================
 
-function quickCardio(minutes) {
-  openDialog(
-    "cardio",
-    minutes
-  );
+function makeId() {
+    if (crypto.randomUUID) {
+        return crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random()}`;
 }
 
-// =====================================================
-// ADD ENTRY DIALOG
-// =====================================================
+function escapeHTML(value = "") {
+    const div =
+        document.createElement("div");
 
-function openDialog(
-  mode,
-  presetMinutes = null
-) {
-  dialogMode = mode;
+    div.textContent = value;
 
-  $("dialogTitle").textContent =
-    mode === "lift"
-      ? "Add lifting exercise"
-      : presetMinutes
-        ? `Add ${presetMinutes} min cardio`
-        : "Add cardio";
-
-  $("dialogFields").innerHTML =
-    mode === "lift"
-      ? `
-          <label>
-            Date
-            <input
-              name="date"
-              type="date"
-              value="${todayKey}"
-              required
-            >
-          </label>
-
-          <label>
-            Exercise
-            <input
-              name="exercise"
-              type="text"
-              placeholder="Goblet squat"
-              required
-            >
-          </label>
-
-          <label>
-            Sets
-            <input
-              name="sets"
-              type="number"
-              min="1"
-              value="3"
-              required
-            >
-          </label>
-
-          <label>
-            Reps
-            <input
-              name="reps"
-              type="number"
-              min="1"
-              value="10"
-              required
-            >
-          </label>
-
-          <label>
-            Weight (lb)
-            <input
-              name="weight"
-              type="number"
-              min="0"
-              step=".5"
-              value="0"
-            >
-          </label>
-        `
-      : `
-          <label>
-            Date
-            <input
-              name="date"
-              type="date"
-              value="${todayKey}"
-              required
-            >
-          </label>
-
-          <label>
-            Cardio type
-            <input
-              name="type"
-              type="text"
-              placeholder="Walk, bike, treadmill…"
-              required
-              autofocus
-            >
-          </label>
-
-          <label>
-            Minutes
-            <input
-              name="minutes"
-              type="number"
-              min="1"
-              value="${presetMinutes ?? 20}"
-              required
-            >
-          </label>
-        `;
-
-  $("entryDialog").showModal();
-}
-
-function closeDialog() {
-  $("entryDialog").close();
-  $("entryForm").reset();
-}
-
-function submitDialog(event) {
-  event.preventDefault();
-
-  const form =
-    new FormData(
-      event.currentTarget
-    );
-
-  if (
-    dialogMode === "lift"
-  ) {
-    const row = {
-      id: uid(),
-      date: form.get("date"),
-      exercise:
-        form
-          .get("exercise")
-          .trim(),
-      sets:
-        Number(
-          form.get("sets")
-        ),
-      reps:
-        Number(
-          form.get("reps")
-        ),
-      weight:
-        Number(
-          form.get(
-            "weight"
-          ) || 0
-        )
-    };
-
-    data.lifting.push(row);
-
-    data.daily[
-      row.date
-    ] = true;
-  } else {
-    const row = {
-      id: uid(),
-      date:
-        form.get("date"),
-      type:
-        form
-          .get("type")
-          .trim(),
-      minutes:
-        Number(
-          form.get(
-            "minutes"
-          )
-        )
-    };
-
-    data.cardio.push(row);
-
-    data.daily[
-      row.date
-    ] = true;
-  }
-
-  closeDialog();
-  render();
-  queueSave();
+    return div.innerHTML;
 }

@@ -16,338 +16,251 @@
 
 <body>
 
-    <div id="loadingScreen" class="loading-screen">
-        <div class="loading-orb"></div>
-        <p>Opening your workout tracker…</p>
-    </div>
-
     <div id="site-header"></div>
 
-    <main class="page-shell">
+    <main class="workout-page">
 
-        <section class="workout-heading">
+        <section class="workout-page-header">
+
             <div>
-                <p class="eyebrow">PERSONAL PLANNER</p>
+                <p class="workout-eyebrow">
+                    Personal Planner
+                </p>
+
                 <h1>Workouts</h1>
-                <p id="weekLabel" class="subtle"></p>
+
+                <p id="workout-date" class="workout-date">
+                    Today
+                </p>
             </div>
 
-            <div class="workout-actions">
-                <span id="saveStatus" class="save-status">
-                    Saved
+            <div class="workout-save-status">
+                <span id="save-status">
+                    Loading…
                 </span>
-
-                <button
-                    id="signOutBtn"
-                    class="icon-button"
-                    type="button"
-                    aria-label="Sign out"
-                    title="Sign out"
-                >
-                    ↪
-                </button>
             </div>
+
         </section>
 
 
-        <!-- =========================================
-             WEEKLY SUMMARY
-        ========================================== -->
+        <section class="workout-summary">
 
-        <section
-            class="summary-grid"
-            aria-label="Weekly workout summary"
-        >
-
-            <article class="summary-card lift">
-                <div class="summary-icon">🏋️</div>
+            <article class="summary-card">
+                <span class="summary-icon">🏋️</span>
 
                 <div>
-                    <span>LIFTING SESSIONS</span>
-                    <strong id="liftingSessions">0</strong>
-                    <small>this week</small>
+                    <p>Lifting</p>
+                    <strong id="lifting-summary">0</strong>
+                    <span>sessions this week</span>
                 </div>
             </article>
 
 
-            <article class="summary-card cardio">
-                <div class="summary-icon">♥</div>
+            <article class="summary-card">
+                <span class="summary-icon">♥</span>
 
                 <div>
-                    <span>CARDIO MINUTES</span>
-                    <strong id="cardioMinutes">0</strong>
-                    <small>this week</small>
+                    <p>Cardio</p>
+                    <strong id="cardio-summary">0</strong>
+                    <span>minutes this week</span>
                 </div>
             </article>
 
 
-            <article class="summary-card daily">
-                <div class="summary-icon">✓</div>
+            <article class="summary-card">
+                <span class="summary-icon">✓</span>
 
                 <div>
-                    <span>DAILY EXERCISE</span>
-                    <strong id="dailyDays">0 / 7</strong>
-                    <small>days</small>
+                    <p>Daily Movement</p>
+                    <strong id="daily-summary">0 / 7</strong>
+                    <span>days this week</span>
                 </div>
             </article>
 
 
-            <article class="summary-card stretch">
-                <div class="summary-icon">❀</div>
+            <article class="summary-card">
+                <span class="summary-icon">❀</span>
 
                 <div>
-                    <span>STRETCHING</span>
-                    <strong id="stretchDays">0 / 7</strong>
-                    <small>days</small>
+                    <p>Stretching</p>
+                    <strong id="stretch-summary">0 / 7</strong>
+                    <span>days this week</span>
                 </div>
             </article>
 
         </section>
 
 
-        <!-- =========================================
-             MAIN TRACKERS
-        ========================================== -->
+        <section class="workout-grid">
 
-        <section class="tracker-grid">
+            <article class="workout-card">
 
-            <article class="card lift-card">
-
-                <div class="card-heading">
+                <div class="card-header">
                     <div>
-                        <p class="eyebrow">🏋️ LIFTING</p>
-                        <h2>Lifting exercises</h2>
+                        <p class="workout-eyebrow">
+                            🏋️ Lifting
+                        </p>
+
+                        <h2>Today's Lifting</h2>
                     </div>
 
                     <button
-                        id="addLiftBtn"
-                        class="button soft"
+                        id="add-lift"
+                        class="planner-button"
                         type="button"
                     >
                         + Exercise
                     </button>
                 </div>
 
-                <div class="mini-stat">
-                    <span>Total volume</span>
-                    <strong id="totalVolume">0 lbs</strong>
-                </div>
-
                 <div
-                    id="liftingList"
-                    class="entry-list"
-                ></div>
-
-            </article>
-
-
-            <article class="card cardio-card">
-
-                <div class="card-heading">
-                    <div>
-                        <p class="eyebrow">♥ CARDIO</p>
-                        <h2>Cardio minutes</h2>
-                    </div>
-
-                    <button
-                        id="addCardioBtn"
-                        class="button soft"
-                        type="button"
-                    >
-                        + Cardio
-                    </button>
-                </div>
-
-                <div
-                    class="quick-minutes"
-                    aria-label="Quick add cardio minutes"
+                    id="lifting-list"
+                    class="workout-list"
                 >
-                    <button data-cardio-min="5">+5</button>
-                    <button data-cardio-min="10">+10</button>
-                    <button data-cardio-min="20">+20</button>
-                    <button data-cardio-min="30">+30</button>
+                    <p class="empty-message">
+                        No lifting exercises yet.
+                    </p>
                 </div>
-
-                <div
-                    id="cardioWeek"
-                    class="week-bars"
-                ></div>
-
-                <div
-                    id="cardioList"
-                    class="entry-list compact"
-                ></div>
 
             </article>
 
 
-            <article class="card daily-card">
+            <article class="workout-card">
 
-                <div class="card-heading">
+                <div class="card-header">
                     <div>
-                        <p class="eyebrow">✓ DAILY</p>
-                        <h2>Daily exercises</h2>
+                        <p class="workout-eyebrow">
+                            ♥ Cardio
+                        </p>
+
+                        <h2>Cardio</h2>
                     </div>
                 </div>
 
-                <p class="subtle">
-                    Daily goal: 10 reps of each movement.
-                    Check off each exercise as you finish it.
+                <div class="quick-cardio">
+
+                    <button type="button" data-cardio="5">
+                        +5
+                    </button>
+
+                    <button type="button" data-cardio="10">
+                        +10
+                    </button>
+
+                    <button type="button" data-cardio="20">
+                        +20
+                    </button>
+
+                    <button type="button" data-cardio="30">
+                        +30
+                    </button>
+
+                </div>
+
+                <p class="cardio-total">
+                    Today:
+                    <strong id="today-cardio">0</strong>
+                    minutes
                 </p>
 
-                <div
-                    id="dailyExerciseList"
-                    class="daily-exercise-list"
-                ></div>
+            </article>
+
+
+            <article class="workout-card">
+
+                <div class="card-header">
+                    <div>
+                        <p class="workout-eyebrow">
+                            ✓ Daily
+                        </p>
+
+                        <h2>Daily Exercises</h2>
+                    </div>
+                </div>
 
                 <div
-                    id="dailyWeek"
-                    class="day-checks"
+                    id="daily-exercises"
+                    class="daily-exercises"
                 ></div>
-
-                <label class="field-label">
-                    Today's note
-
-                    <textarea
-                        id="dailyNote"
-                        rows="4"
-                        placeholder="Walk, core work, YouTube workout, stairs…"
-                    ></textarea>
-                </label>
 
             </article>
 
 
-            <article class="card stretch-card">
+            <article class="workout-card">
 
-                <div class="card-heading">
+                <div class="card-header">
                     <div>
-                        <p class="eyebrow">❀ RECOVERY</p>
+                        <p class="workout-eyebrow">
+                            ❀ Recovery
+                        </p>
+
                         <h2>Stretching</h2>
                     </div>
                 </div>
 
-                <p class="subtle">
-                    A few minutes counts.
-                    This is about consistency, not perfection.
-                </p>
+                <div class="stretch-options">
 
-                <div
-                    id="stretchWeek"
-                    class="day-checks"
-                ></div>
-
-                <div class="stretch-actions">
-                    <button
-                        class="stretch-chip"
-                        data-stretch="Full body"
-                    >
-                        Full body
+                    <button type="button" data-stretch="Full body">
+                        Full Body
                     </button>
 
-                    <button
-                        class="stretch-chip"
-                        data-stretch="Lower body"
-                    >
-                        Lower body
+                    <button type="button" data-stretch="Lower body">
+                        Lower Body
                     </button>
 
-                    <button
-                        class="stretch-chip"
-                        data-stretch="Upper body"
-                    >
-                        Upper body
+                    <button type="button" data-stretch="Upper body">
+                        Upper Body
                     </button>
 
-                    <button
-                        class="stretch-chip"
-                        data-stretch="Mobility"
-                    >
+                    <button type="button" data-stretch="Mobility">
                         Mobility
                     </button>
+
                 </div>
 
-                <div
-                    id="stretchRecent"
-                    class="recent-stretch"
-                ></div>
+                <p id="stretch-status" class="subtle">
+                    Nothing logged today.
+                </p>
 
             </article>
 
         </section>
 
 
-        <!-- =========================================
-             28 DAY CORE PLAN
-        ========================================== -->
+        <section class="workout-card workout-notes">
 
-        <section class="card abs-plan-card">
-
-            <div class="card-heading abs-plan-heading">
-
+            <div class="card-header">
                 <div>
-                    <p class="eyebrow">
-                        ◎ ABS / CORE REPAIR
+                    <p class="workout-eyebrow">
+                        Notes
                     </p>
 
-                    <h2>
-                        28-Day Diastasis Recti Repair Plan
-                    </h2>
-
-                    <p class="subtle">
-                        Ten-minute guided workouts from
-                        Nourish Move Love.
-                        Tap the workout title to open the
-                        guided video page, then check it off
-                        when complete.
-                    </p>
+                    <h2>Today's Workout Notes</h2>
                 </div>
-
-                <div
-                    class="abs-plan-progress"
-                    aria-live="polite"
-                >
-                    <span>Workouts complete</span>
-                    <strong id="absPlanProgress">
-                        0 / 24
-                    </strong>
-                </div>
-
             </div>
 
-            <div
-                class="abs-week-labels"
-                aria-hidden="true"
-            >
-                <span>Week 1</span>
-                <span>Week 2</span>
-                <span>Week 3</span>
-                <span>Week 4</span>
-            </div>
-
-            <div
-                id="absPlanCalendar"
-                class="abs-plan-calendar"
-            ></div>
+            <textarea
+                id="workout-notes"
+                placeholder="How did today feel? Anything you want to remember?"
+            ></textarea>
 
         </section>
 
 
-        <!-- =========================================
-             WEEK AT A GLANCE
-        ========================================== -->
+        <section class="workout-card">
 
-        <section class="card glance-card">
-
-            <div class="card-heading">
+            <div class="card-header">
                 <div>
-                    <p class="eyebrow">THIS WEEK</p>
-                    <h2>Week at a glance</h2>
+                    <p class="workout-eyebrow">
+                        This Week
+                    </p>
+
+                    <h2>Week at a Glance</h2>
                 </div>
             </div>
 
             <div
-                id="weekGlance"
+                id="week-glance"
                 class="week-glance"
             ></div>
 
@@ -356,68 +269,78 @@
     </main>
 
 
-    <!-- =========================================
-         ADD WORKOUT DIALOG
-    ========================================== -->
+    <dialog id="lifting-dialog">
 
-    <dialog id="entryDialog">
+        <form id="lifting-form">
 
-        <form
-            id="entryForm"
-            class="dialog-form"
-        >
-
-            <div class="dialog-heading">
-
-                <h2 id="dialogTitle">
-                    Add workout
-                </h2>
+            <div class="dialog-header">
+                <h2>Add Exercise</h2>
 
                 <button
-                    id="dialogClose"
-                    class="icon-button"
+                    id="close-lifting-dialog"
                     type="button"
                 >
                     ×
                 </button>
-
             </div>
 
-            <div
-                id="dialogFields"
-                class="field-stack"
-            ></div>
+            <label>
+                Exercise
 
-            <div class="dialog-actions">
-
-                <button
-                    id="dialogCancel"
-                    class="button secondary"
-                    type="button"
+                <input
+                    name="exercise"
+                    type="text"
+                    placeholder="Goblet squat"
+                    required
                 >
-                    Cancel
-                </button>
+            </label>
 
-                <button
-                    class="button primary"
-                    type="submit"
+            <label>
+                Sets
+
+                <input
+                    name="sets"
+                    type="number"
+                    min="1"
+                    value="3"
+                    required
                 >
-                    Save
-                </button>
+            </label>
 
-            </div>
+            <label>
+                Reps
+
+                <input
+                    name="reps"
+                    type="number"
+                    min="1"
+                    value="10"
+                    required
+                >
+            </label>
+
+            <label>
+                Weight
+
+                <input
+                    name="weight"
+                    type="number"
+                    min="0"
+                    step=".5"
+                    value="0"
+                >
+            </label>
+
+            <button
+                class="planner-button"
+                type="submit"
+            >
+                Save Exercise
+            </button>
 
         </form>
 
     </dialog>
-
-
-    <div
-        id="toast"
-        class="toast"
-        role="status"
-        aria-live="polite"
-    ></div>
 
 
     <script>
@@ -425,11 +348,7 @@
     </script>
 
     <script src="../header.js"></script>
-
-    <script
-        type="module"
-        src="./workouts.js"
-    ></script>
+    <script type="module" src="./workouts.js"></script>
 
 </body>
 
