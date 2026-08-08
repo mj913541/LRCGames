@@ -11,6 +11,8 @@ fetch(headerPath)
         const links = {
             dashboard: basePath + "dashboard.html",
 
+            tasks: basePath + "tasks/tasks.html",
+
             workouts: basePath + "workouts/workouts.html",
 
             "lesson-planning":
