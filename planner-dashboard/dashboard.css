@@ -65,7 +65,41 @@ body {
 
     touch-action: none;
 }
+.notebook-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
 
+    margin-bottom: 12px;
+}
+
+.notebook-tools {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notebook-tools button {
+    border: none;
+    background-color: #e8efe5;
+
+    padding: 8px 12px;
+
+    border-radius: 8px;
+
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.notebook-tools button:hover {
+    background-color: #d7e3d2;
+}
+
+.notebook-tools button.active {
+    background-color: #9caf98;
+    color: white;
+}
 
 /* To-do list */
 

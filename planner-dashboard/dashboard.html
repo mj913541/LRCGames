@@ -22,15 +22,26 @@
 
         <div class="dashboard-left">
 
-            <section class="notebook">
 
-                <h2>Notebook</h2>
+<section class="notebook">
 
-                <div class="notebook-paper">
-                <canvas id="notebook-canvas"></canvas>
-                </div>
+    <div class="notebook-header">
+        <h2>Notebook</h2>
 
-            </section>
+        <div class="notebook-tools">
+            <button type="button" id="pen-tool">✏️ Pen</button>
+            <button type="button" id="eraser-tool">◯ Eraser</button>
+            <button type="button" id="undo-tool">↶ Undo</button>
+            <button type="button" id="clear-tool">Clear</button>
+        </div>
+    </div>
+
+    <div class="notebook-paper">
+        <canvas id="notebook-canvas"></canvas>
+    </div>
+
+</section>
+
 
             <section class="todo">
                 <h2>To-Do</h2>
