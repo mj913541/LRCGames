@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Weekly Planner</title>
+
+    <link rel="stylesheet" href="../header.css">
+    <link rel="stylesheet" href="./calendar.css">
+</head>
+
+<body>
+
+    <div id="site-header"></div>
+
+    <main class="planner-shell">
+
+        <section class="planner-page weekly-page">
+
+            <div class="week-header">
+
+                <div>
+                    <p class="planner-eyebrow">Weekly Planner</p>
+                    <h1 id="week-title">This Week</h1>
+                </div>
+
+                <div class="week-controls">
+                    <button type="button" id="previous-week">
+                        ←
+                    </button>
+
+                    <button type="button" id="today-week">
+                        Today
+                    </button>
+
+                    <button type="button" id="next-week">
+                        →
+                    </button>
+                </div>
+
+            </div>
+
+
+            <div class="weekly-spread" id="weekly-spread">
+
+                <section class="week-day" data-day="monday">
+                    <h2>Monday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+                <section class="week-day" data-day="tuesday">
+                    <h2>Tuesday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+                <section class="week-day" data-day="wednesday">
+                    <h2>Wednesday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+                <section class="week-day" data-day="thursday">
+                    <h2>Thursday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+                <section class="week-day" data-day="friday">
+                    <h2>Friday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+                <section class="week-day weekend" data-day="saturday">
+                    <h2>Saturday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+                <section class="week-day weekend" data-day="sunday">
+                    <h2>Sunday</h2>
+                    <p class="day-date"></p>
+                    <div class="day-writing-area"></div>
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <nav class="planner-tabs calendar-view-tabs">
+
+            <a href="./calendar.html">
+                Year
+            </a>
+
+            <a href="./august.html">
+                Month
+            </a>
+
+            <a href="./week.html" class="active-tab">
+                Week
+            </a>
+
+        </nav>
+
+    </main>
+
+
+    <script>
+        window.headerPath = "../header.html";
+    </script>
+
+    <script src="../header.js"></script>
+    <script src="./calendar.js"></script>
+
+</body>
+
+</html>
