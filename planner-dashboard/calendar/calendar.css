@@ -745,18 +745,15 @@ body {
 
 .daily-note-paper {
     min-height: 350px;
-
     background-image:
-        linear-gradient(
-            #e4eadf 1px,
-            transparent 1px
-        ),
-        linear-gradient(
-            90deg,
-            #e4eadf 1px,
-            transparent 1px
-        );
+        linear-gradient(#e4eadf 1px, transparent 1px),
+        linear-gradient(90deg, #e4eadf 1px, transparent 1px);
+    background-size: 22px 22px;
+}
 
-    background-size:
-        22px 22px;
+#daily-notes-canvas {
+    display: block;
+    width: 100%;
+    height: 350px;
+    touch-action: none;
 }

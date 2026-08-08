@@ -9,66 +9,58 @@
 
     <link rel="stylesheet" href="./header.css">
     <link rel="stylesheet" href="./dashboard.css">
-
 </head>
 
 <body>
 
     <div id="site-header"></div>
 
-    <h1>Planner Dashboard</h1>
-
     <main class="dashboard-layout">
 
         <div class="dashboard-left">
 
+            <section class="notebook">
 
-<section class="notebook">
+                <div class="notebook-header">
+                    <h2>Notebook</h2>
 
-    <div class="notebook-header">
-        <h2>Notebook</h2>
+                    <div class="notebook-tools">
+                        <button type="button" id="pen-tool">✏️ Pen</button>
+                        <button type="button" id="eraser-tool">◯ Eraser</button>
+                        <button type="button" id="undo-tool">↶ Undo</button>
+                        <button type="button" id="clear-tool">Clear</button>
+                    </div>
+                </div>
 
-        <div class="notebook-tools">
-            <button type="button" id="pen-tool">✏️ Pen</button>
-            <button type="button" id="eraser-tool">◯ Eraser</button>
-            <button type="button" id="undo-tool">↶ Undo</button>
-            <button type="button" id="clear-tool">Clear</button>
-        </div>
-    </div>
+                <div class="notebook-paper">
+                    <canvas id="notebook-canvas"></canvas>
+                </div>
 
-    <div class="notebook-paper">
-        <canvas id="notebook-canvas"></canvas>
-    </div>
-
-</section>
-
+            </section>
 
             <section class="todo">
                 <h2>To-Do</h2>
 
                 <div class="todo-list">
-
                     <label>
                         <input type="checkbox">
                         Example task
                     </label>
-
                 </div>
             </section>
 
         </div>
 
         <aside class="timeline">
-
             <h2>Today</h2>
 
             <div id="timeline-list"></div>
-
         </aside>
 
     </main>
 
     <script src="./header.js"></script>
+    <script src="./drawing.js"></script>
     <script src="./dashboard.js"></script>
 
 </body>
