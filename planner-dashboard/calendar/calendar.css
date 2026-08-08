@@ -1,0 +1,155 @@
+body {
+    margin: 0;
+
+    font-family: Arial, sans-serif;
+
+    background-color: #b9caaa;
+
+    color: #3f5142;
+}
+
+
+/* ---------------------------------
+   Planner shell
+--------------------------------- */
+
+.planner-shell {
+    display: grid;
+
+    grid-template-columns: minmax(0, 1fr) auto;
+
+    max-width: 1200px;
+
+    margin: 20px auto;
+
+    padding:
+        0
+        18px
+        30px
+        38px;
+}
+
+
+/* ---------------------------------
+   Paper page
+--------------------------------- */
+
+.planner-page {
+    min-height: 780px;
+
+    background-color: #fffdf6;
+
+    border-radius:
+        20px
+        0
+        0
+        20px;
+
+    padding:
+        32px
+        38px
+        40px
+        48px;
+
+    box-shadow:
+        0 6px 20px
+        rgba(57, 74, 59, 0.12);
+}
+
+
+/* ---------------------------------
+   Page heading
+--------------------------------- */
+
+.planner-page-header {
+    display: flex;
+
+    justify-content: space-between;
+    align-items: flex-start;
+
+    padding-bottom: 18px;
+
+    border-bottom:
+        1px solid
+        #dce5d8;
+}
+
+.planner-page-header h1 {
+    margin:
+        3px
+        0
+        0;
+
+    font-size: 30px;
+}
+
+.planner-eyebrow {
+    margin: 0;
+
+    color: #7b907c;
+
+    font-size: 13px;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1.5px;
+}
+
+
+/* ---------------------------------
+   Page content
+--------------------------------- */
+
+.calendar-content {
+    padding-top: 28px;
+}
+
+
+/* ---------------------------------
+   Right-side planner tabs
+--------------------------------- */
+
+.planner-tabs {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 5px;
+
+    padding-top: 40px;
+}
+
+.planner-tabs a {
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    width: 64px;
+    height: 48px;
+
+    background-color: #d9e4d3;
+
+    color: #3f5142;
+
+    text-decoration: none;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    border-radius:
+        0
+        13px
+        13px
+        0;
+
+    transition:
+        background-color 0.2s,
+        width 0.2s;
+}
+
+.planner-tabs a:hover {
+    background-color: #c3d4bb;
+
+    width: 70px;
+}
