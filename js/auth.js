@@ -9,16 +9,12 @@ import {
 const googleSignInButton = document.getElementById("googleSignInButton");
 const loginMessage = document.getElementById("loginMessage");
 
+const provider = new GoogleAuthProvider();
+
 const PLANNER_EMAILS = new Set([
     "malbrecht@sd308.org",
     "malbrecht3317@gmail.com"
 ]);
-
-const provider = new GoogleAuthProvider();
-
-// =====================================================
-// CHOOSE WHERE THE USER GOES
-// =====================================================
 
 function sendUserToCorrectPage(user) {
     const email = user.email?.toLowerCase();
@@ -28,33 +24,20 @@ function sendUserToCorrectPage(user) {
         return;
     }
 
-    window.location.href = "./questHub.html";
+    window.location.href = "./quest-hub.html";
 }
-
-// =====================================================
-// GOOGLE SIGN IN BUTTON
-// =====================================================
 
 googleSignInButton?.addEventListener("click", async () => {
     loginMessage.textContent = "Signing in...";
 
     try {
         const result = await signInWithPopup(auth, provider);
-
-        loginMessage.textContent = "Signed in!";
-
         sendUserToCorrectPage(result.user);
     } catch (error) {
         console.error("Google sign-in failed:", error);
-
-        loginMessage.textContent =
-            "Sign-in failed. Please try again.";
+        loginMessage.textContent = "Sign-in failed. Please try again.";
     }
 });
-
-// =====================================================
-// ALREADY SIGNED IN
-// =====================================================
 
 onAuthStateChanged(auth, user => {
     if (!user) {
