@@ -20,7 +20,9 @@ body {
 .planner-shell {
     display: grid;
 
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns:
+        minmax(0, 1fr)
+        auto;
 
     max-width: 1200px;
 
@@ -186,7 +188,9 @@ body {
 
     padding-bottom: 18px;
 
-    border-bottom: 1px solid #dce5d8;
+    border-bottom:
+        1px solid
+        #dce5d8;
 }
 
 
@@ -511,7 +515,9 @@ body {
 
     padding-bottom: 18px;
 
-    border-bottom: 1px solid #dce5d8;
+    border-bottom:
+        1px solid
+        #dce5d8;
 }
 
 
@@ -551,11 +557,14 @@ body {
 /* =====================================================
    DAILY SPREAD
 
-   LEFT  = priorities + notes
-   RIGHT = timeline
+   LEFT:
+   Priorities + Notes
 
-   This keeps the timeline closest to the navigation
-   tabs and leaves the larger writing area on the left.
+   RIGHT:
+   Timeline / Schedule
+
+   This keeps the writing space on the left
+   and the timeline closest to the navigation tabs.
 ===================================================== */
 
 .daily-spread {
@@ -565,6 +574,8 @@ body {
         minmax(0, 1.35fr)
         minmax(260px, 0.65fr);
 
+    align-items: start;
+
     gap: 18px;
 
     margin-top: 22px;
@@ -572,10 +583,10 @@ body {
 
 
 /* =====================================================
-   DAILY LEFT SIDE
+   DAILY PLANNING COLUMN
 ===================================================== */
 
-.daily-right {
+.daily-planning {
     grid-column: 1;
 
     display: flex;
@@ -583,6 +594,90 @@ body {
     flex-direction: column;
 
     gap: 18px;
+
+    min-width: 0;
+}
+
+
+/* =====================================================
+   DAILY PRIORITIES
+===================================================== */
+
+.daily-priorities {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+    padding: 18px;
+
+    border:
+        1px solid
+        #dce5d8;
+
+    border-radius:
+        12px;
+
+    background-color:
+        #fffef9;
+}
+
+
+/* =====================================================
+   DAILY NOTES
+===================================================== */
+
+.daily-notes {
+    padding: 18px;
+
+    border:
+        1px solid
+        #dce5d8;
+
+    border-radius:
+        12px;
+
+    background-color:
+        #fffef9;
+}
+
+
+/* =====================================================
+   MATCH DAILY HEADINGS
+===================================================== */
+
+.daily-priorities h2,
+.daily-notes h2,
+.daily-timeline-panel h2 {
+    margin-top: 0;
+
+    margin-bottom: 14px;
+
+    color: #4f6252;
+}
+
+
+/* =====================================================
+   DAILY TIMELINE PANEL
+===================================================== */
+
+.daily-timeline-panel {
+    grid-column: 2;
+
+    min-width: 0;
+
+    padding: 18px;
+
+    border:
+        1px solid
+        #dce5d8;
+
+    border-radius:
+        12px;
+
+    background-color:
+        #fffef9;
 }
 
 
@@ -590,23 +685,14 @@ body {
    DAILY TIMELINE
 ===================================================== */
 
-.daily-timeline-panel {
-    grid-column: 2;
-
-    min-width: 0;
-}
-
-
 .day-timeline {
     height: 650px;
 
     overflow-y: auto;
 
-    border: 1px solid #dce5d8;
-
-    border-radius: 12px;
-
-    background-color: #fffef9;
+    border-top:
+        1px solid
+        #dce5d8;
 }
 
 
@@ -617,53 +703,39 @@ body {
         82px
         1fr;
 
-    min-height: 22px;
+    min-height:
+        22px;
 
-    border-bottom: 1px solid #edf1eb;
+    border-bottom:
+        1px solid
+        #edf1eb;
 }
 
 
 .day-hour-row {
-    border-top: 2px solid #9caf98;
+    border-top:
+        2px solid
+        #9caf98;
 }
 
 
 .day-time {
-    padding: 3px 6px;
+    padding:
+        3px
+        6px;
 
-    color: #728474;
+    color:
+        #728474;
 
-    font-size: 11px;
+    font-size:
+        11px;
 }
 
 
 .day-slot {
-    border-left: 1px solid #edf1eb;
-}
-
-
-/* =====================================================
-   DAILY PRIORITIES + NOTES
-===================================================== */
-
-.daily-priorities,
-.daily-notes {
-    padding: 18px;
-
-    border: 1px solid #dce5d8;
-
-    border-radius: 12px;
-
-    background-color: #fffef9;
-}
-
-
-.daily-priorities {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 10px;
+    border-left:
+        1px solid
+        #edf1eb;
 }
 
 
@@ -685,5 +757,6 @@ body {
             transparent 1px
         );
 
-    background-size: 22px 22px;
+    background-size:
+        22px 22px;
 }
