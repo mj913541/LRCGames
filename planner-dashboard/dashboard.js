@@ -1,3 +1,6 @@
+import { db } from "../js/firebase.js";
+console.log("Firestore connection:", db);
+
 console.log("Dashboard JavaScript is connected!");
 
 const timelineList = document.getElementById("timeline-list");
