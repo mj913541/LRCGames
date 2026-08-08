@@ -1,3 +1,7 @@
+/* =====================================================
+   BASE PAGE
+===================================================== */
+
 body {
     margin: 0;
 
@@ -9,9 +13,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Planner shell
---------------------------------- */
+/* =====================================================
+   PLANNER SHELL
+===================================================== */
 
 .planner-shell {
     display: grid;
@@ -30,9 +34,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Paper page
---------------------------------- */
+/* =====================================================
+   PAPER PAGE
+===================================================== */
 
 .planner-page {
     min-height: 780px;
@@ -57,9 +61,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Page heading
---------------------------------- */
+/* =====================================================
+   PAGE HEADING
+===================================================== */
 
 .planner-page-header {
     display: flex;
@@ -74,6 +78,7 @@ body {
         #dce5d8;
 }
 
+
 .planner-page-header h1 {
     margin:
         3px
@@ -82,6 +87,7 @@ body {
 
     font-size: 30px;
 }
+
 
 .planner-eyebrow {
     margin: 0;
@@ -96,18 +102,18 @@ body {
 }
 
 
-/* ---------------------------------
-   Page content
---------------------------------- */
+/* =====================================================
+   PAGE CONTENT
+===================================================== */
 
 .calendar-content {
     padding-top: 28px;
 }
 
 
-/* ---------------------------------
-   Right-side planner tabs
---------------------------------- */
+/* =====================================================
+   RIGHT-SIDE PLANNER TABS
+===================================================== */
 
 .planner-tabs {
     display: flex;
@@ -118,6 +124,7 @@ body {
 
     padding-top: 40px;
 }
+
 
 .planner-tabs a {
     display: flex;
@@ -148,18 +155,30 @@ body {
         width 0.2s;
 }
 
+
 .planner-tabs a:hover {
     background-color: #c3d4bb;
 
     width: 70px;
 }
 
-/* ---------------------------------
-   Weekly planner header
---------------------------------- */
+
+.planner-tabs a.active-tab {
+    background-color: #91aa8b;
+
+    width: 72px;
+
+    color: white;
+}
+
+
+/* =====================================================
+   WEEKLY PLANNER HEADER
+===================================================== */
 
 .week-header {
     display: flex;
+
     justify-content: space-between;
     align-items: flex-start;
 
@@ -170,19 +189,22 @@ body {
     border-bottom: 1px solid #dce5d8;
 }
 
+
 .week-header h1 {
     margin: 3px 0 0;
 }
 
 
-/* ---------------------------------
-   Week controls
---------------------------------- */
+/* =====================================================
+   WEEK CONTROLS
+===================================================== */
 
 .week-controls {
     display: flex;
+
     gap: 8px;
 }
+
 
 .week-controls button {
     border: none;
@@ -200,14 +222,15 @@ body {
     cursor: pointer;
 }
 
+
 .week-controls button:hover {
     background-color: #ccd9c6;
 }
 
 
-/* ---------------------------------
-   Weekly spread
---------------------------------- */
+/* =====================================================
+   WEEKLY SPREAD
+===================================================== */
 
 .weekly-spread {
     display: grid;
@@ -221,9 +244,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Individual day
---------------------------------- */
+/* =====================================================
+   INDIVIDUAL WEEK DAY
+===================================================== */
 
 .week-day {
     min-height: 210px;
@@ -235,7 +258,10 @@ body {
     border-radius: 12px;
 
     background-color: #fffef9;
+
+    cursor: pointer;
 }
+
 
 .week-day h2 {
     margin: 0;
@@ -244,6 +270,7 @@ body {
 
     color: #4f6252;
 }
+
 
 .day-date {
     margin: 4px 0 12px;
@@ -254,15 +281,18 @@ body {
 }
 
 
-/* ---------------------------------
-   Graph-paper writing area
---------------------------------- */
+/* =====================================================
+   WEEKLY GRAPH-PAPER WRITING AREA
+===================================================== */
 
 .day-writing-area {
     min-height: 150px;
 
     background-image:
-        linear-gradient(#e4eadf 1px, transparent 1px),
+        linear-gradient(
+            #e4eadf 1px,
+            transparent 1px
+        ),
         linear-gradient(
             90deg,
             #e4eadf 1px,
@@ -273,21 +303,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Active planner tab
---------------------------------- */
-
-.planner-tabs a.active-tab {
-    background-color: #91aa8b;
-
-    width: 72px;
-
-    color: white;
-}
-
-/* ---------------------------------
-   Monthly planning spread
---------------------------------- */
+/* =====================================================
+   MONTHLY PLANNING SPREAD
+===================================================== */
 
 .monthly-spread {
     display: grid;
@@ -300,14 +318,18 @@ body {
 }
 
 
-/* Calendar */
+/* =====================================================
+   MONTH CALENDAR
+===================================================== */
 
 .month-calendar {
     min-height: 480px;
 }
 
 
-/* Important dates */
+/* =====================================================
+   IMPORTANT DATES
+===================================================== */
 
 .important-dates {
     background-color: #f7f8f2;
@@ -320,7 +342,9 @@ body {
 }
 
 
-/* Bottom task sections */
+/* =====================================================
+   MONTH TASK SECTIONS
+===================================================== */
 
 .month-tasks,
 .next-month-tasks {
@@ -364,9 +388,10 @@ body {
     font-size: 14px;
 }
 
-/* ---------------------------------
-   Month calendar grid
---------------------------------- */
+
+/* =====================================================
+   MONTH CALENDAR GRID
+===================================================== */
 
 #month-grid {
     display: grid;
@@ -378,9 +403,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Day headings
---------------------------------- */
+/* =====================================================
+   MONTH DAY HEADINGS
+===================================================== */
 
 .calendar-day-heading {
     text-align: center;
@@ -398,9 +423,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Calendar day
---------------------------------- */
+/* =====================================================
+   MONTH CALENDAR DAY
+===================================================== */
 
 .calendar-day {
     min-height: 82px;
@@ -434,9 +459,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Day number
---------------------------------- */
+/* =====================================================
+   CALENDAR DAY NUMBER
+===================================================== */
 
 .calendar-day-number {
     display: block;
@@ -448,9 +473,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Space for future events
---------------------------------- */
+/* =====================================================
+   FUTURE CALENDAR EVENTS AREA
+===================================================== */
 
 .calendar-day-content {
     min-height: 45px;
@@ -459,9 +484,9 @@ body {
 }
 
 
-/* ---------------------------------
-   Blank days
---------------------------------- */
+/* =====================================================
+   BLANK MONTH DAYS
+===================================================== */
 
 .calendar-day-empty {
     background-color: transparent;
@@ -471,9 +496,10 @@ body {
     cursor: default;
 }
 
-/* ---------------------------------
-   Daily planner header
---------------------------------- */
+
+/* =====================================================
+   DAILY PLANNER HEADER
+===================================================== */
 
 .day-header {
     display: flex;
@@ -485,14 +511,17 @@ body {
 
     padding-bottom: 18px;
 
-    border-bottom:
-        1px solid
-        #dce5d8;
+    border-bottom: 1px solid #dce5d8;
 }
 
 
+/* =====================================================
+   DAY CONTROLS
+===================================================== */
+
 .day-controls {
     display: flex;
+
     gap: 8px;
 }
 
@@ -500,37 +529,41 @@ body {
 .day-controls button {
     border: none;
 
-    background-color:
-        #e4ecdf;
+    background-color: #e4ecdf;
 
-    color:
-        #3f5142;
+    color: #3f5142;
 
-    padding:
-        9px
-        13px;
+    padding: 9px 13px;
 
-    border-radius:
-        10px;
+    border-radius: 10px;
 
-    font-family:
-        inherit;
+    font-family: inherit;
 
-    cursor:
-        pointer;
+    cursor: pointer;
 }
 
 
-/* ---------------------------------
-   Daily spread
---------------------------------- */
+.day-controls button:hover {
+    background-color: #ccd9c6;
+}
+
+
+/* =====================================================
+   DAILY SPREAD
+
+   LEFT  = priorities + notes
+   RIGHT = timeline
+
+   This keeps the timeline closest to the navigation
+   tabs and leaves the larger writing area on the left.
+===================================================== */
 
 .daily-spread {
     display: grid;
 
     grid-template-columns:
-        minmax(0, 1.2fr)
-        minmax(250px, 0.8fr);
+        minmax(0, 1.35fr)
+        minmax(260px, 0.65fr);
 
     gap: 18px;
 
@@ -538,11 +571,28 @@ body {
 }
 
 
-/* ---------------------------------
-   Timeline
---------------------------------- */
+/* =====================================================
+   DAILY LEFT SIDE
+===================================================== */
+
+.daily-right {
+    grid-column: 1;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 18px;
+}
+
+
+/* =====================================================
+   DAILY TIMELINE
+===================================================== */
 
 .daily-timeline-panel {
+    grid-column: 2;
+
     min-width: 0;
 }
 
@@ -552,15 +602,11 @@ body {
 
     overflow-y: auto;
 
-    border:
-        1px solid
-        #dce5d8;
+    border: 1px solid #dce5d8;
 
-    border-radius:
-        12px;
+    border-radius: 12px;
 
-    background-color:
-        #fffef9;
+    background-color: #fffef9;
 }
 
 
@@ -571,68 +617,44 @@ body {
         82px
         1fr;
 
-    min-height:
-        22px;
+    min-height: 22px;
 
-    border-bottom:
-        1px solid
-        #edf1eb;
+    border-bottom: 1px solid #edf1eb;
 }
 
 
 .day-hour-row {
-    border-top:
-        2px solid
-        #9caf98;
+    border-top: 2px solid #9caf98;
 }
 
 
 .day-time {
-    padding:
-        3px
-        6px;
+    padding: 3px 6px;
 
-    color:
-        #728474;
+    color: #728474;
 
-    font-size:
-        11px;
+    font-size: 11px;
 }
 
 
 .day-slot {
-    border-left:
-        1px solid
-        #edf1eb;
+    border-left: 1px solid #edf1eb;
 }
 
 
-/* ---------------------------------
-   Right side
---------------------------------- */
-
-.daily-right {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 18px;
-}
-
+/* =====================================================
+   DAILY PRIORITIES + NOTES
+===================================================== */
 
 .daily-priorities,
 .daily-notes {
     padding: 18px;
 
-    border:
-        1px solid
-        #dce5d8;
+    border: 1px solid #dce5d8;
 
-    border-radius:
-        12px;
+    border-radius: 12px;
 
-    background-color:
-        #fffef9;
+    background-color: #fffef9;
 }
 
 
@@ -644,6 +666,10 @@ body {
     gap: 10px;
 }
 
+
+/* =====================================================
+   DAILY GRAPH-PAPER NOTES
+===================================================== */
 
 .daily-note-paper {
     min-height: 350px;
@@ -659,6 +685,5 @@ body {
             transparent 1px
         );
 
-    background-size:
-        22px 22px;
+    background-size: 22px 22px;
 }
