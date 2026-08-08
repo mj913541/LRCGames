@@ -1,20 +1,4 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4",
-  authDomain: "lrcquest-3039e.firebaseapp.com",
-  projectId: "lrcquest-3039e",
-  storageBucket: "lrcquest-3039e.firebasestorage.app",
-  messagingSenderId: "72063656342",
-  appId: "1:72063656342:web:bc08c6538437f50b53bdb7",
-  measurementId: "G-5VXRYJ733C"
-};
-const ALLOWED_EMAILS = new Set(["malbrecht@sd308.org", "malbrecht3317@gmail.com"]);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
 
 const SCHEDULE_BY_LETTER_DAY = {
   A: [
