@@ -6,47 +6,105 @@ import {
 
 import {
     doc,
+    getDoc,
     setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
 console.log("Dashboard JavaScript is connected!");
 
+let plannerReady = false;
+
 // =====================================================
-// AUTH + FIRESTORE TEST
+// FIREBASE AUTH
 // =====================================================
 
 onAuthStateChanged(auth, async user => {
     if (!user) {
-        console.log("No Firebase user is signed in.");
         window.location.href = "../index.html";
         return;
     }
 
     console.log("Signed in as:", user.email);
-    console.log("Firestore connection:", db);
+    plannerReady = true;
 
-    try {
-        await setDoc(
-            doc(
-                db,
-                "plannerDashboardUsers",
-                "mj",
-                "test",
-                "dashboard"
-            ),
-            {
-                message: "Planner Firebase is working!",
-                email: user.email,
-                updatedAt: serverTimestamp()
-            }
-        );
+    await loadDashboardNotebook();
+});
 
-        console.log("Planner test saved successfully!");
-    } catch (error) {
-        console.error("Planner test save failed:", error);
+// =====================================================
+// DASHBOARD NOTEBOOK FIRESTORE
+// =====================================================
+
+const dashboardDrawingRef = doc(
+    db,
+    "plannerDashboardUsers",
+    "mj",
+    "drawings",
+    "dashboard-notebook"
+);
+
+let notebookSaveTimer = null;
+
+const dashboardNotebook = makeDrawingCanvas({
+    canvasId: "notebook-canvas",
+    penId: "pen-tool",
+    eraserId: "eraser-tool",
+    undoId: "undo-tool",
+    clearId: "clear-tool",
+
+    onChange: strokes => {
+        if (!plannerReady) {
+            return;
+        }
+
+        clearTimeout(notebookSaveTimer);
+
+        notebookSaveTimer = setTimeout(() => {
+            saveDashboardNotebook(strokes);
+        }, 500);
     }
 });
+
+async function loadDashboardNotebook() {
+    try {
+        const snapshot = await getDoc(dashboardDrawingRef);
+
+        if (!snapshot.exists()) {
+            return;
+        }
+
+        dashboardNotebook?.loadDrawing(
+            snapshot.data().strokes || []
+        );
+
+        console.log("Dashboard notebook loaded.");
+    } catch (error) {
+        console.error(
+            "Could not load dashboard notebook:",
+            error
+        );
+    }
+}
+
+async function saveDashboardNotebook(strokes) {
+    try {
+        await setDoc(
+            dashboardDrawingRef,
+            {
+                strokes,
+                updatedAt: serverTimestamp()
+            },
+            { merge: true }
+        );
+
+        console.log("Dashboard notebook saved.");
+    } catch (error) {
+        console.error(
+            "Could not save dashboard notebook:",
+            error
+        );
+    }
+}
 
 // =====================================================
 // TIMELINE
@@ -73,29 +131,21 @@ if (timelineList) {
             const event = document.createElement("span");
             event.classList.add("timeline-event");
 
-            const formattedMinute = String(minute).padStart(2, "0");
+            const formattedMinute =
+                String(minute).padStart(2, "0");
+
             const displayHour = hour % 12 || 12;
             const amPm = hour < 12 ? "AM" : "PM";
 
             if (minute % 15 === 0) {
-                time.textContent = `${displayHour}:${formattedMinute} ${amPm}`;
+                time.textContent =
+                    `${displayHour}:${formattedMinute} ${amPm}`;
             }
 
             row.appendChild(time);
             row.appendChild(event);
+
             timelineList.appendChild(row);
         }
     }
 }
-
-// =====================================================
-// NOTEBOOK DRAWING
-// =====================================================
-
-makeDrawingCanvas({
-    canvasId: "notebook-canvas",
-    penId: "pen-tool",
-    eraserId: "eraser-tool",
-    undoId: "undo-tool",
-    clearId: "clear-tool"
-});

@@ -14,27 +14,62 @@ function makeDrawingCanvas(options) {
 
     let isDrawing = false;
     let currentTool = "pen";
-    let drawingHistory = [];
+    let strokes = [];
+    let history = [];
+    let currentStroke = null;
 
     function resizeCanvas() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
+        redraw();
     }
 
-    function saveDrawingState() {
-        drawingHistory.push(canvas.toDataURL());
+    function redraw() {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        strokes.forEach(stroke => {
+            if (!stroke.points || stroke.points.length < 2) {
+                return;
+            }
+
+            ctx.beginPath();
+
+            const firstPoint = stroke.points[0];
+            ctx.moveTo(
+                firstPoint.x * canvas.width,
+                firstPoint.y * canvas.height
+            );
+
+            for (let i = 1; i < stroke.points.length; i++) {
+                const point = stroke.points[i];
+
+                ctx.lineTo(
+                    point.x * canvas.width,
+                    point.y * canvas.height
+                );
+            }
+
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+
+            if (stroke.tool === "eraser") {
+                ctx.globalCompositeOperation = "destination-out";
+                ctx.lineWidth = 18;
+            } else {
+                ctx.globalCompositeOperation = "source-over";
+                ctx.strokeStyle = "#3f5142";
+                ctx.lineWidth = 2;
+            }
+
+            ctx.stroke();
+        });
+
+        ctx.globalCompositeOperation = "source-over";
     }
 
-    function restoreDrawingState(imageData) {
-        const image = new Image();
-
-        image.onload = () => {
-            ctx.globalCompositeOperation = "source-over";
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-        };
-
-        image.src = imageData;
+    function saveHistory() {
+        history.push(JSON.stringify(strokes));
     }
 
     function selectTool(tool) {
@@ -55,19 +90,42 @@ function makeDrawingCanvas(options) {
     }
 
     function undo() {
-        if (drawingHistory.length === 0) {
+        if (history.length === 0) {
             return;
         }
 
-        const previousDrawing = drawingHistory.pop();
-        restoreDrawingState(previousDrawing);
+        strokes = JSON.parse(history.pop());
+        redraw();
+        notifyChange();
     }
 
     function clear() {
-        saveDrawingState();
+        saveHistory();
+        strokes = [];
+        redraw();
+        notifyChange();
+    }
 
-        ctx.globalCompositeOperation = "source-over";
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    function notifyChange() {
+        if (typeof options.onChange === "function") {
+            options.onChange(strokes);
+        }
+    }
+
+    function loadDrawing(savedStrokes) {
+        history = [];
+
+        if (Array.isArray(savedStrokes)) {
+            strokes = savedStrokes;
+        } else {
+            strokes = [];
+        }
+
+        redraw();
+    }
+
+    function getDrawing() {
+        return strokes;
     }
 
     resizeCanvas();
@@ -75,46 +133,48 @@ function makeDrawingCanvas(options) {
 
     canvas.addEventListener("pointerdown", event => {
         isDrawing = true;
-        saveDrawingState();
+        saveHistory();
 
-        ctx.beginPath();
-        ctx.moveTo(event.offsetX, event.offsetY);
+        const rect = canvas.getBoundingClientRect();
+
+        currentStroke = {
+            tool: currentTool,
+            points: [{
+                x: (event.clientX - rect.left) / rect.width,
+                y: (event.clientY - rect.top) / rect.height
+            }]
+        };
+
+        strokes.push(currentStroke);
     });
 
     canvas.addEventListener("pointermove", event => {
+        if (!isDrawing || !currentStroke) {
+            return;
+        }
+
+        const rect = canvas.getBoundingClientRect();
+
+        currentStroke.points.push({
+            x: (event.clientX - rect.left) / rect.width,
+            y: (event.clientY - rect.top) / rect.height
+        });
+
+        redraw();
+    });
+
+    function finishStroke() {
         if (!isDrawing) {
             return;
         }
 
-        ctx.lineTo(event.offsetX, event.offsetY);
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
-
-        if (currentTool === "pen") {
-            ctx.globalCompositeOperation = "source-over";
-            ctx.strokeStyle = "#3f5142";
-            ctx.lineWidth = 2;
-        }
-
-        if (currentTool === "eraser") {
-            ctx.globalCompositeOperation = "destination-out";
-            ctx.lineWidth = 18;
-        }
-
-        ctx.stroke();
-    });
-
-    canvas.addEventListener("pointerup", () => {
         isDrawing = false;
-    });
+        currentStroke = null;
+        notifyChange();
+    }
 
-    canvas.addEventListener("pointercancel", () => {
-        isDrawing = false;
-    });
-
-    canvas.addEventListener("pointerleave", () => {
-        isDrawing = false;
-    });
+    canvas.addEventListener("pointerup", finishStroke);
+    canvas.addEventListener("pointercancel", finishStroke);
 
     if (options.useSharedToolbar !== true) {
         penButton?.addEventListener("click", () => {
@@ -125,19 +185,18 @@ function makeDrawingCanvas(options) {
             selectTool("eraser");
         });
 
-        undoButton?.addEventListener("click", () => {
-            undo();
-        });
-
-        clearButton?.addEventListener("click", () => {
-            clear();
-        });
+        undoButton?.addEventListener("click", undo);
+        clearButton?.addEventListener("click", clear);
     }
+
+    window.addEventListener("resize", resizeCanvas);
 
     return {
         canvas,
         selectTool,
         undo,
-        clear
+        clear,
+        loadDrawing,
+        getDrawing
     };
 }
