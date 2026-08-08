@@ -153,9 +153,13 @@ if (weeklySpread) {
 
             section.dataset.date = dateString;
 
-            section.onclick = () => {
-                window.location.href = `./day.html?date=${dateString}`;
-            };
+            section.onclick = event => {
+                if (event.target.closest(".day-writing-area")) {
+                 return;
+            }
+
+    window.location.href = `./day.html?date=${dateString}`;
+};
         });
 
         updateURLDate(selectedWeekDate);
