@@ -1,23 +1,43 @@
-import { db } from "../js/firebase.js";
+import { auth, db } from "../js/firebase.js";
+
+import {
+    onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
+
 import {
     doc,
     setDoc,
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 
-console.log("Firestore connection:", db);
 console.log("Dashboard JavaScript is connected!");
 
 // =====================================================
-// FIRESTORE TEST SAVE
+// AUTH + FIRESTORE TEST
 // =====================================================
 
-async function testPlannerSave() {
+onAuthStateChanged(auth, async user => {
+    if (!user) {
+        console.log("No Firebase user is signed in.");
+        window.location.href = "../index.html";
+        return;
+    }
+
+    console.log("Signed in as:", user.email);
+    console.log("Firestore connection:", db);
+
     try {
         await setDoc(
-            doc(db, "planner-test", "dashboard"),
+            doc(
+                db,
+                "plannerDashboardUsers",
+                "mj",
+                "test",
+                "dashboard"
+            ),
             {
                 message: "Planner Firebase is working!",
+                email: user.email,
                 updatedAt: serverTimestamp()
             }
         );
@@ -26,9 +46,7 @@ async function testPlannerSave() {
     } catch (error) {
         console.error("Planner test save failed:", error);
     }
-}
-
-testPlannerSave();
+});
 
 // =====================================================
 // TIMELINE
