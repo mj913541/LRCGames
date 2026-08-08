@@ -155,27 +155,27 @@ if (weeklySpread) {
 
             section.onclick = event => {
                 if (event.target.closest(".day-writing-area")) {
-                 return;
-            }
+                    return;
+                }
 
-    window.location.href = `./day.html?date=${dateString}`;
-};
+                window.location.href = `./day.html?date=${dateString}`;
+            };
         });
 
         updateURLDate(selectedWeekDate);
     }
 
-    previousWeekButton.addEventListener("click", () => {
+    previousWeekButton?.addEventListener("click", () => {
         selectedWeekDate.setDate(selectedWeekDate.getDate() - 7);
         renderWeek();
     });
 
-    todayWeekButton.addEventListener("click", () => {
+    todayWeekButton?.addEventListener("click", () => {
         selectedWeekDate = new Date();
         renderWeek();
     });
 
-    nextWeekButton.addEventListener("click", () => {
+    nextWeekButton?.addEventListener("click", () => {
         selectedWeekDate.setDate(selectedWeekDate.getDate() + 7);
         renderWeek();
     });
@@ -229,7 +229,8 @@ if (dayTimeline) {
                 const formattedMinute = String(minute).padStart(2, "0");
 
                 slot.dataset.date = dateString;
-                slot.dataset.time = `${String(hour).padStart(2, "0")}:${formattedMinute}`;
+                slot.dataset.time =
+                    `${String(hour).padStart(2, "0")}:${formattedMinute}`;
 
                 if (minute % 15 === 0) {
                     const displayHour = hour % 12 || 12;
@@ -248,23 +249,27 @@ if (dayTimeline) {
         updateURLDate(selectedDay);
     }
 
-    previousDayButton.addEventListener("click", () => {
+    previousDayButton?.addEventListener("click", () => {
         selectedDay.setDate(selectedDay.getDate() - 1);
         renderDay();
     });
 
-    todayDayButton.addEventListener("click", () => {
+    todayDayButton?.addEventListener("click", () => {
         selectedDay = new Date();
         renderDay();
     });
 
-    nextDayButton.addEventListener("click", () => {
+    nextDayButton?.addEventListener("click", () => {
         selectedDay.setDate(selectedDay.getDate() + 1);
         renderDay();
     });
 
     renderDay();
 }
+
+// =====================================================
+// DAILY NOTES DRAWING
+// =====================================================
 
 makeDrawingCanvas({
     canvasId: "daily-notes-canvas",
@@ -273,6 +278,10 @@ makeDrawingCanvas({
     undoId: "daily-undo",
     clearId: "daily-clear"
 });
+
+// =====================================================
+// WEEKLY SHARED DRAWING TOOLBAR
+// =====================================================
 
 const weeklyCanvases = [
     "monday-notes",
@@ -285,38 +294,82 @@ const weeklyCanvases = [
 ];
 
 let activeWeeklyDrawing = null;
+let weeklyTool = "pen";
+
+const weekPenButton = document.getElementById("week-pen");
+const weekEraserButton = document.getElementById("week-eraser");
+const weekUndoButton = document.getElementById("week-undo");
+const weekClearButton = document.getElementById("week-clear");
+
+const weeklyDrawings = [];
 
 weeklyCanvases.forEach(canvasId => {
     const drawing = makeDrawingCanvas({
-        canvasId: canvasId,
+        canvasId,
         penId: "week-pen",
         eraserId: "week-eraser",
         undoId: "week-undo",
-        clearId: "week-clear"
+        clearId: "week-clear",
+        useSharedToolbar: true
     });
 
     if (!drawing) {
         return;
     }
 
+    weeklyDrawings.push(drawing);
+    drawing.selectTool(weeklyTool);
+
     drawing.canvas.addEventListener("pointerdown", () => {
         activeWeeklyDrawing = drawing;
+        drawing.selectTool(weeklyTool);
     });
 });
 
-const weekUndoButton = document.getElementById("week-undo");
-const weekClearButton = document.getElementById("week-clear");
+if (weekPenButton) {
+    weekPenButton.classList.add("active");
 
-if (weekUndoButton && weekClearButton) {
-    weekUndoButton.addEventListener("click", () => {
-        if (activeWeeklyDrawing) {
-            activeWeeklyDrawing.undo();
-        }
+    weekPenButton.addEventListener("click", () => {
+        weeklyTool = "pen";
+
+        weekPenButton.classList.add("active");
+        weekEraserButton?.classList.remove("active");
+
+        weeklyDrawings.forEach(drawing => {
+            drawing.selectTool("pen");
+        });
     });
+}
 
-    weekClearButton.addEventListener("click", () => {
-        if (activeWeeklyDrawing) {
-            activeWeeklyDrawing.clear();
+if (weekEraserButton) {
+    weekEraserButton.addEventListener("click", () => {
+        weeklyTool = "eraser";
+
+        weekEraserButton.classList.add("active");
+        weekPenButton?.classList.remove("active");
+
+        weeklyDrawings.forEach(drawing => {
+            drawing.selectTool("eraser");
+        });
+    });
+}
+
+if (weekUndoButton) {
+    weekUndoButton.addEventListener("click", () => {
+        if (!activeWeeklyDrawing) {
+            return;
         }
+
+        activeWeeklyDrawing.undo();
+    });
+}
+
+if (weekClearButton) {
+    weekClearButton.addEventListener("click", () => {
+        if (!activeWeeklyDrawing) {
+            return;
+        }
+
+        activeWeeklyDrawing.clear();
     });
 }
