@@ -363,3 +363,110 @@ body {
 
     font-size: 14px;
 }
+
+/* ---------------------------------
+   Month calendar grid
+--------------------------------- */
+
+#month-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(7, 1fr);
+
+    gap: 5px;
+}
+
+
+/* ---------------------------------
+   Day headings
+--------------------------------- */
+
+.calendar-day-heading {
+    text-align: center;
+
+    padding: 8px 4px;
+
+    color: #728474;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 1px;
+}
+
+
+/* ---------------------------------
+   Calendar day
+--------------------------------- */
+
+.calendar-day {
+    min-height: 82px;
+
+    border: 1px solid #dce5d8;
+
+    border-radius: 9px;
+
+    background-color: #fffef9;
+
+    padding: 8px;
+
+    text-align: left;
+
+    color: #3f5142;
+
+    font-family: inherit;
+
+    cursor: pointer;
+
+    transition:
+        background-color 0.2s,
+        transform 0.2s;
+}
+
+
+.calendar-day:hover {
+    background-color: #eef3ea;
+
+    transform: translateY(-1px);
+}
+
+
+/* ---------------------------------
+   Day number
+--------------------------------- */
+
+.calendar-day-number {
+    display: block;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    margin-bottom: 5px;
+}
+
+
+/* ---------------------------------
+   Space for future events
+--------------------------------- */
+
+.calendar-day-content {
+    min-height: 45px;
+
+    font-size: 12px;
+}
+
+
+/* ---------------------------------
+   Blank days
+--------------------------------- */
+
+.calendar-day-empty {
+    background-color: transparent;
+
+    border-color: transparent;
+
+    cursor: default;
+}
