@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>LRC Book Care Detectives</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background:
+            radial-gradient(circle at top left, #334155 0%, transparent 35%),
+            linear-gradient(135deg, #111827, #1f2937);
+        color: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .game {
+        width: min(950px, 94%);
+        margin: 0 auto;
+        padding: 30px 0 50px;
+    }
+
+    .top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 15px;
+    }
+
+    .case-number {
+        font-weight: 800;
+        letter-spacing: 2px;
+        color: #fde68a;
+    }
+
+    .score {
+        background: #f8fafc;
+        color: #111827;
+        padding: 10px 16px;
+        border-radius: 999px;
+        font-weight: bold;
+    }
+
+    .audio-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .audio-button {
+        background: #e2e8f0;
+        color: #111827;
+        padding: 12px 18px;
+        border-radius: 999px;
+        font-size: 1rem;
+    }
+
+    .panel {
+        background: #f8f5ec;
+        color: #1f2937;
+        border-radius: 18px;
+        padding: 32px;
+        box-shadow: 0 18px 40px rgba(0,0,0,.3);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .panel::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 10px;
+        background: repeating-linear-gradient(
+            -45deg,
+            #facc15,
+            #facc15 18px,
+            #111827 18px,
+            #111827 36px
+        );
+    }
+
+    h1 {
+        margin: 10px 0 5px;
+        font-size: clamp(2rem, 5vw, 3.4rem);
+    }
+
+    h2 {
+        margin-top: 5px;
+        font-size: clamp(1.5rem, 3vw, 2.2rem);
+    }
+
+    p {
+        line-height: 1.55;
+        font-size: 1.15rem;
+    }
+
+    .stamp {
+        display: inline-block;
+        border: 4px solid #b91c1c;
+        color: #b91c1c;
+        padding: 8px 13px;
+        transform: rotate(-4deg);
+        font-weight: 900;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+    }
+
+    .evidence-icon {
+        font-size: 6rem;
+        margin: 15px 0 5px;
+        text-align: center;
+    }
+
+    .evidence-box {
+        margin: 24px 0;
+        padding: 22px;
+        border: 3px dashed #64748b;
+        border-radius: 14px;
+        background: white;
+    }
+
+    .evidence-label {
+        font-size: 1rem;
+        font-weight: 900;
+        letter-spacing: 2px;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .scenario {
+        font-size: clamp(1.3rem, 3vw, 1.8rem);
+        font-weight: 750;
+        margin-top: 12px;
+        text-align: center;
+    }
+
+    .read-again {
+        width: 100%;
+        margin-top: 12px;
+        background: #334155;
+        color: white;
+        font-size: 1.2rem;
+        padding: 16px;
+    }
+
+    .question {
+        text-align: center;
+        font-size: 1.45rem;
+        font-weight: bold;
+        margin: 28px 0 18px;
+    }
+
+    .choices {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+    }
+
+    button {
+        border: none;
+        border-radius: 14px;
+        padding: 18px 10px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        cursor: pointer;
+        transition: transform .15s ease, filter .15s ease;
+        min-height: 58px;
+    }
+
+    button:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.05);
+    }
+
+    button:focus {
+        outline: 4px solid #0f172a;
+        outline-offset: 3px;
+    }
+
+    button:disabled {
+        opacity: .55;
+        cursor: default;
+        transform: none;
+    }
+
+    .safe {
+        background: #22c55e;
+        color: #052e16;
+    }
+
+    .risky {
+        background: #facc15;
+        color: #422006;
+    }
+
+    .danger {
+        background: #ef4444;
+        color: white;
+    }
+
+    .choice-icon {
+        display: block;
+        font-size: 2.3rem;
+        margin-bottom: 5px;
+    }
+
+    .next {
+        background: #334155;
+        color: white;
+        width: 100%;
+        margin-top: 20px;
+        display: none;
+        font-size: 1.2rem;
+    }
+
+    .feedback {
+        margin-top: 24px;
+        padding: 20px;
+        border-radius: 14px;
+        display: none;
+        font-size: 1.15rem;
+    }
+
+    .feedback.correct {
+        background: #dcfce7;
+        border: 3px solid #22c55e;
+    }
+
+    .feedback.incorrect {
+        background: #fee2e2;
+        border: 3px solid #ef4444;
+    }
+
+    .feedback-title {
+        font-size: 1.5rem;
+        font-weight: 900;
+        margin-bottom: 8px;
+    }
+
+    .progress-wrap {
+        margin-top: 22px;
+        background: #374151;
+        border-radius: 999px;
+        height: 12px;
+        overflow: hidden;
+    }
+
+    .progress {
+        height: 100%;
+        width: 0%;
+        background: #facc15;
+        transition: width .3s ease;
+    }
+
+    .small {
+        color: #cbd5e1;
+        margin-top: 7px;
+        font-size: .95rem;
+    }
+
+    .start-screen,
+    .end-screen {
+        text-align: center;
+    }
+
+    .start-button,
+    .restart-button {
+        margin-top: 20px;
+        background: #facc15;
+        color: #111827;
+        padding: 18px 32px;
+        min-width: 240px;
+        font-size: 1.2rem;
+    }
+
+    .rules {
+        max-width: 650px;
+        margin: 25px auto;
+        text-align: left;
+        background: white;
+        border-radius: 14px;
+        padding: 20px 25px;
+    }
+
+    .badge {
+        font-size: 7rem;
+        margin: 20px 0 5px;
+    }
+
+    .rank {
+        display: inline-block;
+        background: #111827;
+        color: white;
+        padding: 10px 18px;
+        border-radius: 999px;
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    @media (max-width: 650px) {
+        .choices {
+            grid-template-columns: 1fr;
+        }
+
+        .panel {
+            padding: 25px 18px;
+        }
+
+        .top-bar {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <div class="top-bar">
+
+        <div>
+            <div class="case-number">LRC CASE FILE #001</div>
+            <div class="small">The Mystery of the Battered Book</div>
+        </div>
+
+        <div class="audio-controls">
+            <button
+                class="audio-button"
+                id="audioToggle"
+                type="button"
+                aria-label="Turn automatic reading off">
+                🔊 Audio ON
+            </button>
+
+            <div class="score" id="scoreDisplay">
+                Evidence Solved: 0
+            </div>
+        </div>
+
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress" id="progressBar"></div>
+    </div>
+
+    <div style="height:20px;"></div>
+
+    <main class="panel" id="gamePanel">
+
+
+        <!-- START -->
+
+        <section id="startScreen" class="start-screen">
+
+            <div class="stamp">CONFIDENTIAL</div>
+
+            <h1>🕵️ Book Care Detectives</h1>
+
+            <p>
+                A library book has been returned in suspicious condition.
+                We need your help!
+            </p>
+
+            <div class="rules">
+
+                <strong>YOUR MISSION</strong>
+
+                <p>
+                    Look at each clue.
+                </p>
+
+                <p>
+                    Then decide:
+                </p>
+
+                <p>
+                    🟢 <strong>SAFE</strong>
+                    <br>
+                    The book is okay.
+                </p>
+
+                <p>
+                    🟡 <strong>RISKY</strong>
+                    <br>
+                    Something could go wrong.
+                </p>
+
+                <p>
+                    🔴 <strong>BOOK DANGER</strong>
+                    <br>
+                    The book could get hurt.
+                </p>
+
+            </div>
+
+            <p>
+                Be careful, Detective.
+                <strong>Not everything is guilty!</strong>
+            </p>
+
+            <button
+                class="start-button"
+                id="startButton"
+                type="button">
+                🔍 BEGIN INVESTIGATION
+            </button>
+
+        </section>
+
+
+        <!-- QUESTIONS -->
+
+        <section id="questionScreen" style="display:none;">
+
+            <div class="evidence-label" id="evidenceNumber">
+                Evidence #1
+            </div>
+
+            <div class="evidence-box">
+
+                <div
+                    class="evidence-icon"
+                    id="evidenceIcon"
+                    aria-hidden="true">
+                    💧
+                </div>
+
+                <div
+                    class="scenario"
+                    id="scenarioText">
+                </div>
+
+                <button
+                    class="read-again"
+                    id="readAgainButton"
+                    type="button">
+
+                    🔊 READ IT AGAIN
+
+                </button>
+
+            </div>
+
+
+            <div class="question">
+                What's your verdict?
+            </div>
+
+
+            <div class="choices">
+
+                <button
+                    class="safe verdict-button"
+                    data-answer="safe"
+                    type="button">
+
+                    <span class="choice-icon">🟢</span>
+                    SAFE
+
+                </button>
+
+
+                <button
+                    class="risky verdict-button"
+                    data-answer="risky"
+                    type="button">
+
+                    <span class="choice-icon">🟡</span>
+                    RISKY
+
+                </button>
+
+
+                <button
+                    class="danger verdict-button"
+                    data-answer="danger"
+                    type="button">
+
+                    <span class="choice-icon">🔴</span>
+                    BOOK DANGER
+
+                </button>
+
+            </div>
+
+
+            <div
+                class="feedback"
+                id="feedbackBox"
+                aria-live="polite">
+
+                <div
+                    class="feedback-title"
+                    id="feedbackTitle">
+                </div>
+
+                <div id="feedbackText"></div>
+
+            </div>
+
+
+            <button
+                class="next"
+                id="nextButton"
+                type="button">
+
+                NEXT EVIDENCE →
+
+            </button>
+
+        </section>
+
+
+        <!-- END -->
+
+        <section
+            id="endScreen"
+            class="end-screen"
+            style="display:none;">
+
+            <div class="badge">🏅</div>
+
+            <div class="stamp">
+                CASE CLOSED
+            </div>
+
+            <h1>
+                Investigation Complete!
+            </h1>
+
+            <p id="finalScore"></p>
+
+            <div
+                class="rank"
+                id="rank">
+            </div>
+
+            <h2>
+                The Real Culprit?
+            </h2>
+
+            <p style="font-size:1.5rem;">
+                🚨
+                <strong>RISKY BOOK HABITS</strong>
+                🚨
+            </p>
+
+            <div class="rules">
+
+                <strong>
+                    DETECTIVE'S BOOK CARE CODE
+                </strong>
+
+                <p>
+                    📚 Protect your books.
+                </p>
+
+                <p>
+                    💧 Keep books away from
+                    things that could hurt them.
+                </p>
+
+                <p>
+                    🔖 Use a bookmark.
+                </p>
+
+                <p>
+                    🏠 Keep books somewhere safe.
+                </p>
+
+                <p>
+                    🩹 Don't fix library books yourself.
+                </p>
+
+                <p>
+                    🗣️ If something happens,
+                    tell Mrs. Albrecht.
+                </p>
+
+            </div>
+
+            <button
+                class="restart-button"
+                id="restartButton"
+                type="button">
+
+                🔄 INVESTIGATE AGAIN
+
+            </button>
+
+        </section>
+
+    </main>
+</div>
+
+
+<script>
+
+/* ============================
+   EVIDENCE
+============================ */
+
+const evidence = [
+
+    {
+        icon: "💧",
+
+        text:
+        "A library book is inside a backpack next to a water bottle. The cap is loose.",
+
+        speech:
+        "Detective! Look at the evidence. A library book is next to a water bottle. The cap is loose. Is this safe, risky, or book danger?",
+
+        answer: "danger",
+
+        verdict:
+        "BOOK DANGER",
+
+        explanation:
+        "Water can badly damage books. Keep bottles closed and keep your library book protected.",
+
+        feedbackSpeech:
+        "Book danger! Water can badly damage books. Keep bottles closed and keep your library book protected."
+    },
+
+
+    {
+        icon: "🔖",
+
+        text:
+        "A student puts a bookmark between the pages before closing the book.",
+
+        speech:
+        "Detective! A student puts a bookmark between the pages. Is this safe, risky, or book danger?",
+
+        answer: "safe",
+
+        verdict:
+        "SAFE",
+
+        explanation:
+        "Great choice! A bookmark saves your place without hurting the pages.",
+
+        feedbackSpeech:
+        "Safe! Great choice. A bookmark saves your place without hurting the pages."
+    },
+
+
+    {
+        icon: "🍪",
+
+        text:
+        "An open library book is beside a snack. There are crumbs everywhere.",
+
+        speech:
+        "Detective! An open library book is next to a snack. There are crumbs everywhere. Is this safe, risky, or book danger?",
+
+        answer: "risky",
+
+        verdict:
+        "RISKY",
+
+        explanation:
+        "Crumbs, sticky fingers, and spills can hurt books. Eat first, clean your hands, and then read.",
+
+        feedbackSpeech:
+        "Risky! Food, crumbs, sticky fingers, and spills can hurt books. Eat first, clean your hands, and then read."
+    },
+
+
+    {
+        icon: "📄",
+
+        text:
+        "A student folds the corner of a page to remember where they stopped.",
+
+        speech:
+        "Detective! A student folds the corner of the page to save their spot. Is this safe, risky, or book danger?",
+
+        answer: "risky",
+
+        verdict:
+        "RISKY",
+
+        explanation:
+        "Folding pages can weaken or tear them. Use a bookmark instead.",
+
+        feedbackSpeech:
+        "Risky! Folding pages can weaken or tear them. Use a bookmark instead."
+    },
+
+
+    {
+        icon: "✏️",
+
+        text:
+        "A pencil is sitting on the table beside a closed library book.",
+
+        speech:
+        "Detective! A pencil is sitting beside a closed library book. Is this safe, risky, or book danger?",
+
+        answer: "safe",
+
+        verdict:
+        "NOT GUILTY",
+
+        explanation:
+        "Plot twist! A pencil sitting near a book is okay. Writing inside a library book is not.",
+
+        feedbackSpeech:
+        "Not guilty! A pencil sitting beside a book is okay. Writing inside a library book is not."
+    },
+
+
+    {
+        icon: "🐶",
+
+        text:
+        "A library book is left on the floor where a puppy can reach it.",
+
+        speech:
+        "Detective! A library book was left on the floor. A puppy can reach it. Is this safe, risky, or book danger?",
+
+        answer: "danger",
+
+        verdict:
+        "BOOK DANGER",
+
+        explanation:
+        "Pets do not know library rules! Keep books somewhere pets cannot reach.",
+
+        feedbackSpeech:
+        "Book danger! Pets do not know library rules. Keep your library books somewhere pets cannot reach."
+    },
+
+
+    {
+        icon: "🎒",
+
+        text:
+        "A library book is carefully placed inside its own section of a backpack.",
+
+        speech:
+        "Detective! A library book is carefully placed in a protected part of a backpack. Is this safe, risky, or book danger?",
+
+        answer: "safe",
+
+        verdict:
+        "SAFE",
+
+        explanation:
+        "Great job! A backpack can protect a library book when it is packed carefully.",
+
+        feedbackSpeech:
+        "Safe! A backpack can protect your library book when you pack it carefully."
+    },
+
+
+    {
+        icon: "📚",
+
+        text:
+        "A library book is crushed underneath shoes, folders, and heavy supplies.",
+
+        speech:
+        "Detective! A library book is underneath shoes, folders, and heavy things. Is this safe, risky, or book danger?",
+
+        answer: "danger",
+
+        verdict:
+        "BOOK DANGER",
+
+        explanation:
+        "Heavy things can bend, crush, or tear books. Give your library book a safe place.",
+
+        feedbackSpeech:
+        "Book danger! Heavy things can bend, crush, or tear books. Give your library book a safe place."
+    },
+
+
+    {
+        icon: "🩹",
+
+        text:
+        "A page tears. The student fixes it at home with clear tape.",
+
+        speech:
+        "Detective! A page tears. The student tries to fix the library book with tape. Is this safe, risky, or book danger?",
+
+        answer: "risky",
+
+        verdict:
+        "GOOD IDEA, WRONG FIX",
+
+        explanation:
+        "They were trying to help, but library books need special repairs. Bring damaged books to Mrs. Albrecht.",
+
+        feedbackSpeech:
+        "Risky. The student was trying to help, but library books need special repairs. Bring damaged books to Mrs. Albrecht."
+    },
+
+
+    {
+        icon: "🗣️",
+
+        text:
+        "A student accidentally damages a book and tells Mrs. Albrecht what happened.",
+
+        speech:
+        "Detective! A student accidentally damages a book. They bring it back and tell Mrs. Albrecht what happened. Is this safe, risky, or book danger?",
+
+        answer: "safe",
+
+        verdict:
+        "SAFE",
+
+        explanation:
+        "Exactly right! Accidents happen. Bring the book back and tell Mrs. Albrecht.",
+
+        feedbackSpeech:
+        "Safe! Exactly right. Accidents happen. Bring the book back and tell Mrs. Albrecht."
+    }
+
+];
+
+
+/* ============================
+   GAME STATE
+============================ */
+
+let currentEvidence = 0;
+let score = 0;
+let answered = false;
+
+let audioEnabled = true;
+
+
+/* ============================
+   ELEMENTS
+============================ */
+
+const startScreen =
+    document.getElementById("startScreen");
+
+const questionScreen =
+    document.getElementById("questionScreen");
+
+const endScreen =
+    document.getElementById("endScreen");
+
+const evidenceNumber =
+    document.getElementById("evidenceNumber");
+
+const evidenceIcon =
+    document.getElementById("evidenceIcon");
+
+const scenarioText =
+    document.getElementById("scenarioText");
+
+const feedbackBox =
+    document.getElementById("feedbackBox");
+
+const feedbackTitle =
+    document.getElementById("feedbackTitle");
+
+const feedbackText =
+    document.getElementById("feedbackText");
+
+const nextButton =
+    document.getElementById("nextButton");
+
+const scoreDisplay =
+    document.getElementById("scoreDisplay");
+
+const progressBar =
+    document.getElementById("progressBar");
+
+const audioToggle =
+    document.getElementById("audioToggle");
+
+const readAgainButton =
+    document.getElementById("readAgainButton");
+
+const verdictButtons =
+    document.querySelectorAll(".verdict-button");
+
+
+/* ============================
+   SPEECH
+============================ */
+
+function stopSpeaking() {
+
+    if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+    }
+
+}
+
+
+function speak(text) {
+
+    if (!audioEnabled) {
+        return;
+    }
+
+    if (!("speechSynthesis" in window)) {
+        return;
+    }
+
+    stopSpeaking();
+
+    const message =
+        new SpeechSynthesisUtterance(text);
+
+    message.rate = 0.88;
+    message.pitch = 1;
+    message.volume = 1;
+
+    window.speechSynthesis.speak(message);
+
+}
+
+
+function readCurrentEvidence() {
+
+    const item =
+        evidence[currentEvidence];
+
+    speak(item.speech);
+
+}
+
+
+/* ============================
+   START
+============================ */
+
+document
+.getElementById("startButton")
+.addEventListener("click", () => {
+
+    startGame();
+
+});
+
+
+function startGame() {
+
+    stopSpeaking();
+
+    startScreen.style.display =
+        "none";
+
+    questionScreen.style.display =
+        "block";
+
+    showEvidence();
+
+}
+
+
+/* ============================
+   DISPLAY EVIDENCE
+============================ */
+
+function showEvidence() {
+
+    answered = false;
+
+    const item =
+        evidence[currentEvidence];
+
+    evidenceNumber.textContent =
+        "Evidence #" +
+        (currentEvidence + 1) +
+        " of " +
+        evidence.length;
+
+    evidenceIcon.textContent =
+        item.icon;
+
+    scenarioText.textContent =
+        item.text;
+
+    feedbackBox.style.display =
+        "none";
+
+    nextButton.style.display =
+        "none";
+
+    verdictButtons.forEach(button => {
+
+        button.disabled = false;
+
+    });
+
+    updateProgress();
+
+    /*
+       Small delay allows the next
+       card to appear before speaking.
+    */
+
+    setTimeout(() => {
+
+        readCurrentEvidence();
+
+    }, 350);
+
+}
+
+
+/* ============================
+   READ AGAIN
+============================ */
+
+readAgainButton.addEventListener(
+    "click",
+    () => {
+
+        readCurrentEvidence();
+
+    }
+);
+
+
+/* ============================
+   ANSWERS
+============================ */
+
+verdictButtons.forEach(button => {
+
+    button.addEventListener(
+        "click",
+        () => {
+
+            if (answered) {
+                return;
+            }
+
+            answered = true;
+
+            checkAnswer(
+                button.dataset.answer
+            );
+
+        }
+    );
+
+});
+
+
+function checkAnswer(choice) {
+
+    stopSpeaking();
+
+    const item =
+        evidence[currentEvidence];
+
+    verdictButtons.forEach(button => {
+
+        button.disabled = true;
+
+    });
+
+    const correct =
+        choice === item.answer;
+
+
+    if (correct) {
+
+        score++;
+
+        feedbackBox.className =
+            "feedback correct";
+
+        feedbackTitle.textContent =
+            "✅ CASE SOLVED — " +
+            item.verdict;
+
+        speak(
+            "Case solved! " +
+            item.feedbackSpeech
+        );
+
+    }
+
+    else {
+
+        feedbackBox.className =
+            "feedback incorrect";
+
+        feedbackTitle.textContent =
+            "🔎 VERDICT — " +
+            item.verdict;
+
+        speak(
+            "Good investigation. Let's look at the evidence. " +
+            item.feedbackSpeech
+        );
+
+    }
+
+
+    feedbackText.textContent =
+        item.explanation;
+
+    feedbackBox.style.display =
+        "block";
+
+    scoreDisplay.textContent =
+        "Evidence Solved: " +
+        score;
+
+    nextButton.style.display =
+        "block";
+
+
+    if (
+        currentEvidence ===
+        evidence.length - 1
+    ) {
+
+        nextButton.textContent =
+            "CLOSE THE CASE →";
+
+    }
+
+    else {
+
+        nextButton.textContent =
+            "NEXT EVIDENCE →";
+
+    }
+
+}
+
+
+/* ============================
+   NEXT
+============================ */
+
+nextButton.addEventListener(
+    "click",
+    nextEvidence
+);
+
+
+function nextEvidence() {
+
+    stopSpeaking();
+
+    currentEvidence++;
+
+    if (
+        currentEvidence >=
+        evidence.length
+    ) {
+
+        finishGame();
+
+    }
+
+    else {
+
+        showEvidence();
+
+    }
+
+}
+
+
+/* ============================
+   FINISH
+============================ */
+
+function finishGame() {
+
+    stopSpeaking();
+
+    questionScreen.style.display =
+        "none";
+
+    endScreen.style.display =
+        "block";
+
+    progressBar.style.width =
+        "100%";
+
+
+    document.getElementById(
+        "finalScore"
+    ).innerHTML =
+
+        "You correctly investigated <strong>" +
+        score +
+        " out of " +
+        evidence.length +
+        "</strong> clues.";
+
+
+    const rank =
+        document.getElementById("rank");
+
+
+    let rankText = "";
+
+
+    if (score === evidence.length) {
+
+        rankText =
+            "MASTER LRC DETECTIVE";
+
+        rank.textContent =
+            "🏆 " + rankText;
+
+    }
+
+    else if (score >= 8) {
+
+        rankText =
+            "SENIOR BOOK DETECTIVE";
+
+        rank.textContent =
+            "🕵️ " + rankText;
+
+    }
+
+    else if (score >= 6) {
+
+        rankText =
+            "BOOK CARE INVESTIGATOR";
+
+        rank.textContent =
+            "🔎 " + rankText;
+
+    }
+
+    else {
+
+        rankText =
+            "DETECTIVE IN TRAINING";
+
+        rank.textContent =
+            "📚 " + rankText;
+
+    }
+
+
+    speak(
+        "Case closed! Investigation complete. " +
+        "You solved " +
+        score +
+        " out of " +
+        evidence.length +
+        " clues. " +
+        "Your detective rank is " +
+        rankText +
+        ". Remember: protect your books. Keep them somewhere safe. Use a bookmark. Do not repair library books yourself. And if something happens, tell Mrs. Albrecht."
+    );
+
+}
+
+
+/* ============================
+   AUDIO TOGGLE
+============================ */
+
+audioToggle.addEventListener(
+    "click",
+    () => {
+
+        audioEnabled =
+            !audioEnabled;
+
+        stopSpeaking();
+
+
+        if (audioEnabled) {
+
+            audioToggle.textContent =
+                "🔊 Audio ON";
+
+            audioToggle.setAttribute(
+                "aria-label",
+                "Turn automatic reading off"
+            );
+
+            if (
+                questionScreen.style.display
+                !== "none"
+            ) {
+
+                readCurrentEvidence();
+
+            }
+
+        }
+
+        else {
+
+            audioToggle.textContent =
+                "🔇 Audio OFF";
+
+            audioToggle.setAttribute(
+                "aria-label",
+                "Turn automatic reading on"
+            );
+
+        }
+
+    }
+);
+
+
+/* ============================
+   RESTART
+============================ */
+
+document
+.getElementById("restartButton")
+.addEventListener(
+    "click",
+    restartGame
+);
+
+
+function restartGame() {
+
+    stopSpeaking();
+
+    currentEvidence = 0;
+    score = 0;
+    answered = false;
+
+    scoreDisplay.textContent =
+        "Evidence Solved: 0";
+
+    endScreen.style.display =
+        "none";
+
+    questionScreen.style.display =
+        "block";
+
+    showEvidence();
+
+}
+
+
+/* ============================
+   PROGRESS
+============================ */
+
+function updateProgress() {
+
+    const percentage =
+
+        (
+            currentEvidence /
+            evidence.length
+        ) * 100;
+
+    progressBar.style.width =
+        percentage + "%";
+
+}
+
+</script>
+
+</body>
+</html>
