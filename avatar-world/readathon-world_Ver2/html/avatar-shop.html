@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Avatar Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../css/avatar-shop.css" />
+</head>
+<body>
+<div class="shopPage">
+
+  <!-- Top Bar -->
+  <header class="shopTopbar">
+
+    <div class="shopTopbarLeft">
+      <button id="btnBack" class="shopBtn shopBtnSecondary" type="button">
+        ← Back
+      </button>
+    </div>
+
+    <!-- REQUIRED HEADER ELEMENT FOR setHeaderUser() -->
+    <div id="hdr" class="shopTopbarCenter">
+      <h1 class="shopTitle" data-title>Avatar Shop</h1>
+      <div class="shopSubtitle" data-subtitle>Loading…</div>
+    </div>
+
+    <div class="shopTopbarRight">
+      <a href="./avatar-world.html" class="shopBtn shopBtnSecondary">
+        Avatar World
+      </a>
+
+      <button id="btnSignOut" class="shopBtn shopBtnPrimary" type="button">
+        Sign Out
+      </button>
+    </div>
+
+  </header>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="shopLoadingOverlay isHidden" aria-live="polite" aria-busy="true">
+      <div class="shopLoadingCard">
+        <div class="shopLoadingSpinner" aria-hidden="true"></div>
+        <div id="loadingText" class="shopLoadingText">Loading Avatar Shop…</div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div id="errorBox" class="shopError" hidden></div>
+
+    <!-- Summary Row -->
+    <section class="shopSummaryRow">
+      <article class="shopStatCard">
+        <div class="shopStatLabel">Rubies</div>
+        <div id="rubiesBalance" class="shopStatValue">0</div>
+      </article>
+
+      <article class="shopStatCard">
+        <div class="shopStatLabel">Owned Items</div>
+        <div id="ownedCount" class="shopStatValue">0</div>
+      </article>
+
+      <article class="shopStatCard shopStatCardWide">
+        <div class="shopStatLabel">Shop Summary</div>
+        <div id="shopSummary" class="shopStatValue shopStatValueSmall">Loading…</div>
+      </article>
+    </section>
+
+    <!-- Filters -->
+    <section class="shopFiltersCard">
+      <div class="shopFiltersTop">
+        <div class="shopFiltersTitleWrap">
+          <h2 class="shopSectionTitle">Browse Items</h2>
+          <p class="shopSectionText">
+            Buy avatar items with rubies you’ve earned in Readathon World.
+          </p>
+        </div>
+      </div>
+
+      <div class="shopTabs" role="tablist" aria-label="Shop categories">
+        <button class="shopTab active" data-shop-tab="all" type="button">All</button>
+        <button class="shopTab" data-shop-tab="wearables" type="button">Wearables</button>
+        <button class="shopTab" data-shop-tab="background" type="button">Backgrounds</button>
+        <button class="shopTab" data-shop-tab="pets" type="button">Pets</button>
+        <button class="shopTab" data-shop-tab="wall" type="button">Wall</button>
+        <button class="shopTab" data-shop-tab="floor" type="button">Floor</button>
+      </div>
+
+      <div class="shopFiltersGrid">
+        <label class="shopField">
+          <span class="shopFieldLabel">Search</span>
+          <input
+            id="searchInput"
+            class="shopInput"
+            type="search"
+            placeholder="Search by name, rarity, or type"
+            autocomplete="off"
+          />
+        </label>
+
+        <label class="shopField">
+          <span class="shopFieldLabel">Rarity</span>
+          <select id="rarityFilter" class="shopSelect">
+            <option value="all">All rarities</option>
+            <option value="common">Common</option>
+            <option value="uncommon">Uncommon</option>
+            <option value="rare">Rare</option>
+            <option value="epic">Epic</option>
+            <option value="legendary">Legendary</option>
+          </select>
+        </label>
+
+        <label class="shopField">
+          <span class="shopFieldLabel">Ownership</span>
+          <select id="ownedFilter" class="shopSelect">
+            <option value="all">All items</option>
+            <option value="owned">Owned only</option>
+            <option value="unowned">Not owned</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <!-- Shop Grid -->
+    <main class="shopMain">
+      <section class="shopGridSection">
+        <div id="emptyState" class="shopEmptyState" hidden>
+          <div class="shopEmptyStateTitle">No items to show</div>
+          <div class="shopEmptyStateText">
+            Try changing your category or filters.
+          </div>
+        </div>
+
+        <div id="shopGrid" class="shopGrid" aria-live="polite"></div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="../js/avatar-shop.js"></script>
+</body>
+</html>

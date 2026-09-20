@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Home • Readathon World</title>
+    <link rel="stylesheet" href="../css/student.css" />
+    <link rel="stylesheet" href="../css/components.css" />
+    <link rel="stylesheet" href="../css/leaderboard.css" />
+    <link rel="stylesheet" href="../css/avatar-world-widget.css" />
+</head>
+
+<body class="page page--student-home">
+  <div class="bg bg--home" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="topbar__back" href="./student-login.html" aria-label="Back to login">← Login</a>
+    <div class="topbar__title"><div class="pill">🧒 Student Home</div></div>
+    <button class="topbar__btn" id="btnSignOut" type="button">Sign Out</button>
+  </header>
+
+  <main class="wrap" id="pageWrap">
+    <section class="panel panel--hero" id="hdr">
+      <div class="heroRow">
+        <div>
+          <h1 class="h1" data-title>Readathon World</h1>
+          <p class="sub" data-subtitle></p>
+        </div>
+        <a class="isHidden btnBig btnBig--primary" href="./student-minutes-submit.html">
+          ⏱️ Submit Minutes
+        </a>
+      </div>
+
+      <div class="gridButtons">
+        <div class="hero-actions">
+          <a href="./student-minutes-submit.html"
+             class="btn-action btn-submit-minutes btn-action--large">
+            ⏱️ Submit Minutes ⏱️ 
+          </a>
+
+          <a href="./prize-store.html"
+             class="btn-action btn-store btn-action--large">
+            Prize Store
+          </a>
+
+          <a href="./donations.html"
+             class="btn-action btn-donate btn-action--large">
+            Donate
+          </a>
+        </div>
+      </div>
+
+      <div class="gridCards">
+        <div class="cardStat">
+          <div class="cardStat__label">Your Minutes</div>
+          <div class="cardStat__value" id="minutesTotal">—</div>
+        </div>
+
+        <div class="cardStat">
+          <div class="cardStat__label">Your Pending</div>
+          <div class="cardStat__value" id="minutesPending">—</div>
+        </div>
+
+        <div class="cardStat">
+          <div class="cardStat__label">Your Rubies</div>
+          <div class="cardStat__value" id="rubiesBalance">—</div>
+          <div class="cardStat__sub" id="rubiesLifetime">—</div>
+        </div>
+
+        <div class="cardStat">
+          <div class="cardStat__label">Your Money</div>
+          <div class="cardStat__value" id="moneyRaised">—</div>
+        </div>
+      </div>
+    </section>
+
+<section id="leaderboardMount"></section>
+
+<section id="avatarWorldMount"></section>
+
+
+
+
+
+
+
+
+
+
+    <section class=" isHidden panel">
+      <div class="sectionHead">
+        <h2 class="isHidden h2">🧍 Avatar Space</h2>
+        <p class="isHidden sub">This is a preview. (We’ll persist equipped items after you confirm the schema.)</p>
+
+        <div class="isHidden awLaunchRow">
+          <button id="btnOpenAvatarWorld" class="btnBig btnBig--primary" type="button">
+            🌿 Open Avatar World
+          </button>
+        </div>
+      </div><!-- closes .sectionHead -->
+
+      <div class="isHidden avatarArea">
+        <div class="avatarStage" aria-label="Avatar preview area">
+          <div class="avatarStage__bg" id="roomBgLabel">Room: (none)</div>
+          <div class="avatarStage__body">
+            <div class="avatarDoll" id="avatarDoll">
+              <div class="avatarTag" id="equipHead">Head: (none)</div>
+              <div class="avatarTag" id="equipBody">Body: (none)</div>
+              <div class="avatarTag" id="equipAcc">Accessory: (none)</div>
+              <div class="avatarTag" id="equipPet">Pet: (none)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="inventoryBox">
+          <div class="inventoryHead">
+            <h3 class="h3">🎒 Your Items</h3>
+            <p class="tiny">Tap an item to “equip” (preview only).</p>
+          </div>
+          <div class="inventoryList" id="inventoryList" aria-label="Inventory list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="isHidden panel">
+      <div class="isHidden sectionHead">
+        <h2 class="isHidden h2">Quick Links</h2>
+      </div>
+
+      <div class="isHidden gridButtons">
+        <a class="isHidden btnBig" href="/readathon-world_Ver2/html/student-minutes-submit.html">⏱️ Submit Minutes</a>
+        <a class="isHidden btnBig" href="/readathon-world_Ver2/html/index.html">🏠 Home</a>
+      </div>
+    </section>
+
+    <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+      <div class="loadingCard">
+        <div class="spinner" aria-hidden="true"></div>
+        <div class="loadingText" id="loadingText">Loading…</div>
+      </div>
+    </div>
+
+    <div class="panel msg msg--error isHidden" id="errorBox" role="alert"></div>
+  </main>
+
+  <!-- Avatar World Embed Modal -->
+  <div id="awEmbedModal" class="awModal isHidden" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Avatar World">
+    <div class="awModal__card">
+      <div class="awModal__hdr">
+        <div class="awModal__title">Avatar World</div>
+        <button id="btnCloseAvatarWorld" class="awModal__close" type="button" aria-label="Close">✖</button>
+      </div>
+
+      <iframe
+        id="awEmbedFrame"
+        class="awModal__frame"
+        src="/readathon-world_Ver2/html/avatar-world.html?embed=1&from=student"
+        title="Avatar World"
+        loading="lazy"
+      ></iframe>
+    </div>
+  </div>
+
+  <script type="module" src="../js/student-home.js"></script>
+</body>
+</html>

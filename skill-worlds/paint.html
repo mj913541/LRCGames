@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coloring Page Studio</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            width: 800px;
+            height: 600px;
+            border: 1px solid #000;
+        }
+        .toolbox, .colorbox {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px;
+            width: 100px;
+            background-color: #f0f0f0;
+        }
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #fff;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+        .toolbox button, .colorbox button {
+            margin: 5px;
+            padding: 10px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .colorbox {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .colorbox button {
+            width: 40px;
+            height: 40px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="toolbox">
+            <button id="brush1" title="Small Brush">🖌️ 1</button>
+            <button id="brush2" title="Medium Brush">🖌️ 2</button>
+            <button id="brush3" title="Large Brush">🖌️ 3</button>
+            <button id="bucket" title="Bucket Fill">🪣</button>
+            <button id="undo" title="Undo">↩️</button>
+            <button id="save" title="Save">💾</button>
+        </div>
+        <div class="canvas-container">
+            <canvas id="canvas" width="500" height="500"></canvas>
+        </div>
+        <div class="colorbox">
+            <button style="background-color: red;" data-color="red"></button>
+            <button style="background-color: blue;" data-color="blue"></button>
+            <button style="background-color: green;" data-color="green"></button>
+            <button style="background-color: yellow;" data-color="yellow"></button>
+            <button style="background-color: black;" data-color="black"></button>
+            <button style="background-color: white;" data-color="white"></button>
+            <!-- Add more colors as needed -->
+        </div>
+    </div>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const toolbox = document.querySelector('.toolbox');
+        const colorbox = document.querySelector('.colorbox');
+        let currentTool = 'brush';
+        let currentColor = 'black';
+        let currentSize = 5;
+        let isDrawing = false;
+        let startX, startY;
+        let undoStack = [];
+
+        function saveState() {
+            undoStack.push(canvas.toDataURL());
+        }
+
+        function restoreState() {
+            if (undoStack.length > 0) {
+                const previousState = undoStack.pop();
+                const img = new Image();
+                img.src = previousState;
+                img.onload = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                };
+            }
+        }
+
+        function getPixelColor(x, y) {
+            const pixel = ctx.getImageData(x, y, 1, 1).data;
+            return [pixel[0], pixel[1], pixel[2], pixel[3]];
+        }
+
+        function setPixelColor(x, y, color) {
+            const [r, g, b, a] = color.match(/\d+/g).map(Number);
+            const pixel = ctx.createImageData(1, 1);
+            pixel.data[0] = r;
+            pixel.data[1] = g;
+            pixel.data[2] = b;
+            pixel.data[3] = a || 255;
+            ctx.putImageData(pixel, x, y);
+        }
+
+        function colorMatch(a, b) {
+            return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
+        }
+
+        function floodFill(x, y, fillColor) {
+            const stack = [[x, y]];
+            const baseColor = getPixelColor(x, y);
+            const targetColor = fillColor.match(/\d+/g).map(Number);
+
+            if (colorMatch(baseColor, targetColor)) return;
+
+            while (stack.length) {
+                const [curX, curY] = stack.pop();
+                const currentColor = getPixelColor(curX, curY);
+
+                if (!colorMatch(currentColor, baseColor)) continue;
+
+                setPixelColor(curX, curY, `rgba(${targetColor[0]},${targetColor[1]},${targetColor[2]},${targetColor[3] || 1})`);
+
+                stack.push([curX + 1, curY]);
+                stack.push([curX - 1, curY]);
+                stack.push([curX, curY + 1]);
+                stack.push([curX, curY - 1]);
+            }
+        }
+
+        toolbox.addEventListener('click', (e) => {
+            if (e.target.id.startsWith('brush')) {
+                currentTool = 'brush';
+                currentSize = parseInt(e.target.id.replace('brush', '')) * 5;
+            } else if (e.target.id === 'bucket') {
+                currentTool = 'bucket';
+            } else if (e.target.id === 'undo') {
+                restoreState();
+            } else if (e.target.id === 'save') {
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = 'canvas.png';
+                link.click();
+            }
+        });
+
+        colorbox.addEventListener('click', (e) => {
+            if (e.target.tagName === 'BUTTON') {
+                currentColor = e.target.dataset.color;
+            }
+        });
+
+        canvas.addEventListener('mousedown', (e) => {
+            startX = e.offsetX;
+            startY = e.offsetY;
+            isDrawing = true;
+            if (currentTool === 'brush') saveState();
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDrawing && currentTool === 'brush') {
+                ctx.strokeStyle = currentColor;
+                ctx.lineWidth = currentSize;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(e.offsetX, e.offsetY);
+                ctx.stroke();
+                startX = e.offsetX;
+                startY = e.offsetY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            if (isDrawing && currentTool === 'brush') {
+                ctx.closePath();
+            }
+            isDrawing = false;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (currentTool === 'bucket') {
+                saveState();
+                floodFill(e.offsetX, e.offsetY, currentColor);
+            }
+        });
+
+        // Initialize the canvas with an image if needed
+        const img = new Image();
+        img.crossOrigin = "Anonymous";
+        img.src = 'https://drive.google.com/thumbnail?id=1-kx_doQJD80Yr6OmSWwGz-Ky0OhmpMcZ&sz=w100';
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            saveState();
+        };
+    </script>
+</body>
+</html>

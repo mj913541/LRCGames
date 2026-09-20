@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Text Feature Detectives</title>
+<style>
+body {
+  font-family: Comic Sans MS, Arial, sans-serif;
+  background: linear-gradient(to bottom right, #a8e6cf, #dcedc1);
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+h1 {
+  background: #ff8b94;
+  padding: 20px;
+  margin: 0;
+  color: white;
+}
+
+.game-box {
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
+  margin: 30px auto;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+button {
+  display: block;
+  margin: 12px auto;
+  padding: 15px;
+  width: 80%;
+  font-size: 18px;
+  border-radius: 15px;
+  border: none;
+  background: #4ecdc4;
+  color: white;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  background: #1a535c;
+}
+
+#feedback {
+  font-size: 20px;
+  margin-top: 15px;
+}
+
+#score {
+  font-size: 22px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.hidden { display: none; }
+</style>
+</head>
+
+<body>
+
+<h1>🕵️‍♀️ Text Feature Detectives 🕵️‍♂️</h1>
+
+<div class="game-box">
+  <div id="question"></div>
+  <div id="choices"></div>
+  <div id="feedback"></div>
+  <div id="score"></div>
+  <button onclick="restartGame()">Restart Game</button>
+</div>
+
+<script>
+const questions = [
+  // Table of Contents
+  {
+    question: "You want to learn about penguins. Where should you look first?",
+    choices: ["The Index", "The Table of Contents", "The Back Cover"],
+    answer: 1
+  },
+  {
+    question: "You want to find what page Tigers are on. What helps you most?",
+    choices: ["Table of Contents", "Glossary", "Pictures"],
+    answer: 0
+  },
+
+  // Headings
+  {
+    question: "This section tells how pandas find food. Which heading fits best?",
+    choices: ["Where Pandas Live", "How Pandas Eat", "Fun Facts"],
+    answer: 1
+  },
+  {
+    question: "This part explains how sharks swim. Best heading?",
+    choices: ["Shark Teeth", "Shark Movement", "Ocean Waves"],
+    answer: 1
+  },
+
+  // Index
+  {
+    question: "You want to find zebras. Where do you look?",
+    choices: ["Beginning of the book", "Index in the back", "Title page"],
+    answer: 1
+  },
+  {
+    question: "The word 'Lions' starts with L. Where in the index would it be?",
+    choices: ["Near A", "Near L", "Near Z"],
+    answer: 1
+  }
+];
+
+let current = 0;
+let score = 0;
+
+function showQuestion() {
+  document.getElementById("feedback").innerText = "";
+  document.getElementById("question").innerText = questions[current].question;
+
+  const choicesDiv = document.getElementById("choices");
+  choicesDiv.innerHTML = "";
+
+  questions[current].choices.forEach((choice, index) => {
+    const btn = document.createElement("button");
+    btn.innerText = choice;
+    btn.onclick = () => checkAnswer(index);
+    choicesDiv.appendChild(btn);
+  });
+}
+
+function checkAnswer(selected) {
+  if (selected === questions[current].answer) {
+    score++;
+    document.getElementById("feedback").innerText = "⭐ Correct! Great Detective Work!";
+  } else {
+    document.getElementById("feedback").innerText = "❌ Not quite. Try the next clue!";
+  }
+
+  current++;
+  document.getElementById("score").innerText = "Detective Stars: " + score;
+
+  if (current < questions.length) {
+    setTimeout(showQuestion, 1500);
+  } else {
+    document.getElementById("question").innerText = "🎉 Case Closed! You are a Text Feature Master!";
+    document.getElementById("choices").innerHTML = "";
+  }
+}
+
+function restartGame() {
+  current = 0;
+  score = 0;
+  document.getElementById("score").innerText = "";
+  showQuestion();
+}
+
+showQuestion();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Student Login • Readathon World</title>
+
+  <link rel="stylesheet" href="../css/student.css" />
+</head>
+
+<body class="page page--student-login">
+  <!-- Background image placeholder (swap later) -->
+  <div class="bg" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="topbar__back" href="./index.html" aria-label="Back to home">
+      ← Home
+    </a>
+    <div class="topbar__title">
+      <div class="pill">Student Login</div>
+    </div>
+    <div class="topbar__right" aria-hidden="true"></div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <h1 class="h1">Let’s log in!</h1>
+      <p class="sub">Pick your grade, choose your class, tap your name, then enter your 4-digit PIN.</p>
+
+      <!-- STEP 0: school (kept simple; default set in localStorage) -->
+      <div class="hidden schoolBar" role="group" aria-label="School ID">
+        <div class="hidden schoolBar__label">School:</div>
+        <div class="hidden schoolBar__value" id="schoolIdLabel"></div>
+        <button class="hidden chipBtn" id="btnChangeSchool" type="button">Change</button>
+      </div>
+
+      <!-- STEP 1: grade -->
+      <div class="step" id="stepGrade">
+        <h2 class="h2">Step 1: Choose your grade</h2>
+        <div class="gradeGrid" id="gradeGrid" aria-label="Choose grade"></div>
+      </div>
+
+      <!-- STEP 2: homeroom -->
+      <div class="step isHidden" id="stepHomeroom">
+        <h2 class="h2">Step 2: Choose your class</h2>
+        <div class="chips" id="homeroomChips" aria-label="Choose homeroom"></div>
+        <div class="stepActions">
+          <button class="btnGhost" id="btnBackToGrade" type="button">← Back</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: student name -->
+      <div class="step isHidden" id="stepStudent">
+        <h2 class="h2">Step 3: Tap your name</h2>
+        <div class="studentList" id="studentList" aria-label="Choose student"></div>
+        <div class="stepActions">
+          <button class="btnGhost" id="btnBackToHomeroom" type="button">← Back</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: pin -->
+      <div class="step isHidden" id="stepPin">
+        <h2 class="h2">Step 4: Enter your 4-digit PIN</h2>
+
+        <div class="who" id="whoBox" aria-live="polite"></div>
+
+        <form class="pinRow" id="pinForm">
+          <label class="srOnly" for="pinInput">4-digit PIN</label>
+          <input
+            id="pinInput"
+            class="pinInput"
+            inputmode="numeric"
+            autocomplete="one-time-code"
+            pattern="[0-9]*"
+            maxlength="4"
+            placeholder="••••"
+            aria-label="Enter 4-digit PIN"
+          />
+          <button class="btnPrimary" id="btnLogin" type="submit">
+            Log In
+          </button>
+        </form>
+
+        <div class="helpRow">
+          <button class="btnGhost" id="btnBackToStudents" type="button">← Back</button>
+          <button class="btnGhost" id="btnClearPin" type="button">Clear</button>
+        </div>
+
+        <div class="msg msg--error isHidden" id="errorBox" role="alert"></div>
+      </div>
+
+      <div class="loadingOverlay isHidden" id="loadingOverlay" aria-live="polite" aria-busy="true">
+        <div class="loadingCard">
+          <div class="spinner" aria-hidden="true"></div>
+          <div class="loadingText" id="loadingText">Loading…</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer__chip">Tip: If it doesn’t work, ask your teacher or Mrs. A ❤️</div>
+    </footer>
+  </main>
+
+  <!-- School picker dialog -->
+  <dialog class="hidden dialog" id="schoolDialog" aria-labelledby="schoolDialogTitle">
+    <form method="dialog" class="dialog__panel">
+      <h2 class="h2" id="schoolDialogTitle">Change School ID</h2>
+      <p class="sub">Use the default unless you’re testing another school.</p>
+
+      <label class="field">
+        <span class="field__label">School ID</span>
+        <input class="input" id="schoolIdInput" autocomplete="off" spellcheck="false"
+               placeholder="308_longbeach_elementary" />
+      </label>
+
+      <div class="row">
+        <button class="btnSmall" value="cancel" type="submit">Cancel</button>
+        <button class="btnSmall btnSmall--primary" id="btnSaveSchool" value="ok" type="submit">Save</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="../js/student-login.js"></script>
+</body>
+</html>

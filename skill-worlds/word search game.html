@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Game</title>
+    <style>
+        body {
+            background: #306a8b;
+            font-family: sans-serif;
+        }
+
+        .container {
+            display: flex;
+            width: 850px;
+            margin: 50px auto 0;
+        }
+
+        #words {
+            width: 250px;
+            color: #6891ad;
+            margin-top: 37px;
+        }
+
+        #words ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        #words li {
+            padding: 0 0 7px;
+            font: 1em sans-serif;
+            display: inline-block;
+            width: 100px;
+        }
+
+        .puzzleSquare {
+            width: 30px;
+            height: 30px;
+            text-transform: uppercase;
+            background-color: #306a8b;
+            border: 0;
+            outline: none;
+            font: 1em sans-serif;
+            color: #6891ad;
+            cursor: pointer;
+            display: inline-block;
+            text-align: center;
+            line-height: 30px;
+        }
+
+        .puzzleSquare:hover {
+            color: #ee5426;
+        }
+
+        .selected {
+            background-color: yellow;
+        }
+
+        .found {
+            background-color: lightgreen;
+        }
+
+        .wordFound {
+            text-decoration: line-through;
+            color: #ee5426;
+        }
+
+        #score {
+            margin: 20px 20px 0px 45px;
+            color: #6891ad;
+        }
+
+        #congratulations {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        #congratulations h2 {
+            color: #ee5426;
+        }
+
+        #congratulations button {
+            background: transparent;
+            color: #ee5426;
+            padding: 10px 20px;
+            border: 2px solid #ee5426;
+            border-radius: 25px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="words">
+        <ul id="wordList"></ul>
+    </div>
+    <div id="puzzle"></div>
+</div>
+<div id="score">Score: 0</div>
+<div id="congratulations">
+    <h2>Congratulations! You've found all the words!</h2>
+    <button onclick="window.location.reload();">Play Again</button>
+</div>
+
+<script>
+    // WordFind.js Implementation
+
+    (function () {
+        'use strict';
+
+        var WordFind = function () {
+            var letters = 'abcdefghijklmnopqrstuvwxyz';
+            var orientations = ['horizontal', 'vertical'];
+            var orientationFunctions = {
+                horizontal: function (x, y, i) { return { x: x + i, y: y }; },
+                vertical: function (x, y, i) { return { x: x, y: y + i }; }
+            };
+            var checkOrientations = {
+                horizontal: function (x, y, h, w, l) { return w >= x + l; },
+                vertical: function (x, y, h, w, l) { return h >= y + l; }
+            };
+            var skipOrientations = {
+                horizontal: function (x, y, l) { return { x: 0, y: y + 1 }; },
+                vertical: function (x, y, l) { return { x: 0, y: y + 100 }; }
+            };
+
+            var fillPuzzle = function (words, options) {
+                var puzzle = [], i, j, len;
+
+                for (i = 0; i < options.height; i++) {
+                    puzzle.push([]);
+                    for (j = 0; j < options.width; j++) {
+                        puzzle[i].push('');
+                    }
+                }
+
+                for (i = 0, len = words.length; i < len; i++) {
+                    if (!placeWordInPuzzle(puzzle, options, words[i])) {
+                        return null;
+                    }
+                }
+
+                return puzzle;
+            };
+
+            var placeWordInPuzzle = function (puzzle, options, word) {
+                var locations = findBestLocations(puzzle, options, word);
+
+                if (locations.length === 0) {
+                    return false;
+                }
+
+                var sel = locations[Math.floor(Math.random() * locations.length)];
+                placeWord(puzzle, word, sel.x, sel.y, orientationFunctions[sel.orientation]);
+
+                return true;
+            };
+
+            var findBestLocations = function (puzzle, options, word) {
+                var locations = [],
+                    height = options.height,
+                    width = options.width,
+                    wordLength = word.length,
+                    maxOverlap = 0;
+
+                for (var k = 0, len = orientations.length; k < len; k++) {
+                    var orientation = orientations[k],
+                        check = checkOrientations[orientation],
+                        next = orientationFunctions[orientation],
+                        skipTo = skipOrientations[orientation],
+                        x = 0, y = 0;
+
+                    while (y < height) {
+                        if (check(x, y, height, width, wordLength)) {
+                            var overlap = calcOverlap(word, puzzle, x, y, next);
+
+                            if (overlap >= maxOverlap) {
+                                maxOverlap = overlap;
+                                locations.push({ x: x, y: y, orientation: orientation, overlap: overlap });
+                            }
+
+                            x++;
+                            if (x >= width) {
+                                x = 0;
+                                y++;
+                            }
+                        } else {
+                            var nextPossible = skipTo(x, y, wordLength);
+                            x = nextPossible.x;
+                            y = nextPossible.y;
+                        }
+                    }
+                }
+
+                return locations;
+            };
+
+            var calcOverlap = function (word, puzzle, x, y, fnGetSquare) {
+                var overlap = 0;
+
+                for (var i = 0, len = word.length; i < len; i++) {
+                    var next = fnGetSquare(x, y, i),
+                        square = puzzle[next.y][next.x];
+
+                    if (square === word[i]) {
+                        overlap++;
+                    } else if (square !== '') {
+                        return -1;
+                    }
+                }
+
+                return overlap;
+            };
+
+            var placeWord = function (puzzle, word, x, y, fnGetSquare) {
+                for (var i = 0, len = word.length; i < len; i++) {
+                    var next = fnGetSquare(x, y, i);
+                    puzzle[next.y][next.x] = word[i];
+                }
+            };
+
+            var addExtraLetters = function (puzzle, options) {
+                for (var i = 0, height = options.height; i < height; i++) {
+                    for (var j = 0, width = options.width; j < width; j++) {
+                        if (puzzle[i][j] === '') {
+                            puzzle[i][j] = letters[Math.floor(Math.random() * letters.length)];
+                        }
+                    }
+                }
+            };
+
+            var newPuzzle = function (words, settings) {
+                var options = {
+                    height: 10,
+                    width: 10,
+                    orientations: orientations,
+                    preferOverlap: true,
+                    fillBlanks: true
+                };
+
+                if (settings) {
+                    for (var key in settings) {
+                        if (settings.hasOwnProperty(key)) {
+                            options[key] = settings[key];
+                        }
+                    }
+                }
+
+                var puzzle = null;
+                for (var i = 0; i < 3; i++) {
+                    puzzle = fillPuzzle(words, options);
+                    if (puzzle !== null) {
+                        break;
+                    }
+
+                    options.height++;
+                    options.width++;
+                }
+
+                if (puzzle === null) {
+                    return null;
+                }
+
+                if (options.fillBlanks) {
+                    addExtraLetters(puzzle, options);
+                }
+
+                return puzzle;
+            };
+
+            return {
+                newPuzzle: newPuzzle
+            };
+        };
+
+        window.wordfind = new WordFind();
+    })();
+
+    // WordFindGame.js Implementation
+
+    (function (document, wordfind) {
+        'use strict';
+
+        var WordFindGame = function () {
+            var wordList, startSquare = null, selectedSquares = [], foundWords = 0;
+
+            var drawPuzzle = function (el, puzzle) {
+                var output = '';
+                for (var i = 0, height = puzzle.length; i < height; i++) {
+                    var row = puzzle[i];
+                    output += '<div>';
+                    for (var j = 0, width = row.length; j < width; j++) {
+                        output += '<button class="puzzleSquare" x="' + j + '" y="' + i + '">' + row[j] + '</button>';
+                    }
+                    output += '</div>';
+                }
+                el.innerHTML = output;
+            };
+
+            var drawWordList = function (el, words) {
+                var output = '<ul>';
+                for (var i = 0, len = words.length; i < len; i++) {
+                    output += '<li id="word-' + words[i] + '">' + words[i] + '</li>';
+                }
+                output += '</ul>';
+                el.innerHTML = output;
+            };
+
+            var startGame = function () {
+                wordList = ['javascript', 'html', 'css', 'node', 'react'];
+                var puzzle = wordfind.newPuzzle(wordList, { height: 10, width: 10 });
+                drawPuzzle(document.getElementById('puzzle'), puzzle);
+                drawWordList(document.getElementById('wordList'), wordList);
+                document.querySelectorAll('.puzzleSquare').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        selectSquare(this);
+                    });
+                });
+            };
+
+            var selectSquare = function (square) {
+                if (!startSquare) {
+                    startSquare = square;
+                    square.classList.add('selected');
+                } else {
+                    var endSquare = square;
+                    var x1 = parseInt(startSquare.getAttribute('x'), 10);
+                    var y1 = parseInt(startSquare.getAttribute('y'), 10);
+                    var x2 = parseInt(endSquare.getAttribute('x'), 10);
+                    var y2 = parseInt(endSquare.getAttribute('y'), 10);
+                    var word = getWord(x1, y1, x2, y2);
+
+                    if (word && wordList.indexOf(word) !== -1) {
+                        foundWords++;
+                        document.getElementById('word-' + word).classList.add('wordFound');
+                        selectedSquares.forEach(function (square) {
+                            square.classList.add('found');
+                        });
+                        document.getElementById('score').innerHTML = 'Score: ' + foundWords;
+                        if (foundWords === wordList.length) {
+                            document.getElementById('congratulations').style.display = 'block';
+                        }
+                    }
+
+                    clearSelection();
+                }
+            };
+
+            var getWord = function (x1, y1, x2, y2) {
+                var word = '';
+                var dx = x2 - x1;
+                var dy = y2 - y1;
+
+                if (dx !== 0 && dy !== 0 && Math.abs(dx) !== Math.abs(dy)) {
+                    return null;
+                }
+
+                var x = x1, y = y1;
+
+                while (x !== x2 || y !== y2) {
+                    var square = document.querySelector('.puzzleSquare[x="' + x + '"][y="' + y + '"]');
+                    word += square.innerHTML;
+                    selectedSquares.push(square);
+                    x += Math.sign(dx);
+                    y += Math.sign(dy);
+                }
+
+                word += document.querySelector('.puzzleSquare[x="' + x2 + '"][y="' + y2 + '"]').innerHTML;
+                selectedSquares.push(document.querySelector('.puzzleSquare[x="' + x2 + '"][y="' + y2 + '"]'));
+
+                return word;
+            };
+
+            var clearSelection = function () {
+                startSquare.classList.remove('selected');
+                startSquare = null;
+                selectedSquares = [];
+            };
+
+            return {
+                create: startGame
+            };
+        };
+
+        window.wordfindgame = new WordFindGame();
+        window.wordfindgame.create();
+    })(document, wordfind);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+  <title>Monarch Task | Readathon World</title>
+  <link rel="stylesheet" href="../css/monarch-task.css" />
+</head>
+<body class="monarch-task-page">
+
+  <main id="monarchTaskPage" class="monarch-task-shell">
+
+    <!-- REQUIRED PAGE HEADER IDS -->
+    <header id="pageHeader" class="page-header monarch-task-hero">
+      <div class="page-header__content">
+        <p id="pageKicker" class="page-kicker">Readathon World Special Event</p>
+        <h1 id="pageTitle">Monarch Quest Task</h1>
+        <p id="pageSubtitle">Complete this quest step to keep moving forward.</p>
+      </div>
+    </header>
+
+    <div class="monarch-task-topbar">
+      <a
+        id="mqBackToBoardBtn"
+        class="monarch-task-back-btn"
+        href="./monarch-quest.html"
+      >
+        ← Back to Monarch Quest
+      </a>
+
+      <div id="mqTaskStatusPill" class="monarch-task-status-pill">
+        Not Started
+      </div>
+    </div>
+
+    <section class="monarch-task-grid">
+
+      <!-- MAIN TASK CONTENT -->
+      <section class="monarch-task-main">
+
+        <article class="monarch-task-panel monarch-task-intro-panel">
+          <div class="monarch-task-panel__header">
+            <p class="monarch-task-panel__eyebrow">Quest Task</p>
+            <h2 id="mqTaskTitle">Loading task...</h2>
+          </div>
+
+          <p id="mqTaskSubtitle" class="monarch-task-subtitle">
+            Please wait while your quest task loads.
+          </p>
+
+          <div class="monarch-task-meta-row">
+            <div class="monarch-task-meta-card">
+              <span class="monarch-task-meta-card__label">Task Type</span>
+              <strong id="mqTaskTypeLabel">—</strong>
+            </div>
+
+            <div class="monarch-task-meta-card">
+              <span class="monarch-task-meta-card__label">Task Order</span>
+              <strong id="mqTaskOrderLabel">—</strong>
+            </div>
+
+            <div class="monarch-task-meta-card">
+              <span class="monarch-task-meta-card__label">Reward Preview</span>
+              <strong id="mqTaskRewardPreviewLabel">—</strong>
+            </div>
+          </div>
+        </article>
+
+        <!-- NOMINEES / BOOKS -->
+        <article class="monarch-task-panel" aria-labelledby="mqBooksHeading">
+          <div class="monarch-task-panel__header">
+            <p class="monarch-task-panel__eyebrow">Books</p>
+            <h2 id="mqBooksHeading">Your Quest Books</h2>
+          </div>
+
+          <div id="mqNomineeList" class="monarch-nominee-list">
+            <!-- JS injects nominee cards -->
+          </div>
+        </article>
+
+        <!-- VOTE AREA -->
+        <article
+          id="mqVotePanel"
+          class="monarch-task-panel"
+          aria-labelledby="mqVoteHeading"
+          hidden
+        >
+          <div class="monarch-task-panel__header">
+            <p class="monarch-task-panel__eyebrow">Vote</p>
+            <h2 id="mqVoteHeading">Choose Your Favorite</h2>
+          </div>
+
+          <p class="monarch-task-help-text">
+            Once you vote, your choice will be saved for this task.
+          </p>
+
+          <div id="mqVoteOptions" class="monarch-vote-options">
+            <!-- JS injects vote buttons -->
+          </div>
+
+          <div id="mqVoteSavedNotice" class="monarch-vote-saved-notice" hidden>
+            Your vote has been saved.
+          </div>
+        </article>
+
+        <!-- COMPLETE AREA -->
+        <article class="monarch-task-panel" aria-labelledby="mqCompleteHeading">
+          <div class="monarch-task-panel__header">
+            <p class="monarch-task-panel__eyebrow">Finish Task</p>
+            <h2 id="mqCompleteHeading">Complete This Quest Step</h2>
+          </div>
+
+          <p id="mqCompleteHelpText" class="monarch-task-help-text">
+            Open the book link and finish the task steps to complete this quest.
+          </p>
+
+          <div class="monarch-task-action-row">
+            <button id="mqMarkOpenedBtn" class="monarch-btn monarch-btn--secondary" type="button">
+              Mark Listening Opened
+            </button>
+
+            <button id="mqCompleteTaskBtn" class="monarch-btn monarch-btn--primary" type="button">
+              Complete Task
+            </button>
+          </div>
+
+          <div id="mqTaskMessage" class="monarch-task-message" aria-live="polite"></div>
+        </article>
+
+      </section>
+
+      <!-- SIDEBAR -->
+      <aside class="monarch-task-sidebar">
+
+        <article class="monarch-task-panel" aria-labelledby="mqTaskProgressHeading">
+          <div class="monarch-task-panel__header">
+            <p class="monarch-task-panel__eyebrow">Your Status</p>
+            <h2 id="mqTaskProgressHeading">Task Progress</h2>
+          </div>
+
+          <div class="monarch-mini-checklist">
+            <div class="monarch-mini-checklist__item">
+              <span class="monarch-mini-checklist__label">Listening Opened</span>
+              <strong id="mqChecklistOpened">No</strong>
+            </div>
+
+            <div class="monarch-mini-checklist__item">
+              <span class="monarch-mini-checklist__label">Vote Submitted</span>
+              <strong id="mqChecklistVoted">No</strong>
+            </div>
+
+            <div class="monarch-mini-checklist__item">
+              <span class="monarch-mini-checklist__label">Task Completed</span>
+              <strong id="mqChecklistCompleted">No</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="monarch-task-panel" aria-labelledby="mqMilestoneHeading">
+          <div class="monarch-task-panel__header">
+            <p class="monarch-task-panel__eyebrow">Milestones</p>
+            <h2 id="mqMilestoneHeading">Next Reward</h2>
+          </div>
+
+          <div id="mqNextRewardCard" class="monarch-next-reward-card">
+            <h3 id="mqNextRewardTitle">Loading...</h3>
+            <p id="mqNextRewardSubtitle">Checking your next Monarch milestone.</p>
+          </div>
+        </article>
+
+      </aside>
+
+    </section>
+
+    <!-- COMPLETION / REWARD BANNER -->
+    <section
+      id="mqTaskCelebrationBanner"
+      class="monarch-task-panel monarch-task-celebration-banner"
+      hidden
+      aria-live="polite"
+    >
+      <p class="monarch-task-panel__eyebrow">Quest Update</p>
+      <h2 id="mqTaskCelebrationTitle">Task complete!</h2>
+      <p id="mqTaskCelebrationText">
+        Great work! You completed this Monarch Quest task.
+      </p>
+    </section>
+
+  </main>
+
+<script type="module" src="../js/monarch-task.js"></script>
+</body>
+</html>

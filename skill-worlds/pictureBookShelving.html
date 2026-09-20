@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Alphabet Jungle – ABC Order (Picture Books)</title>
+  <style>
+    :root{
+      --jungle: #145a32; /* deep jungle green */
+      --leaf: #1e8449;   /* medium green */
+      --vine: #27ae60;   /* accent green */
+      --neon: #39ff14;   /* neon green spine label cue */
+      --sand: #f7f5e8;   /* background */
+      --ink: #24322b;    /* text */
+      --good: #2ecc71;
+      --bad: #e74c3c;
+    }
+    html, body{height:100%}
+    body{
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1000px 600px at 20% -10%, #d3f9d8 0%, transparent 60%),
+                  radial-gradient(900px 600px at 120% 10%, #d0f0c0 0%, transparent 55%),
+                  var(--sand);
+      color: var(--ink);
+    }
+    header{ text-align:center; padding:18px 16px 8px; }
+    h1{ margin:0 0 8px; font-size: clamp(22px, 3.2vw, 36px); color: var(--jungle); }
+    .subtitle{opacity:.9; font-size: clamp(13px, 1.6vw, 16px)}
+
+    .wrap{max-width: 980px; margin: 0 auto; padding: 10px 16px 28px}
+
+    .toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:center; margin: 10px 0 14px; }
+    button, select{
+      border:2px solid var(--leaf); background:#fff; color: var(--ink); padding:10px 14px; border-radius:14px; font-weight:700; cursor:pointer; box-shadow:0 2px 0 rgba(0,0,0,.08);
+    }
+    button:active{transform: translateY(1px)}
+    .pill{ background: linear-gradient(180deg, #fff, #f6fff6); border-color: var(--vine); }
+
+    .area{ display:grid; grid-template-columns: 1fr; gap:14px; }
+    @media(min-width: 760px){ .area{grid-template-columns: 360px 1fr} }
+
+    .pool, .slots{ background:#ffffffcc; border:3px dashed var(--vine); border-radius:18px; padding:14px; min-height: 140px; }
+    .section-title{margin:0 0 8px; font-weight:800; color: var(--leaf); letter-spacing:.4px}
+
+    .alpha-strip{
+      display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin: 8px auto 12px; max-width:980px;
+    }
+    .alpha-chip{
+      padding:6px 8px; border-radius:12px; border:2px solid var(--vine); background:#fff; font-weight:900; color: var(--jungle);
+      display:inline-flex; align-items:center; gap:4px; font-size:14px;
+    }
+
+    .cards{ display:flex; flex-wrap:wrap; gap:10px; min-height: 86px; }
+
+    .card{
+      width:92px; height:120px; border-radius:16px; background: var(--neon); /* full neon background */
+      display:flex; flex-direction:column; align-items:center; justify-content:center; 
+      border:3px solid var(--jungle); position:relative; user-select:none;
+    }
+    .card[draggable="true"]{cursor:grab}
+    .card:active{cursor:grabbing}
+    .letter{
+      font-size:56px; line-height:1; font-weight:900; color: var(--jungle);
+    }
+    /* removed small corner spine — entire card is now the neon spine label */
+
+    .slot-row{ display:flex; flex-wrap:wrap; gap:10px; min-height: 130px; }
+    .slot{
+      width:92px; height:120px; border-radius:16px; border:3px dashed #9fd8b3; background: repeating-linear-gradient(45deg, #f9fff9, #f9fff9 10px, #f3fff3 10px, #f3fff3 20px);
+      display:flex; align-items:center; justify-content:center; position:relative; transition: box-shadow .15s ease;
+    }
+    .slot::after{ content: attr(data-index); position:absolute; bottom:6px; right:8px; font-size:12px; opacity:.5 }
+    .slot.hover{box-shadow:0 0 0 4px rgba(39,174,96,.25)}
+    .slot.filled{border-style:solid; border-color: var(--vine); background:#fff}
+
+    .a11y{font-size:14px; margin: 6px 0 0; opacity:.8}
+
+    .result{ margin-top: 12px; font-weight:800; text-align:center; min-height: 26px; }
+    .ok{color: var(--good)}
+    .no{color: var(--bad)}
+
+    .tiny{font-size:12px; opacity:.8}
+
+    /* fun vine border */
+    .vine-border{position:relative}
+    .vine-border::before{
+      content:""; position:absolute; inset:-6px; border-radius:22px; pointer-events:none;
+      background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(39,174,96,.15) 10px, rgba(39,174,96,.15) 20px);
+      mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+      padding:6px; border:3px solid transparent;
+    }
+
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🅰️🦁 Alphabet Jungle – ABC Order 📚</h1>
+    <div class="subtitle">Picture Books = <strong style="color:var(--neon);">Neon Green</strong> stickers • Sort by <strong>author’s last name</strong> (first letter) 🔤</div>
+    <!-- Alphabet strip (A–Z) -->
+    <div class="alpha-strip" aria-hidden="false" aria-label="Alphabet from A to Z">
+      <span class="alpha-chip">A</span>
+      <span class="alpha-chip">B</span>
+      <span class="alpha-chip">C</span>
+      <span class="alpha-chip">D</span>
+      <span class="alpha-chip">E</span>
+      <span class="alpha-chip">F</span>
+      <span class="alpha-chip">G</span>
+      <span class="alpha-chip">H</span>
+      <span class="alpha-chip">I</span>
+      <span class="alpha-chip">J</span>
+      <span class="alpha-chip">K</span>
+      <span class="alpha-chip">L</span>
+      <span class="alpha-chip">M</span>
+      <span class="alpha-chip">N</span>
+      <span class="alpha-chip">O</span>
+      <span class="alpha-chip">P</span>
+      <span class="alpha-chip">Q</span>
+      <span class="alpha-chip">R</span>
+      <span class="alpha-chip">S</span>
+      <span class="alpha-chip">T</span>
+      <span class="alpha-chip">U</span>
+      <span class="alpha-chip">V</span>
+      <span class="alpha-chip">W</span>
+      <span class="alpha-chip">X</span>
+      <span class="alpha-chip">Y</span>
+      <span class="alpha-chip">Z</span>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="toolbar">
+      <button id="speak" class="pill" aria-label="play instructions">🔊 Speak</button>
+      <label class="tiny" for="level">🎚️ Difficulty:</label>
+      <select id="level" class="pill" aria-label="difficulty">
+        <option value="5">🐣 Easy (5 letters)</option>
+        <option value="6" selected>🦁 Standard (6 letters)</option>
+        <option value="8">🌟 Challenging (8 letters)</option>
+      </select>
+      <button id="newRound" class="pill" aria-label="new round">🎲 New Round</button>
+      <button id="reset" class="pill" aria-label="reset">🔄 Reset</button>
+      <button id="check" class="pill" aria-label="check order">✅ Check</button>
+    </div>
+
+    <section class="area">
+      <div class="pool vine-border" aria-labelledby="poolTitle">
+        <h2 id="poolTitle" class="section-title">📚 Book Bin (Drag from here)</h2>
+        <div id="pool" class="cards" role="list" aria-live="polite"></div>
+        <div class="a11y tiny">💡 Tip: Drag with the touchpad; press <strong>Enter</strong> to place a selected card. 🖱️⌨️</div>
+      </div>
+
+      <div class="slots vine-border" aria-labelledby="slotsTitle">
+        <h2 id="slotsTitle" class="section-title">🪵 Shelf Left ➜ Right (A → Z) ➡️</h2>
+        <div id="slots" class="slot-row" role="list" aria-live="polite"></div>
+        <div id="result" class="result" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <p class="tiny" style="text-align:center;margin-top:18px">
+      Teacher note: Letters simulate <strong>spine labels</strong> for the author’s last initial. Picture books use the <span style="color:var(--neon); font-weight:800">neon green</span> background. Students drag cards so the shelf reads in ABC order from left to right. 🅰️➡️🇿
+    </p>
+  </main>
+
+  <script>
+    // --- Utility helpers ---
+    const $ = sel => document.querySelector(sel);
+    const poolEl = $('#pool');
+    const slotsEl = $('#slots');
+    const resultEl = $('#result');
+    const levelSel = $('#level');
+    const speakBtn = $('#speak');
+
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+    // --- Text-to-Speech (Web Speech API) ---
+    const INSTRUCTION = "Help Alpha-Betti fix her library shelves by putting these books back in ABC order?";
+    function speakInstruction(){
+      try{
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(INSTRUCTION);
+        u.rate = 0.95; // slower for firsties
+        u.pitch = 1.0;
+        // Try to pick a child-friendly voice if available
+        const voices = window.speechSynthesis.getVoices();
+        const pick = voices.find(v => /child|female|google us english/i.test(v.name)) || voices[0];
+        if(pick) u.voice = pick;
+        window.speechSynthesis.speak(u);
+      }catch(e){ /* graceful no-op */ }
+    }
+
+    // Some browsers load voices async
+    if ('speechSynthesis' in window){
+      window.speechSynthesis.onvoiceschanged = () => {};
+    }
+
+    speakBtn?.addEventListener('click', speakInstruction);
+
+    function uniqueRandomLetters(n){
+      const pool = [...alphabet];
+      const out = [];
+      while(out.length < n && pool.length){
+        const idx = Math.floor(Math.random()*pool.length);
+        out.push(pool.splice(idx,1)[0]);
+      }
+      return out;
+    }
+
+    function makeCard(letter){
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.setAttribute('role','listitem');
+      card.setAttribute('draggable','true');
+      card.dataset.letter = letter;
+      // full neon background + emoji book
+      card.innerHTML = `<div class="letter" aria-label="letter ${letter}">📗 ${letter}</div>`;
+
+      // Drag events
+      card.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', letter);
+        e.dataTransfer.effectAllowed = 'move';
+        card.classList.add('dragging');
+      });
+      card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+      // Keyboard move (Enter puts into first empty slot)
+      card.tabIndex = 0;
+      card.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter'){
+          const slot = [...slotsEl.querySelectorAll('.slot')].find(s => !s.firstElementChild);
+          if(slot) slot.appendChild(card);
+        }
+      });
+      return card;
+    }
+
+    function makeSlot(i){
+      const slot = document.createElement('div');
+      slot.className = 'slot';
+      slot.dataset.index = i+1;
+      slot.setAttribute('role','listitem');
+      slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('hover'); });
+      slot.addEventListener('dragleave', () => slot.classList.remove('hover'));
+      slot.addEventListener('drop', e => {
+        e.preventDefault();
+        slot.classList.remove('hover');
+        const letter = e.dataTransfer.getData('text/plain');
+        const dragging = document.querySelector('.card.dragging');
+        if(dragging){ slot.appendChild(dragging); slot.classList.add('filled'); }
+      });
+      return slot;
+    }
+
+    function layoutSlots(n){
+      slotsEl.innerHTML='';
+      for(let i=0;i<n;i++) slotsEl.appendChild(makeSlot(i));
+      updateFilledState();
+    }
+    function layoutCards(letters){
+      poolEl.innerHTML = '';
+      letters.forEach(L => poolEl.appendChild(makeCard(L)));
+    }
+
+    function updateFilledState(){
+      slotsEl.querySelectorAll('.slot').forEach(s => s.classList.toggle('filled', !!s.firstElementChild));
+    }
+
+    function newRound(){
+      resultEl.textContent = '';
+      const n = parseInt(levelSel.value, 10);
+      const letters = uniqueRandomLetters(n);
+      layoutSlots(n);
+      layoutCards(letters);
+      // auto-speak once each round to cue non-readers
+      speakInstruction();
+    }
+
+    function resetPlacements(){
+      resultEl.textContent = '';
+      const cards = [...document.querySelectorAll('.card')];
+      poolEl.innerHTML = '';
+      cards.forEach(c => poolEl.appendChild(c));
+      updateFilledState();
+    }
+
+    function checkOrder(){
+      const slots = [...slotsEl.querySelectorAll('.slot')];
+      const placed = slots.map(s => s.firstElementChild?.dataset.letter || null);
+      const complete = placed.every(Boolean);
+      if(!complete){
+        resultEl.textContent = '📥 Place all the books on the shelf left ➡️ right.';
+        resultEl.className = 'result no';
+        return;
+      }
+      // compare to sorted copy
+      const correct = [...placed].sort((a,b) => a.localeCompare(b));
+      const ok = placed.every((L, i) => L === correct[i]);
+      slots.forEach((s,i) => {
+        s.style.borderColor = ok ? 'var(--good)' : (placed[i] === correct[i] ? 'var(--vine)' : 'var(--bad)');
+      });
+      resultEl.textContent = ok ? '🦁 ROAR! The shelf is in perfect ABC order! 🎉' : '🔁 Almost! Fix the letters so they go A → Z.';
+      resultEl.className = ok ? 'result ok' : 'result no';
+      if(ok){ confettiBurst(); }
+    }
+
+    // Simple confetti without libraries
+    function confettiBurst(){
+      const N = 28;
+      for(let i=0;i<N;i++){
+        const bit = document.createElement('div');
+        bit.style.position='fixed'; bit.style.width='10px'; bit.style.height='14px';
+        bit.style.background = i%3===0? 'var(--neon)': (i%3===1? '#b8f5b8':'#a0e9a0');
+        bit.style.left = (50 + (Math.random()*20-10)) + 'vw';
+        bit.style.top = '-20px';
+        bit.style.transform = `rotate(${Math.random()*360}deg)`;
+        bit.style.borderRadius='2px';
+        document.body.appendChild(bit);
+        const dx = (Math.random()*2-1) * 0.6; // drift
+        const dur = 1200 + Math.random()*800;
+        const start = performance.now();
+        const spin = (Math.random()*2-1) * 400;
+        (function anim(t0){
+          const dt = t0 - start;
+          const p = Math.min(1, dt/dur);
+          bit.style.top = (p*100) + 'vh';
+          bit.style.left = `calc(${bit.style.left} + ${dx*dt/10}px)`;
+          bit.style.opacity = (1-p).toString();
+          bit.style.transform = `rotate(${spin*p}deg)`;
+          if(p<1) requestAnimationFrame(anim); else bit.remove();
+        })(start);
+      }
+    }
+
+    // Events
+    $('#newRound').addEventListener('click', newRound);
+    $('#reset').addEventListener('click', resetPlacements);
+    $('#check').addEventListener('click', checkOrder);
+    levelSel.addEventListener('change', newRound);
+
+    // keep filled state updated when DOM changes
+    const obs = new MutationObserver(updateFilledState);
+    obs.observe(slotsEl, {childList:true, subtree:true});
+
+    // init
+    newRound();
+  </script>
+</body>
+</html>

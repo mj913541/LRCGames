@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chromebook Keyboard Drag and Drop Game</title>
+
+<style>
+        body {
+		font-family: Arial, sans-serif;
+		text-align: center;
+		justify-content: center;
+		background-color: #f0f8ff;
+	}
+
+	.game-container {
+		margin: 20px auto;
+		width: auto;
+		max-width: 1000px;
+	}
+
+	.dropzone {
+		cursor: pointer;
+		border-radius: 5px;
+		background-color: white;
+		border: 3px solid #000;
+		display: flex;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
+
+	.dropzonerow {
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 5px;
+	}
+
+	#dropzonecontainer {
+		background-color: grey;
+		border: 3px solid #000;
+		padding: 2px;
+		max-width: 1000px;
+		justify-content: center;
+		border-radius: 10px;
+	}
+
+	.draggablecontainer {
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+
+	.draggable {
+		margin: 2px;
+		cursor: pointer;
+		border-radius: 5px;
+		background-color: white;
+		border: 3px solid #000;
+		display: flex;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
+
+	.draggable img {
+		pointer-events: none; /* Make it to where the img can't be draggable */
+	}
+
+	.bigkeys {
+		background-size: 80%;
+		background-repeat: no-repeat;
+		background-position: center;
+
+	}
+
+
+	.draggable.correct {
+		background-color: #90ee90;
+		border-color: #90ee90;
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	#congratulations {
+		margin-top: 20px;
+	}
+
+	.dragging {
+		opacity: 0.5;
+	}
+
+	.bounce {
+		animation: bounce 0.5s;
+	}
+
+	@keyframes bounce {
+		0%, 20%, 50%, 80%, 100% {
+			transform: translateY(0);
+		}
+		40% {
+			transform: translateY(-30px);
+		}
+		60% {
+			transform: translateY(-15px);
+		}
+	}
+</style>
+</head>
+
+<body>
+	<div class="game-container">
+	<h1>Chromebook Keyboard Drag and Drop Game</h1>
+		<div id="dropzonecontainer">
+		<div class="dropzonerow" id="row1">
+			<div id="dropzone1" class="dropzone" data-accept="draggable1" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1ehhDSdxo5HrUlc6ExMvaKM4s_FA0l-UI&sz=w100');"></div> <!--esc--> 
+			<div id="dropzone2" class="dropzone bigkeys" data-accept="draggable2" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=13-R1mpDXMK27ldFaziY1-5j4x3EORLKp&sz=w100');"></div> <!--larrow-->
+			<div id="dropzone3" class="dropzone bigkeys" data-accept="draggable3" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1D0mVM0vfcIckzjjaTWQ1lqaBcU7fxxEX&sz=w100');"></div> <!--rarrow-->
+			<div id="dropzone4" class="dropzone bigkeys" data-accept="draggable4" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=120E5zHJrJCfBvUwpmDCaDI1kAOQTEqrO&sz=w100');"></div> <!--pic key 4 refresh-->
+			<div id="dropzone5" class="dropzone bigkeys" data-accept="draggable5" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1KCUUSkfXmOOjRBGcF2d1pB31LTBP3N25&sz=w100');"></div> <!--pic key 5 screen-->
+			<div id="dropzone6" class="dropzone bigkeys" data-accept="draggable6" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1dFInJlGuXIG9C0XZQBbh482CoCMpQSUn&sz=w100');"></div> <!--pic key 6-->
+			<div id="dropzone7" class="dropzone bigkeys" data-accept="draggable7" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1S0fBJe7PKp4Gpbd8AMOPOpqen3yABh2J&sz=w100');"></div> <!--pic key 7--> 
+			<div id="dropzone8" class="dropzone bigkeys" data-accept="draggable8" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1fx54Nyl2zK5HK9lm6uNarEcsnBE0BJ9b&sz=w100');"></div> <!--pic key 8--> 
+			<div id="dropzone9" class="dropzone bigkeys" data-accept="draggable9" style="width: 65px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=11zMSrwRTIGdCbfsY30le62p5rJK0Mp99&sz=w100');"></div> <!--pic key 9-->
+			<div id="dropzone10" class="dropzone bigkeys" data-accept="draggable10" style="width: 65px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1cQ33_KrlDXJx5x1O7UwNN9daNYKzLRBq&sz=w100');"></div> <!--pic key 10--> 
+			<div id="dropzone69" class="dropzone bigkeys" data-accept="draggable69" style="width: 65px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1SRJlkpoC7zV1oNyZ1OzNZ2wHO8PSYqKz&sz=w100');"></div> <!--pic key 11--> 
+			<div id="dropzone70" class="dropzone bigkeys" data-accept="draggable70" style="width: 65px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1wIYAp0klNbETX4iQ3cOKbwOCum-VlcW_&sz=w100');"></div> <!--pic key 12--> 
+		</div>
+
+		<div class="dropzonerow" id="row2">
+ 			<div id="dropzone11" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=17WmjoeRcOiUZkAyK3SnwsgQJxDnynGvb&sz=w100');"></div> <!--tilde-->
+ 			<div id="dropzone12" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1tRx4XTkNh3_Ob5Q61I50xkkgyNwlfMGu&sz=w100');"></div> <!-- 1 key-->
+ 			<div id="dropzone13" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1QRfxCitq_y0tuKhLzVKCia00mHb_30wg&sz=w100');"></div> <!-- 2 key-->
+ 			<div id="dropzone14" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1khdGsb7zag9lL-9YrNi__pY0PY5pQpUy&sz=w100');"></div> <!-- 3 key-->
+ 			<div id="dropzone15" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1s4S9IwVPS2-u91HzA6I5l2F-34Z9-XMs&sz=w100');"></div> <!-- 4 key-->
+ 			<div id="dropzone16" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1uyimlf3swFYYiPTI8CpjBXKWPzrKlIkn&sz=w100');"></div> <!--num 5 key-->
+ 			<div id="dropzone17" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1CI9OBnIX6FhzIvP79rJOR6Dyq7dVAM53&sz=w100');"></div> <!--num 6 key-->
+			<div id="dropzone18" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1BwZyX_PY-FNdGwdWT1aPkah19hdxJgj_&sz=w100');"></div> <!--num 7 key-->
+			<div id="dropzone19" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1CmUPlNtxf-405On99TqsQhEaO5py60GQ&sz=w100');"></div> <!--num 8 key-->
+ 			<div id="dropzone20" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1YTRcC7aTMKIWezYMsK1iaD5LmMr3flov&sz=w100');"></div> <!--num 9 key-->
+ 			<div id="dropzone21" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=127ZiZ3BGeysIP3WfSu_elmX17X302zf7&sz=w100');"></div> <!--num 0 key-->
+ 			<div id="dropzone22" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1Nd4uOQOLCu7R1jPaY3kZzF4B5GLctsdE&sz=w100');"></div> <!-- -_ key-->
+ 			<div id="dropzone23" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1FDoUx5irZ9_vLv6Hid7lIodDgpzbgnGd&sz=w100');"></div> <!-- =+ key-->
+ 			<div id="dropzone24" class="dropzone bigkeys" style="width: 140px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1L1t-gBFEAhLH7B5XBK_3EyCZ8ERvg9cG&sz=w100');"></div> <!--backspace-->
+
+ 		</div>
+
+		<div class="dropzonerow" id="row3">
+ 			<div id="dropzone25" class="dropzone" data-accept="draggable25" style="width: 140px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1VApClTFuCMCOVddymHs4tCksfcgA-s0X&sz=w100');"></div> <!--tab key-->
+ 			<div id="dropzone26" class="dropzone" data-accept="draggable26" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1OR68z3kdS1UotqydosLpBXt5EqksWSng&sz=w100');"></div> <!--Q key-->
+ 			<div id="dropzone27" class="dropzone" data-accept="draggable27" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=12-v7EhG4Z7X-wbUpwBpY8oZfc-K4-cKv&sz=w100');"></div> <!--W key-->
+ 			<div id="dropzone28" class="dropzone" data-accept="draggable28" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1umA_njUihHwrg6e8fm-0kAVci7gTRLrv&sz=w100');"></div> <!--E key-->
+			<div id="dropzone29" class="dropzone" data-accept="draggable29" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1ZRCQ1Ta4Y6K7MRFBjZv6rwG6A2XE7q4r&sz=w100');"></div> <!--R key-->
+			<div id="dropzone30" class="dropzone" data-accept="draggable30" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1mLkSIv1JamzSDfOVGuhvuFRWWoLEKWWv&sz=w100 ');"></div> <!--T key-->
+ 			<div id="dropzone31" class="dropzone" data-accept="draggable31" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1kgJOnju-PPAaW3F06FdCfPxsnEXsJfsM&sz=w100');"></div> <!--Y key-->
+			<div id="dropzone32" class="dropzone" data-accept="draggable32" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=12M27CYwOoENPc6pRBxZHW-mHHuIb0u40&sz=w100');"></div> <!--U key-->
+ 			<div id="dropzone33" class="dropzone" data-accept="draggable33" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1Ahn_oZ--IqdFK841k7wxS6FkFa2FZ0uf&sz=w100');"></div> <!--I key-->
+ 			<div id="dropzone34" class="dropzone" data-accept="draggable34" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1lLJeUUg5al60854c21PwxW82B2480pHU&sz=w100');"></div> <!--O key-->
+ 			<div id="dropzone35" class="dropzone" data-accept="draggable35" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1W29KlLEI1Wyt6QvX8fx4Hh_5wYURAsvB&sz=w100');"></div> <!--P key-->
+ 			<div id="dropzone36" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1Kf4fdN6eUgZQxcghrD3EHnkAC_PzZEH1&sz=w100');"></div> <!--{[ key-->
+ 			<div id="dropzone37" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=19Av3KuZwMDz09c1uN49W0Vw6Dy7MQgqY&sz=w100');"></div> <!--}] key-->
+ 			<div id="dropzone38" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=18IpD_4yInsMIKaYmcNu6szr6GQVmeJET&sz=w100');"></div> <!--|\ key-->
+		</div>
+
+
+		<div class="dropzonerow" id="row4">
+ 			<div id="dropzone39" class="dropzone" style="width: 160px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1VULT4XrB_9JuFjFPKWww2IGhgIRFK0kj&sz=w100');"></div> <!--search-->
+			<div id="dropzone40" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1-wMCYXJuen18gFmfOGwUqSDicpRyXm3l&sz=w100');"></div> <!--A key-->
+			<div id="dropzone41" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1SYyQl9WZf5LxE4bjBnyKr-xFOFxRnQaA&sz=w100');"></div> <!--S key-->
+			<div id="dropzone42" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=10BoN7RBR0C558779UPpfE2TmNbyVeHwd&sz=w100');"></div> <!--D key-->
+			<div id="dropzone43" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=11OaYCNVft6fzPrlJ1d1zfnvm2bRC42Y7&sz=w100');"></div> <!--F key-->
+			<div id="dropzone44" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1gkFAc4S0Tl16PzMVO4-MWB7fozOG6SCI&sz=w100');"></div> <!--G key-->
+			<div id="dropzone45" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1IsMwGdpYr6l2OnLesxI13YWzxtUXXpv0&sz=w100');"></div> <!--H key-->
+			<div id="dropzone46" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1fPyY7QGnj1AE1ZmNTdrhYi9XzeiEF1YV&sz=w100');"></div> <!--J key-->
+			<div id="dropzone47" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1tG5V187odO3JI_sGH-Xyr4J2HOTIuHMa&sz=w100');"></div> <!--K key-->
+			<div id="dropzone48" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1eLXFlC82kcCGnC-6SqG5pANZtnJsnq0r&sz=w100');"></div> <!--L key-->
+			<div id="dropzone49" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=12yCw-wJvE6QSDkpJ1IKL402PRppGOwK0&sz=w100');"></div> <!--:; key-->
+			<div id="dropzone50" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=14wzrqavQuYRBJcrrleaOSrf9oeYq19P3&sz=w100');"></div> <!--"' key-->
+			<div id="dropzone51" class="dropzone" style="width: 160px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1pjfzotlx_v-rnRb7TRyfVLnsUic7ekHH&sz=w100');"></div> <!--enter-->
+		</div>
+
+
+
+		<div class="dropzonerow" id="row5">
+			<div id="dropzone52" class="dropzone" style="width: 180px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1TSjGH3zn7p8jOKmdq08ZxTu5Bdh099jv&sz=w100');"></div> <!--shift-->
+			<div id="dropzone53" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1VD020uuBi3UOsVhpFyDjQQAyR5q0Od5h&sz=w100');"></div> <!--Z key-->
+			<div id="dropzone54" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1FcXYYL32rErGDMzoubjDyCl8m8lEaWbx&sz=w100');"></div> <!--X key-->
+			<div id="dropzone55" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1nx2MjTdoJ4zIedUJt0Ygm6rHpVOqpL17&sz=w100');"></div> <!--C key-->
+			<div id="dropzone56" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=10gPMfLVg1mQPWKCyVmMqpHofDdIgg6sM&sz=w100');"></div> <!--V key-->
+			<div id="dropzone57" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1ynKuqcDahO2fUXggeX5rc0jCSnlFxqIq&sz=w100');"></div> <!--B key-->
+			<div id="dropzone58" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1h8LUJXA19P7dS_ZcQSt2cR65XA1xCb9H&sz=w100');"></div> <!--N key-->
+			<div id="dropzone59" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1tginfXl_waGgyXOscrBv3ac3Fv61-k-q&sz=w100');"></div> <!--M key-->
+			<div id="dropzone60" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1OgUcuZECq7Rm40WH-v983TTC49SFmi3_&sz=w100');"></div> <!--, key-->
+			<div id="dropzone61" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1qOAjlk12_Rbb801BrDNlDpFKttqcOMR3&sz=w100');"></div> <!--. key-->
+			<div id="dropzone62" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1onyTOXHiEyDRdLBJxewSiuMEyFmz1xPj&sz=w100');"></div> <!--? key-->
+			<div id="dropzone63" class="dropzone" style="width: 180px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1TSjGH3zn7p8jOKmdq08ZxTu5Bdh099jv&sz=w100');"></div> <!--rightshift-->
+		</div>
+
+
+
+		<div class="dropzonerow" id="row6">
+			<div id="dropzone64" class="dropzone" style="width: 150px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1EMZmgAQJasz13Z2WSHMjCHoFRz9eAcp7&sz=w100');"></div> <!--LftCtrl-->
+			<div id="dropzone65" class="dropzone" style="width: 150px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1xvEnfrAwcCz5fELOgFkYK0gOzhKsGj30&sz=w100');"></div> <!--LftAlt-->
+			<div id="dropzone66" class="dropzone" style="width: 340px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1hbWbDqVYcf1sSL9x9rcDQ7PjaeXytMJG&sz=w100');"></div> <!--Space-->
+			<div id="dropzone67" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1xvEnfrAwcCz5fELOgFkYK0gOzhKsGj30&sz=w100');"></div> <!--RtAlt-->
+			<div id="dropzone68" class="dropzone" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1EMZmgAQJasz13Z2WSHMjCHoFRz9eAcp7&sz=w100');"></div> <!--RtCtrl-->
+			<div id="dropzone69" class="dropzone bigkeys" style="width: 220px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1WkmLDDzTd182F5_5IKSZFvc8zT6OJs4P&sz=w100');"></div> <!--arrows-->
+		</div>
+		</div>
+
+
+
+
+
+
+
+
+
+        <div id="draggablecontainer" class="draggablecontainer">
+<!-- top row -->
+			<div id="draggable1" class="draggable" data-match="dropzone1" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1ehhDSdxo5HrUlc6ExMvaKM4s_FA0l-UI&sz=w100');"></div> <!--esc--> 
+			<div id="draggable2" class="draggable bigkeys" data-match="dropzone2" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=13-R1mpDXMK27ldFaziY1-5j4x3EORLKp&sz=w100');"></div> <!--larrow-->
+			<div id="draggable3" class="draggable bigkeys" data-match="dropzone3" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1D0mVM0vfcIckzjjaTWQ1lqaBcU7fxxEX&sz=w100');"></div> <!--rarrow-->
+			<div id="draggable4" class="draggable bigkeys" data-match="dropzone4" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=120E5zHJrJCfBvUwpmDCaDI1kAOQTEqrO&sz=w100');"></div> <!--pic key 4 refresh-->
+			<div id="draggable5" class="draggable bigkeys" data-match="dropzone5" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1KCUUSkfXmOOjRBGcF2d1pB31LTBP3N25&sz=w100');"></div> <!--pic key 5-->
+			<div id="draggable6" class="draggable bigkeys" data-match="dropzone6" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1dFInJlGuXIG9C0XZQBbh482CoCMpQSUn&sz=w100');"></div> <!--pic key 6-->
+			<div id="draggable7" class="draggable bigkeys" data-match="dropzone7" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1S0fBJe7PKp4Gpbd8AMOPOpqen3yABh2J&sz=w100');"></div> <!--pic key 7-->
+			<div id="draggable8" class="draggable bigkeys" data-match="dropzone8" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1fx54Nyl2zK5HK9lm6uNarEcsnBE0BJ9b&sz=w100');"></div> <!--pic key 8-->
+			<div id="draggable9" class="draggable bigkeys" data-match="dropzone9" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=11zMSrwRTIGdCbfsY30le62p5rJK0Mp99&sz=w100');"></div> <!--pic key 9-->
+			<div id="draggable10" class="draggable bigkeys" data-match="dropzone10" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1cQ33_KrlDXJx5x1O7UwNN9daNYKzLRBq&sz=w100');"></div> <!--pic key 10-->
+			<div id="draggable69" class="draggable bigkeys" data-match="dropzone69" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1SRJlkpoC7zV1oNyZ1OzNZ2wHO8PSYqKz&sz=w100');"></div> <!--pic key 11--> 
+			<div id="draggable70" class="draggable bigkeys" data-match="dropzone70" draggable="true" style="width: 70px; height: 35px; background-image: url('https://drive.google.com/thumbnail?id=1wIYAp0klNbETX4iQ3cOKbwOCum-VlcW_&sz=w100');"></div> <!--pic key 12--> 
+
+
+
+<!-- numbers row -->
+		<div id="draggable11" class="draggable" data-match="dropzone11" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=17WmjoeRcOiUZkAyK3SnwsgQJxDnynGvb&sz=w100');"></div> <!--tilde-->
+		<div id="draggable12" class="draggable" data-match="dropzone12" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1tRx4XTkNh3_Ob5Q61I50xkkgyNwlfMGu&sz=w100');"></div> <!--1 key-->
+		<div id="draggable13" class="draggable" data-match="dropzone13" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1QRfxCitq_y0tuKhLzVKCia00mHb_30wg&sz=w100');"></div> <!-- 2 key-->
+		<div id="draggable14" class="draggable" data-match="dropzone14" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1khdGsb7zag9lL-9YrNi__pY0PY5pQpUy&sz=w100');"></div> <!-- 3 key-->
+		<div id="draggable15" class="draggable" data-match="dropzone15" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1s4S9IwVPS2-u91HzA6I5l2F-34Z9-XMs&sz=w100');"></div> <!-- 4 key-->
+		<div id="draggable16" class="draggable" data-match="dropzone16" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1uyimlf3swFYYiPTI8CpjBXKWPzrKlIkn&sz=w100');"></div> <!--num 5 key-->
+		<div id="draggable17" class="draggable" data-match="dropzone17" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1CI9OBnIX6FhzIvP79rJOR6Dyq7dVAM53&sz=w100');"></div> <!--num 6 key-->
+		<div id="draggable18" class="draggable" data-match="dropzone18" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1BwZyX_PY-FNdGwdWT1aPkah19hdxJgj_&sz=w100');"></div> <!--num 7 key-->
+		<div id="draggable19" class="draggable" data-match="dropzone19" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1CmUPlNtxf-405On99TqsQhEaO5py60GQ&sz=w100');"></div> <!--num 8 key-->
+		<div id="draggable20" class="draggable" data-match="dropzone20" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1YTRcC7aTMKIWezYMsK1iaD5LmMr3flov&sz=w100');"></div> <!--num 9 key-->
+		<div id="draggable21" class="draggable" data-match="dropzone21" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=127ZiZ3BGeysIP3WfSu_elmX17X302zf7&sz=w100');"></div> <!--num 0 key-->
+		<div id="draggable22" class="draggable" data-match="dropzone22" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1Nd4uOQOLCu7R1jPaY3kZzF4B5GLctsdE&sz=w100');"></div> <!-- -_ key-->
+		<div id="draggable23" class="draggable" data-match="dropzone23" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1FDoUx5irZ9_vLv6Hid7lIodDgpzbgnGd&sz=w100');"></div>  <!-- =+ key-->
+		<div id="draggable24" class="draggable bigkeys" data-match="dropzone24" draggable="true" style="width: 140px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1L1t-gBFEAhLH7B5XBK_3EyCZ8ERvg9cG&sz=w100');"></div> <!--backspace-->
+
+
+
+<!-- tab row -->
+		<div id="draggable25" class="draggable" data-match="dropzone25" draggable="true" style="width: 140px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1VApClTFuCMCOVddymHs4tCksfcgA-s0X&sz=w100');"></div> <!--tab key-->
+		<div id="draggable26" class="draggable" data-match="dropzone26" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1OR68z3kdS1UotqydosLpBXt5EqksWSng&sz=w100');"></div> <!--Q key--> 
+		<div id="draggable27" class="draggable" data-match="dropzone27" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=12-v7EhG4Z7X-wbUpwBpY8oZfc-K4-cKv&sz=w100');"></div> <!--W key-->
+		<div id="draggable28" class="draggable" data-match="dropzone28" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1umA_njUihHwrg6e8fm-0kAVci7gTRLrv&sz=w100');"></div> <!--E key-->
+		<div id="draggable29" class="draggable" data-match="dropzone29" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1ZRCQ1Ta4Y6K7MRFBjZv6rwG6A2XE7q4r&sz=w100');"></div> <!--R key-->
+		<div id="draggable30" class="draggable" data-match="dropzone30" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1mLkSIv1JamzSDfOVGuhvuFRWWoLEKWWv&sz=w100');"></div> <!--T key-->
+		<div id="draggable31" class="draggable" data-match="dropzone31" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1kgJOnju-PPAaW3F06FdCfPxsnEXsJfsM&sz=w100');"></div> <!--Y key-->
+		<div id="draggable32" class="draggable" data-match="dropzone32" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=12M27CYwOoENPc6pRBxZHW-mHHuIb0u40&sz=w100');"></div><!--U key-->
+		<div id="draggable33" class="draggable" data-match="dropzone33" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1Ahn_oZ--IqdFK841k7wxS6FkFa2FZ0uf&sz=w100');"></div> <!--I key-->
+		<div id="draggable34" class="draggable" data-match="dropzone34" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1lLJeUUg5al60854c21PwxW82B2480pHU&sz=w100');"></div> <!--O key-->
+		<div id="draggable35" class="draggable" data-match="dropzone35" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1W29KlLEI1Wyt6QvX8fx4Hh_5wYURAsvB&sz=w100');"></div> <!--P key-->
+		<div id="draggable36" class="draggable" data-match="dropzone36" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1Kf4fdN6eUgZQxcghrD3EHnkAC_PzZEH1&sz=w100');"></div> <!--{[ key-->
+		<div id="draggable37" class="draggable" data-match="dropzone37" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=19Av3KuZwMDz09c1uN49W0Vw6Dy7MQgqY&sz=w100');"></div> <!--}] key--> 
+		<div id="draggable38" class="draggable" data-match="dropzone38" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=18IpD_4yInsMIKaYmcNu6szr6GQVmeJET&sz=w100');"></div> <!--|\ key-->
+
+
+
+<!-- capslock/search row -->
+		<div id="draggable39" class="draggable" data-match="dropzone39" draggable="true" style="width: 160px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1VULT4XrB_9JuFjFPKWww2IGhgIRFK0kj&sz=w100');"></div><!--search-->
+		<div id="draggable40" class="draggable" data-match="dropzone40" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1-wMCYXJuen18gFmfOGwUqSDicpRyXm3l&sz=w100');"></div> <!--A key-->
+		<div id="draggable41" class="draggable" data-match="dropzone41" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1SYyQl9WZf5LxE4bjBnyKr-xFOFxRnQaA&sz=w100');"></div> <!--S key-->
+		<div id="draggable42" class="draggable" data-match="dropzone42" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=10BoN7RBR0C558779UPpfE2TmNbyVeHwd&sz=w100');"></div> <!--D key-->
+		<div id="draggable43" class="draggable" data-match="dropzone43" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=11OaYCNVft6fzPrlJ1d1zfnvm2bRC42Y7&sz=w100');"></div> <!--F key-->
+		<div id="draggable44" class="draggable" data-match="dropzone44" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1gkFAc4S0Tl16PzMVO4-MWB7fozOG6SCI&sz=w100');"></div> <!--G key-->
+		<div id="draggable45" class="draggable" data-match="dropzone45" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1IsMwGdpYr6l2OnLesxI13YWzxtUXXpv0&sz=w100');"></div> <!--H key-->
+		<div id="draggable46" class="draggable" data-match="dropzone46" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1fPyY7QGnj1AE1ZmNTdrhYi9XzeiEF1YV&sz=w100');"></div> <!--J key-->
+		<div id="draggable47" class="draggable" data-match="dropzone47" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1tG5V187odO3JI_sGH-Xyr4J2HOTIuHMa&sz=w100');"></div> <!--K key-->
+		<div id="draggable48" class="draggable" data-match="dropzone48" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1eLXFlC82kcCGnC-6SqG5pANZtnJsnq0r&sz=w100');"></div> <!--L key-->
+		<div id="draggable49" class="draggable" data-match="dropzone49" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=12yCw-wJvE6QSDkpJ1IKL402PRppGOwK0&sz=w100');"></div> <!--:; key-->
+		<div id="draggable50" class="draggable" data-match="dropzone50" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=14wzrqavQuYRBJcrrleaOSrf9oeYq19P3&sz=w100');"></div> <!--"' key-->
+		<div id="draggable51" class="draggable" data-match="dropzone51" draggable="true" style="width: 160px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1pjfzotlx_v-rnRb7TRyfVLnsUic7ekHH&sz=w100');"></div> <!--enter-->
+
+
+
+
+<!-- shift row -->
+		<div id="draggable52" class="draggable" data-match="dropzone52" draggable="true" style="width: 180px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1TSjGH3zn7p8jOKmdq08ZxTu5Bdh099jv&sz=w100');"></div> <!--shift-->
+		<div id="draggable53" class="draggable" data-match="dropzone53" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1VD020uuBi3UOsVhpFyDjQQAyR5q0Od5h&sz=w100');"></div> <!--Z key-->
+		<div id="draggable54" class="draggable" data-match="dropzone54" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1FcXYYL32rErGDMzoubjDyCl8m8lEaWbx&sz=w100');"></div> <!--X key-->
+		<div id="draggable55" class="draggable" data-match="dropzone55" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1nx2MjTdoJ4zIedUJt0Ygm6rHpVOqpL17&sz=w100');"></div> <!--C key-->
+		<div id="draggable56" class="draggable" data-match="dropzone56" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=10gPMfLVg1mQPWKCyVmMqpHofDdIgg6sM&sz=w100');"></div> <!--V key-->
+		<div id="draggable57" class="draggable" data-match="dropzone57" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1ynKuqcDahO2fUXggeX5rc0jCSnlFxqIq&sz=w100');"></div> <!--B key-->
+		<div id="draggable58" class="draggable" data-match="dropzone58" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1h8LUJXA19P7dS_ZcQSt2cR65XA1xCb9H&sz=w100');"></div> <!--N key-->
+		<div id="draggable59" class="draggable" data-match="dropzone59" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1tginfXl_waGgyXOscrBv3ac3Fv61-k-q&sz=w100');"></div> <!--M key-->
+		<div id="draggable60" class="draggable" data-match="dropzone60" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1OgUcuZECq7Rm40WH-v983TTC49SFmi3_&sz=w100’);"></div> <!--, key-->
+		<div id="draggable61" class="draggable" data-match="dropzone61" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1qOAjlk12_Rbb801BrDNlDpFKttqcOMR3&sz=w100');"></div> <!--. key-->
+		<div id="draggable62" class="draggable" data-match="dropzone62" draggable="true" style="width: 50px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1onyTOXHiEyDRdLBJxewSiuMEyFmz1xPj&sz=w100');"></div> <!--? Key-->
+		<div id="draggable63" class="draggable" data-match="dropzone63" draggable="true" style="width: 180px; height: 50px; background-image: url('https://drive.google.com/thumbnail?id=1TSjGH3zn7p8jOKmdq08ZxTu5Bdh099jv&sz=w100');"></div> <!--rightshift-->
+
+
+
+
+
+
+<!-- space row -->
+		<div id="draggable64" class="draggable" data-match="dropzone64" draggable="true" style="width: 150px; height: 50px; background-image: url(https://drive.google.com/thumbnail?id=1EMZmgAQJasz13Z2WSHMjCHoFRz9eAcp7&sz=w100);"></div> <!--LftCtrl-->
+		<div id="draggable65" class="draggable" data-match="dropzone65" draggable="true" style="width: 150px; height: 50px; background-image: url(https://drive.google.com/thumbnail?id=1xvEnfrAwcCz5fELOgFkYK0gOzhKsGj30&sz=w100);"></div> <!--LftAlt-->
+		<div id="draggable66" class="draggable" data-match="dropzone66" draggable="true" style="width: 320px; height: 50px; background-image: url(https://drive.google.com/thumbnail?id=1hbWbDqVYcf1sSL9x9rcDQ7PjaeXytMJG&sz=w100);"></div> <!--Space-->
+		<div id="draggable67" class="draggable" data-match="dropzone67" draggable="true" style="width: 40px; height: 50px; background-image: url(https://drive.google.com/thumbnail?id=1xvEnfrAwcCz5fELOgFkYK0gOzhKsGj30&sz=w100);"></div> <!--RtAlt-->
+		<div id="draggable68" class="draggable" data-match="dropzone68" draggable="true" style="width: 40px; height: 50px; background-image: url(https://drive.google.com/thumbnail?id=1EMZmgAQJasz13Z2WSHMjCHoFRz9eAcp7&sz=w100);"></div> <!--RtCtrl-->
+		<div id="draggable69" class="draggable bigkeys" data-match="dropzone69" draggable="true" style="width: 220px; height: 50px; background-image: url(https://drive.google.com/thumbnail?id=1WkmLDDzTd182F5_5IKSZFvc8zT6OJs4P&sz=w100);"></div> <!--arrows-->
+
+
+
+       
+
+
+
+
+
+
+
+
+	</div>
+	</div>
+
+	<div id="congratulations" class="congratulations hidden">
+		<h2>Congratulations! You've completed the keyboard!</h2>
+		<button onclick="restartGame()">Play Again</button>
+	</div>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const draggables = document.querySelectorAll('.draggable');
+    const dropzones = document.querySelectorAll('.dropzone');
+    const draggableContainer = document.getElementById('draggablecontainer');
+    const congratulationsMessage = document.getElementById('congratulations');
+
+    // Shuffle draggables
+    function shuffleDraggables() {
+        const items = Array.from(draggables);
+        items.sort(() => Math.random() - 0.5);
+        items.forEach(item => draggableContainer.appendChild(item));
+    }
+
+    shuffleDraggables();
+
+    draggables.forEach(draggable => {
+        draggable.addEventListener('dragstart', () => {
+            draggable.classList.add('dragging');
+        });
+
+        draggable.addEventListener('dragend', () => {
+            draggable.classList.remove('dragging');
+        });
+    });
+
+    dropzones.forEach(dropzone => {
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            const draggable = document.querySelector('.dragging');
+            if (draggable && draggable.dataset.match === dropzone.id) {
+                dropzone.appendChild(draggable);
+
+                draggable.classList.add('correct');
+                draggable.classList.add('hidden');
+                dropzone.style.borderColor = 'green';
+                dropzone.style.backgroundColor = 'green'; // Change border color when placed correctly
+                checkCompletion();
+            } else {
+                draggableContainer.appendChild(draggable);
+                draggable.classList.add('bounce');
+                setTimeout(() => draggable.classList.remove('bounce'), 1000);
+            }
+        });
+    });
+
+    function checkCompletion() {
+        const allCorrect = Array.from(draggables).every(draggable => draggable.classList.contains('correct'));
+        if (allCorrect) {
+            congratulationsMessage.classList.remove('hidden');
+        }
+    }
+
+
+    window.restartGame = function() {
+        draggables.forEach(draggable => {
+            draggable.classList.remove('hidden', 'correct');
+            draggableContainer.appendChild(draggable);
+        });
+        dropzones.forEach(dropzone => {
+            dropzone.style.borderColor = ''; // Reset border color
+            dropzone.style.backgroundColor = ''; // Reset background color
+        });
+        congratulationsMessage.classList.add('hidden');
+        shuffleDraggables();
+    };
+});
+
+</script>
+</body>
+</html>
+
+

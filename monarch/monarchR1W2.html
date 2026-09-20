@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monarch Round 1 – Battle 2 🐱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: "Comic Sans MS", "Trebuchet MS", system-ui, sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #fff3e0);
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .wrapper {
+      background: #ffffffee;
+      border-radius: 24px;
+      padding: 20px;
+      max-width: 900px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      border: 4px solid #90caf9;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin: 0 0 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 1.1rem;
+      margin-bottom: 16px;
+    }
+
+    .steps-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .step-badge {
+      flex: 1;
+      min-width: 110px;
+      background: #e3f2fd;
+      border-radius: 999px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px solid #90caf9;
+      font-size: 0.85rem;
+    }
+
+    .step-circle {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #90caf9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #0d47a1;
+      flex: 0 0 auto;
+    }
+
+    .step-badge.active {
+      background: #bbdefb;
+      border-color: #42a5f5;
+    }
+
+    .step-badge.done {
+      background: #c8e6c9;
+      border-color: #66bb6a;
+    }
+
+    .step-badge.done .step-circle {
+      background: #66bb6a;
+      color: white;
+    }
+
+    .step-card {
+      display: none;
+      background: #f5fbff;
+      border-radius: 18px;
+      padding: 16px;
+      border: 3px solid #bbdefb;
+      margin-bottom: 10px;
+    }
+
+    .step-card.active {
+      display: block;
+    }
+
+    .step-title {
+      font-size: 1.4rem;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .video-box {
+      position: relative;
+      padding-bottom: 56.25%;
+      height: 0;
+      overflow: hidden;
+      border-radius: 16px;
+      background: #000;
+    }
+
+    .video-box iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .next-btn {
+      margin-top: 12px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #42a5f5;
+      font-weight: bold;
+    }
+
+    .next-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .pin-btn {
+      margin-left: 10px;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 2px dashed #90caf9;
+      background: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .work-btn {
+      padding: 14px 24px;
+      font-size: 1.2rem;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      background: #ef6c00;
+      color: white;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+
+<body>
+<div class="wrapper">
+
+  <h1>Monarch Round 1 – Battle 2 🐱</h1>
+  <div class="subtitle">
+    Watch both stories, vote, then move on to your work of choice! 📚🗳️
+  </div>
+
+  <div class="steps-row">
+    <div class="step-badge active" data-step-indicator="1"><div class="step-circle">1</div>Watch <em>Bathe the Cat</em></div>
+    <div class="step-badge" data-step-indicator="2"><div class="step-circle">2</div>Watch <em>Negative Cat</em></div>
+    <div class="step-badge" data-step-indicator="3"><div class="step-circle">3</div>Vote</div>
+    <div class="step-badge" data-step-indicator="4"><div class="step-circle">4</div>Work of Choice</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <section class="step-card active" data-step="1">
+    <div class="step-title">1️⃣ Watch <em>Bathe the Cat</em></div>
+    <div class="video-box">
+      <iframe id="yt1"
+        src="https://www.youtube.com/embed/38M7BKrCmks?enablejsapi=1&controls=0&disablekb=1"
+        title="READ ALOUD | Bathe the Cat | Alice McGinty"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen></iframe>
+    </div>
+    <button class="next-btn" id="next1" onclick="goToStep(2)" disabled>Next 👉</button>
+    <button class="pin-btn" onclick="unlockWithPin(1)">🔐 Teacher Unlock</button>
+  </section>
+
+  <!-- STEP 2 -->
+  <section class="step-card" data-step="2">
+    <div class="step-title">2️⃣ Watch <em>Negative Cat</em></div>
+    <div class="video-box">
+      <iframe id="yt2"
+        src="https://www.youtube.com/embed/2pCo2GEzylo?enablejsapi=1&controls=0&disablekb=1"
+        title="Negative Cat by Sophie Blackall"
+        frameborder="0"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen></iframe>
+    </div>
+    <button class="next-btn" id="next2" onclick="goToStep(3)" disabled>Time to Vote 🗳️</button>
+    <button class="pin-btn" onclick="unlockWithPin(2)">🔐 Teacher Unlock</button>
+  </section>
+
+  <!-- STEP 3 -->
+  <section class="step-card" data-step="3">
+    <div class="step-title">3️⃣ Vote for Your Favorite</div>
+    <iframe
+      src="https://docs.google.com/forms/d/e/1FAIpQLSfsvVRiC8D2OKCOSXMxX4Q9W7DfTERd-WRR7wDYZtN9u9f-nQ/viewform?embedded=true"
+      width="100%" height="657" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+    <button class="next-btn" onclick="goToStep(4)">Done 👉</button>
+  </section>
+
+  <!-- STEP 4 -->
+  <section class="step-card" data-step="4">
+    <div class="step-title">4️⃣ Work of Choice</div>
+    <a href="https://www.lrcquest.org/oldPages/worksOfChoice/jungleGames12/gameHub12Jungle.html"
+       class="work-btn" target="_blank" rel="noopener">✏️ Go to my Work of Choice!</a>
+  </section>
+</div>
+
+<!-- PIN MODAL -->
+<div id="pinModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:white;padding:24px;border-radius:18px;width:280px;text-align:center;">
+    <h3>Teacher Unlock</h3>
+    <input id="pinInput" type="password" inputmode="numeric" placeholder="Enter PIN"
+      style="font-size:1.2rem;padding:10px;width:100%;text-align:center;border-radius:12px;border:2px solid #90caf9;">
+    <br><br>
+    <button class="next-btn" onclick="submitPin()">Unlock</button>
+    <button class="pin-btn" onclick="closePin()">Cancel</button>
+  </div>
+</div>
+
+<script>
+  const TEACHER_PIN = "0913";
+  let pendingPinStep = null;
+  const pinUnlocked = {1:false,2:false};
+  const maxWatched = {1:0,2:0};
+  const players = {};
+  let pollTimer = null;
+  let currentStep = 1;
+
+  function goToStep(step){
+    currentStep = step;
+    document.querySelectorAll(".step-card").forEach(c =>
+      c.classList.toggle("active", Number(c.dataset.step) === step));
+    updateIndicators();
+  }
+
+  function updateIndicators(){
+    document.querySelectorAll("[data-step-indicator]").forEach(el=>{
+      const n=Number(el.dataset.stepIndicator);
+      el.classList.toggle("active", n===currentStep);
+      el.classList.toggle("done", n<currentStep);
+    });
+  }
+
+  function unlockWithPin(step){
+    pendingPinStep = step;
+    pinInput.value="";
+    pinModal.style.display="flex";
+    pinInput.focus();
+  }
+
+  function submitPin(){
+    if(pinInput.value===TEACHER_PIN){
+      pinUnlocked[pendingPinStep]=true;
+      document.getElementById("next"+pendingPinStep).disabled=false;
+      closePin();
+    } else alert("Incorrect PIN");
+  }
+
+  function closePin(){
+    pinModal.style.display="none";
+  }
+
+  function onYouTubeIframeAPIReady(){
+    players[1]=new YT.Player("yt1",{events:{onStateChange:e=>state(1,e)}})
+    players[2]=new YT.Player("yt2",{events:{onStateChange:e=>state(2,e)}})
+  }
+
+  function state(step,e){
+    if(e.data===YT.PlayerState.ENDED)
+      document.getElementById("next"+step).disabled=false;
+
+    if(e.data===YT.PlayerState.PLAYING && !pollTimer){
+      pollTimer=setInterval(()=>{
+        [1,2].forEach(s=>{
+          if(pinUnlocked[s])return;
+          const p=players[s];
+          if(!p||p.getPlayerState()!==1)return;
+          const t=p.getCurrentTime();
+          if(t>maxWatched[s])maxWatched[s]=t;
+          if(t>maxWatched[s]+1.2)p.seekTo(maxWatched[s],true);
+        });
+      },500);
+    }
+  }
+
+  const tag=document.createElement("script");
+  tag.src="https://www.youtube.com/iframe_api";
+  document.head.appendChild(tag);
+</script>
+
+</body>
+</html>

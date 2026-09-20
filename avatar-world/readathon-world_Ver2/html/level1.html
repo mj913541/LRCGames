@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LRC Quest: Level 1</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+    
+<style>
+    body {
+        font-family: 'Lexend', sans-serif;
+        background-color: #fdfcf0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh; /* Takes up exactly the window height */
+        margin: 0;
+        overflow: hidden; /* Prevents the whole page from scrolling */
+    }
+
+    #game-container {
+        width: 95%;
+        height: 90vh; /* Constrains the whole game to 90% of the screen height */
+        max-width: 800px;
+        background: white;
+        border: 6px solid #FFD700;
+        border-radius: 25px;
+        display: flex;
+        flex-direction: column; /* Stacks items vertically */
+        padding: 15px;
+        box-sizing: border-box; /* Ensures padding doesn't add to the width */
+    }
+
+    #image-display {
+        flex-grow: 1; /* This tells the image area to take up all available space */
+        width: 100%;
+        background-color: #eee;
+        border-radius: 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    #image-display img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain; /* Keeps the image from stretching */
+    }
+
+    #text-box {
+        background: #fff9c4;
+        padding: 10px 15px;
+        border-radius: 12px;
+        border: 2px dashed #fbc02d;
+        flex-shrink: 0; /* Prevents the text box from being squashed */
+    }
+
+    #dialogue {
+        font-size: 1.2rem; /* Scaled down slightly for better fit */
+        color: #333;
+        margin: 0 0 8px 0;
+    }
+
+    #nav-controls {
+        padding-top: 10px;
+        flex-shrink: 0; /* Keeps buttons at the bottom */
+    }
+
+    .btn-audio {
+        background: #4fc3f7;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 50px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .btn-nav {
+        background: #66bb6a;
+        color: white;
+        padding: 12px 30px;
+        border-radius: 50px;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
+
+    .hidden { display: none; }
+
+    #gus-feedback {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: #FFD700;
+        padding: 5px 10px;
+        border-radius: 10px;
+        font-size: 0.8rem;
+        border: 2px solid white;
+    }
+</style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div id="image-display">
+            <img id="panel-img" src="" alt="Gus the Lion" style="max-height: 100%; max-width: 100%; display:none;">
+            <span id="placeholder-text">Panel Image Placeholder</span>
+        </div>
+
+        <div id="text-box">
+            <p id="dialogue">Loading Gus...</p>
+            <button class="btn-audio" onclick="speakText()">🔊 READ TO ME</button>
+        </div>
+
+        <div id="nav-controls">
+            <button id="next-btn" class="btn-nav" onclick="changePanel(1)">Next →</button>
+            <button id="finish-btn" class="btn-nav hidden" onclick="completeLevel()">Get My Badge! 🦁</button>
+        </div>
+
+        <div id="gus-feedback">Gus is here!</div>
+    </div>
+
+<script>
+        let currentStep = 0;
+        let itemsSorted = 0;
+        const totalItems = 2; // Sticky Fingers and Juice Box
+
+        const storyData = [
+            {
+                text: "Welcome to our LRC! I am Gus, your Lion Guardian.",
+                img: "https://via.placeholder.com/800x400?text=Panel+1:+Gus+Welcome",
+                isAction: false
+            },
+            {
+                text: "Oh no! Some books have damage. We must keep them safe!",
+                img: "https://via.placeholder.com/800x400?text=Panel+2:+Damaged+Books",
+                isAction: false
+            },
+            {
+                text: "The Mess-Makers are here! Drag them to the Hazard Bin!",
+                img: "https://via.placeholder.com/800x400?text=Panel+3:+Hazard+Bin+Background",
+                isAction: true 
+            },
+            {
+                text: "Use your tools! A shelf marker keeps the book's place.",
+                img: "https://via.placeholder.com/800x400?text=Panel+4:+Shelf+Markers",
+                isAction: false
+            },
+            {
+                text: "Are you ready to be a Guardian? Let's start the quest!",
+                img: "https://via.placeholder.com/800x400?text=Panel+5:+High+Five",
+                isAction: false
+            }
+        ];
+
+        function updateUI() {
+            const data = storyData[currentStep];
+            document.getElementById('dialogue').innerText = data.text;
+            
+            const imgEl = document.getElementById('panel-img');
+            const placeholder = document.getElementById('placeholder-text');
+            const nextBtn = document.getElementById('next-btn');
+            const finishBtn = document.getElementById('finish-btn');
+            const feedback = document.getElementById('gus-feedback');
+
+            // Set Image
+            if(data.img) {
+                imgEl.src = data.img;
+                imgEl.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+
+            // Reset UI for Game Panel
+            if (data.isAction) {
+                nextBtn.style.visibility = 'hidden'; // Force them to play
+                feedback.innerText = "Sort the mess!";
+                setupGame();
+            } else {
+                nextBtn.style.visibility = 'visible';
+                document.getElementById('game-overlay')?.remove(); // Clean up game if moving away
+                
+                if (currentStep === storyData.length - 1) {
+                    nextBtn.classList.add('hidden');
+                    finishBtn.classList.remove('hidden');
+                    feedback.innerText = "Great job!";
+                } else {
+                    nextBtn.classList.remove('hidden');
+                    finishBtn.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- MINI GAME LOGIC ---
+        function setupGame() {
+            // Create a simple overlay for dragging items
+            const display = document.getElementById('image-display');
+            const overlay = document.createElement('div');
+            overlay.id = 'game-overlay';
+            overlay.style = "position:absolute; width:100%; height:100%; top:0; left:0;";
+            display.appendChild(overlay);
+
+            // Add the "Bin"
+            overlay.innerHTML = `
+                <div id="bin" style="position:absolute; bottom:20px; right:20px; width:120px; height:120px; border:4px dashed red; border-radius:10px; background:rgba(255,0,0,0.1); display:flex; align-items:center; justify-content:center;">BIN</div>
+                <div id="item1" draggable="true" ondragstart="drag(event)" style="position:absolute; top:50px; left:50px; cursor:grab; font-size:3rem;">🧃</div>
+                <div id="item2" draggable="true" ondragstart="drag(event)" style="position:absolute; top:50px; left:150px; cursor:grab; font-size:3rem;">🍕</div>
+            `;
+
+            const bin = document.getElementById('bin');
+            bin.ondragover = (e) => e.preventDefault();
+            bin.ondrop = drop;
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev) {
+            ev.preventDefault();
+            var data = ev.dataTransfer.getData("text");
+            document.getElementById(data).style.display = 'none';
+            itemsSorted++;
+
+            if (itemsSorted === totalItems) {
+                document.getElementById('gus-feedback').innerText = "ROAR! (Good job!)";
+                document.getElementById('next-btn').style.visibility = 'visible';
+                itemsSorted = 0; // Reset for future play
+            }
+        }
+        // --- END MINI GAME LOGIC ---
+
+        function changePanel(direction) {
+            if (currentStep + direction >= 0 && currentStep + direction < storyData.length) {
+                currentStep += direction;
+                updateUI();
+            }
+        }
+
+        function speakText() {
+            const msg = new SpeechSynthesisUtterance(storyData[currentStep].text);
+            msg.rate = 0.9;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function completeLevel() {
+            alert("Roar! You earned your Lion Guardian Badge!");
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

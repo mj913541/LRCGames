@@ -1,0 +1,767 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Read-A-Thon Donations | Long Beach Elementary LRC</title>
+  <meta name="description" content="Support our Read-A-Thon! Donate by buying library-bound books, sending cash/check/coins, or giving online through Omella. 20% goes to student prizes, 80% to LRC books." />
+
+  <style>
+    :root{
+      /* Jungle palette */
+      --bg1:#061f1a;
+      --bg2:#0b2a24;
+
+      --text:#f4fff9;
+      --muted:#cfe9dd;
+
+      --mint:#66f2c2;
+      --gold:#ffd36a;
+      --sky:#74b0ff;
+      --danger:#ff6b6b;
+
+      /* Glass + strokes */
+      --glass: rgba(255,255,255,.09);
+      --glass2: rgba(255,255,255,.13);
+      --stroke: rgba(255,255,255,.16);
+
+      /* Shadows + radius */
+      --shadow: 0 18px 55px rgba(0,0,0,.35);
+      --shadow2: 0 22px 70px rgba(0,0,0,.35);
+      --radius: 26px;
+
+      /* Layout */
+      --max: 1220px;
+
+      /* Type scale */
+      --title: clamp(36px, 3.4vw, 56px);
+      --h2: clamp(20px, 1.7vw, 24px);
+      --sub: clamp(16px, 1.25vw, 19px);
+      --body: 16px;
+
+      /* Wood tones */
+      --wood1:#2d1b12;
+      --wood2:#4a2e1a;
+      --wood3:#6a3f22;
+      --woodHi: rgba(255, 218, 160, .20);
+      --woodLo: rgba(0,0,0,.36);
+    }
+
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--text);
+      overflow-x:hidden;
+
+      background:
+        radial-gradient(1100px 700px at 12% 8%, rgba(46, 182, 130,.36) 0%, transparent 60%),
+        radial-gradient(950px 650px at 85% 16%, rgba(64, 125, 170,.30) 0%, transparent 58%),
+        radial-gradient(900px 700px at 35% 92%, rgba(22, 150, 110,.28) 0%, transparent 62%),
+        linear-gradient(180deg, var(--bg1), var(--bg2));
+    }
+
+    /* Soft jungle canopy overlay (pure CSS, no images) */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(900px 420px at 10% -10%, rgba(102,242,194,.22), transparent 60%),
+        radial-gradient(900px 420px at 90% -10%, rgba(255,211,106,.18), transparent 60%),
+        radial-gradient(1000px 520px at 50% 0%, rgba(255,255,255,.10), transparent 60%),
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,.035) 0px,
+          rgba(255,255,255,.035) 2px,
+          transparent 2px,
+          transparent 16px);
+      mix-blend-mode: soft-light;
+      opacity:.9;
+      z-index:0;
+    }
+
+    /* Gentle vignette */
+    body::after{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background: radial-gradient(1200px 700px at 50% 25%, transparent 55%, rgba(0,0,0,.35) 100%);
+      opacity:.55;
+      z-index:0;
+    }
+
+    a{ color:inherit; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:34px 18px 84px;
+      position:relative;
+      z-index:1;
+    }
+
+    /* --- Leaf frame around the page --- */
+    .wrap::before{
+      content:"";
+      position:absolute;
+      inset:-14px;
+      border-radius: calc(var(--radius) + 18px);
+      pointer-events:none;
+      z-index:-1;
+
+      background:
+        radial-gradient(1200px 700px at 50% 0%, rgba(102,242,194,.16), transparent 60%),
+        radial-gradient(900px 600px at 10% 20%, rgba(255,211,106,.12), transparent 55%),
+        radial-gradient(900px 600px at 90% 20%, rgba(116,176,255,.10), transparent 60%),
+        repeating-linear-gradient(135deg,
+          rgba(255,255,255,.03) 0px,
+          rgba(255,255,255,.03) 2px,
+          transparent 2px,
+          transparent 18px);
+
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.30),
+        inset 0 0 0 1px rgba(0,0,0,.18);
+      opacity:.95;
+    }
+
+    .wrap::after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      border-radius: calc(var(--radius) + 6px);
+      pointer-events:none;
+      z-index:-1;
+
+      background:
+        radial-gradient(30px 18px at 16px 18px, rgba(102,242,194,.25), transparent 70%),
+        radial-gradient(30px 18px at calc(100% - 16px) 18px, rgba(255,211,106,.22), transparent 70%),
+        radial-gradient(30px 18px at 16px calc(100% - 18px), rgba(116,176,255,.18), transparent 70%),
+        radial-gradient(30px 18px at calc(100% - 16px) calc(100% - 18px), rgba(102,242,194,.22), transparent 70%);
+      opacity:.9;
+    }
+
+    /* Top bar */
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      gap:14px;
+      margin-bottom:20px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+    }
+
+    .logo{
+      width:52px;
+      height:52px;
+      border-radius:18px;
+      background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(255,211,106,.92));
+      box-shadow: 0 14px 34px rgba(0,0,0,.30);
+      position:relative;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.22);
+      flex: 0 0 auto;
+    }
+    .logo::after{
+      content:"";
+      position:absolute;
+      inset:-60%;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.70), transparent 55%);
+      transform: rotate(25deg);
+      animation: shimmer 7s linear infinite;
+      opacity:.85;
+    }
+    @keyframes shimmer{
+      0%{ transform: translateX(-12%) rotate(25deg); }
+      50%{ transform: translateX(12%) rotate(25deg); }
+      100%{ transform: translateX(-12%) rotate(25deg); }
+    }
+
+    .brand h1{
+      font-size:16px;
+      letter-spacing:.25px;
+      margin:0;
+      line-height:1.15;
+    }
+    .brand p{
+      margin:4px 0 0;
+      color:rgba(207,233,221,.92);
+      font-size:13px;
+    }
+
+    @media (max-width: 900px){
+      .topbar{ flex-direction:column; align-items:center; }
+    }
+
+    /* Hero */
+    .hero{
+      border-radius: var(--radius);
+      background: linear-gradient(135deg, rgba(255,255,255,.14), rgba(255,255,255,.06));
+      border: 1px solid rgba(255,255,255,.18);
+      box-shadow: var(--shadow);
+      padding:30px 24px;
+      position:relative;
+      overflow:hidden;
+      text-align:center;
+    }
+    .hero::before{
+      content:"";
+      position:absolute;
+      inset:-120px;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(102,242,194,.28), transparent 55%),
+        radial-gradient(circle at 82% 22%, rgba(255,211,106,.22), transparent 55%),
+        radial-gradient(circle at 38% 92%, rgba(116,176,255,.18), transparent 60%),
+        radial-gradient(circle at 60% 70%, rgba(255,255,255,.10), transparent 62%);
+      filter: blur(1px);
+      pointer-events:none;
+    }
+    .hero::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        radial-gradient(10px 10px at 12% 30%, rgba(255,255,255,.12), transparent 70%),
+        radial-gradient(10px 10px at 22% 62%, rgba(255,255,255,.10), transparent 70%),
+        radial-gradient(10px 10px at 46% 38%, rgba(255,255,255,.10), transparent 70%),
+        radial-gradient(10px 10px at 74% 48%, rgba(255,255,255,.12), transparent 70%),
+        radial-gradient(10px 10px at 88% 70%, rgba(255,255,255,.10), transparent 70%);
+      opacity:.7;
+    }
+
+    .herogrid{
+      display:grid;
+      gap:18px;
+      position:relative;
+      justify-items:center;
+      align-items:center;
+      z-index:1;
+    }
+
+    .herogrid > div{
+      max-width: 860px;
+    }
+
+    .hero h2{
+      margin:0 0 10px;
+      text-align:center;
+      font-size: var(--title);
+      line-height:1.02;
+      letter-spacing:.2px;
+      text-shadow: 0 12px 30px rgba(0,0,0,.25);
+    }
+    .hero p{
+      margin:0 0 16px;
+      text-align:center;
+      color:rgba(207,233,221,.96);
+      font-size: var(--sub);
+      line-height:1.65;
+      max-width: 62ch;
+      margin-left:auto;
+      margin-right:auto;
+    }
+
+    .ctaRow{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:center;
+      margin-top: 14px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:13px 16px;
+      border-radius: 16px;
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
+      font-weight:800;
+      transition: transform .18s ease, filter .18s ease, background .18s ease, border-color .18s ease;
+      text-decoration:none;
+      white-space: nowrap;
+    }
+    .btn:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.03);
+      background: rgba(0,0,0,.24);
+      border-color: rgba(255,255,255,.28);
+      text-decoration:none;
+    }
+
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(102,242,194,.55));
+      color:#073022;
+      border-color: rgba(102,242,194,.4);
+    }
+    .btn.warn{
+      background: linear-gradient(135deg, rgba(255,211,106,.96), rgba(255,211,106,.55));
+      color:#3a2b06;
+      border-color: rgba(255,211,106,.38);
+    }
+    .btn.sky{
+      background: linear-gradient(135deg, rgba(116,176,255,.95), rgba(116,176,255,.55));
+      color:#061a33;
+      border-color: rgba(116,176,255,.38);
+    }
+
+    /* Sections */
+    .section{
+      margin-top: 18px;
+      padding: 18px 2px 0;
+      text-align: center;
+    }
+    .section h2{
+      font-size: var(--h2);
+      margin:0 0 10px;
+      letter-spacing:.25px;
+      text-align: center;
+      text-shadow: 0 10px 26px rgba(0,0,0,.20);
+    }
+
+    /* Donation tiles grid */
+    .accordions{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap:18px;
+      margin-top:14px;
+      align-items:stretch;
+    }
+    @media (max-width: 980px){
+      .accordions{ grid-template-columns: 1fr; }
+    }
+
+    /* --- Carved wood cards (PURE CSS) --- */
+    details.ac{
+      position:relative;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.09);
+      box-shadow: 0 18px 48px rgba(0,0,0,.24);
+      overflow:hidden;
+      min-height: 300px;
+      border:none;
+      transition: transform .18s ease, box-shadow .18s ease;
+
+      /* ✅ stacking context safety */
+      isolation: isolate;
+    }
+    details.ac:hover{
+      transform: translateY(-4px);
+      box-shadow: var(--shadow2);
+    }
+
+    /* Colored jungle stripe */
+    details.ac::before{
+      content:"";
+      position:absolute;
+      top:0; left:0; right:0;
+      height:7px;
+      opacity:.98;
+      background: linear-gradient(90deg, rgba(102,242,194,.9), rgba(255,211,106,.9));
+      z-index:1; /* ✅ below content, above rim */
+    }
+    details.ac[aria-label*="Bound"]::before{
+      background: linear-gradient(90deg, rgba(255,211,106,.98), rgba(255,211,106,.55));
+    }
+    details.ac[aria-label*="Cash"]::before,
+    details.ac[aria-label*="cash"]::before{
+      background: linear-gradient(90deg, rgba(102,242,194,.98), rgba(102,242,194,.55));
+    }
+    details.ac[aria-label*="Omella"]::before{
+      background: linear-gradient(90deg, rgba(116,176,255,.98), rgba(102,242,194,.55));
+    }
+
+    /* Wood rim + grain ring */
+    details.ac::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius: var(--radius);
+      pointer-events:none;
+      z-index:0; /* ✅ behind everything */
+
+      background:
+        /* rim shading */
+        linear-gradient(180deg, rgba(255,255,255,.10), rgba(0,0,0,.18)),
+        /* wood grain */
+        repeating-linear-gradient(90deg,
+          rgba(255, 224, 170, .07) 0px,
+          rgba(255, 224, 170, .07) 2px,
+          rgba(0,0,0,.00) 2px,
+          rgba(0,0,0,.00) 11px),
+        /* wood tone */
+        linear-gradient(135deg, var(--wood2), var(--wood1));
+
+      /* carve out the center so only rim shows */
+      -webkit-mask:
+        linear-gradient(#000,#000) content-box,
+        linear-gradient(#000,#000);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+
+      padding: 10px; /* rim thickness */
+
+      box-shadow:
+        0 18px 50px rgba(0,0,0,.22),
+        inset 0 0 0 2px rgba(255,255,255,.07),
+        inset 0 0 0 1px rgba(0,0,0,.38);
+      opacity:.95;
+    }
+
+    /* Optional slight tint per card so the wood feels “themed” */
+    details.ac[aria-label*="Bound"]::after{ filter: hue-rotate(-8deg) saturate(1.05); }
+    details.ac[aria-label*="Cash"]::after,
+    details.ac[aria-label*="cash"]::after{ filter: hue-rotate(10deg) saturate(1.05); }
+    details.ac[aria-label*="Omella"]::after{ filter: hue-rotate(22deg) saturate(1.05); }
+
+    /* Keep inner content above the rim */
+    details.ac > summary,
+    details.ac > .acBody{
+      position:relative;
+      z-index:2;
+    }
+
+    summary{
+      list-style:none;
+      padding:18px 16px 10px;
+      user-select:none;
+      display:block;               /* ✅ keep visible for <details> rendering */
+      pointer-events:none;         /* ✅ always-open: disable collapsing */
+      cursor:default;
+      background: transparent;
+    }
+    summary::-webkit-details-marker{ display:none; }
+
+    /* “Carved” inner bevel feel */
+    details.ac > summary{
+      border-bottom: 1px solid rgba(255,255,255,.10);
+    }
+    details.ac .acBody{
+      padding:0 16px 18px;
+      border-radius: calc(var(--radius) - 4px);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.10),
+        inset 0 -18px 28px rgba(0,0,0,.18);
+    }
+
+    /* Title badge inside summary */
+    .sumLeft{ display:flex; flex-direction:column; gap:10px; }
+
+    .sumTitle .titleBadge{
+      width:100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      padding:14px 14px;
+      border-radius:18px;
+      font-size:16px;
+      font-weight:950;
+      letter-spacing:.25px;
+      border:1px solid rgba(255,255,255,.20);
+      background: rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 12px 28px rgba(0,0,0,.22);
+    }
+
+    .titleBadge.warn{
+      background: linear-gradient(135deg, rgba(255,211,106,.96), rgba(255,211,106,.55));
+      color:#3a2b06;
+      border-color: rgba(255,211,106,.38);
+    }
+    .titleBadge.primary{
+      background: linear-gradient(135deg, rgba(102,242,194,.95), rgba(102,242,194,.55));
+      color:#073022;
+      border-color: rgba(102,242,194,.40);
+    }
+    .titleBadge.sky{
+      background: linear-gradient(135deg, rgba(116,176,255,.95), rgba(116,176,255,.55));
+      color:#061a33;
+      border-color: rgba(116,176,255,.38);
+    }
+
+    .sumDesc{
+      margin:0;
+      color:rgba(207,233,221,.95);
+      font-size:14px;
+      line-height:1.45;
+      opacity:.95;
+      padding: 0 2px;
+    }
+
+    /* Steps */
+    .steps{
+      margin: 12px 0 0;
+      padding: 0;
+      display:grid;
+      gap:10px;
+    }
+    .step{
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      padding:12px 12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.14);
+      text-align:left;
+    }
+    .stepNum{
+      width:32px; height:32px;
+      border-radius: 12px;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:950;
+      flex:0 0 auto;
+      font-size:14px;
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 10px 20px rgba(0,0,0,.15);
+    }
+
+    /* number badge tint per card */
+    details.ac[aria-label*="Bound"] .stepNum{
+      background: rgba(255,211,106,.18);
+      border-color: rgba(255,211,106,.26);
+      color: #fff5d3;
+    }
+    details.ac[aria-label*="Cash"] .stepNum,
+    details.ac[aria-label*="cash"] .stepNum{
+      background: rgba(102,242,194,.18);
+      border-color: rgba(102,242,194,.26);
+      color:#d6fff0;
+    }
+    details.ac[aria-label*="Omella"] .stepNum{
+      background: rgba(116,176,255,.18);
+      border-color: rgba(116,176,255,.26);
+      color:#d8ebff;
+    }
+
+    .step p{
+      margin:0;
+      color:rgba(207,233,221,.95);
+      font-size:14px;
+      line-height:1.55;
+    }
+    .step strong{ color:var(--text); }
+    .step a{ text-decoration: underline; }
+
+    /* Notes */
+    .note{
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius: 16px;
+      background: rgba(102,242,194,.10);
+      border: 1px solid rgba(102,242,194,.22);
+      color: var(--text);
+      font-size:13px;
+      line-height:1.5;
+      text-align:left;
+    }
+    .noteDanger{
+      margin-top:12px;
+      padding:12px 12px;
+      border-radius: 16px;
+      background: rgba(255,107,107,.12);
+      border: 1px solid rgba(255,107,107,.24);
+      color: rgba(255,255,255,.92);
+      font-size: 13px;
+      line-height:1.5;
+      display:flex; gap:10px; align-items:flex-start;
+      text-align:left;
+    }
+    .icon{
+      width: 22px; height: 22px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.16);
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      flex: 0 0 auto;
+      font-weight:950;
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce){
+      *{ animation:none !important; transition:none !important; scroll-behavior:auto !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand" aria-label="Long Beach Elementary LRC">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <h1>Long Beach Elementary • LRC Read-A-Thon</h1>
+          <p>Donations • Student prizes • New library books</p>
+        </div>
+      </div>
+    </div>
+
+    <section class="hero" aria-label="Donate hero">
+      <div class="herogrid">
+        <div>
+          <h2>Help our readers roar! 🦁📚</h2>
+          <p>
+            Choose <strong>one</strong> donation option or <strong>combine</strong> them.<br>
+            Every gift supports <strong>student rewards</strong> and brings in <strong>fresh, high-interest books</strong> for our LRC.
+          </p>
+
+          <div class="ctaRow">
+            <a class="btn primary"
+               href="./prize-store.html"
+               target="_blank" rel="noopener">
+              🎁 Visit the Prize Store
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="donateOptions" aria-label="Donation options">
+      <h2>Donation options work great alone or in any combination.</h2>
+
+      <div class="accordions">
+        <!-- 1) BTSB -->
+        <details class="ac" open aria-label="Buy a book from Bound to Stay Bound">
+          <summary>
+            <div class="sumLeft">
+              <div class="sumTitle">
+                <span class="titleBadge warn" aria-hidden="true">📚 Buy a Library-Bound Book!</span>
+              </div>
+              <p class="sumDesc">Donate &amp; grow our library instantly.</p>
+            </div>
+          </summary>
+
+          <div class="acBody">
+            <div class="steps" role="list" aria-label="BTSB steps">
+              <div class="step" role="listitem">
+                <span class="stepNum">1</span>
+                <p>Shop the official wishlist: <strong><a href="https://www.btsb.com/sosl/longbeachelementary" target="_blank" rel="noopener">Bound to Stay Bound</a></strong></p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">2</span>
+                <p>Your purchase total is credited to the student’s Read-A-Thon account.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">3</span>
+                <p>Books ship to school &amp; arrive <strong>shelf-ready</strong> (durable, library-bound).</p>
+              </div>
+            </div>
+
+            <div class="noteDanger" role="note">
+              <span class="icon" aria-hidden="true">!</span>
+              <div>
+                Please don’t order this option through Amazon—BTSB ensures the books are <strong>library-bound</strong>
+                and built for hundreds of checkouts.
+              </div>
+            </div>
+          </div>
+        </details>
+
+        <!-- 2) Cash/Check/Coins -->
+        <details class="ac" open aria-label="Donate by cash check or coins">
+          <summary>
+            <div class="sumLeft">
+              <div class="sumTitle">
+                <span class="titleBadge primary" aria-hidden="true">💛 Cash, Check, or Coins!</span>
+              </div>
+              <p class="sumDesc">Quick &amp; simple — any amount helps our readers.</p>
+            </div>
+          </summary>
+
+          <div class="acBody">
+            <div class="steps" role="list" aria-label="Cash steps">
+              <div class="step" role="listitem">
+                <span class="stepNum">1</span>
+                <p>Place donations in the <strong>donation box by the office</strong> OR send them to the <strong>homeroom teacher</strong>.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">2</span>
+                <p>Label with <strong>student first &amp; last name</strong> and <strong>homeroom teacher</strong>.</p>
+              </div>
+            </div>
+
+            <div class="note">
+              Labeling ensures donations are credited to the correct student account. Thank you!
+            </div>
+          </div>
+        </details>
+
+        <!-- 3) Omella -->
+        <details class="ac" open id="omella" aria-label="Donate online via Omella">
+          <summary>
+            <div class="sumLeft">
+              <div class="sumTitle">
+                <span class="titleBadge sky" aria-hidden="true">🌐 Online Donation (Omella)</span>
+              </div>
+              <p class="sumDesc">Create a shareable link for family &amp; friends.</p>
+            </div>
+          </summary>
+
+          <div class="acBody">
+            <div class="steps" role="list" aria-label="Omella steps">
+              <div class="step" role="listitem">
+                <span class="stepNum">1</span>
+                <p>Create your family’s donation page on Omella.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">2</span>
+                <p>Share your link with friends &amp; family.</p>
+              </div>
+              <div class="step" role="listitem">
+                <span class="stepNum">3</span>
+                <p>
+                  Donation link:
+                  <strong><a href="#" id="omellaLinkInline" target="_blank" rel="noopener">Click Here to get Started</a></strong>
+                  <br>
+                  Need help?
+                  <a class="btn primary" href="#" id="omellaSlidesBtn" target="_blank" rel="noopener" style="margin-top:10px;">
+                    📽 View Omella Setup Guide
+                  </a>
+                </p>
+              </div>
+            </div>
+          </div>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const LINKS = {
+      prizeStore: "./prizeStore.html",
+      omella: "https://omella.com/1pv8u/p/signup?utm_medium=qr&utm_source=share_page",
+      omellaSetupSlides: "https://docs.google.com/presentation/d/e/2PACX-1vQVslFp0bfAmp9OXidX6HTDkQAJ8281JaKFNVyX4bDmS7J2wpQ7JGlJWyY7Hto4crnFOqxQyIQWyIkh/pub?start=false&loop=false&delayms=3000",
+    };
+
+    // Apply links
+    const omellaInline = document.getElementById("omellaLinkInline");
+    const slidesBtn = document.getElementById("omellaSlidesBtn");
+
+    if (omellaInline) omellaInline.href = LINKS.omella;
+    if (slidesBtn) slidesBtn.href = LINKS.omellaSetupSlides;
+  </script>
+</body>
+</html>
