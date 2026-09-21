@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Games</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #26345c;
+      --purple: #7559df;
+      --shadow: 0 12px 0 rgba(57, 50, 119, .12), 0 18px 35px rgba(57, 50, 119, .15);
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 10%, rgba(255,255,255,.75) 0 7%, transparent 7.5%),
+        radial-gradient(circle at 92% 18%, rgba(255,255,255,.65) 0 6%, transparent 6.5%),
+        linear-gradient(135deg, #dff7ff 0%, #eee4ff 48%, #fff0c8 100%);
+      padding: clamp(12px, 2.3vh, 24px);
+      overflow-x: hidden;
+    }
+
+    .page-shell { width: min(1120px, 100%); margin: 0 auto; }
+    .hidden-data { display: none; }
+
+    .hero { text-align: center; margin-bottom: clamp(12px, 2vh, 20px); }
+
+    .kicker {
+      display: inline-block;
+      padding: 6px 15px;
+      margin-bottom: 7px;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--purple);
+      font-size: clamp(.72rem, 1.4vw, .88rem);
+      font-weight: 900;
+      letter-spacing: .11em;
+      text-transform: uppercase;
+      box-shadow: 0 5px 15px rgba(70, 55, 130, .12);
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5.2vw, 3.6rem);
+      line-height: 1;
+      color: #4f3fad;
+      text-shadow: 0 3px 0 #fff;
+    }
+
+    .subtitle {
+      margin-top: 7px;
+      font-size: clamp(.95rem, 2vw, 1.18rem);
+      font-weight: 700;
+      color: #536184;
+    }
+
+    .games-section {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(13px, 2vw, 22px);
+    }
+
+    .game-card {
+      --card-color: #ffcf54;
+      --button-color: #ed7c2d;
+      position: relative;
+      display: flex;
+      min-width: 0;
+      flex-direction: column;
+      overflow: hidden;
+      border: 4px solid rgba(255,255,255,.92);
+      border-radius: 28px;
+      background: var(--card-color);
+      box-shadow: var(--shadow);
+      color: var(--ink);
+      text-decoration: none;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .game-card:nth-child(2) { --card-color: #72ddc0; --button-color: #168e7b; }
+    .game-card:nth-child(3) { --card-color: #ff94b6; --button-color: #c83e76; }
+
+    .game-card:hover,
+    .game-card:focus-visible {
+      transform: translateY(-7px) rotate(-.4deg);
+      box-shadow: 0 16px 0 rgba(57,50,119,.12), 0 24px 44px rgba(57,50,119,.2);
+      outline: none;
+    }
+
+    .game-card:focus-visible { outline: 5px solid #4f3fad; outline-offset: 4px; }
+
+    .picture {
+      position: relative;
+      height: clamp(170px, 27vh, 245px);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: rgba(255,255,255,.28);
+    }
+
+    .picture::before,
+    .picture::after {
+      content: "";
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.3);
+    }
+
+    .picture::before { top: 13px; left: 14px; }
+    .picture::after { right: 18px; bottom: 15px; width: 38px; height: 38px; }
+    .picture svg { width: 88%; height: 88%; z-index: 1; filter: drop-shadow(0 9px 5px rgba(44,43,81,.16)); }
+
+    .card-copy {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(13px, 2.2vh, 20px);
+      text-align: center;
+      background: rgba(255,255,255,.94);
+    }
+
+    .game-title { font-size: clamp(1.18rem, 2.2vw, 1.55rem); line-height: 1.1; }
+
+    .game-description {
+      flex: 1;
+      margin: 7px 0 12px;
+      color: #596480;
+      font-size: clamp(.82rem, 1.45vw, .98rem);
+      line-height: 1.28;
+    }
+
+    .play-button {
+      width: min(190px, 100%);
+      padding: 11px 18px;
+      border-radius: 999px;
+      background: var(--button-color);
+      box-shadow: 0 5px 0 rgba(43,38,80,.18);
+      color: white;
+      font-size: 1rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    .game-card:hover .play-button { transform: scale(1.04); }
+
+    .footer-note {
+      margin-top: clamp(12px, 2vh, 20px);
+      text-align: center;
+      color: #536184;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    @media (max-width: 760px) {
+      .games-section { grid-template-columns: 1fr; }
+      .game-card { flex-direction: row; min-height: 170px; }
+      .picture { width: 43%; height: auto; min-height: 170px; }
+      .card-copy { justify-content: center; }
+    }
+
+    @media (max-width: 460px) {
+      .game-card { flex-direction: column; }
+      .picture { width: 100%; height: 170px; min-height: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .game-card { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <div class="hidden-data" aria-hidden="true">
+      <div id="data-title" data-title>Skill Games</div>
+      <div id="data-subtitle" data-subtitle>Choose a game to begin</div>
+    </div>
+
+    <header class="hero">
+      <div class="kicker">Learning Arcade</div>
+      <h1>Choose a Game!</h1>
+      <p class="subtitle">Click a picture to play, learn, and earn rubies.</p>
+    </header>
+
+    <main class="games-section" id="gamesSection">
+      <a class="game-card" href="./a.html" aria-label="Play Alpha Burst">
+        <div class="picture">
+          <svg viewBox="0 0 340 240" role="img" aria-label="Colorful alphabet letters bursting from a star">
+            <path d="M170 24l28 53 60-12-29 54 45 41-61 8-8 61-44-42-52 32 10-61-56-26 55-29z" fill="#fff8a8" stroke="#f68c32" stroke-width="9" stroke-linejoin="round"/>
+            <circle cx="71" cy="51" r="17" fill="#ff668a"/><circle cx="285" cy="72" r="13" fill="#785adf"/>
+            <path d="M49 177l11 21 24 3-18 16 5 23-22-12-21 12 4-24-17-16 24-3z" fill="#40c7ba"/>
+            <text x="116" y="145" font-size="78" font-weight="900" font-family="Arial" fill="#7657df" transform="rotate(-10 116 145)">A</text>
+            <text x="170" y="164" font-size="82" font-weight="900" font-family="Arial" fill="#ef4e75" transform="rotate(8 170 164)">B</text>
+            <text x="220" y="139" font-size="67" font-weight="900" font-family="Arial" fill="#2da9c8" transform="rotate(-8 220 139)">C</text>
+          </svg>
+        </div>
+        <div class="card-copy">
+          <h2 class="game-title">Alpha Burst</h2>
+          <p class="game-description">Pop the letters and build your score!</p>
+          <span class="play-button">Play!</span>
+        </div>
+      </a>
+
+      <a class="game-card" href="./book-parts-adventure.html" aria-label="Play Book Parts Adventure">
+        <div class="picture">
+          <svg viewBox="0 0 340 240" role="img" aria-label="An open book with a magnifying glass and a map trail">
+            <path d="M45 55c48-14 88-4 125 27v128c-38-28-80-37-125-24z" fill="#fff" stroke="#355da8" stroke-width="8" stroke-linejoin="round"/>
+            <path d="M295 55c-48-14-88-4-125 27v128c38-28 80-37 125-24z" fill="#fff9d8" stroke="#355da8" stroke-width="8" stroke-linejoin="round"/>
+            <path d="M80 91c22-3 39 1 57 12M80 121c18-2 33 1 46 9M215 101c20-8 36-10 53-7" fill="none" stroke="#86a5d5" stroke-width="7" stroke-linecap="round"/>
+            <path d="M210 151c13-22 38-24 52-8 11 13 4 32-12 38-17 7-31-2-29-17 2-13 19-18 27-8" fill="none" stroke="#ed6c86" stroke-width="7" stroke-linecap="round" stroke-dasharray="5 12"/>
+            <circle cx="90" cy="69" r="7" fill="#ed6c86"/><path d="M90 62l12-16" stroke="#ed6c86" stroke-width="5"/>
+            <circle cx="245" cy="74" r="35" fill="#a7eff0" fill-opacity=".8" stroke="#684fc3" stroke-width="9"/>
+            <path d="M269 100l33 36" stroke="#684fc3" stroke-width="15" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="card-copy">
+          <h2 class="game-title">Book Parts Adventure</h2>
+          <p class="game-description">Look closely and find the correct book parts!</p>
+          <span class="play-button">Play!</span>
+        </div>
+      </a>
+
+      <a class="game-card" href="./book-parts-bonanza.html" aria-label="Play Book Parts Bonanza">
+        <div class="picture">
+          <svg viewBox="0 0 340 240" role="img" aria-label="Happy books being collected in a treasure chest">
+            <path d="M56 127h229v76c0 13-10 23-23 23H79c-13 0-23-10-23-23z" fill="#f3a43b" stroke="#783f65" stroke-width="9"/>
+            <path d="M44 127c0-38 31-69 69-69h114c38 0 69 31 69 69z" fill="#ffcb55" stroke="#783f65" stroke-width="9"/>
+            <path d="M48 127h244" stroke="#783f65" stroke-width="9"/>
+            <rect x="148" y="115" width="45" height="48" rx="8" fill="#fff18a" stroke="#783f65" stroke-width="8"/>
+            <path d="M84 109V36h55v75" fill="#6b8cff" stroke="#3f4385" stroke-width="8" stroke-linejoin="round"/>
+            <path d="M145 108V24h57v88" fill="#ff6e91" stroke="#743d68" stroke-width="8" stroke-linejoin="round"/>
+            <path d="M207 110V43h49v69" fill="#6edbbb" stroke="#277b72" stroke-width="8" stroke-linejoin="round"/>
+            <circle cx="104" cy="69" r="5" fill="#26345c"/><circle cx="121" cy="69" r="5" fill="#26345c"/><path d="M103 83c7 7 14 7 21 0" fill="none" stroke="#26345c" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="162" cy="58" r="5" fill="#26345c"/><circle cx="180" cy="58" r="5" fill="#26345c"/><path d="M161 73c8 7 15 7 22 0" fill="none" stroke="#26345c" stroke-width="4" stroke-linecap="round"/>
+            <path d="M38 48l8 15 17 3-13 11 3 17-15-8-15 8 3-17-13-11 17-3zM291 45l7 12 13 2-10 9 3 14-13-7-12 7 2-14-10-9 14-2z" fill="#fff59b"/>
+          </svg>
+        </div>
+        <div class="card-copy">
+          <h2 class="game-title">Book Parts Bonanza</h2>
+          <p class="game-description">Collect every book part in the challenge!</p>
+          <span class="play-button">Play!</span>
+        </div>
+      </a>
+    </main>
+
+    <p class="footer-note">Pick a picture and start your quest! ✨</p>
+  </div>
+</body>
+</html>

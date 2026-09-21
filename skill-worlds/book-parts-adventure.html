@@ -1,0 +1,2870 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>Book Parts Adventure</title>
+
+<style>
+
+/* ==========================================
+   GLOBAL
+========================================== */
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+body {
+    font-family:
+        "Arial Rounded MT Bold",
+        "Trebuchet MS",
+        Arial,
+        sans-serif;
+
+    color: #17243d;
+    background: #dff5ff;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* ==========================================
+   GAME LAYOUT
+========================================== */
+
+.game {
+    height: 100vh;
+    height: 100dvh;
+
+    display: grid;
+
+    grid-template-rows:
+        auto
+        minmax(0, 1fr)
+        auto;
+
+    gap: 8px;
+    padding: 10px 15px;
+
+    background:
+        linear-gradient(
+            #ccefff 0 18%,
+            #fff4d7 18% 100%
+        );
+}
+
+/* ==========================================
+   TOP HEADER
+========================================== */
+
+.top {
+    display: grid;
+
+    grid-template-columns:
+        150px
+        minmax(0, 1fr)
+        150px;
+
+    gap: 10px;
+    align-items: center;
+}
+
+.mascot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.owl {
+    font-size: 3.4rem;
+}
+
+.bubble {
+    background: white;
+    border: 3px solid #aad8ec;
+    border-radius: 20px;
+
+    padding: 8px;
+
+    font-size: .8rem;
+    font-weight: bold;
+    text-align: center;
+}
+
+/* ==========================================
+   INSTRUCTIONS
+========================================== */
+
+.instruction-box {
+    background: white;
+
+    border: 4px solid #36a1ea;
+    border-radius: 25px;
+
+    min-height: 76px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 15px;
+    padding: 8px 15px;
+
+    box-shadow:
+        0 5px 0 rgba(42,126,180,.2);
+}
+
+.speaker {
+    width: 56px;
+    height: 56px;
+
+    flex-shrink: 0;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #149fe5;
+    color: white;
+
+    font-size: 1.7rem;
+
+    box-shadow:
+        0 4px 0 #087ab5;
+}
+
+.speaker:active {
+    transform: translateY(3px);
+}
+
+.instructions {
+    text-align: center;
+}
+
+.big-instruction {
+    font-size:
+        clamp(1.2rem, 2.5vw, 2.3rem);
+
+    font-weight: 900;
+}
+
+.small-instruction {
+    font-size: .85rem;
+    color: #6b7280;
+    margin-top: 3px;
+}
+
+/* ==========================================
+   ROUND PROGRESS
+========================================== */
+
+.progress-box {
+    background: white;
+    border-radius: 20px;
+
+    padding: 9px 5px;
+    text-align: center;
+}
+
+.dots {
+    display: flex;
+    justify-content: center;
+    gap: 3px;
+}
+
+.dot {
+    width: 13px;
+    height: 13px;
+
+    border: 2px solid #77808c;
+    border-radius: 50%;
+
+    background: white;
+}
+
+.dot.done {
+    background: #ffd43b;
+    border-color: #d39a00;
+}
+
+.round-count {
+    font-size: .9rem;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+.skill-name {
+    margin-top: 5px;
+
+    background: #fff0b5;
+
+    padding: 5px;
+    border-radius: 10px;
+
+    font-size: .85rem;
+    font-weight: bold;
+}
+
+/* ==========================================
+   MAIN SCENE
+========================================== */
+
+.scene {
+    min-height: 0;
+    position: relative;
+
+    background:
+        linear-gradient(
+            #f7e4bd,
+            #fff0ce
+        );
+
+    border: 7px solid #d8a768;
+    border-radius: 22px;
+
+    padding: 12px;
+    overflow: hidden;
+
+    box-shadow:
+        inset 0 0 20px rgba(91,56,22,.12),
+        0 5px 0 #b77c42;
+}
+
+/* ==========================================
+   BOOKSHELVES
+========================================== */
+
+.shelf-scene {
+    height: 100%;
+
+    display: grid;
+
+    grid-template-rows:
+        minmax(0, 1fr)
+        minmax(0, 1fr);
+
+    gap: 18px;
+}
+
+.shelf-row {
+    min-height: 0;
+
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+
+    gap: 6px;
+
+    position: relative;
+
+    padding: 0 8px 13px;
+}
+
+.shelf-row::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    height: 13px;
+
+    background: #b97b3c;
+    border-radius: 5px;
+
+    box-shadow:
+        0 4px 0 #8c582c;
+}
+
+/* ==========================================
+   SHELF BOOKS
+========================================== */
+
+.book {
+    position: relative;
+    flex-shrink: 0;
+
+    cursor: pointer;
+    user-select: none;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition: transform .15s;
+}
+
+.book:hover {
+    transform: translateY(-4px);
+}
+
+/* FRONT COVER */
+
+.front {
+    width: clamp(65px, 8vw, 125px);
+    height: min(95%, 185px);
+
+    border: 4px solid #293d52;
+    border-radius: 6px 12px 12px 6px;
+
+    padding: 7px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+
+    text-align: center;
+
+    box-shadow:
+        inset 6px 0 rgba(0,0,0,.08),
+        4px 4px 0 rgba(0,0,0,.12);
+}
+
+.cover-title {
+    font-size:
+        clamp(.55rem, .9vw, 1rem);
+
+    font-weight: 900;
+}
+
+.cover-picture {
+    font-size:
+        clamp(2rem, 5vh, 4rem);
+}
+
+.cover-author {
+    font-size: .55rem;
+}
+
+/* BACK COVER */
+
+.back {
+    width: clamp(65px, 8vw, 125px);
+    height: min(95%, 185px);
+
+    border: 4px solid #293d52;
+    border-radius: 12px 6px 6px 12px;
+
+    padding: 12px 6px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+
+    box-shadow:
+        4px 4px 0 rgba(0,0,0,.12);
+}
+
+.blurb {
+    width: 75%;
+}
+
+.blurb-line {
+    height: 4px;
+
+    background: rgba(0,0,0,.3);
+
+    margin: 5px 0;
+    border-radius: 4px;
+}
+
+.barcode {
+    width: 45px;
+    height: 27px;
+
+    background:
+        repeating-linear-gradient(
+            90deg,
+            #111 0 2px,
+            white 2px 4px,
+            #111 4px 5px,
+            white 5px 8px
+        );
+
+    border: 4px solid white;
+}
+
+/* SPINE */
+
+.spine {
+    width: clamp(30px, 3.5vw, 55px);
+    height: min(95%, 190px);
+
+    border: 4px solid #293d52;
+    border-radius: 7px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow:
+        4px 4px 0 rgba(0,0,0,.12);
+}
+
+.spine span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+
+    font-size: .6rem;
+    font-weight: bold;
+}
+
+/* OPEN BOOK DISTRACTOR */
+
+.open-book {
+    width: clamp(100px, 12vw, 175px);
+    height: min(75%, 130px);
+
+    display: flex;
+    align-self: flex-end;
+
+    filter:
+        drop-shadow(
+            4px 4px 2px rgba(0,0,0,.18)
+        );
+}
+
+.open-page {
+    width: 50%;
+
+    background: #fffdf2;
+
+    border: 3px solid #293d52;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.open-page:first-child {
+    border-radius: 15px 3px 3px 8px;
+}
+
+.open-page:last-child {
+    border-radius: 3px 15px 8px 3px;
+}
+
+.open-picture {
+    font-size:
+        clamp(1.5rem, 4vh, 3rem);
+}
+
+/* ==========================================
+   BOOK COLORS
+========================================== */
+
+.red {
+    background: #ff6f61;
+}
+
+.blue {
+    background: #66c7ff;
+}
+
+.green {
+    background: #79d38a;
+}
+
+.purple {
+    background: #aa87e8;
+}
+
+.yellow {
+    background: #ffd85b;
+}
+
+.pink {
+    background: #f49ac2;
+}
+
+.orange {
+    background: #ffad5a;
+}
+
+.teal {
+    background: #58c9c5;
+}
+
+/* ==========================================
+   INSIDE BOOK SCENE
+========================================== */
+
+.inside-scene {
+    height: 100%;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+
+    gap: 12px;
+    align-items: center;
+}
+
+.inside-book {
+    width: 100%;
+    height: min(96%, 390px);
+
+    min-height: 0;
+
+    display: flex;
+    position: relative;
+
+    filter:
+        drop-shadow(
+            3px 6px 3px rgba(0,0,0,.15)
+        );
+}
+
+.inside-page {
+    width: 50%;
+    height: 100%;
+
+    min-width: 0;
+
+    background: #fffdf3;
+
+    border: 4px solid #354052;
+
+    position: relative;
+
+    padding: 8px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 4px;
+}
+
+.inside-page:first-child {
+    border-radius:
+        18px 3px 3px 12px;
+
+    border-right-width: 2px;
+}
+
+.inside-page:last-child {
+    border-radius:
+        3px 18px 12px 3px;
+
+    border-left-width: 2px;
+}
+
+/* ==========================================
+   CLICKABLE BOOK PARTS
+========================================== */
+
+.book-part {
+    width: 100%;
+    min-height: 0;
+
+    position: relative;
+
+    border: 2px solid transparent;
+    border-radius: 10px;
+
+    padding: 5px 2px;
+
+    text-align: center;
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 3px;
+
+    user-select: none;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+        background .15s,
+        transform .15s;
+}
+
+.book-part:hover {
+    background: #fff0c4;
+    border-color: #f0ce75;
+}
+
+.part-title {
+    font-size:
+        clamp(.8rem, 1.45vw, 1.45rem);
+
+    font-weight: 900;
+    line-height: 1.15;
+
+    color: #273b65;
+}
+
+.part-author,
+.part-illustrator {
+    font-size:
+        clamp(.65rem, 1vw, 1rem);
+
+    color: #343434;
+}
+
+.part-publisher {
+    font-size:
+        clamp(.6rem, .95vw, .95rem);
+
+    font-weight: bold;
+    color: #354052;
+}
+
+.part-copyright {
+    font-size:
+        clamp(.55rem, .85vw, .85rem);
+
+    color: #555;
+}
+
+.inside-illustration {
+    font-size:
+        clamp(2rem, 5vw, 4.5rem);
+
+    text-align: center;
+
+    flex: 1;
+    min-height: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ==========================================
+   CORRECT ANSWER
+========================================== */
+
+.correct-choice {
+    pointer-events: none;
+
+    outline:
+        4px solid #55c878 !important;
+
+    outline-offset: -3px;
+
+    background:
+        rgba(129,222,145,.35) !important;
+}
+
+.correct-choice::after {
+    content: "⭐";
+
+    position: absolute;
+
+    top: 50%;
+    left: 50%;
+
+    transform:
+        translate(-50%, -50%);
+
+    width: 48px;
+    height: 48px;
+
+    border-radius: 50%;
+
+    background: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 2rem;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,.2);
+
+    z-index: 20;
+
+    animation: pop .3s ease;
+}
+
+@keyframes pop {
+    0% {
+        transform:
+            translate(-50%, -50%)
+            scale(.2);
+    }
+
+    70% {
+        transform:
+            translate(-50%, -50%)
+            scale(1.2);
+    }
+
+    100% {
+        transform:
+            translate(-50%, -50%)
+            scale(1);
+    }
+}
+
+/* ==========================================
+   WRONG ANSWER
+========================================== */
+
+.wrong {
+    animation: wiggle .35s ease;
+}
+
+@keyframes wiggle {
+    0%, 100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-6px);
+    }
+
+    50% {
+        transform: translateX(6px);
+    }
+
+    75% {
+        transform: translateX(-4px);
+    }
+}
+
+/* ==========================================
+   BOTTOM BAR
+========================================== */
+
+.bottom {
+    min-height: 58px;
+
+    display: grid;
+
+    grid-template-columns:
+        minmax(230px, 1.3fr)
+        minmax(0, 2fr)
+        150px;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+/* ==========================================
+   NEW: MENU + RESTART BUTTONS
+========================================== */
+
+.home-buttons {
+    display: flex;
+    align-items: center;
+
+    gap: 8px;
+    min-width: 0;
+}
+
+.home {
+    flex: 1;
+    min-width: 0;
+
+    border: none;
+    border-radius: 22px;
+
+    background: #ff8fb8;
+
+    padding: 11px 8px;
+
+    font-size:
+        clamp(.7rem, 1vw, .95rem);
+
+    font-weight: bold;
+
+    color: #51233b;
+
+    white-space: nowrap;
+
+    box-shadow:
+        0 4px 0 #cf527f;
+}
+
+.home:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #cf527f;
+}
+
+/* START OVER HAS ITS OWN COLOR */
+
+.home.restart {
+    background: #b39ddb;
+    color: #35235d;
+
+    box-shadow:
+        0 4px 0 #8066ad;
+}
+
+.home.restart:active {
+    box-shadow:
+        0 1px 0 #8066ad;
+}
+
+/* ==========================================
+   STAR PROGRESS
+========================================== */
+
+.find-progress {
+    text-align: center;
+    min-width: 0;
+}
+
+.stars {
+    font-size:
+        clamp(1.4rem, 2.6vw, 2.3rem);
+
+    letter-spacing: 5px;
+}
+
+.find-message {
+    font-size: .85rem;
+    color: #475569;
+    margin-top: 2px;
+}
+
+/* ==========================================
+   NEXT BUTTON
+========================================== */
+
+.next {
+    border: none;
+    border-radius: 22px;
+
+    padding: 11px;
+
+    font-size: 1rem;
+    font-weight: bold;
+
+    background: #aab5c5;
+    color: #657080;
+
+    box-shadow:
+        0 4px 0 #788391;
+
+    cursor: not-allowed;
+}
+
+.next.ready {
+    background: #69cf88;
+    color: #143d21;
+
+    box-shadow:
+        0 4px 0 #3e9c59;
+
+    cursor: pointer;
+
+    animation:
+        nextPulse .8s infinite alternate;
+}
+
+@keyframes nextPulse {
+    to {
+        transform: scale(1.04);
+    }
+}
+
+/* ==========================================
+   CELEBRATION
+========================================== */
+
+.celebration {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    z-index: 1000;
+
+    background:
+        radial-gradient(
+            circle,
+            #fffef3,
+            #e6f7ff
+        );
+
+    align-items: center;
+    justify-content: center;
+}
+
+.celebration-card {
+    background: white;
+
+    border-radius: 35px;
+
+    padding: 30px 60px;
+
+    text-align: center;
+
+    box-shadow:
+        0 15px 50px rgba(0,0,0,.2);
+}
+
+.trophy {
+    font-size: 6rem;
+}
+
+.celebration h2 {
+    margin: 0;
+    color: #513a94;
+
+    font-size:
+        clamp(2.5rem, 6vw, 5rem);
+}
+
+.celebration-buttons {
+    display: flex;
+    justify-content: center;
+
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.play-again {
+    border: none;
+    border-radius: 25px;
+
+    padding: 13px 24px;
+
+    background: #ff8fb8;
+
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.finish-menu {
+    background: #b39ddb;
+}
+
+/* ==========================================
+   CONFETTI
+========================================== */
+
+.confetti {
+    position: fixed;
+
+    width: 11px;
+    height: 11px;
+
+    top: -15px;
+
+    z-index: 2000;
+
+    pointer-events: none;
+
+    animation:
+        fall 2.6s linear forwards;
+}
+
+@keyframes fall {
+    to {
+        transform:
+            translateY(110vh)
+            rotate(720deg);
+    }
+}
+
+/* ==========================================
+   SMALL CHROMEBOOKS
+========================================== */
+
+@media (max-height: 650px) {
+
+    .game {
+        padding: 5px 10px;
+        gap: 4px;
+    }
+
+    .top {
+        grid-template-columns:
+            115px
+            minmax(0, 1fr)
+            120px;
+    }
+
+    .owl {
+        font-size: 2.4rem;
+    }
+
+    .bubble {
+        font-size: .65rem;
+        padding: 5px;
+    }
+
+    .instruction-box {
+        min-height: 54px;
+        padding: 5px;
+    }
+
+    .speaker {
+        width: 42px;
+        height: 42px;
+
+        font-size: 1.3rem;
+    }
+
+    .big-instruction {
+        font-size: 1.35rem;
+    }
+
+    .small-instruction {
+        display: none;
+    }
+
+    .progress-box {
+        padding: 5px;
+    }
+
+    .bottom {
+        min-height: 43px;
+    }
+
+    .home {
+        padding: 8px 5px;
+    }
+
+    .inside-book {
+        height: 98%;
+    }
+
+    .inside-page {
+        padding: 4px;
+        gap: 2px;
+    }
+
+    .book-part {
+        padding: 2px;
+        gap: 1px;
+    }
+
+    .inside-illustration {
+        font-size: 2rem;
+    }
+}
+
+/* ==========================================
+   NARROW SCREENS
+========================================== */
+
+@media (max-width: 700px) {
+
+    .mascot {
+        display: none;
+    }
+
+    .top {
+        grid-template-columns:
+            minmax(0, 1fr)
+            100px;
+    }
+
+    .bottom {
+        grid-template-columns:
+            minmax(0, 1.5fr)
+            minmax(0, 1fr)
+            75px;
+
+        gap: 5px;
+    }
+
+    .home-buttons {
+        gap: 4px;
+    }
+
+    .home {
+        font-size: .65rem;
+        padding: 9px 3px;
+
+        white-space: normal;
+    }
+
+    .next {
+        font-size: .75rem;
+        padding: 9px 3px;
+    }
+
+    .stars {
+        letter-spacing: 0;
+        font-size: 1.2rem;
+    }
+
+    .inside-scene {
+        gap: 4px;
+    }
+
+    .inside-page {
+        padding: 3px;
+        border-width: 2px;
+    }
+
+    .inside-illustration {
+        font-size: 1.8rem;
+    }
+}
+
+</style>
+
+</head>
+
+<body>
+
+<!-- ==========================================
+     MAIN GAME
+========================================== -->
+
+<div class="game">
+
+    <!-- TOP -->
+
+    <div class="top">
+
+        <div class="mascot">
+
+            <div class="owl">
+                🦉
+            </div>
+
+            <div class="bubble">
+                Can you<br>
+                find them?
+            </div>
+
+        </div>
+
+
+        <div class="instruction-box">
+
+            <button
+                class="speaker"
+                id="speaker"
+                aria-label="Hear directions"
+            >
+                🔊
+            </button>
+
+            <div class="instructions">
+
+                <div
+                    class="big-instruction"
+                    id="bigInstruction"
+                ></div>
+
+                <div
+                    class="small-instruction"
+                    id="smallInstruction"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <div class="progress-box">
+
+            <div
+                class="dots"
+                id="dots"
+            ></div>
+
+            <div
+                class="round-count"
+                id="roundCount"
+            ></div>
+
+            <div
+                class="skill-name"
+                id="skillName"
+            ></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- BOOK SCENE -->
+
+    <main
+        class="scene"
+        id="scene"
+    ></main>
+
+
+    <!-- BOTTOM BAR -->
+
+    <div class="bottom">
+
+        <!-- NEW BUTTON GROUP -->
+
+        <div class="home-buttons">
+
+            <button
+                class="home"
+                onclick="backToMenu()"
+            >
+                🏠 Back to Menu
+            </button>
+
+            <button
+                class="home restart"
+                onclick="restartGame()"
+            >
+                🔄 Start Over
+            </button>
+
+        </div>
+
+
+        <!-- STARS -->
+
+        <div class="find-progress">
+
+            <div
+                class="stars"
+                id="stars"
+            ></div>
+
+            <div
+                class="find-message"
+                id="findMessage"
+            ></div>
+
+        </div>
+
+
+        <!-- NEXT -->
+
+        <button
+            class="next"
+            id="nextButton"
+            disabled
+        >
+            Next ➜
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ==========================================
+     FINISH SCREEN
+========================================== -->
+
+<div
+    class="celebration"
+    id="celebration"
+>
+
+    <div class="celebration-card">
+
+        <div class="trophy">
+            🏆
+        </div>
+
+        <h2>
+            BOOK EXPERT!
+        </h2>
+
+        <p style="font-size:1.4rem;">
+            You found all 8 parts
+            of a book!
+        </p>
+
+        <div style="font-size:2.5rem;">
+            ⭐ ⭐ ⭐ ⭐ ⭐
+        </div>
+
+
+        <!-- BOTH BUTTONS ALSO APPEAR AT THE END -->
+
+        <div class="celebration-buttons">
+
+            <button
+                class="play-again finish-menu"
+                onclick="backToMenu()"
+            >
+                🏠 Back to Menu
+            </button>
+
+            <button
+                class="play-again"
+                onclick="restartGame()"
+            >
+                🔄 Play Again
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* ==========================================
+   MENU LOCATION
+
+   Current file:
+   LRCGames/bookParts/index.html
+
+   Menu:
+   LRCGames/questHub.html
+========================================== */
+
+const MENU_URL = "./game-index.html";
+
+
+function backToMenu() {
+
+    if (
+        "speechSynthesis" in window
+    ) {
+        speechSynthesis.cancel();
+    }
+
+    window.location.href = MENU_URL;
+}
+
+
+/* ==========================================
+   ALL 8 BOOK PART ROUNDS
+========================================== */
+
+const rounds = [
+
+    {
+        skill: "Front Cover",
+
+        instruction:
+            "Click ALL the FRONT COVERS!",
+
+        spoken:
+            "Click all the front covers.",
+
+        small:
+            "Find every book facing you.",
+
+        target: "front",
+
+        scene: "shelf"
+    },
+
+    {
+        skill: "Back Cover",
+
+        instruction:
+            "Click ALL the BACK COVERS!",
+
+        spoken:
+            "Click all the back covers.",
+
+        small:
+            "Find the backs of the books.",
+
+        target: "back",
+
+        scene: "shelf"
+    },
+
+    {
+        skill: "Spine",
+
+        instruction:
+            "Click ALL the SPINES!",
+
+        spoken:
+            "Click all the book spines.",
+
+        small:
+            "Find the skinny sides of the books.",
+
+        target: "spine",
+
+        scene: "shelf"
+    },
+
+    {
+        skill: "Title",
+
+        instruction:
+            "Click ALL the TITLES!",
+
+        spoken:
+            "Click all the titles. The title is the name of the book.",
+
+        small:
+            "Find the name of each book.",
+
+        target: "title",
+
+        scene: "inside"
+    },
+
+    {
+        skill: "Author",
+
+        instruction:
+            "Click ALL the AUTHORS!",
+
+        spoken:
+            "Click all the authors. The author writes the words.",
+
+        small:
+            "Find who wrote each book.",
+
+        target: "author",
+
+        scene: "inside"
+    },
+
+    {
+        skill: "Illustrator",
+
+        instruction:
+            "Click ALL the ILLUSTRATORS!",
+
+        spoken:
+            "Click all the illustrators. The illustrator makes the pictures.",
+
+        small:
+            "Find who made the pictures.",
+
+        target: "illustrator",
+
+        scene: "inside"
+    },
+
+    {
+        skill: "Publisher",
+
+        instruction:
+            "Click ALL the PUBLISHERS!",
+
+        spoken:
+            "Click all the publishers. The publisher makes the book.",
+
+        small:
+            "Find the publishing company.",
+
+        target: "publisher",
+
+        scene: "inside"
+    },
+
+    {
+        skill: "Copyright",
+
+        instruction:
+            "Click ALL the COPYRIGHTS!",
+
+        spoken:
+            "Click all the copyright symbols. Look for the letter C inside a circle.",
+
+        small:
+            "Find the copyright symbol.",
+
+        target: "copyright",
+
+        scene: "inside"
+    }
+
+];
+
+
+/* ==========================================
+   PICTURE BOOK INFORMATION
+========================================== */
+
+const frontBooks = [
+
+    {
+        title: "Zoom!",
+        picture: "🚚",
+        color: "blue"
+    },
+
+    {
+        title: "Dino Detectives",
+        picture: "🦖",
+        color: "green"
+    },
+
+    {
+        title: "The Sleepy Puppy",
+        picture: "🐶",
+        color: "purple"
+    },
+
+    {
+        title: "Kind Koala",
+        picture: "🐨",
+        color: "teal"
+    },
+
+    {
+        title: "Brave Unicorn",
+        picture: "🦄",
+        color: "pink"
+    },
+
+    {
+        title: "Space Adventure",
+        picture: "🚀",
+        color: "orange"
+    },
+
+    {
+        title: "Happy Frog",
+        picture: "🐸",
+        color: "yellow"
+    },
+
+    {
+        title: "Ocean Friends",
+        picture: "🐬",
+        color: "blue"
+    }
+
+];
+
+
+/* ==========================================
+   INSIDE BOOK INFORMATION
+========================================== */
+
+const insideBooks = [
+
+    {
+        title: "The Happy Bear",
+
+        author: "Sam Story",
+
+        illustrator: "Alex Art",
+
+        publisher: "Little House Books",
+
+        copyright: "© 2026",
+
+        picture: "🐻"
+    },
+
+    {
+        title: "The Brave Fox",
+
+        author: "Pat Reader",
+
+        illustrator: "Jen Draw",
+
+        publisher: "Rainbow Books",
+
+        copyright: "© 2025",
+
+        picture: "🦊"
+    },
+
+    {
+        title: "The Magic Unicorn",
+
+        author: "Kim Writer",
+
+        illustrator: "Lee Paint",
+
+        publisher: "Star Books",
+
+        copyright: "© 2024",
+
+        picture: "🦄"
+    },
+
+    {
+        title: "The Little Dinosaur",
+
+        author: "Max Story",
+
+        illustrator: "Jo Art",
+
+        publisher: "Happy Tree Books",
+
+        copyright: "© 2023",
+
+        picture: "🦖"
+    },
+
+    {
+        title: "The Sleepy Puppy",
+
+        author: "Ann Reader",
+
+        illustrator: "Sky Draw",
+
+        publisher: "Moon Books",
+
+        copyright: "© 2026",
+
+        picture: "🐶"
+    }
+
+];
+
+
+const colors = [
+
+    "red",
+    "blue",
+    "green",
+    "purple",
+    "yellow",
+    "pink",
+    "orange",
+    "teal"
+
+];
+
+
+/* ==========================================
+   GAME STATE
+========================================== */
+
+let currentRound = 0;
+
+let correctFound = 0;
+
+let totalTargets = 0;
+
+let roundFinished = false;
+
+
+/* ==========================================
+   SPEECH
+========================================== */
+
+function speak(text) {
+
+    if (
+        !("speechSynthesis" in window)
+    ) {
+        return;
+    }
+
+    speechSynthesis.cancel();
+
+    const speech =
+        new SpeechSynthesisUtterance(text);
+
+    speech.rate = .78;
+
+    speech.pitch = 1.08;
+
+    speech.volume = 1;
+
+    speechSynthesis.speak(speech);
+}
+
+
+/* ==========================================
+   RANDOM HELPERS
+========================================== */
+
+function randomItem(array) {
+
+    return array[
+        Math.floor(
+            Math.random() *
+            array.length
+        )
+    ];
+}
+
+
+function shuffle(array) {
+
+    const copy = [...array];
+
+    for (
+        let i = copy.length - 1;
+        i > 0;
+        i--
+    ) {
+
+        const j =
+            Math.floor(
+                Math.random() *
+                (i + 1)
+            );
+
+        [
+            copy[i],
+            copy[j]
+        ] = [
+            copy[j],
+            copy[i]
+        ];
+    }
+
+    return copy;
+}
+
+
+/* ==========================================
+   FRONT COVER
+========================================== */
+
+function makeFront() {
+
+    const info =
+        randomItem(frontBooks);
+
+    const book =
+        document.createElement("div");
+
+    book.className =
+        `book front ${info.color}`;
+
+    book.dataset.type = "front";
+
+    book.innerHTML = `
+
+        <div class="cover-title">
+            ${info.title}
+        </div>
+
+        <div class="cover-picture">
+            ${info.picture}
+        </div>
+
+        <div class="cover-author">
+            by A. Reader
+        </div>
+
+    `;
+
+    prepareClickable(book);
+
+    return book;
+}
+
+
+/* ==========================================
+   BACK COVER
+========================================== */
+
+function makeBack() {
+
+    const book =
+        document.createElement("div");
+
+    book.className =
+        `book back ${randomItem(colors)}`;
+
+    book.dataset.type = "back";
+
+    book.innerHTML = `
+
+        <div class="blurb">
+
+            <div class="blurb-line"></div>
+            <div class="blurb-line"></div>
+            <div class="blurb-line"></div>
+            <div class="blurb-line"></div>
+
+        </div>
+
+        <div class="barcode"></div>
+
+    `;
+
+    prepareClickable(book);
+
+    return book;
+}
+
+
+/* ==========================================
+   SPINE
+========================================== */
+
+function makeSpine() {
+
+    const book =
+        document.createElement("div");
+
+    book.className =
+        `book spine ${randomItem(colors)}`;
+
+    book.dataset.type = "spine";
+
+    book.innerHTML = `
+
+        <span>
+            BOOK
+        </span>
+
+    `;
+
+    prepareClickable(book);
+
+    return book;
+}
+
+
+/* ==========================================
+   OPEN BOOK DISTRACTOR
+========================================== */
+
+function makeOpenBook() {
+
+    const book =
+        document.createElement("div");
+
+    book.className =
+        "book open-book";
+
+    book.dataset.type = "open";
+
+    book.innerHTML = `
+
+        <div class="open-page">
+
+            <div class="open-picture">
+                🌳
+            </div>
+
+        </div>
+
+        <div class="open-page">
+
+            <div class="open-picture">
+                ❤️
+            </div>
+
+        </div>
+
+    `;
+
+    prepareClickable(book);
+
+    return book;
+}
+
+
+/* ==========================================
+   CREATE SHELF SCENE
+========================================== */
+
+function buildShelfScene() {
+
+    const scene =
+        document.getElementById("scene");
+
+    scene.innerHTML = `
+
+        <div class="shelf-scene">
+
+            <div
+                class="shelf-row"
+                id="topShelf"
+            ></div>
+
+            <div
+                class="shelf-row"
+                id="bottomShelf"
+            ></div>
+
+        </div>
+
+    `;
+
+
+    const top =
+        document.getElementById(
+            "topShelf"
+        );
+
+    const bottom =
+        document.getElementById(
+            "bottomShelf"
+        );
+
+
+    let objects = [
+
+        makeFront(),
+        makeFront(),
+        makeFront(),
+        makeFront(),
+
+        makeBack(),
+        makeBack(),
+        makeBack(),
+
+        makeSpine(),
+        makeSpine(),
+        makeSpine(),
+        makeSpine(),
+
+        makeOpenBook()
+
+    ];
+
+
+    objects = shuffle(objects);
+
+
+    const target =
+        rounds[currentRound].target;
+
+
+    totalTargets =
+        objects.filter(
+            item =>
+                item.dataset.type === target
+        ).length;
+
+
+    const midpoint =
+        Math.ceil(
+            objects.length / 2
+        );
+
+
+    objects
+        .slice(0, midpoint)
+        .forEach(
+            item =>
+                top.appendChild(item)
+        );
+
+
+    objects
+        .slice(midpoint)
+        .forEach(
+            item =>
+                bottom.appendChild(item)
+        );
+}
+
+
+/* ==========================================
+   CREATE CLICKABLE BOOK PART
+========================================== */
+
+function makeBookPart(
+    type,
+    content
+) {
+
+    const part =
+        document.createElement("div");
+
+    part.className =
+        `book-part part-${type}`;
+
+    part.dataset.type = type;
+
+    part.innerHTML = content;
+
+    prepareClickable(part);
+
+    return part;
+}
+
+
+/* ==========================================
+   CREATE ONE INSIDE BOOK
+========================================== */
+
+function makeInsideBook(info) {
+
+    const book =
+        document.createElement("div");
+
+    book.className =
+        "inside-book";
+
+
+    const left =
+        document.createElement("div");
+
+    left.className =
+        "inside-page";
+
+
+    const right =
+        document.createElement("div");
+
+    right.className =
+        "inside-page";
+
+
+    /* TITLE */
+
+    const title =
+        makeBookPart(
+            "title",
+            info.title
+        );
+
+
+    /* AUTHOR */
+
+    const author =
+        makeBookPart(
+            "author",
+            `
+                <span>Written by</span>
+
+                <strong>
+                    ${info.author}
+                </strong>
+            `
+        );
+
+
+    /* ILLUSTRATOR */
+
+    const illustrator =
+        makeBookPart(
+            "illustrator",
+            `
+                <span>Illustrated by</span>
+
+                <strong>
+                    ${info.illustrator}
+                </strong>
+            `
+        );
+
+
+    /* PUBLISHER */
+
+    const publisher =
+        makeBookPart(
+            "publisher",
+            `
+                <span style="font-size:1.4rem;">
+                    🏠
+                </span>
+
+                <strong>
+                    ${info.publisher}
+                </strong>
+            `
+        );
+
+
+    /* COPYRIGHT */
+
+    const copyright =
+        makeBookPart(
+            "copyright",
+            `
+                <strong>
+                    ${info.copyright}
+                </strong>
+            `
+        );
+
+
+    /* PICTURE */
+
+    const picture =
+        document.createElement("div");
+
+    picture.className =
+        "inside-illustration";
+
+    picture.textContent =
+        info.picture;
+
+
+    /* LEFT PAGE */
+
+    left.appendChild(title);
+
+    left.appendChild(author);
+
+    left.appendChild(picture);
+
+    left.appendChild(copyright);
+
+
+    /* RIGHT PAGE */
+
+    right.appendChild(illustrator);
+
+    right.appendChild(publisher);
+
+
+    book.appendChild(left);
+
+    book.appendChild(right);
+
+
+    return book;
+}
+
+
+/* ==========================================
+   CREATE INSIDE BOOK SCENE
+========================================== */
+
+function buildInsideScene() {
+
+    const scene =
+        document.getElementById("scene");
+
+
+    scene.innerHTML = `
+
+        <div
+            class="inside-scene"
+            id="insideScene"
+        ></div>
+
+    `;
+
+
+    const area =
+        document.getElementById(
+            "insideScene"
+        );
+
+
+    const selectedBooks =
+        shuffle(insideBooks)
+            .slice(0, 3);
+
+
+    selectedBooks.forEach(
+        info => {
+
+            const book =
+                makeInsideBook(info);
+
+            area.appendChild(book);
+
+        }
+    );
+
+
+    totalTargets = 3;
+}
+
+
+/* ==========================================
+   CLICK HANDLING
+========================================== */
+
+function prepareClickable(element) {
+
+    element.addEventListener(
+        "click",
+        () => {
+
+            checkAnswer(element);
+
+        }
+    );
+
+}
+
+
+/* ==========================================
+   CHECK ANSWER
+========================================== */
+
+function checkAnswer(element) {
+
+    if (roundFinished) {
+        return;
+    }
+
+
+    if (
+        element.classList.contains(
+            "correct-choice"
+        )
+    ) {
+        return;
+    }
+
+
+    const target =
+        rounds[currentRound].target;
+
+
+    const selected =
+        element.dataset.type;
+
+
+    /* CORRECT */
+
+    if (
+        selected === target
+    ) {
+
+        element.classList.add(
+            "correct-choice"
+        );
+
+        correctFound++;
+
+        playSuccessSound();
+
+        updateFindProgress();
+
+
+        if (
+            correctFound ===
+            totalTargets
+        ) {
+
+            roundComplete();
+
+        }
+
+    }
+
+
+    /* WRONG */
+
+    else {
+
+        element.classList.remove(
+            "wrong"
+        );
+
+        void element.offsetWidth;
+
+        element.classList.add(
+            "wrong"
+        );
+
+        playOopsSound();
+
+
+        setTimeout(
+            () => {
+
+                element.classList.remove(
+                    "wrong"
+                );
+
+            },
+            400
+        );
+
+    }
+}
+
+
+/* ==========================================
+   LOAD ROUND
+========================================== */
+
+function loadRound() {
+
+    correctFound = 0;
+
+    roundFinished = false;
+
+
+    const round =
+        rounds[currentRound];
+
+
+    document.getElementById(
+        "bigInstruction"
+    ).textContent =
+        round.instruction;
+
+
+    document.getElementById(
+        "smallInstruction"
+    ).textContent =
+        round.small;
+
+
+    document.getElementById(
+        "skillName"
+    ).textContent =
+        round.skill;
+
+
+    document.getElementById(
+        "roundCount"
+    ).textContent =
+        (currentRound + 1) +
+        " of " +
+        rounds.length;
+
+
+    /* RESET NEXT BUTTON */
+
+    const next =
+        document.getElementById(
+            "nextButton"
+        );
+
+    next.disabled = true;
+
+    next.classList.remove(
+        "ready"
+    );
+
+    next.textContent =
+        "Next ➜";
+
+
+    /* BUILD SCENE */
+
+    if (
+        round.scene === "shelf"
+    ) {
+
+        buildShelfScene();
+
+    } else {
+
+        buildInsideScene();
+
+    }
+
+
+    buildProgressDots();
+
+    updateFindProgress();
+
+
+    /* READ DIRECTIONS */
+
+    setTimeout(
+        () => {
+
+            if (
+                rounds[currentRound] === round
+                && !roundFinished
+            ) {
+
+                speak(round.spoken);
+
+            }
+
+        },
+        450
+    );
+}
+
+
+/* ==========================================
+   STAR PROGRESS
+========================================== */
+
+function updateFindProgress() {
+
+    const starArea =
+        document.getElementById(
+            "stars"
+        );
+
+
+    let starText = "";
+
+
+    for (
+        let i = 0;
+        i < totalTargets;
+        i++
+    ) {
+
+        if (
+            i < correctFound
+        ) {
+
+            starText += "⭐";
+
+        } else {
+
+            starText += "☆";
+
+        }
+
+    }
+
+
+    starArea.textContent =
+        starText;
+
+
+    const remaining =
+        totalTargets -
+        correctFound;
+
+
+    const message =
+        document.getElementById(
+            "findMessage"
+        );
+
+
+    if (
+        remaining === 0
+    ) {
+
+        message.textContent =
+            "You found them all!";
+
+    } else {
+
+        message.textContent =
+            "Keep looking!";
+
+    }
+}
+
+
+/* ==========================================
+   ROUND COMPLETE
+========================================== */
+
+function roundComplete() {
+
+    roundFinished = true;
+
+
+    speak(
+        "Great job! You found them all!"
+    );
+
+
+    createConfetti(30);
+
+
+    const next =
+        document.getElementById(
+            "nextButton"
+        );
+
+
+    next.disabled = false;
+
+    next.classList.add(
+        "ready"
+    );
+
+
+    if (
+        currentRound ===
+        rounds.length - 1
+    ) {
+
+        next.textContent =
+            "Finish! ⭐";
+
+    } else {
+
+        next.textContent =
+            "Next ➜";
+
+    }
+}
+
+
+/* ==========================================
+   NEXT ROUND
+========================================== */
+
+document.getElementById(
+    "nextButton"
+).addEventListener(
+    "click",
+    () => {
+
+        if (!roundFinished) {
+            return;
+        }
+
+
+        if (
+            currentRound <
+            rounds.length - 1
+        ) {
+
+            currentRound++;
+
+            loadRound();
+
+        } else {
+
+            finishGame();
+
+        }
+
+    }
+);
+
+
+/* ==========================================
+   SPEAKER BUTTON
+========================================== */
+
+document.getElementById(
+    "speaker"
+).addEventListener(
+    "click",
+    () => {
+
+        speak(
+            rounds[currentRound]
+                .spoken
+        );
+
+    }
+);
+
+
+/* ==========================================
+   ROUND DOTS
+========================================== */
+
+function buildProgressDots() {
+
+    const dots =
+        document.getElementById(
+            "dots"
+        );
+
+
+    dots.innerHTML = "";
+
+
+    rounds.forEach(
+        (round, index) => {
+
+            const dot =
+                document.createElement(
+                    "div"
+                );
+
+
+            dot.className =
+                "dot";
+
+
+            if (
+                index < currentRound
+            ) {
+
+                dot.classList.add(
+                    "done"
+                );
+
+            }
+
+
+            dots.appendChild(dot);
+
+        }
+    );
+}
+
+
+/* ==========================================
+   SOUND EFFECTS
+========================================== */
+
+let audioContext = null;
+
+
+function playTone(
+    frequency,
+    duration
+) {
+
+    try {
+
+        const AudioContextClass =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+
+        if (!AudioContextClass) {
+            return;
+        }
+
+
+        if (!audioContext) {
+
+            audioContext =
+                new AudioContextClass();
+
+        }
+
+
+        if (
+            audioContext.state ===
+            "suspended"
+        ) {
+
+            audioContext.resume();
+
+        }
+
+
+        const oscillator =
+            audioContext.createOscillator();
+
+
+        const gain =
+            audioContext.createGain();
+
+
+        oscillator.connect(gain);
+
+        gain.connect(
+            audioContext.destination
+        );
+
+
+        oscillator.frequency.value =
+            frequency;
+
+
+        oscillator.type =
+            "sine";
+
+
+        gain.gain.setValueAtTime(
+            .08,
+            audioContext.currentTime
+        );
+
+
+        gain.gain.exponentialRampToValueAtTime(
+            .001,
+            audioContext.currentTime +
+            duration
+        );
+
+
+        oscillator.start();
+
+
+        oscillator.stop(
+            audioContext.currentTime +
+            duration
+        );
+
+    } catch (error) {
+
+        /* Game continues without audio. */
+
+    }
+}
+
+
+/* SUCCESS SOUND */
+
+function playSuccessSound() {
+
+    playTone(
+        660,
+        .08
+    );
+
+
+    setTimeout(
+        () => {
+
+            playTone(
+                880,
+                .12
+            );
+
+        },
+        90
+    );
+}
+
+
+/* GENTLE WRONG SOUND */
+
+function playOopsSound() {
+
+    playTone(
+        250,
+        .10
+    );
+}
+
+
+/* ==========================================
+   FINISH GAME
+========================================== */
+
+function finishGame() {
+
+    document.getElementById(
+        "celebration"
+    ).style.display =
+        "flex";
+
+
+    speak(
+        "Amazing! You are a book expert!"
+    );
+
+
+    createConfetti(100);
+}
+
+
+/* ==========================================
+   START OVER
+========================================== */
+
+function restartGame() {
+
+    if (
+        "speechSynthesis" in window
+    ) {
+
+        speechSynthesis.cancel();
+
+    }
+
+
+    currentRound = 0;
+
+    correctFound = 0;
+
+    roundFinished = false;
+
+
+    document.getElementById(
+        "celebration"
+    ).style.display =
+        "none";
+
+
+    loadRound();
+}
+
+
+/* ==========================================
+   CONFETTI
+========================================== */
+
+function createConfetti(amount) {
+
+    const confettiColors = [
+
+        "#ff8fb8",
+        "#ffd43b",
+        "#65c8ff",
+        "#79d38a",
+        "#aa87e8",
+        "#ffad5a"
+
+    ];
+
+
+    for (
+        let i = 0;
+        i < amount;
+        i++
+    ) {
+
+        const piece =
+            document.createElement(
+                "div"
+            );
+
+
+        piece.className =
+            "confetti";
+
+
+        piece.style.left =
+            Math.random() *
+            100 +
+            "vw";
+
+
+        piece.style.background =
+            randomItem(
+                confettiColors
+            );
+
+
+        piece.style.animationDelay =
+            Math.random() *
+            .6 +
+            "s";
+
+
+        piece.style.animationDuration =
+            (
+                1.8 +
+                Math.random() *
+                1.5
+            ) +
+            "s";
+
+
+        document.body.appendChild(
+            piece
+        );
+
+
+        setTimeout(
+            () => {
+
+                piece.remove();
+
+            },
+            4000
+        );
+
+    }
+}
+
+
+/* ==========================================
+   START GAME
+========================================== */
+
+loadRound();
+
+</script>
+
+</body>
+</html>
