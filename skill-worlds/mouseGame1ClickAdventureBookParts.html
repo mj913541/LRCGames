@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Click Adventure</title>
+  <style>
+    body {
+      background: url('../../pictures/otherIcons/backgroundJungle.png') no-repeat center center;
+      background-size: cover;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+      font-family: 'Comic Sans MS', sans-serif;
+      color: white;
+    }
+
+    #score, #timer, #bestScore {
+      position: absolute;
+      top: 20px;
+      font-size: 24px;
+      background: rgba(0,0,0,0.4);
+      padding: 10px;
+      border-radius: 10px;
+      display: none;
+    }
+    #score { left: 20px; }
+    #timer { left: 180px; }
+    #bestScore { right: 20px; }
+
+    .animal {
+      position: absolute;
+      width: 80px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .animal:active {
+      transform: scale(0.8);
+    }
+
+    #startScreen, #endScreen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-size: 36px;
+    }
+    #endScreen { display: none; }
+
+    .animal-animated {
+      width: 100px;
+      margin: 10px;
+      animation: bounce 1s infinite alternate;
+    }
+
+    @keyframes bounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-20px); }
+    }
+
+    button {
+      font-size: 24px;
+      padding: 10px 20px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 10px;
+      background: #ffd633;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ffcc00;
+    }
+  </style>
+</head>
+<body>
+  <div id="score">Score: 0</div>
+  <div id="timer">Time: 30</div>
+  <div id="bestScore">Best: 0</div>
+
+  <!-- Start Screen -->
+  <div id="startScreen">
+    <div>Welcome to <strong>Click Adventure!</strong></div>
+    <div style="display:flex; justify-content:center;">
+      <img class="animal-animated" src="../../pictures/otherIcons/elephant.png">
+      <img class="animal-animated" src="../../pictures/otherIcons/parrot.webp">
+      <img class="animal-animated" src="../../pictures/otherIcons/lion.png">
+    </div>
+    <div>Select Difficulty:</div>
+    <button onclick="startGame(1000)">Easy</button>
+    <button onclick="startGame(600)">Hard</button>
+  </div>
+
+  <!-- End Screen -->
+  <div id="endScreen">
+    <div id="finalScore"></div>
+    <div id="bestScoreEnd"></div>
+    <button onclick="restartGame()">Play Again</button>
+  </div>
+
+  <audio id="clickSound" src="https://actions.google.com/sounds/v1/cartoon/pop.ogg"></audio>
+
+  <script>
+    let score = 0;
+    let bestScore = localStorage.getItem('bestScore') ? parseInt(localStorage.getItem('bestScore')) : 0;
+    let gameInterval, gameTimer, countdown;
+    let spawnSpeed = 1000;
+    let timeLeft = 30;
+
+    document.getElementById('bestScore').innerText = 'Best: ' + bestScore;
+
+    function createAnimal() {
+      const img = document.createElement('img');
+      img.src = '../../pictures/otherIcons/parrot.webp';
+      img.className = 'animal';
+      img.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+      img.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+      img.onclick = function() {
+        score++;
+        document.getElementById('score').innerText = 'Score: ' + score;
+        document.getElementById('clickSound').play();
+        img.remove();
+      };
+      document.body.appendChild(img);
+      setTimeout(() => img.remove(), 3000);
+    }
+
+    function startGame(speed) {
+      spawnSpeed = speed;
+      document.getElementById('startScreen').style.display = 'none';
+      document.getElementById('score').style.display = 'block';
+      document.getElementById('timer').style.display = 'block';
+      document.getElementById('bestScore').style.display = 'block';
+      score = 0;
+      timeLeft = 30;
+      document.getElementById('score').innerText = 'Score: ' + score;
+      document.getElementById('timer').innerText = 'Time: ' + timeLeft;
+      gameInterval = setInterval(createAnimal, spawnSpeed);
+      countdown = setInterval(updateTimer, 1000);
+      gameTimer = setTimeout(endGame, 30000);
+    }
+
+    function updateTimer() {
+      timeLeft--;
+      document.getElementById('timer').innerText = 'Time: ' + timeLeft;
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      clearInterval(countdown);
+      document.querySelectorAll('.animal').forEach(el => el.remove());
+      document.getElementById('finalScore').innerText = 'Time\'s up! Your score: ' + score;
+      if(score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('bestScore', bestScore);
+      }
+      document.getElementById('bestScoreEnd').innerText = 'Best Score: ' + bestScore;
+      document.getElementById('endScreen').style.display = 'flex';
+      document.getElementById('bestScore').innerText = 'Best: ' + bestScore;
+    }
+
+    function restartGame() {
+      document.getElementById('endScreen').style.display = 'none';
+      document.getElementById('startScreen').style.display = 'flex';
+    }
+  </script>
+</body>
+</html>
