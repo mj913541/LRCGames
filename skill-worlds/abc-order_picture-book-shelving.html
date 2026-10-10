@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Alphabet Jungle – ABC Order (Picture Books)</title>
+  <title>ABC Order Shelvng (Picture Books)</title>
   <style>
     :root{
       --jungle: #145a32; /* deep jungle green */
@@ -92,11 +92,147 @@
     }
 
     .hidden{display:none}
+
+    /* ===== FIT GAME ON ONE SCREEN ===== */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+}
+
+/* Compact header */
+header {
+  flex-shrink: 0;
+  padding: 5px 12px 2px;
+}
+
+h1 {
+  font-size: clamp(18px, 2.5vw, 28px);
+  margin-bottom: 3px;
+}
+
+.subtitle {
+  font-size: clamp(11px, 1.2vw, 14px);
+}
+
+/* Alphabet reference */
+.alpha-strip {
+  gap: 3px;
+  margin: 5px auto;
+}
+
+.alpha-chip {
+  padding: 3px 5px;
+  font-size: 12px;
+}
+
+/* Main game area */
+.wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar */
+.toolbar {
+  flex-shrink: 0;
+  gap: 6px;
+  margin: 4px 0 8px;
+}
+
+button, select {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+/* Book bin and shelf */
+.area {
+  flex: 1;
+  min-height: 0;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pool, .slots {
+  min-height: 0;
+  padding: 8px;
+  overflow: hidden;
+}
+
+.section-title {
+  font-size: 15px;
+  margin-bottom: 5px;
+}
+
+/* Automatically resize book cards */
+.card, .slot {
+  width: clamp(38px, 6vw, 75px);
+  height: clamp(55px, 12vh, 95px);
+  box-sizing: border-box;
+}
+
+.letter {
+  font-size: clamp(20px, 3vw, 38px);
+}
+
+/* Compact spacing */
+.cards, .slot-row {
+  gap: 5px;
+  min-height: 0;
+  align-content: flex-start;
+}
+
+.result {
+  margin-top: 5px;
+  font-size: 13px;
+  min-height: 20px;
+}
+
+/* Compact teacher note */
+.wrap > p.tiny {
+  margin: 4px 0 !important;
+  font-size: 10px;
+}
+
+/* Smaller Chromebook screens */
+@media (max-height: 650px) {
+  header {
+    padding: 3px 8px;
+  }
+
+  .alpha-chip {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+
+  .card, .slot {
+    height: clamp(45px, 10vh, 70px);
+  }
+
+  .letter {
+    font-size: 25px;
+  }
+
+  .a11y {
+    font-size: 10px;
+  }
+}
   </style>
 </head>
 <body>
   <header>
-    <h1>🅰️🦁 Alphabet Jungle – ABC Order 📚</h1>
+    <h1>🦁ABC Order Shelvng (Picture Books)📚</h1>
     <div class="subtitle">Picture Books = <strong style="color:var(--neon);">Neon Green</strong> stickers • Sort by <strong>author’s last name</strong> (first letter) 🔤</div>
     <!-- Alphabet strip (A–Z) -->
     <div class="alpha-strip" aria-hidden="false" aria-label="Alphabet from A to Z">
@@ -147,19 +283,15 @@
       <div class="pool vine-border" aria-labelledby="poolTitle">
         <h2 id="poolTitle" class="section-title">📚 Book Bin (Drag from here)</h2>
         <div id="pool" class="cards" role="list" aria-live="polite"></div>
-        <div class="a11y tiny">💡 Tip: Drag with the touchpad; press <strong>Enter</strong> to place a selected card. 🖱️⌨️</div>
+        <div class="a11y tiny">💡 Tip: Drag with the touchpad to place a selected card. 🖱️⌨️</div>
       </div>
 
       <div class="slots vine-border" aria-labelledby="slotsTitle">
-        <h2 id="slotsTitle" class="section-title">🪵 Shelf Left ➜ Right (A → Z) ➡️</h2>
+        <h2 id="slotsTitle" class="section-title">🪵 Shelve Left ➜ Right (A → Z) ➡️</h2>
         <div id="slots" class="slot-row" role="list" aria-live="polite"></div>
         <div id="result" class="result" aria-live="polite"></div>
       </div>
     </section>
-
-    <p class="tiny" style="text-align:center;margin-top:18px">
-      Teacher note: Letters simulate <strong>spine labels</strong> for the author’s last initial. Picture books use the <span style="color:var(--neon); font-weight:800">neon green</span> background. Students drag cards so the shelf reads in ABC order from left to right. 🅰️➡️🇿
-    </p>
   </main>
 
   <script>
