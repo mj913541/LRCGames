@@ -1,0 +1,554 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parts of a Book</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 8px;
+            height: 100vh;
+            height: 100dvh;
+        }
+
+        h1 {
+            font-size: clamp(18px, 3vh, 28px);
+            margin: 4px 0 8px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        /* GAME BOARD */
+
+        #game-board {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-rows: repeat(4, minmax(0, 1fr));
+            gap: 6px;
+            width: 100%;
+            max-width: 1050px;
+            flex: 1;
+            min-height: 0;
+            margin: 0 auto;
+        }
+
+        /* CARDS */
+
+        .card {
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            min-height: 0;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .card-front,
+        .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            backface-visibility: hidden;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card-front {
+            font-size: clamp(18px, 4vh, 30px);
+            color: #333;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+            color: white;
+        }
+
+        /* CARD IMAGES */
+
+        .card-back img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        img {
+            pointer-events: none;
+            user-select: none;
+        }
+
+        /* BUTTONS */
+
+        button {
+            margin-top: 6px;
+            padding: 6px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        #restart-btn {
+            margin-top: 8px;
+        }
+
+        #next-btn {
+            margin-top: 4px;
+        }
+
+        #flip-count {
+            margin: 4px 0;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .sound-button {
+            background-color: #1f1d1d;
+            border: none;
+            border-radius: 50%;
+            padding: 8px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 20px;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+
+        .sound-button:focus {
+            outline: none;
+        }
+
+        /* SMALL CHROMEBOOK SCREENS */
+
+        @media (max-height: 650px) {
+            body {
+                padding: 4px;
+            }
+
+            h1 {
+                font-size: 18px;
+                margin: 2px 0 4px;
+            }
+
+            #game-board {
+                gap: 4px;
+            }
+
+            button {
+                padding: 4px 10px;
+                margin-top: 4px;
+                font-size: 12px;
+            }
+
+            #flip-count {
+                margin: 2px 0;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 700px) {
+            #game-board {
+                gap: 4px;
+            }
+
+            .card-front {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Matching Game</h1>
+
+    <div id="game-board"></div>
+
+    <button id="restart-btn">Play Again</button>
+
+    <p id="flip-count">Flips: 0</p>
+
+    <button id="next-btn" style="display: none;">
+        Next
+    </button>
+
+    <script>
+
+        /* TEXT TO SPEECH */
+
+        function speakCaption(caption) {
+            if (!('speechSynthesis' in window)) {
+                return;
+            }
+
+            if (!caption) {
+                return;
+            }
+
+            window.speechSynthesis.cancel();
+
+            const speech = new SpeechSynthesisUtterance(caption);
+
+            speech.lang = 'en-US';
+            speech.rate = 0.85;
+            speech.pitch = 1;
+            speech.volume = 1;
+
+            window.speechSynthesis.speak(speech);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+
+            /* MATCHING CARDS */
+
+            const cards = [
+                {
+                    name: 'A',
+                    img: '../../img/parts-of-a-book-pictures/author.png',
+                    caption: 'Author'
+                },
+                {
+                    name: 'A',
+                    img: '../../img/parts-of-a-book-pictures/author.png',
+                    caption: 'Author'
+                },
+                {
+                    name: 'B',
+                    img: '../../img/parts-of-a-book-pictures/back-cover.png',
+                    caption: 'Back Cover'
+                },
+                {
+                    name: 'B',
+                    img: '../../img/parts-of-a-book-pictures/back-cover.png',
+                    caption: 'Back Cover'
+                },
+                {
+                    name: 'C',
+                    img: '../../img/parts-of-a-book-pictures/copyright-page.png',
+                    caption: 'Copyright Page'
+                },
+                {
+                    name: 'C',
+                    img: '../../img/parts-of-a-book-pictures/copyright-page.png',
+                    caption: 'Copyright Page'
+                },
+                {
+                    name: 'D',
+                    img: '../../img/parts-of-a-book-pictures/front-cover.png',
+                    caption: 'Front Cover'
+                },
+                {
+                    name: 'D',
+                    img: '../../img/parts-of-a-book-pictures/front-cover.png',
+                    caption: 'Front Cover'
+                },
+                {
+                    name: 'E',
+                    img: '../../img/parts-of-a-book-pictures/illustrations.png',
+                    caption: 'Illustrations'
+                },
+                {
+                    name: 'E',
+                    img: '../../img/parts-of-a-book-pictures/illustrations.png',
+                    caption: 'Illustrations'
+                },
+                {
+                    name: 'F',
+                    img: '../../img/parts-of-a-book-pictures/illustrator.png',
+                    caption: 'Illustrator'
+                },
+                {
+                    name: 'F',
+                    img: '../../img/parts-of-a-book-pictures/illustrator.png',
+                    caption: 'Illustrator'
+                },
+                {
+                    name: 'G',
+                    img: '../../img/parts-of-a-book-pictures/publisher.png',
+                    caption: 'Publisher'
+                },
+                {
+                    name: 'G',
+                    img: '../../img/parts-of-a-book-pictures/publisher.png',
+                    caption: 'Publisher'
+                },
+                {
+                    name: 'H',
+                    img: '../../img/parts-of-a-book-pictures/spine.png',
+                    caption: 'Spine'
+                },
+                {
+                    name: 'H',
+                    img: '../../img/parts-of-a-book-pictures/spine.png',
+                    caption: 'Spine'
+                },
+                {
+                    name: 'I',
+                    img: '../../img/parts-of-a-book-pictures/table-of-contents.png',
+                    caption: 'Table of Contents'
+                },
+                {
+                    name: 'I',
+                    img: '../../img/parts-of-a-book-pictures/table-of-contents.png',
+                    caption: 'Table of Contents'
+                },
+                {
+                    name: 'J',
+                    img: '../../img/parts-of-a-book-pictures/title.png',
+                    caption: 'Title'
+                },
+                {
+                    name: 'J',
+                    img: '../../img/parts-of-a-book-pictures/title.png',
+                    caption: 'Title'
+                }
+            ];
+
+            let cardArray = [...cards];
+
+            cardArray.sort(() => 0.5 - Math.random());
+
+            const gameBoard = document.getElementById('game-board');
+
+            let firstCard = null;
+            let secondCard = null;
+            let flips = 0;
+            let matches = 0;
+            let lockBoard = false;
+
+            /* CREATE GAME BOARD */
+
+            function createBoard() {
+
+                cardArray.forEach((card) => {
+
+                    const cardElement = document.createElement('div');
+
+                    cardElement.classList.add('card');
+
+                    cardElement.dataset.name = card.name;
+
+                    // Store the caption for speaking
+                    cardElement.dataset.caption = card.caption;
+
+                    const cardInner = document.createElement('div');
+                    cardInner.classList.add('card-inner');
+
+                    const cardFront = document.createElement('div');
+                    cardFront.classList.add('card-front');
+                    cardFront.textContent = '?';
+
+                    const cardBack = document.createElement('div');
+                    cardBack.classList.add('card-back');
+
+                    const imgElement = document.createElement('img');
+                    imgElement.src = card.img;
+                    imgElement.alt = card.caption;
+
+                    cardBack.appendChild(imgElement);
+
+                    cardInner.appendChild(cardFront);
+                    cardInner.appendChild(cardBack);
+
+                    cardElement.appendChild(cardInner);
+
+                    cardElement.addEventListener('click', flipCard);
+
+                    gameBoard.appendChild(cardElement);
+                });
+            }
+
+            /* FLIP A CARD */
+
+            function flipCard() {
+
+                if (
+                    lockBoard ||
+                    this === firstCard ||
+                    this.classList.contains('flipped')
+                ) {
+                    return;
+                }
+
+                this.classList.add('flipped');
+
+                // READ THE CAPTION OUT LOUD
+                speakCaption(this.dataset.caption);
+
+                if (!firstCard) {
+                    firstCard = this;
+                    return;
+                }
+
+                secondCard = this;
+
+                flips++;
+
+                document.getElementById('flip-count').textContent =
+                    `Flips: ${flips}`;
+
+                checkForMatch();
+            }
+
+            /* CHECK FOR MATCH */
+
+            function checkForMatch() {
+
+                if (firstCard.dataset.name === secondCard.dataset.name) {
+
+                    disableCards();
+
+                    matches++;
+
+                    checkCompletion();
+
+                } else {
+
+                    unflipCards();
+                }
+            }
+
+            /* MATCHED CARDS */
+
+            function disableCards() {
+
+                firstCard.removeEventListener('click', flipCard);
+
+                secondCard.removeEventListener('click', flipCard);
+
+                resetBoard();
+            }
+
+            /* UNMATCHED CARDS */
+
+            function unflipCards() {
+
+                lockBoard = true;
+
+                setTimeout(() => {
+
+                    firstCard.classList.remove('flipped');
+
+                    secondCard.classList.remove('flipped');
+
+                    resetBoard();
+
+                }, 1000);
+            }
+
+            /* RESET SELECTED CARDS */
+
+            function resetBoard() {
+
+                firstCard = null;
+                secondCard = null;
+                lockBoard = false;
+            }
+
+            /* CHECK FOR COMPLETION */
+
+            function checkCompletion() {
+
+                if (matches === cardArray.length / 2) {
+
+                    setTimeout(() => {
+
+                        alert('Congratulations! You have matched all the cards.');
+
+                    }, 500);
+
+                    document.getElementById('next-btn').style.display = 'block';
+                }
+            }
+
+            /* NEXT BUTTON */
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+
+                completeActivity();
+            });
+
+            /* RESTART GAME */
+
+            document.getElementById('restart-btn').addEventListener('click', () => {
+
+                window.speechSynthesis.cancel();
+
+                gameBoard.innerHTML = '';
+
+                document.getElementById('flip-count').textContent = 'Flips: 0';
+
+                document.getElementById('next-btn').style.display = 'none';
+
+                flips = 0;
+                matches = 0;
+                firstCard = null;
+                secondCard = null;
+                lockBoard = false;
+
+                cardArray.sort(() => 0.5 - Math.random());
+
+                createBoard();
+            });
+
+            /* COMPLETE ACTIVITY */
+
+            function completeActivity() {
+
+                if (window.opener) {
+                    window.opener.postMessage('stepCompleted', '*');
+                }
+
+                window.close();
+            }
+
+            /* START GAME */
+
+            createBoard();
+
+        });
+
+    </script>
+
+</body>
+</html>
