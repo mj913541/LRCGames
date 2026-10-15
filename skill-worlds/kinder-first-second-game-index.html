@@ -95,7 +95,7 @@ function makeCard(g,i){
  if(g.img){const img=document.createElement('img');img.src=g.img;img.alt='';img.loading='lazy';img.onerror=()=>art.replaceChildren(el('span','fallback',g.emoji||'🎮'));art.append(img)}
  else art.append(el('span','fallback',g.emoji||'🎮'));
  card.append(art);
- if(g.group==='matching' && g.level!==undefined){card.append(el('span','level-tag',g.level===0?'LEVEL 0':g.level===1?'LEVEL 1A':g.level===2?'LEVEL 1B':'LEVEL '+g.level));}
+ if(g.group==='matching' && g.level!==undefined){card.append(el('span','level-tag',g.level===0?'LEVEL 1':g.level===1?'LEVEL 2':g.level===2?'LEVEL 3':'LEVEL '+g.level));}
  card.append(el('h4','',g.title),el('p','',g.desc));
  const link=el('a','play','▶ PLAY!');link.href=g.href;card.append(link);
  return card;
