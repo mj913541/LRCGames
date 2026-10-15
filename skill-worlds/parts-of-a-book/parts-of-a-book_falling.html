@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRC Quest | Book Parts Catch</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden}body{height:100dvh;display:flex;flex-direction:column;gap:7px;padding:8px;font-family:Arial,sans-serif;color:#55378f;background:linear-gradient(150deg,#f6efff,#e5f6ff)}button{font:inherit;cursor:pointer}header{display:flex;justify-content:center;align-items:center;position:relative;min-height:38px;flex-shrink:0}h1{font-size:clamp(17px,2.6vw,28px);margin:0;padding:0 115px;text-align:center}#teacherBtn{position:absolute;right:0;top:0;border:2px solid #9070c8;background:#e5dcff;color:#60419d;border-radius:10px;padding:7px;font-size:12px;font-weight:bold}#hud{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap;flex-shrink:0}.pill{border:2px solid #d5c5ef;border-radius:12px;padding:6px 12px;background:#fff;font-size:14px;font-weight:bold}#target{display:flex;align-items:center;justify-content:center;gap:10px;flex-shrink:0;min-height:49px;border-radius:13px;border:3px solid #bba0e8;background:#fff;text-align:center;font-size:clamp(17px,2.7vw,26px);font-weight:bold}#targetWord{color:#4d318e}#playfield{position:relative;flex:1;min-height:0;width:100%;max-width:1100px;align-self:center;overflow:hidden;border:3px solid #b9a5e5;border-radius:18px;background:linear-gradient(#e8f8ff 0%,#f6f2ff 85%,#d8f0db 85%)}#playfield:after{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;background:#5caa7d;pointer-events:none}.falling{position:absolute;width:clamp(65px,10vw,115px);height:clamp(74px,12vw,132px);border:3px solid #8462c6;border-radius:14px;background:white;box-shadow:0 4px 10px #0002;display:flex;align-items:center;justify-content:center;padding:5px;touch-action:manipulation;z-index:2}.falling img{width:100%;height:100%;object-fit:contain;pointer-events:none}.falling.bonus{font-size:clamp(40px,6vw,65px);background:#fff7d8;border-color:#edb943}.falling:focus-visible{outline:4px solid #f0b33b;outline-offset:2px}#instructions{font-size:clamp(12px,1.7vw,17px);font-weight:bold;text-align:center;margin:0;flex-shrink:0}#bottom{display:flex;align-items:center;justify-content:center;gap:9px;flex-wrap:wrap;flex-shrink:0}.action{border:3px solid;border-radius:13px;padding:8px 15px;min-height:46px;font-weight:bold;font-size:15px}#again{background:#d9f3df;border-color:#5ca56b;color:#27643b}#menu{background:#e5dcff;border-color:#9070c8;color:#60419d}#sound{background:#fff5d8;border-color:#d8b760;color:#785600}.overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#1b1630bd;padding:16px;z-index:20}.overlay[hidden]{display:none}.dialog{width:min(94vw,590px);max-height:88dvh;overflow:auto;background:white;border-radius:20px;padding:22px;text-align:center;color:#443564;box-shadow:0 12px 35px #0003}.dialog h2{margin:0 0 10px;color:#60419d}.dialog p{line-height:1.5}.dialog button{background:#e5dcff;border:2px solid #9070c8;border-radius:12px;padding:10px 16px;margin:5px;font-weight:bold;color:#60419d}.dialog section{border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:12px;text-align:left}.dialog h3{text-align:left;color:#60419d;margin:0 0 5px}.dialog section p{margin:0;text-align:left}#toast{position:fixed;left:50%;top:48%;transform:translate(-50%,-50%);background:#fff;border:3px solid #bba0e8;border-radius:15px;padding:10px 18px;z-index:5;font-size:20px;font-weight:bold;pointer-events:none}#toast[hidden]{display:none}@media(max-height:650px){body{gap:4px;padding:4px}header{min-height:27px}h1{font-size:17px}.pill{font-size:12px;padding:4px 9px}#target{min-height:37px;font-size:18px}.action{min-height:34px;font-size:12px;padding:4px 8px;border-width:2px}#teacherBtn{font-size:10px;padding:4px}}
+</style>
+</head>
+<body>
+<header><h1>📚 Book Parts Catch!</h1><button id="teacherBtn">📋 Teacher Info</button></header>
+<div id="hud"><span class="pill" id="levelLabel">⭐ Level 1</span><span class="pill" id="scoreLabel">🌟 Score: 0</span><span class="pill" id="livesLabel">❤️❤️❤️❤️❤️</span></div>
+<div id="target"><span>🎯 CATCH:</span><span id="targetWord">FRONT COVER</span><button id="repeatTarget" type="button" aria-label="Hear the book part again" style="background:#fff5d8;border:2px solid #d8b760;border-radius:10px;padding:5px 10px;font-size:clamp(13px,1.7vw,18px);font-weight:bold;color:#785600">🔊 Hear It Again</button></div>
+<p id="instructions">🖱️ Move your mouse and CLICK the matching picture! ⭐ Catch stars for bonus points!</p>
+<main id="playfield" aria-label="Falling book part pictures"></main>
+<footer id="bottom"><button id="again" class="action">🔄 Play Again</button><button id="sound" class="action">🔊 Hear Directions</button><button id="menu" class="action">🏠 Game Room</button></footer>
+<div id="toast" hidden role="status"></div>
+<div id="start" class="overlay"><div class="dialog"><h2>📚 Book Parts Catch!</h2><p>🎯 Look at the book-part word at the top.</p><p>🖱️ Move your mouse and <strong>CLICK</strong> the matching picture before it reaches the ground!</p><p>⭐ Catch a golden star for two bonus points. You have five hearts!</p><button id="startBtn">▶️ Let's Play!</button><button id="startMenu">🏠 Game Room</button></div></div>
+<div id="finish" class="overlay" hidden><div class="dialog"><h2 id="finishTitle">🎉 Great Job!</h2><p id="finishText"></p><button id="finishAgain">🔄 Play Again</button><button id="finishMenu">🏠 Game Room</button></div></div>
+<div id="teacher" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="teacherTitle"><div class="dialog"><h2 id="teacherTitle">📋 Teacher & Standards</h2><section><h3>Grade & Strand</h3><p>Kindergarten–First Grade · Information Literacy & Technology Skills</p></section><section><h3>Learning Target</h3><p>Students will use mouse movement and single-click accuracy to identify book parts from pictures and vocabulary.</p></section><section><h3>⭐ I Can</h3><p>I can move my mouse and click the picture that matches a book-part word!</p></section><section><h3>Skills</h3><p>Mouse movement, aiming, single clicking, visual recognition, vocabulary, and hand-eye coordination.</p></section><section><h3>AASL / ISTE Connections</h3><p>AASL Inquire (book vocabulary); ISTE 1.1 Empowered Learner (independent digital skill practice). Broad instructional connections.</p></section><section><h3>Differentiation & Assessment</h3><p>Three progressively faster levels, five hearts, no scrolling, and spoken directions. Observe accurate clicks and students' recognition of book parts.</p></section><button id="closeTeacher">✕ Close</button></div></div>
+<script>
+const imageFolder='../../img/parts-of-a-book-pictures/';
+const parts=[
+{name:'Front Cover',file:'front-cover.png'},
+{name:'Back Cover',file:'back-cover.png'},
+{name:'Spine',file:'spine.png'},
+{name:'Title',file:'title.png'},
+{name:'Author',file:'author.png'},
+{name:'Illustrator',file:'illustrator.png'},
+{name:'Illustrations',file:'illustrations.png'},
+{name:'Publisher',file:'publisher.png'},
+{name:'Copyright Page',file:'copyright-page.png'},
+{name:'Table of Contents',file:'table-of-contents.png'}
+];
+const field=document.getElementById('playfield');
+let score=0,lives=5,level=1,correct=0,target=null,items=[],running=false,raf=0,lastFrame=0,lastSpawn=0,spawnDelay=1900,toastTimer=0,session=0,pausedUntil=0,voiceSerial=0;
+const requiredPerLevel=6;
+function speak(t,onDone){
+  voiceSerial++;
+  const serial=voiceSerial;
+  if(!('speechSynthesis' in window)){
+    if(onDone)onDone();
+    return;
+  }
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);
+  u.rate=.85;
+  u.lang='en-US';
+  let finished=false;
+  function done(){
+    if(finished||serial!==voiceSerial)return;
+    finished=true;
+    if(onDone)onDone();
+  }
+  u.onend=done;
+  u.onerror=done;
+  try{speechSynthesis.speak(u)}catch(e){done()}
+}
+function stopSpeech(){
+  voiceSerial++;
+  if('speechSynthesis' in window)speechSynthesis.cancel();
+}
+function announceTarget(){
+  // Give children time to hear the new word before items move.
+  pausedUntil=performance.now()+2500;
+  const thisSession=session;
+  const thisTarget=target;
+  speak('Find the '+target.name+'.',()=>{
+    if(thisSession===session && thisTarget===target){
+      pausedUntil=performance.now()+450;
+    }
+  });
+}
+function directions(){
+  pausedUntil=performance.now()+8500;
+  const thisSession=session;
+  speak('Listen for the book part. Move your mouse and click its matching picture. Click a golden star for two bonus points. You have five hearts.',()=>{
+    if(thisSession===session)announceTarget();
+  });
+}
+function updateHUD(){document.getElementById('levelLabel').textContent='⭐ Level '+level+' of 3';document.getElementById('scoreLabel').textContent='🌟 Score: '+score;document.getElementById('livesLabel').textContent='❤️'.repeat(lives)+'🤍'.repeat(5-lives);document.getElementById('targetWord').textContent=target.name.toUpperCase()}
+function randomPart(except){const choices=parts.filter(p=>p!==except);return choices[Math.floor(Math.random()*choices.length)]}
+function chooseTarget(){target=parts[Math.floor(Math.random()*parts.length)];clearItems();updateHUD();announceTarget()}
+function toast(text){const e=document.getElementById('toast');e.textContent=text;e.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>e.hidden=true,950)}
+function clearItems(){for(const item of items)item.el.remove();items=[]}
+function stopGame(){running=false;cancelAnimationFrame(raf);raf=0;clearItems();stopSpeech()}
+function startGame(){session++;stopGame();score=0;lives=5;level=1;correct=0;spawnDelay=1900;lastFrame=0;lastSpawn=0;pausedUntil=0;document.getElementById('start').hidden=true;document.getElementById('finish').hidden=true;target=parts[Math.floor(Math.random()*parts.length)];updateHUD();running=true;const s=session;directions();raf=requestAnimationFrame(t=>{if(s===session)loop(t)})}
+function spawn(){if(items.length>=5)return;const bonus=Math.random()<.13;const matching=bonus?false:Math.random()<.56;const part=bonus?null:(matching?target:randomPart(target));const el=document.createElement('button');el.type='button';el.className='falling'+(bonus?' bonus':'');el.setAttribute('aria-label',bonus?'Bonus star':part.name);if(bonus){el.textContent='⭐'}else{const img=document.createElement('img');img.src=imageFolder+part.file;img.alt=part.name;el.appendChild(img)}field.appendChild(el);const width=el.offsetWidth;const height=el.offsetHeight;const x=Math.random()*Math.max(0,field.clientWidth-width-8)+4;const item={el,x,y:-height,width,height,part,bonus,speed:(level===1?64:level===2?83:105)+Math.random()*16};items.push(item);el.style.left=x+'px';el.style.top=item.y+'px';el.addEventListener('click',()=>catchItem(item))}
+function removeItem(item){const i=items.indexOf(item);if(i!==-1)items.splice(i,1);item.el.remove()}
+function catchItem(item){if(!running||!items.includes(item))return;removeItem(item);if(item.bonus){score+=2;toast('⭐ Bonus +2!');updateHUD();return}if(item.part===target){score++;correct++;toast('⭐ Correct! '+target.name);if(correct>=requiredPerLevel){if(level===3){endGame(true);return}level++;correct=0;spawnDelay=Math.max(1000,spawnDelay-350);clearItems();toast('🎉 Level '+level+'!')}chooseTarget()}else{lives--;toast('💜 Try '+target.name+'!');if(lives<=0){endGame(false);return}}updateHUD()}
+function loop(time){if(!running)return;if(!lastFrame){lastFrame=time;lastSpawn=time}const dt=Math.min((time-lastFrame)/1000,.05);lastFrame=time;if(time<pausedUntil){lastSpawn=time;raf=requestAnimationFrame(loop);return}if(time-lastSpawn>=spawnDelay){spawn();lastSpawn=time}for(const item of [...items]){item.y+=item.speed*dt;item.el.style.top=item.y+'px';if(item.y>=field.clientHeight){removeItem(item);if(item.part===target&&!item.bonus){lives--;toast('❤️ Keep looking for '+target.name+'!');if(lives<=0){endGame(false);return}updateHUD()}}}raf=requestAnimationFrame(loop)}
+function endGame(won){stopGame();document.getElementById('finishTitle').textContent=won?'🎉 Book Parts Champion!':'💜 Nice Practice!';document.getElementById('finishText').textContent=won?'You completed all three levels! Final score: '+score:'You earned '+score+' points! Play again to practice your mouse skills.';document.getElementById('finish').hidden=false}
+function restart(){session++;stopGame();document.getElementById('finish').hidden=true;document.getElementById('start').hidden=false}
+function menu(){stopGame();window.location.href='../kinder-first-second-game-index.html'}
+document.getElementById('startBtn').onclick=startGame;document.getElementById('startMenu').onclick=menu;document.getElementById('again').onclick=restart;document.getElementById('sound').onclick=directions;document.getElementById('repeatTarget').onclick=()=>{if(running)announceTarget()};document.getElementById('menu').onclick=menu;document.getElementById('finishAgain').onclick=startGame;document.getElementById('finishMenu').onclick=menu;
+const teacher=document.getElementById('teacher');const teacherBtn=document.getElementById('teacherBtn');teacherBtn.onclick=()=>{teacher.hidden=false;document.getElementById('closeTeacher').focus()};function closeTeacher(){teacher.hidden=true;teacherBtn.focus()}document.getElementById('closeTeacher').onclick=closeTeacher;teacher.addEventListener('click',e=>{if(e.target===teacher)closeTeacher()});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!teacher.hidden)closeTeacher()});
+target=parts[0];updateHUD();
+</script>
+</body>
+</html>

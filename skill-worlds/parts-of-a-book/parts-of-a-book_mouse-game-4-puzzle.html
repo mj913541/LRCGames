@@ -1,0 +1,908 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRC Quest | Book Parts Puzzle</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{
+  height:100dvh;
+  background:linear-gradient(145deg,#f7f0ff,#e7f5ff);
+  color:#55378f;
+  font-family:Arial,sans-serif;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  padding:8px;
+}
+button{font:inherit;cursor:pointer}
+header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+  flex-shrink:0;
+  min-height:38px;
+}
+h1{
+  margin:0;
+  font-size:clamp(17px,2.7vw,28px);
+  text-align:center;
+  padding:0 120px;
+}
+#teacherBtn{
+  position:absolute;
+  right:0;
+  top:0;
+  background:#e5dcff;
+  color:#60419d;
+  border:2px solid #9070c8;
+  border-radius:10px;
+  padding:7px 10px;
+  font-size:12px;
+  font-weight:bold;
+}
+#topBar{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:9px;
+  flex-shrink:0;
+}
+.pill{
+  background:white;
+  border:2px solid #d5c5ef;
+  border-radius:12px;
+  padding:7px 12px;
+  font-size:14px;
+  font-weight:bold;
+}
+#instruction{
+  text-align:center;
+  font-size:clamp(12px,1.8vw,17px);
+  font-weight:bold;
+  margin:0;
+  flex-shrink:0;
+}
+#workspace{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:12px;
+  flex:1;
+  min-height:0;
+  max-width:1120px;
+  width:100%;
+  align-self:center;
+}
+.zone{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  min-width:0;
+  align-items:center;
+  gap:5px;
+}
+.zoneTitle{
+  font-size:clamp(12px,1.8vw,17px);
+  font-weight:bold;
+  flex-shrink:0;
+}
+#board,#tray{
+  display:grid;
+  width:100%;
+  flex:1;
+  min-height:0;
+  min-width:0;
+  border:3px solid #bda5e8;
+  border-radius:14px;
+  overflow:hidden;
+  background:#fff;
+  gap:3px;
+  padding:4px;
+}
+#board{
+  background:#efe9fc;
+}
+#tray{
+  background:#e9fff2;
+  border-color:#8fc7a4;
+}
+.slot,.trayCell{
+  position:relative;
+  min-width:0;
+  min-height:0;
+  border-radius:6px;
+  overflow:hidden;
+}
+.slot{
+  border:2px dashed #b6a0df;
+  background-color:#faf7ff;
+}
+.slot.correct{
+  border:2px solid #59b879;
+  background-color:white;
+}
+.trayCell{
+  border:1px solid #d1ead9;
+  display:flex;
+}
+.piece{
+  width:100%;
+  height:100%;
+  min-width:0;
+  min-height:0;
+  border:2px solid #6d4baa;
+  border-radius:6px;
+  background-repeat:no-repeat;
+  background-color:white;
+  cursor:grab;
+  touch-action:none;
+  user-select:none;
+  -webkit-user-select:none;
+}
+.piece:active{cursor:grabbing}
+.piece.placed{
+  border:0;
+  cursor:default;
+}
+.piece.draggingSource{
+  opacity:.22;
+}
+.dragGhost{
+  position:fixed;
+  z-index:200;
+  pointer-events:none;
+  box-shadow:0 9px 25px #0005;
+  border:3px solid #7954c8;
+  border-radius:8px;
+  background-repeat:no-repeat;
+  background-color:white;
+  opacity:.94;
+}
+.slot.target{
+  outline:4px solid #f2b94b;
+  outline-offset:-4px;
+}
+#bottom{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  flex-shrink:0;
+}
+.action{
+  border:3px solid;
+  border-radius:13px;
+  padding:9px 16px;
+  min-height:46px;
+  font-size:16px;
+  font-weight:bold;
+}
+#restartBtn{
+  background:#d9f3df;
+  border-color:#5ca56b;
+  color:#27643b;
+}
+#menuBtn{
+  background:#e5dcff;
+  border-color:#9070c8;
+  color:#60419d;
+}
+#soundBtn{
+  background:#fff5d8;
+  border-color:#d8b760;
+  color:#785600;
+}
+.overlay{
+  position:fixed;
+  inset:0;
+  background:#1b1630bb;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:16px;
+  z-index:500;
+}
+.overlay[hidden]{display:none}
+.dialog{
+  background:white;
+  color:#453567;
+  width:min(94vw,600px);
+  max-height:88dvh;
+  overflow:auto;
+  border-radius:22px;
+  padding:22px;
+  text-align:center;
+  box-shadow:0 12px 35px #0003;
+}
+.dialog h2{margin:0 0 12px;color:#60419d}
+.dialog p{line-height:1.5}
+.dialog button{
+  border:2px solid #9070c8;
+  border-radius:12px;
+  padding:11px 17px;
+  margin:5px;
+  font-weight:bold;
+  background:#e5dcff;
+  color:#60419d;
+}
+#teacherPanel .dialog{text-align:left}
+#teacherPanel section{
+  padding-bottom:10px;
+  margin-bottom:12px;
+  border-bottom:1px solid #eee;
+}
+#teacherPanel h3{
+  margin:0 0 5px;
+  color:#60419d;
+}
+#teacherPanel section p{margin:0}
+#toast{
+  position:fixed;
+  bottom:76px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#fff;
+  border:2px solid #c9b5eb;
+  border-radius:14px;
+  padding:9px 17px;
+  font-weight:bold;
+  z-index:250;
+  pointer-events:none;
+}
+#toast[hidden]{display:none}
+@media(max-height:650px){
+ body{padding:4px;gap:4px}
+ header{min-height:28px}
+ h1{font-size:17px}
+ .pill{padding:4px 9px;font-size:12px}
+ .action{min-height:35px;padding:5px 10px;font-size:12px;border-width:2px}
+ #workspace{gap:7px}
+ .zone{gap:2px}
+ #board,#tray{padding:2px;gap:2px}
+ #teacherBtn{padding:4px 6px;font-size:10px}
+}
+@media(max-width:620px){
+ h1{text-align:left;font-size:15px;padding:0 105px 0 0}
+ #workspace{gap:5px}
+ .zoneTitle{font-size:11px}
+ .action{font-size:12px;padding:6px 8px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>📚 Book Parts Puzzle Quest!</h1>
+  <button id="teacherBtn">📋 Teacher Info</button>
+</header>
+
+<div id="topBar">
+  <span class="pill" id="levelLabel">⭐ Level 1 of 3</span>
+  <span class="pill" id="partLabel">📖 Book Part</span>
+  <span class="pill" id="progressLabel">🧩 0 / 4</span>
+</div>
+
+<p id="instruction">
+  🖱️ Click, hold, drag, and let go!
+</p>
+
+<div id="workspace">
+  <section class="zone">
+    <div class="zoneTitle">📖 Build the Picture</div>
+    <div id="board" aria-label="Puzzle board"></div>
+  </section>
+  <section class="zone">
+    <div class="zoneTitle">🧩 Drag These Pieces</div>
+    <div id="tray" aria-label="Puzzle pieces"></div>
+  </section>
+</div>
+
+<footer id="bottom">
+  <button class="action" id="restartBtn">🔄 Play Again</button>
+  <button class="action" id="soundBtn">🔊 Hear Directions</button>
+  <button class="action" id="menuBtn">🏠 Game Room</button>
+</footer>
+
+<div id="toast" hidden role="status"></div>
+
+<!-- START SCREEN -->
+
+<div class="overlay" id="startScreen">
+  <div class="dialog">
+    <h2>🧩 Book Parts Puzzle Quest!</h2>
+    <p>
+      Use your mouse to put the book-part
+      pictures back together!
+    </p>
+    <p style="font-size:25px">
+      🖱️ Click → Hold → Drag → Let Go!
+    </p>
+    <p>
+      Complete three puzzles to win!
+    </p>
+    <button id="startBtn">▶️ Let's Play!</button>
+    <button id="startMenuBtn">🏠 Game Room</button>
+  </div>
+</div>
+
+<!-- LEVEL COMPLETE -->
+
+<div class="overlay" id="levelScreen" hidden>
+  <div class="dialog">
+    <h2>🌟 Puzzle Complete!</h2>
+    <p id="levelMessage"></p>
+    <button id="nextBtn">➡️ Next Puzzle!</button>
+  </div>
+</div>
+
+<!-- GAME COMPLETE -->
+
+<div class="overlay" id="winScreen" hidden>
+  <div class="dialog">
+    <h2>🎉 Amazing Mouse Skills!</h2>
+    <p>
+      You completed all three book-part puzzles!
+    </p>
+    <p>You're a Puzzle Quest Champion! 🏆</p>
+    <button id="winAgain">🔄 Play Again!</button>
+    <button id="winMenu">🏠 Game Room</button>
+  </div>
+</div>
+
+<!-- TEACHER INFORMATION -->
+
+<div class="overlay" id="teacherPanel" hidden
+     role="dialog" aria-modal="true"
+     aria-labelledby="teacherTitle">
+  <div class="dialog">
+    <h2 id="teacherTitle">📋 Teacher & Standards</h2>
+
+    <section>
+      <h3>Grade</h3>
+      <p>Kindergarten–First Grade</p>
+    </section>
+
+    <section>
+      <h3>Strands</h3>
+      <p>Technology Skills & Information Literacy</p>
+    </section>
+
+    <section>
+      <h3>Skills</h3>
+      <p>
+        Mouse control, click-and-hold, drag-and-drop,
+        visual matching, and recognizing parts of a book.
+      </p>
+    </section>
+
+    <section>
+      <h3>Learning Target</h3>
+      <p>
+        Students will use a mouse or trackpad
+        to move puzzle pieces accurately while
+        identifying familiar parts of a book.
+      </p>
+    </section>
+
+    <section>
+      <h3>⭐ I Can Statement</h3>
+      <p>
+        I can click, hold, and drag puzzle pieces
+        to complete a picture of a book part!
+      </p>
+    </section>
+
+    <section>
+      <h3>AASL Connection</h3>
+      <p>
+        Inquire — building knowledge about books
+        and their organization. Broad instructional
+        connection.
+      </p>
+    </section>
+
+    <section>
+      <h3>ISTE Connection</h3>
+      <p>
+        1.1 Empowered Learner — practicing
+        technology skills through an independent
+        digital activity. Broad instructional connection.
+      </p>
+    </section>
+
+    <section>
+      <h3>Assessment</h3>
+      <p>
+        Observe accurate click-and-hold, dragging,
+        releasing, and successful puzzle placement.
+        Ask students to name the completed book part.
+      </p>
+    </section>
+
+    <section>
+      <h3>Differentiation</h3>
+      <p>
+        Level 1: 4 pieces (2 × 2).<br>
+        Level 2: 6 pieces (3 × 2).<br>
+        Level 3: 9 pieces (3 × 3).<br>
+        No countdown timer.
+      </p>
+    </section>
+
+    <button id="closeTeacher">✕ Close</button>
+  </div>
+</div>
+
+<script>
+
+/* ==========================================
+   SAME KINDERGARTEN BOOK PART IMAGES
+========================================== */
+
+const imageFolder =
+  '../../img/parts-of-a-book-pictures/';
+
+const bookParts = [
+  {name:'Front Cover',file:'front-cover.png'},
+  {name:'Back Cover',file:'back-cover.png'},
+  {name:'Spine',file:'spine.png'},
+  {name:'Title',file:'title.png'},
+  {name:'Author',file:'author.png'},
+  {name:'Illustrator',file:'illustrator.png'},
+  {name:'Illustrations',file:'illustrations.png'},
+  {name:'Publisher',file:'publisher.png'},
+  {name:'Copyright Page',file:'copyright-page.png'},
+  {name:'Table of Contents',file:'table-of-contents.png'}
+];
+
+const levels = [
+  {rows:2,cols:2},
+  {rows:2,cols:3},
+  {rows:3,cols:3}
+];
+
+const board = document.getElementById('board');
+const tray = document.getElementById('tray');
+
+let level = 0;
+let placed = 0;
+let chosenParts = [];
+let currentPart = null;
+let drag = null;
+let gameStarted = false;
+let toastTimer = null;
+
+/* ==========================================
+   SPEECH
+========================================== */
+
+function stopAudio(){
+  if('speechSynthesis' in window){
+    speechSynthesis.cancel();
+  }
+}
+
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  stopAudio();
+
+  const voice = new SpeechSynthesisUtterance(text);
+  voice.lang = 'en-US';
+  voice.rate = 0.85;
+  voice.pitch = 1;
+
+  speechSynthesis.speak(voice);
+}
+
+function directions(){
+  speak(
+    'Click and hold a puzzle piece. ' +
+    'Drag it to the matching space. ' +
+    'Let go of your mouse button to place it.'
+  );
+}
+
+/* ==========================================
+   SHUFFLE
+========================================== */
+
+function shuffle(items){
+  const result = [...items];
+
+  for(let i=result.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [result[i],result[j]]=[result[j],result[i]];
+  }
+
+  return result;
+}
+
+/* ==========================================
+   SMALL FEEDBACK MESSAGE
+========================================== */
+
+function showToast(text){
+  const toast=document.getElementById('toast');
+
+  clearTimeout(toastTimer);
+
+  toast.textContent=text;
+  toast.hidden=false;
+
+  toastTimer=setTimeout(()=>{
+    toast.hidden=true;
+  },1100);
+}
+
+/* ==========================================
+   PUZZLE PIECE IMAGE SLICES
+========================================== */
+
+function applySlice(element,index,rows,cols,image){
+  const row=Math.floor(index/cols);
+  const col=index%cols;
+
+  element.style.backgroundImage=`url("${image}")`;
+  element.style.backgroundSize=
+    `${cols*100}% ${rows*100}%`;
+
+  element.style.backgroundPosition=
+    `${cols===1?0:col/(cols-1)*100}% `+
+    `${rows===1?0:row/(rows-1)*100}%`;
+}
+
+/* ==========================================
+   START GAME
+========================================== */
+
+function startGame(){
+  gameStarted=true;
+  level=0;
+
+  chosenParts=shuffle(bookParts).slice(0,3);
+
+  document.getElementById('startScreen').hidden=true;
+  document.getElementById('winScreen').hidden=true;
+
+  startLevel();
+}
+
+/* ==========================================
+   CREATE EACH LEVEL
+========================================== */
+
+function startLevel(){
+  stopAudio();
+  cancelDrag();
+
+  placed=0;
+  currentPart=chosenParts[level];
+
+  const config=levels[level];
+  const total=config.rows*config.cols;
+  const image=imageFolder+currentPart.file;
+
+  document.getElementById('levelScreen').hidden=true;
+
+  document.getElementById('levelLabel').textContent=
+    `⭐ Level ${level+1} of 3`;
+
+  document.getElementById('partLabel').textContent=
+    `📖 ${currentPart.name}`;
+
+  updateProgress(total);
+
+  board.innerHTML='';
+  tray.innerHTML='';
+
+  for(const area of [board,tray]){
+    area.style.gridTemplateColumns=
+      `repeat(${config.cols},minmax(0,1fr))`;
+
+    area.style.gridTemplateRows=
+      `repeat(${config.rows},minmax(0,1fr))`;
+  }
+
+  /* Create matching spaces on board */
+
+  for(let i=0;i<total;i++){
+    const slot=document.createElement('div');
+
+    slot.className='slot';
+    slot.dataset.index=i;
+
+    board.appendChild(slot);
+  }
+
+  /* Create shuffled draggable pieces */
+
+  const order=shuffle(
+    Array.from({length:total},(_,i)=>i)
+  );
+
+  for(const index of order){
+    const cell=document.createElement('div');
+    cell.className='trayCell';
+
+    const piece=document.createElement('div');
+    piece.className='piece';
+    piece.dataset.index=index;
+
+    applySlice(
+      piece,index,
+      config.rows,config.cols,image
+    );
+
+    piece.addEventListener(
+      'pointerdown',beginDrag
+    );
+
+    cell.appendChild(piece);
+    tray.appendChild(cell);
+  }
+
+  speak(
+    'Level '+(level+1)+'. '+currentPart.name+
+    '. Drag the puzzle pieces to make the picture.'
+  );
+}
+
+function updateProgress(total){
+  document.getElementById('progressLabel').textContent=
+    `🧩 ${placed} / ${total}`;
+}
+
+/* ==========================================
+   POINTER-BASED DRAG AND DROP
+
+   Works with mouse and Chromebook trackpads.
+========================================== */
+
+function beginDrag(event){
+  if(!gameStarted || drag) return;
+
+  if(event.pointerType==='mouse' && event.button!==0){
+    return;
+  }
+
+  event.preventDefault();
+
+  const piece=event.currentTarget;
+  const rect=piece.getBoundingClientRect();
+
+  const ghost=piece.cloneNode(true);
+
+  ghost.className='dragGhost';
+
+  ghost.style.width=rect.width+'px';
+  ghost.style.height=rect.height+'px';
+  ghost.style.left=rect.left+'px';
+  ghost.style.top=rect.top+'px';
+
+  document.body.appendChild(ghost);
+
+  drag={
+    piece,
+    ghost,
+    pointerId:event.pointerId,
+    offsetX:event.clientX-rect.left,
+    offsetY:event.clientY-rect.top
+  };
+
+  piece.classList.add('draggingSource');
+
+  document.addEventListener('pointermove',moveDrag);
+  document.addEventListener('pointerup',endDrag);
+  document.addEventListener('pointercancel',cancelDrag);
+}
+
+function moveDrag(event){
+  if(!drag || event.pointerId!==drag.pointerId){
+    return;
+  }
+
+  event.preventDefault();
+
+  drag.ghost.style.left=
+    (event.clientX-drag.offsetX)+'px';
+
+  drag.ghost.style.top=
+    (event.clientY-drag.offsetY)+'px';
+
+  document.querySelectorAll('.slot').forEach(slot=>{
+    slot.classList.remove('target');
+  });
+
+  const slot=slotAt(event.clientX,event.clientY);
+
+  if(slot && !slot.classList.contains('correct')){
+    slot.classList.add('target');
+  }
+}
+
+function slotAt(x,y){
+  for(const slot of board.querySelectorAll('.slot')){
+    const r=slot.getBoundingClientRect();
+
+    if(x>=r.left && x<=r.right &&
+       y>=r.top && y<=r.bottom){
+      return slot;
+    }
+  }
+
+  return null;
+}
+
+function endDrag(event){
+  if(!drag || event.pointerId!==drag.pointerId){
+    return;
+  }
+
+  const piece=drag.piece;
+  const index=piece.dataset.index;
+  const slot=slotAt(event.clientX,event.clientY);
+
+  cancelDrag();
+
+  if(
+    slot &&
+    !slot.classList.contains('correct') &&
+    slot.dataset.index===index
+  ){
+    placePiece(piece,slot);
+  }else{
+    showToast('🧩 Try another spot!');
+  }
+}
+
+function cancelDrag(){
+  if(drag){
+    drag.piece.classList.remove('draggingSource');
+    drag.ghost.remove();
+    drag=null;
+  }
+
+  document.removeEventListener('pointermove',moveDrag);
+  document.removeEventListener('pointerup',endDrag);
+  document.removeEventListener('pointercancel',cancelDrag);
+
+  document.querySelectorAll('.slot').forEach(slot=>{
+    slot.classList.remove('target');
+  });
+}
+
+/* ==========================================
+   CORRECT PIECE PLACEMENT
+========================================== */
+
+function placePiece(piece,slot){
+  piece.removeEventListener('pointerdown',beginDrag);
+
+  piece.classList.add('placed');
+
+  slot.classList.add('correct');
+  slot.appendChild(piece);
+
+  placed++;
+
+  const config=levels[level];
+  const total=config.rows*config.cols;
+
+  updateProgress(total);
+  showToast('⭐ Great job!');
+
+  if(placed===total){
+    finishLevel();
+  }
+}
+
+/* ==========================================
+   LEVEL COMPLETE
+========================================== */
+
+function finishLevel(){
+  stopAudio();
+
+  speak(
+    'Great job! You completed the '+
+    currentPart.name+' puzzle!'
+  );
+
+  if(level<2){
+    document.getElementById('levelMessage').textContent=
+      'You put together the '+currentPart.name+
+      '! Ready for a harder puzzle?';
+
+    document.getElementById('levelScreen').hidden=false;
+  }else{
+    document.getElementById('winScreen').hidden=false;
+  }
+}
+
+function nextLevel(){
+  level++;
+  startLevel();
+}
+
+/* ==========================================
+   RESTART AND GAME ROOM
+========================================== */
+
+function restartGame(){
+  stopAudio();
+  cancelDrag();
+
+  document.getElementById('levelScreen').hidden=true;
+  document.getElementById('winScreen').hidden=true;
+  document.getElementById('startScreen').hidden=false;
+
+  gameStarted=false;
+  board.innerHTML='';
+  tray.innerHTML='';
+}
+
+function goToGameRoom(){
+  stopAudio();
+
+  window.location.href=
+    '../kinder-first-second-game-index.html';
+}
+
+/* ==========================================
+   TEACHER PANEL
+========================================== */
+
+const teacherPanel=
+  document.getElementById('teacherPanel');
+
+const teacherBtn=
+  document.getElementById('teacherBtn');
+
+teacherBtn.onclick=()=>{
+  teacherPanel.hidden=false;
+  document.getElementById('closeTeacher').focus();
+};
+
+function closeTeacher(){
+  teacherPanel.hidden=true;
+  teacherBtn.focus();
+}
+
+document.getElementById('closeTeacher').onclick=
+  closeTeacher;
+
+teacherPanel.addEventListener('click',event=>{
+  if(event.target===teacherPanel){
+    closeTeacher();
+  }
+});
+
+document.addEventListener('keydown',event=>{
+  if(event.key==='Escape' && !teacherPanel.hidden){
+    closeTeacher();
+  }
+});
+
+/* ==========================================
+   BUTTONS
+========================================== */
+
+document.getElementById('startBtn').onclick=startGame;
+document.getElementById('startMenuBtn').onclick=goToGameRoom;
+document.getElementById('nextBtn').onclick=nextLevel;
+document.getElementById('restartBtn').onclick=restartGame;
+document.getElementById('menuBtn').onclick=goToGameRoom;
+document.getElementById('soundBtn').onclick=directions;
+document.getElementById('winAgain').onclick=restartGame;
+document.getElementById('winMenu').onclick=goToGameRoom;
+
+</script>
+</body>
+</html>

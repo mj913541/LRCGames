@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Choose a grade level or staff area in LRC Quest.">
+  <title>LB LRC</title>
+
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%235b3aa4'/%3E%3Cpath d='M16 17c7-3 13-2 16 2 3-4 9-5 16-2v31c-7-3-13-2-16 2-3-4-9-5-16-2z' fill='white'/%3E%3Cpath d='M32 19v31' stroke='%235b3aa4' stroke-width='3'/%3E%3C/svg%3E"
+  >
+
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: "Trebuchet MS", "Avenir Next", system-ui, sans-serif;
+      --ink: #243049;
+      --shadow:
+        0 10px 0 rgba(36, 48, 73, 0.14),
+        0 16px 28px rgba(36, 48, 73, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100svh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: clamp(1rem, 4vw, 3rem);
+      color: var(--ink);
+      background:
+        radial-gradient(
+          circle at 12% 16%,
+          rgba(255, 210, 58, 0.22),
+          transparent 22rem
+        ),
+        radial-gradient(
+          circle at 88% 82%,
+          rgba(65, 133, 219, 0.20),
+          transparent 24rem
+        ),
+        linear-gradient(145deg, #fffdf7, #eef8ff);
+    }
+
+    main {
+      width: min(100%, 900px);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.35rem, 7vw, 4.8rem);
+      line-height: 1;
+      letter-spacing: -0.055em;
+      color: #493082;
+      text-shadow: 0 3px 0 #ffffff;
+    }
+
+    p {
+      margin: 0.8rem 0 clamp(1.6rem, 5vw, 3rem);
+      font-size: clamp(1.05rem, 2.7vw, 1.4rem);
+      font-weight: 700;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(110px, 1fr));
+      gap: clamp(1rem, 2.4vw, 1.6rem);
+      justify-items: center;
+      align-items: center;
+    }
+
+    .choice {
+      width: min(100%, 165px);
+      aspect-ratio: 1 / 1;
+      border: 4px solid rgba(255, 255, 255, 0.82);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      padding: 0.75rem;
+      color: #ffffff;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 900;
+      line-height: 1;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        filter 180ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .choice:hover {
+      transform: scale(1.09);
+      filter: saturate(1.08) brightness(1.04);
+      box-shadow:
+        0 13px 0 rgba(36, 48, 73, 0.13),
+        0 23px 34px rgba(36, 48, 73, 0.18);
+      z-index: 1;
+    }
+
+    .choice:active {
+      transform: scale(1.03);
+    }
+
+    .choice:focus-visible {
+      outline: 5px solid #17233b;
+      outline-offset: 5px;
+    }
+
+    .kindergarten {
+      background: #dc3545;
+    }
+
+    .first {
+      background: #ffd43b;
+      color: #453500;
+    }
+
+    .second {
+      background: #f28c28;
+      color: #342000;
+    }
+
+    .third {
+      background: #2878c8;
+    }
+
+    .fourth {
+      background: #7651b8;
+    }
+
+    .fifth {
+      background: #2c9348;
+    }
+
+    .staff {
+      background: #3f4652;
+    }
+
+    @media (max-width: 680px) {
+      body {
+        align-items: start;
+      }
+
+      .choices {
+        grid-template-columns: repeat(2, minmax(110px, 1fr));
+      }
+
+      .choice {
+        width: min(100%, 145px);
+      }
+
+      .staff {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 350px) {
+      .choices {
+        grid-template-columns: 1fr;
+      }
+
+      .staff {
+        grid-column: auto;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .choice {
+        transition: none;
+      }
+
+      .choice:hover {
+        transform: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>LRC Quest</h1>
+    <p>Choose your grade level or staff.</p>
+
+    <nav class="choices" aria-label="LRC Quest areas">
+      <a
+        class="choice kindergarten"
+        href="./skill-worlds/game-index.html"
+        aria-label="Go to Kindergarten"
+      >
+        K
+      </a>
+
+      <a
+        class="choice first"
+        href="./skill-worlds/123WOCpage.html"
+        aria-label="Go to First Grade"
+      >
+        1st
+      </a>
+
+      <a
+        class="choice second"
+        href="./skill-worlds/123WOCpage.html"
+        aria-label="Go to Second Grade"
+      >
+        2nd
+      </a>
+
+      <a
+        class="choice third"
+        href="https://classroom.google.com/c/Nzc0MjExNzg1NzY2?cjc=pcezbegg"
+        aria-label="Go to Third Grade"
+      >
+        3rd
+      </a>
+
+      <a
+        class="choice fourth"
+        href="https://classroom.google.com/c/Nzc0MjExNzg1NzY2?cjc=pcezbegg"
+        aria-label="Go to Fourth Grade"
+      >
+        4th
+      </a>
+
+      <a
+        class="choice fifth"
+        href="https://classroom.google.com/c/Nzc0MjExNzg1NzY2?cjc=pcezbegg"
+        aria-label="Go to Fifth Grade"
+      >
+        5th
+      </a>
+
+      <a
+        class="choice staff"
+        href="staff.html"
+        aria-label="Go to Staff Area"
+      >
+        Staff
+      </a>
+    </nav>
+  </main>
+</body>
+</html>

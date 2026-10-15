@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRC Quest | Game Arcade</title>
+<style>
+:root{--ink:#382c63;--purple:#7150c6;--paper:#fff;--shadow:0 9px 25px #382c6320}*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Trebuchet MS,Arial,sans-serif;color:var(--ink)}body{background:radial-gradient(circle at 15% 10%,#fff8d7,transparent 30%),radial-gradient(circle at 85% 25%,#e1f4ff,transparent 35%),#f4efff}.shell{max-width:1160px;margin:auto;padding:18px 20px 35px}.hero{text-align:center;background:#fff;border:4px solid #e3d7ff;border-radius:26px;padding:14px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}.hero:before,.hero:after{content:'✦';position:absolute;font-size:38px;color:#f4b73c;animation:twinkle 2s ease-in-out infinite alternate}.hero:before{left:5%;top:12%}.hero:after{right:6%;bottom:6%;animation-delay:1s}.hero h1{font-size:clamp(25px,4.4vw,45px);margin:0;color:#6342b4}.hero p{margin:4px 0;font-size:clamp(13px,1.7vw,18px)}.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:14px 0}.toolbar h2{font-size:clamp(19px,2.8vw,27px);margin:0}.nav{border:0;border-radius:15px;padding:11px 16px;font-weight:900;font-size:16px;background:#e6dbff;color:#4f328f;cursor:pointer}.nav[hidden],section[hidden]{display:none!important}.topics,.games{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.topic{position:relative;min-height:165px;border:4px solid #fff;border-radius:24px;padding:18px 12px;box-shadow:var(--shadow);color:var(--ink);cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;transition:transform .2s,box-shadow .2s;animation:pop .4s both}.topic:hover,.topic:focus-visible,.game:hover,.game:focus-within{transform:translateY(-6px) rotate(-1deg);box-shadow:0 15px 25px #382c6330}.topic .emoji{font-size:clamp(36px,5vw,57px);animation:float 3s ease-in-out infinite}.topic strong{font-size:clamp(16px,2.1vw,23px)}.topic small{font-size:13px}.topic .count{position:absolute;right:10px;top:10px;border-radius:20px;background:#fff9;padding:5px 9px;font-size:12px;font-weight:bold}.game{background:white;border:3px solid #e5dbff;border-radius:23px;padding:12px;box-shadow:var(--shadow);transition:transform .2s,box-shadow .2s;animation:pop .35s both;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}.game .art{height:105px;width:100%;display:grid;place-items:center;background:linear-gradient(145deg,#f4edff,#e8f7ff);border-radius:14px;overflow:hidden}.game .art img{max-width:100%;max-height:100%;object-fit:contain}.game .art .fallback{font-size:60px}.game h3{font-size:18px;margin:3px 0}.game p{margin:0;font-size:13px;flex:1}.tags{font-size:11px;color:#66518d}.play{display:block;background:#6b4dc3;color:white;text-decoration:none;padding:10px 18px;border-radius:12px;font-weight:900;min-width:65%;margin-top:5px}.play:hover,.play:focus-visible{background:#4c3199}.note{text-align:center;font-size:12px;margin:16px 0;color:#695b85}.empty{padding:40px;text-align:center;background:white;border-radius:20px}/* Each opened game floats gently, at a different pace. */
+.game{animation:pop .45s both,gameHover 3.4s ease-in-out infinite;animation-delay:var(--enter-delay,0ms),calc(var(--enter-delay,0ms) + 450ms);will-change:transform}
+.game:nth-child(3n+2){animation-duration:.45s,4.1s}
+.game:nth-child(3n){animation-duration:.45s,3.7s}
+.game:hover,.game:focus-within{animation-play-state:paused;transform:translateY(-10px) scale(1.035) rotate(-1deg);box-shadow:0 19px 32px #382c6340;z-index:2}
+.game .art .fallback{animation:float 3s ease-in-out infinite}
+@keyframes gameHover{0%,100%{transform:translateY(0) rotate(-.5deg)}50%{transform:translateY(-9px) rotate(.6deg)}}
+@keyframes float{50%{transform:translateY(-6px) rotate(3deg)}}@keyframes twinkle{to{transform:scale(1.3);opacity:.4}}@keyframes pop{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}@media(max-width:720px){.topics,.games{grid-template-columns:repeat(2,minmax(0,1fr))}.shell{padding:10px}.topic{min-height:145px}.game .art{height:85px}}@media(max-width:430px){.topics,.games{gap:9px}.topic{padding:12px 7px;min-height:130px}.topic small{font-size:11px}.game{padding:8px}.game h3{font-size:15px}.play{font-size:13px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Topic subgroups: compact, floating game cards in ordered rows */
+#gameView.games{display:flex;flex-direction:column;gap:19px}
+.subgroup{background:#ffffffbd;border:2px solid #e8dfff;border-radius:22px;padding:13px 15px 18px;min-width:0}
+.subgroup h3{margin:0 0 12px;color:#55378f;font-size:clamp(17px,2.2vw,22px)}
+.subgroup .group-note{font-size:12px;color:#75658e;margin:-6px 0 13px}
+.game-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;align-items:stretch;padding:4px 3px 12px}
+.game-row .game{min-width:0;padding:9px;gap:5px;border-radius:17px}
+.game-row .game .art{height:70px;border-radius:10px}
+.game-row .game .art .fallback{font-size:39px}
+.game-row .game h4{font-size:clamp(13px,1.5vw,16px);line-height:1.25;margin:2px 0}
+.game-row .game p{font-size:11px;line-height:1.35}
+.game-row .play{font-size:13px;padding:8px 12px;margin-top:3px;min-width:75%}
+.level-tag{font-size:11px;font-weight:900;color:#5a409b;background:#ede5ff;padding:4px 9px;border-radius:20px}
+@media(max-width:760px){.game-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}}
+@media(max-width:520px){.game-row{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.subgroup{padding:11px}.game-row .game .art{height:60px}}
+</style>
+</head>
+<body><main class="shell"><header class="hero"><h1>🎮 LRC QUEST ARCADE 📚</h1><p>Choose a world. Pick a game. Level up your skills!</p></header>
+<div class="toolbar"><h2 id="heading">🌈 Choose a Topic!</h2><button class="nav" id="allTopics" hidden>🏠 All Topics</button></div>
+<section id="topicView" class="topics" aria-label="Game topics"></section><section id="gameView" class="games" aria-label="Games" hidden></section>
+<p class="note">💜 Made for curious readers, thinkers, and digital explorers!</p></main>
+<script>
+/* ADD TOPICS HERE. A game can belong to several topics. */
+const topics=[
+ {id:'book-parts',name:'Parts of a Book',emoji:'📚',desc:'Explore the pieces of a book',color:'#e8dfff'},
+ {id:'mouse',name:'Mouse Skills',emoji:'🖱️',desc:'Click, move, drag & drop',color:'#d8eeff'},
+ {id:'keyboard',name:'Keyboard Skills',emoji:'⌨️',desc:'Letters, keys & typing',color:'#dff5e5'},
+ {id:'book-care',name:'Book Care',emoji:'❤️',desc:'Be a book superhero',color:'#ffe3ed'},
+ {id:'research',name:'Research Skills',emoji:'🔎',desc:'Discover facts & information',color:'#fff1c9'},
+ {id:'digital',name:'Digital Citizenship',emoji:'🛡️',desc:'Be safe, smart & kind',color:'#ffe7d3'}
+];
+/* ADD NEW GAMES HERE. Change the paths if your HTML files are in different folders.
+   Existing thumbnails from your original page are reused when available.
+   New games have emoji art until you add a thumbnail image. */
+const games=[
+ {group:'mouse',level:4,title:'Book Parts Catch',desc:'Listen and click the falling book part!',href:'../skill-worlds/parts-of-a-book_falling.html',emoji:'🎯',topics:['book-parts','mouse']},
+ {group:'matching',level:0,title:'Book Parts Matching — Level 0',desc:'Find matching book-part pictures!',href:'../skill-worlds/parts-of-a-book_L0_matching.html',emoji:'🃏',topics:['book-parts','mouse']},
+ {group:'matching',level:1,title:'Book Parts Matching — Level 1A',desc:'Build your memory and recognize book parts!',href:'../skill-worlds/parts-of-a-book_L1a_matching.html',emoji:'📖',topics:['book-parts','mouse']},
+ {group:'matching',level:2,title:'Book Parts & Their Jobs — Level 1B',desc:'Match each book part with what it does!',href:'../skill-worlds/parts-of-a-book_L1b_matching.html',emoji:'🧠',topics:['book-parts','mouse']},
+ {group:'mouse',level:3,title:'Book Parts Puzzle Quest',desc:'Click, hold, drag and drop the puzzle pieces!',href:'../skill-worlds/parts-of-a-book_mouse-game-4-puzzle.html',emoji:'🧩',topics:['book-parts','mouse']},
+ // Other games from your earlier arcade. Keep these only if the files exist at these paths.
+ {group:'adventure',level:5,title:'Book Parts Adventure',desc:'Explore the parts of a book!',href:'../skill-worlds/book-parts-adventure.html',img:'../img/picturesForLinks/book-parts-adventure.png',emoji:'📖',topics:['book-parts']},
+ {group:'adventure',level:6,title:'Book Parts Bonanza',desc:'Practice book-part vocabulary!',href:'../skill-worlds/book-parts-bonanza.html',img:'../img/picturesForLinks/book-parts-bonanza.png',emoji:'🌟',topics:['book-parts']},
+ {group:'matching',title:'Book Care Matching',desc:'Match ways to care for books!',href:'../skill-worlds/book-care-matching.html',img:'../img/picturesForLinks/book-care-matching.png',emoji:'❤️',topics:['book-care']},
+ {group:'practice',title:'Home Row Practice',desc:'Find keys on the keyboard!',href:'../skill-worlds/keyboard_home-row-keys-focus.html',emoji:'⌨️',topics:['keyboard']}
+];
+const topicView=document.getElementById('topicView'),gameView=document.getElementById('gameView'),heading=document.getElementById('heading'),allTopics=document.getElementById('allTopics');
+function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node}
+function showTopics(){topicView.hidden=false;gameView.hidden=true;allTopics.hidden=true;heading.textContent='🌈 Choose a Topic!';history.replaceState(null,'',location.pathname+location.search);}
+const groupInfo={
+ matching:{name:'🃏 Matching Games',note:'Start with Level 0, then move up!'},
+ mouse:{name:'🖱️ Mouse Skill Games',note:'Practice dragging, aiming, and clicking.'},
+ adventure:{name:'📖 Book Parts Adventures',note:'Explore and practice book vocabulary.'},
+ practice:{name:'⌨️ Practice Games',note:'Build your skills!'},
+ other:{name:'🎮 More Games',note:'More ways to learn and play!'}
+};
+function makeCard(g,i){
+ const card=el('article','game');card.style.setProperty('--enter-delay',(i*85)+'ms');
+ const art=el('div','art');
+ if(g.img){const img=document.createElement('img');img.src=g.img;img.alt='';img.loading='lazy';img.onerror=()=>art.replaceChildren(el('span','fallback',g.emoji||'🎮'));art.append(img)}
+ else art.append(el('span','fallback',g.emoji||'🎮'));
+ card.append(art);
+ if(g.group==='matching' && g.level!==undefined){card.append(el('span','level-tag',g.level===0?'LEVEL 0':g.level===1?'LEVEL 1A':g.level===2?'LEVEL 1B':'LEVEL '+g.level));}
+ card.append(el('h4','',g.title),el('p','',g.desc));
+ const link=el('a','play','▶ PLAY!');link.href=g.href;card.append(link);
+ return card;
+}
+function showTopic(id,updateHash=true){
+ const topic=topics.find(t=>t.id===id);if(!topic)return showTopics();
+ heading.textContent=topic.emoji+' '+topic.name;
+ topicView.hidden=true;gameView.hidden=false;allTopics.hidden=false;gameView.replaceChildren();
+ const matches=games.filter(g=>g.topics.includes(id));
+ if(!matches.length){gameView.append(el('div','empty','🚧 New games are coming soon!'));}
+ const order=['matching','mouse','adventure','practice','other'];
+ const groups=[...new Set(matches.map(g=>g.group||'other'))].sort((a,b)=>order.indexOf(a)-order.indexOf(b));
+ let cardIndex=0;
+ groups.forEach(group=>{
+  const info=groupInfo[group]||groupInfo.other;
+  const section=el('section','subgroup');
+  section.append(el('h3','',info.name),el('p','group-note',info.note));
+  const row=el('div','game-row');
+  matches.filter(g=>(g.group||'other')===group)
+   .sort((a,b)=>(a.level??99)-(b.level??99))
+   .forEach(g=>row.append(makeCard(g,cardIndex++)));
+  section.append(row);gameView.append(section);
+ });
+ if(updateHash)history.replaceState(null,'','#'+id);
+}
+
+topics.forEach((t,i)=>{const button=el('button','topic');button.type='button';button.style.background=t.color;button.style.animationDelay=(i*65)+'ms';button.append(el('span','count',games.filter(g=>g.topics.includes(t.id)).length+' games'),el('span','emoji',t.emoji),el('strong','',t.name),el('small','',t.desc));button.addEventListener('click',()=>showTopic(t.id));topicView.append(button)});allTopics.addEventListener('click',showTopics);const initial=decodeURIComponent(location.hash.slice(1));if(initial&&topics.some(t=>t.id===initial))showTopic(initial,false);else showTopics();window.addEventListener('hashchange',()=>{const id=decodeURIComponent(location.hash.slice(1));if(id)showTopic(id,false);else showTopics()});
+</script></body></html>
