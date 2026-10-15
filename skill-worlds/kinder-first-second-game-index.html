@@ -31,7 +31,22 @@
 </style>
 </head>
 <body><main class="shell"><header class="hero"><h1>🎮 LRC QUEST ARCADE 📚</h1><p>Choose a world. Pick a game. Level up your skills!</p></header>
-<div class="toolbar"><h2 id="heading">🌈 Choose a Topic!</h2><button class="nav" id="allTopics" hidden>🏠 All Topics</button></div>
+
+<div class="toolbar">
+  <h2 id="heading">🌈 Choose a Topic!</h2>
+
+  <div class="toolbar-buttons">
+    <button class="nav" id="allTopics" hidden>
+      🏠 All Topics
+    </button>
+
+    <a class="nav main-home" href="https://lrcquest.org/">
+      🏡 Return to Main Page
+    </a>
+  </div>
+</div>
+
+
 <section id="topicView" class="topics" aria-label="Game topics"></section><section id="gameView" class="games" aria-label="Games" hidden></section>
 <p class="note">💜 Made for curious readers, thinkers, and digital explorers!</p></main>
 <script>
@@ -48,17 +63,22 @@ const topics=[
    Existing thumbnails from your original page are reused when available.
    New games have emoji art until you add a thumbnail image. */
 const games=[
- {group:'mouse',level:4,title:'Book Parts Catch',desc:'Listen and click the falling book part!',href:'../skill-worlds/parts-of-a-book_falling.html',emoji:'🎯',topics:['book-parts','mouse']},
- {group:'matching',level:0,title:'Book Parts Matching — Level 0',desc:'Find matching book-part pictures!',href:'../skill-worlds/parts-of-a-book_L0_matching.html',emoji:'🃏',topics:['book-parts','mouse']},
- {group:'matching',level:1,title:'Book Parts Matching — Level 1A',desc:'Build your memory and recognize book parts!',href:'../skill-worlds/parts-of-a-book_L1a_matching.html',emoji:'📖',topics:['book-parts','mouse']},
- {group:'matching',level:2,title:'Book Parts & Their Jobs — Level 1B',desc:'Match each book part with what it does!',href:'../skill-worlds/parts-of-a-book_L1b_matching.html',emoji:'🧠',topics:['book-parts','mouse']},
- {group:'mouse',level:3,title:'Book Parts Puzzle Quest',desc:'Click, hold, drag and drop the puzzle pieces!',href:'../skill-worlds/parts-of-a-book_mouse-game-4-puzzle.html',emoji:'🧩',topics:['book-parts','mouse']},
- // Other games from your earlier arcade. Keep these only if the files exist at these paths.
- {group:'adventure',level:5,title:'Book Parts Adventure',desc:'Explore the parts of a book!',href:'../skill-worlds/book-parts-adventure.html',img:'../img/picturesForLinks/book-parts-adventure.png',emoji:'📖',topics:['book-parts']},
- {group:'adventure',level:6,title:'Book Parts Bonanza',desc:'Practice book-part vocabulary!',href:'../skill-worlds/book-parts-bonanza.html',img:'../img/picturesForLinks/book-parts-bonanza.png',emoji:'🌟',topics:['book-parts']},
- {group:'matching',title:'Book Care Matching',desc:'Match ways to care for books!',href:'../skill-worlds/book-care-matching.html',img:'../img/picturesForLinks/book-care-matching.png',emoji:'❤️',topics:['book-care']},
- {group:'practice',title:'Home Row Practice',desc:'Find keys on the keyboard!',href:'../skill-worlds/keyboard_home-row-keys-focus.html',emoji:'⌨️',topics:['keyboard']}
+ {group:'mouse',level:4,title:'Book Parts Catch',desc:'Listen and click the falling book part!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_falling.html',emoji:'🎯',topics:['book-parts','mouse']},
+ {group:'matching',level:0,title:'Book Parts Matching — Level 0',desc:'Find matching book-part pictures!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_L0_matching.html',emoji:'🃏',topics:['book-parts','mouse']},
+ {group:'matching',level:1,title:'Book Parts Matching — Level 1A',desc:'Build your memory and recognize book parts!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_L1a_matching.html',emoji:'📖',topics:['book-parts','mouse']},
+ {group:'matching',level:2,title:'Book Parts & Their Jobs — Level 1B',desc:'Match each book part with what it does!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_L1b_matching.html',emoji:'🧠',topics:['book-parts','mouse']},
+ {group:'mouse',level:3,title:'Book Parts Puzzle Quest',desc:'Click, hold, drag and drop the puzzle pieces!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_mouse-game-4-puzzle.html',emoji:'🧩',topics:['book-parts','mouse']},
+ {group:'adventure',level:5,title:'Book Parts Adventure',desc:'Explore the parts of a book!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_adventure.html',img:'../img/picturesForLinks/book-parts-adventure.png',emoji:'📖',topics:['book-parts']},
+ {group:'adventure',level:6,title:'Book Parts Bonanza',desc:'Practice book-part vocabulary!',href:'../skill-worlds/parts-of-a-book/parts-of-a-book_bonanza.html',img:'../img/picturesForLinks/book-parts-bonanza.png',emoji:'🌟',topics:['book-parts']},
+ {group:'matching',title:'Book Care Matching',desc:'Match ways to care for books!',href:'../skill-worlds/book-care_matching.html',img:'../img/picturesForLinks/book-care-matching.png',emoji:'❤️',topics:['book-care']},
+ {group:'practice',title:'Home Row Practice',desc:'Find keys on the keyboard!',href:'../skill-worlds/keyboard-typing/keyboard_home-row-keys-focus.html',emoji:'⌨️',topics:['keyboard']}
 ];
+
+
+
+
+
+
 const topicView=document.getElementById('topicView'),gameView=document.getElementById('gameView'),heading=document.getElementById('heading'),allTopics=document.getElementById('allTopics');
 function el(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node}
 function showTopics(){topicView.hidden=false;gameView.hidden=true;allTopics.hidden=true;heading.textContent='🌈 Choose a Topic!';history.replaceState(null,'',location.pathname+location.search);}

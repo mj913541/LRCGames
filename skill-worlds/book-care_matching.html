@@ -1,265 +1,889 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Matching Game</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Care Matching | LRC Quest</title>
 
-        #game-board {
-            display: grid;
-            grid-template-columns: repeat(4, 200px);
-            grid-gap: 10px;
-        }
+<style>
+* {
+  box-sizing: border-box;
+}
 
-        .card {
-            width: auto;
-            height: 150px;
-            perspective: 1000px;
-        }
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  font-family: "Trebuchet MS", Arial, sans-serif;
+}
 
-        .card-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-        }
+body {
+  background: linear-gradient(135deg, #f8f1ff, #e6ddff);
+  color: #49316d;
+  overflow: hidden;
+}
 
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
+.game-page {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px;
+}
 
-        .card-back img {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            width: 100%;      /* Make the image take up the full width of the card */
-            height: 100%;     /* Make the image take up the full height of the card */
-            object-fit: fill; /* Ensure the image covers the entire card without distortion */
-            border-radius: 5px; /* Optional: add rounded corners to match the card */
-        }
-        .card-front, .card-back {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            backface-visibility: hidden;
-        }
+/* ========================================
+   TOP NAVIGATION
+======================================== */
 
-        .card-front {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-        }
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-shrink: 0;
+}
 
-        .card-back {
-            transform: rotateY(180deg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 24px;
-            color: white;
-        }
+.nav-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #a98ad5;
+  border-radius: 14px;
+  box-shadow: 0 3px 0 #c7b1e3;
+  color: #593780;
+  font: bold 15px "Trebuchet MS", Arial, sans-serif;
+  cursor: pointer;
+}
 
-        img {
-            pointer-events: none; /* Make it to where the img can't be draggable */
-        }
+.nav-button:hover,
+.action-button:hover {
+  transform: translateY(-2px);
+  filter: brightness(.97);
+}
 
-        button {
-            margin-top: 20px;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
+button:focus-visible,
+a:focus-visible,
+.card:focus-visible {
+  outline: 4px solid #f1bd43;
+  outline-offset: 3px;
+}
 
-        #flip-count {
-            margin-top: 10px;
-            font-size: 18px;
-        }
-        .sound-button {
-            background-color: #1f1d1d;
-            border: none;
-            border-radius: 50%;
-            padding: 10px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 20px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 5px;
-            vertical-align: middle; /* Adjust the alignment to match text */
-        }
-        .sound-button:focus {
-            outline: none;
-        }
+/* ========================================
+   GAME HEADER
+======================================== */
 
-    </style>
+.game-header {
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.game-header h1 {
+  margin: 0 0 5px;
+  font-size: clamp(22px, 3vw, 34px);
+}
+
+.instructions {
+  margin: 0;
+  font-size: clamp(13px, 1.6vw, 18px);
+  font-weight: bold;
+}
+
+.sound-button {
+  width: 38px;
+  height: 38px;
+  margin-right: 7px;
+  border: 0;
+  border-radius: 50%;
+  background: #65438e;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* ========================================
+   GAME BOARD
+======================================== */
+
+.game-area {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#game-board {
+  width: min(100%, 830px);
+  height: min(100%, 510px);
+  min-height: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: clamp(5px, 1vh, 10px);
+}
+
+/* ========================================
+   MATCHING CARDS
+======================================== */
+
+.card {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  perspective: 1000px;
+  cursor: pointer;
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform .6s;
+}
+
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  backface-visibility: hidden;
+  border: 2px solid #c5b3e2;
+  border-radius: 10px;
+  overflow: hidden;
+  background: white;
+}
+
+.card-front {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: clamp(26px, 4vw, 48px);
+  font-weight: 900;
+  color: #8a67bd;
+  background: linear-gradient(145deg, white, #f0e5ff);
+}
+
+.card-back {
+  transform: rotateY(180deg);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-back img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  pointer-events: none;
+}
+
+img {
+  pointer-events: none;
+}
+
+/* ========================================
+   BOTTOM CONTROLS
+======================================== */
+
+.bottom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#flip-count {
+  margin: 0;
+  padding: 10px 16px;
+  background: white;
+  border: 2px solid #d4c0eb;
+  border-radius: 14px;
+  font-size: 17px;
+  font-weight: 900;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  background: #7350a5;
+  border: 2px solid #7851aa;
+  border-radius: 14px;
+  color: white;
+  font: bold 15px "Trebuchet MS", Arial, sans-serif;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ========================================
+   TEACHER INFO MODAL
+======================================== */
+
+dialog {
+  width: min(92vw, 620px);
+  max-height: 86dvh;
+  overflow-y: auto;
+  padding: 25px;
+  border: 3px solid #ab8bd9;
+  border-radius: 22px;
+  background: #fffafc;
+  color: #49316d;
+  box-shadow: 0 15px 45px #35214b55;
+}
+
+dialog::backdrop {
+  background: #241338aa;
+}
+
+dialog h2 {
+  margin: 0 0 16px;
+  color: #65438e;
+  font-size: 24px;
+}
+
+.info-section {
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5d8f1;
+}
+
+.info-section h3 {
+  margin: 0 0 6px;
+  color: #65438e;
+  font-size: 16px;
+}
+
+.info-section p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.info-section ul {
+  margin: 6px 0;
+  padding-left: 22px;
+  line-height: 1.5;
+}
+
+.close-button {
+  display: block;
+  margin: 18px auto 0;
+  padding: 11px 25px;
+  background: #65438e;
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* ========================================
+   SMALL CHROMEBOOK SCREENS
+======================================== */
+
+@media (max-height: 650px) {
+  .game-page {
+    padding: 6px 12px;
+    gap: 5px;
+  }
+
+  .game-header h1 {
+    font-size: 22px;
+  }
+
+  .instructions {
+    font-size: 13px;
+  }
+
+  .nav-button,
+  .action-button {
+    padding: 7px 11px;
+    font-size: 13px;
+  }
+
+  .sound-button {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 520px) {
+  .nav-button {
+    font-size: 11px;
+    padding: 7px;
+  }
+
+  .bottom-bar {
+    gap: 5px;
+  }
+
+  .action-button {
+    font-size: 12px;
+    padding: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-inner {
+    transition-duration: .01ms;
+  }
+}
+</style>
 </head>
+
 <body>
-    <h1><button class="sound-button" onclick="playAudio('../../audios/watchVideoFindMatches.mp3')">🔊</button>Matching Game</h1>
+
+<div class="game-page">
+
+  <!-- ========================================
+       TOP RIGHT: TEACHER INFO
+  ======================================== -->
+
+  <header class="top-bar">
+
+    <button
+      class="nav-button"
+      id="teacherInfoBtn"
+      type="button"
+    >
+      📋 Teacher Info
+    </button>
+
+  </header>
+
+  <!-- ========================================
+       TITLE AND AUDIO DIRECTIONS
+  ======================================== -->
+
+  <div class="game-header">
+
+    <h1>📚 Book Care Matching</h1>
+
+    <p class="instructions">
+
+      <button
+        class="sound-button"
+        type="button"
+        onclick="playAudio('../../audios/watchVideoFindMatches.mp3')"
+        aria-label="Listen to directions"
+        title="Listen to directions"
+      >🔊</button>
+
+      Flip two cards. Find the matching book care pictures!
+
+    </p>
+
+  </div>
+
+  <!-- ========================================
+       GAME BOARD
+  ======================================== -->
+
+  <main class="game-area">
+
     <div id="game-board"></div>
 
-    <button id="restart-btn">Play Again</button>
+  </main>
+
+  <!-- ========================================
+       BOTTOM CONTROLS
+  ======================================== -->
+
+  <footer class="bottom-bar">
+
     <p id="flip-count">Flips: 0</p>
-    <button id="next-btn" style="display: none;">Next</button>
-    </script>
-    <script>
-            function playAudio(audioSrc) {
-        let audio = new Audio(audioSrc);
-        audio.play();
+
+    <button
+      class="action-button"
+      id="restart-btn"
+      type="button"
+    >
+      🔄 Play Again!
+    </button>
+
+    <a
+      class="action-button"
+      href="../kinder-first-second-game-index.html"
+    >
+      🏠 Back to Home
+    </a>
+
+  </footer>
+
+</div>
+
+<!-- ========================================
+     TEACHER & STANDARDS MODAL
+======================================== -->
+
+<dialog id="teacherDialog">
+
+  <h2>📋 Teacher & Standards</h2>
+
+  <div class="info-section">
+    <h3>🎓 Grade Level</h3>
+    <p>Kindergarten–2nd Grade</p>
+  </div>
+
+  <div class="info-section">
+    <h3>📚 Strand</h3>
+    <p>
+      Information Literacy — Library Citizenship & Book Care
+    </p>
+  </div>
+
+  <div class="info-section">
+    <h3>🎯 Skill</h3>
+    <p>
+      Identifying and recognizing behaviors that help
+      keep library books clean, safe, and usable.
+    </p>
+  </div>
+
+  <div class="info-section">
+    <h3>🌟 Learning Target</h3>
+    <p>
+      Students will identify and match illustrations
+      showing appropriate book care practices.
+    </p>
+  </div>
+
+  <div class="info-section">
+    <h3>💬 I Can Statement</h3>
+    <p>
+      "I can recognize ways to take care of library
+      books so everyone can enjoy them."
+    </p>
+  </div>
+
+  <div class="info-section">
+    <h3>📖 AASL Standards Connection</h3>
+
+    <p>
+      <strong>Shared Foundation III — Collaborate:</strong>
+      Learners demonstrate respect for shared resources
+      and their learning community.
+    </p>
+
+    <p style="margin-top:8px;">
+      <strong>Shared Foundation VI — Engage:</strong>
+      Learners develop responsible practices for
+      participating in a learning community and
+      using shared resources.
+    </p>
+
+    <p style="margin-top:8px;">
+      These are instructional connections to the
+      AASL Shared Foundations rather than direct
+      quotations of individual indicators.
+    </p>
+  </div>
+
+  <div class="info-section">
+    <h3>💻 ISTE Standards Connection</h3>
+
+    <p>
+      <strong>1.2 Digital Citizen:</strong>
+      Students practice responsible behavior and
+      respect for shared learning resources.
+      Book care provides a concrete introduction
+      to stewardship before applying similar
+      responsibility to digital resources.
+    </p>
+
+    <p style="margin-top:8px;">
+      <strong>1.1 Empowered Learner:</strong>
+      Students use an interactive learning activity
+      to practice a skill and monitor progress
+      through their matching results.
+    </p>
+  </div>
+
+  <div class="info-section">
+    <h3>🔎 Assessment Evidence</h3>
+
+    <ul>
+      <li>
+        Student correctly identifies all six
+        matching pairs.
+      </li>
+      <li>
+        Student distinguishes between different
+        book care practices.
+      </li>
+      <li>
+        Student completes the matching game
+        independently or with appropriate support.
+      </li>
+      <li>
+        Teacher may ask students to explain why
+        each practice protects books.
+      </li>
+    </ul>
+  </div>
+
+  <div class="info-section">
+    <h3>🌈 Differentiation</h3>
+
+    <p><strong>Additional Support:</strong></p>
+
+    <ul>
+      <li>
+        Preview the six book care rules before beginning.
+      </li>
+      <li>
+        Use the audio directions and visual examples.
+      </li>
+      <li>
+        Allow partner play or teacher-guided matching.
+      </li>
+      <li>
+        Encourage students to describe pictures aloud
+        before choosing.
+      </li>
+    </ul>
+
+    <p><strong>On-Level:</strong></p>
+
+    <ul>
+      <li>
+        Complete all six pairs independently.
+      </li>
+      <li>
+        Identify the book care behavior shown
+        in each match.
+      </li>
+    </ul>
+
+    <p><strong>Extension:</strong></p>
+
+    <ul>
+      <li>
+        Explain what might happen if a book care
+        rule is ignored.
+      </li>
+      <li>
+        Compare ways to care for printed books
+        and Chromebooks.
+      </li>
+      <li>
+        Create an additional book care rule
+        or illustration.
+      </li>
+    </ul>
+  </div>
+
+  <button
+    class="close-button"
+    id="closeTeacherInfo"
+    type="button"
+  >
+    ✖ Close Teacher Info
+  </button>
+
+</dialog>
+
+<!-- ========================================
+     JAVASCRIPT
+======================================== -->
+
+<script>
+
+/* ========================================
+   AUDIO DIRECTIONS
+======================================== */
+
+function playAudio(audioSrc) {
+
+  let audio = new Audio(audioSrc);
+
+  audio.play().catch(() => {});
+
+}
+
+/* ========================================
+   TEACHER INFORMATION
+======================================== */
+
+const teacherDialog =
+  document.getElementById("teacherDialog");
+
+document.getElementById("teacherInfoBtn")
+  .addEventListener("click", () => {
+
+    teacherDialog.showModal();
+
+  });
+
+document.getElementById("closeTeacherInfo")
+  .addEventListener("click", () => {
+
+    teacherDialog.close();
+
+  });
+
+/* ========================================
+   ORIGINAL MATCHING GAME
+   ORIGINAL IMAGE FILES PRESERVED
+======================================== */
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  const cards = [
+
+    { name: 'A', img: '../img/bookCarePictures/keepBooksDry.png' },
+    { name: 'A', img: '../img/bookCarePictures/keepBooksDry2.png' },
+
+    { name: 'B', img: '../img/bookCarePictures/keepBooksFromBabies.png' },
+    { name: 'B', img: '../img/bookCarePictures/keepBooksFromBabies2.png' },
+
+    { name: 'C', img: '../img/bookCarePictures/keepBooksFromPets.png' },
+    { name: 'C', img: '../img/bookCarePictures/keepBooksFromPets2.png' },
+
+    { name: 'D', img: '../img/bookCarePictures/noDrawOrColor.png' },
+    { name: 'D', img: '../img/bookCarePictures/noDrawOrColor2.png' },
+
+    { name: 'E', img: '../img/bookCarePictures/noFoodOrDrinks.png' },
+    { name: 'E', img: '../img/bookCarePictures/noFoodOrDrinks2.png' },
+
+    { name: 'F', img: '../img/bookCarePictures/useCleanHands.png' },
+    { name: 'F', img: '../img/bookCarePictures/useCleanHands2.png' }
+
+  ];
+
+  let cardArray = [...cards];
+
+  cardArray.sort(() => 0.5 - Math.random());
+
+  const gameBoard =
+    document.getElementById('game-board');
+
+  let firstCard = null;
+  let secondCard = null;
+
+  let flips = 0;
+  let matches = 0;
+  let lockBoard = false;
+
+  /* CREATE THE GAME BOARD */
+
+  function createBoard() {
+
+    cardArray.forEach((card, index) => {
+
+      const cardElement =
+        document.createElement('div');
+
+      cardElement.classList.add('card');
+
+      cardElement.dataset.name = card.name;
+
+      const cardInner =
+        document.createElement('div');
+
+      cardInner.classList.add('card-inner');
+
+      const cardFront =
+        document.createElement('div');
+
+      cardFront.classList.add('card-front');
+
+      cardFront.textContent = '?';
+
+      const cardBack =
+        document.createElement('div');
+
+      cardBack.classList.add('card-back');
+
+      const imgElement =
+        document.createElement('img');
+
+      imgElement.src = card.img;
+
+      cardBack.appendChild(imgElement);
+
+      cardInner.appendChild(cardFront);
+
+      cardInner.appendChild(cardBack);
+
+      cardElement.appendChild(cardInner);
+
+      cardElement.addEventListener(
+        'click',
+        flipCard
+      );
+
+      gameBoard.appendChild(cardElement);
+
+    });
+
+  }
+
+  /* FLIP A CARD */
+
+  function flipCard() {
+
+    if (
+      lockBoard ||
+      this === firstCard ||
+      this.classList.contains('flipped')
+    ) {
+      return;
     }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const cards = [
-                { name: 'A', img: '../img/bookCarePictures/keepBooksDry.png' },
-                { name: 'A', img: '../img/bookCarePictures/keepBooksDry2.png' },
-                { name: 'B', img: '../img/bookCarePictures/keepBooksFromBabies.png' },
-                { name: 'B', img: '../img/bookCarePictures/keepBooksFromBabies2.png' },
-                { name: 'C', img: '../img/bookCarePictures/keepBooksFromPets.png' },
-                { name: 'C', img: '../img/bookCarePictures/keepBooksFromPets2.png' },
-                { name: 'D', img: '../img/bookCarePictures/noDrawOrColor.png' },
-                { name: 'D', img: '../img/bookCarePictures/noDrawOrColor2.png' },
-                { name: 'E', img: '../img/bookCarePictures/noFoodOrDrinks.png' },
-                { name: 'E', img: '../img/bookCarePictures/noFoodOrDrinks2.png' },
-                { name: 'F', img: '../img/bookCarePictures/useCleanHands.png' },
-                { name: 'F', img: '../img/bookCarePictures/useCleanHands2.png' },
-                // Add more pairs as needed
-            ];
+    this.classList.add('flipped');
 
-            let cardArray = [...cards];
-            cardArray.sort(() => 0.5 - Math.random());
+    if (!firstCard) {
 
-            const gameBoard = document.getElementById('game-board');
-            let firstCard = null;
-            let secondCard = null;
-            let flips = 0;
-            let matches = 0;
-            let lockBoard = false;
+      firstCard = this;
 
-            function createBoard() {
-                cardArray.forEach((card, index) => {
-                    const cardElement = document.createElement('div');
-                    cardElement.classList.add('card');
-                    cardElement.dataset.name = card.name;
+      return;
 
-                    const cardInner = document.createElement('div');
-                    cardInner.classList.add('card-inner');
+    }
 
-                    const cardFront = document.createElement('div');
-                    cardFront.classList.add('card-front');
-                    cardFront.textContent = '?';
+    secondCard = this;
 
-                    const cardBack = document.createElement('div');
-                    cardBack.classList.add('card-back');
-                    const imgElement = document.createElement('img');
-                    imgElement.src = card.img;
-                    cardBack.appendChild(imgElement);
+    flips++;
 
-                    cardInner.appendChild(cardFront);
-                    cardInner.appendChild(cardBack);
-                    cardElement.appendChild(cardInner);
+    document.getElementById('flip-count').textContent =
+      `Flips: ${flips}`;
 
-                    cardElement.addEventListener('click', flipCard);
-                    gameBoard.appendChild(cardElement);
-                });
-            }
+    checkForMatch();
 
-            function flipCard() {
-                if (lockBoard || this === firstCard || this.classList.contains('flipped')) return;
+  }
 
-                this.classList.add('flipped');
+  /* CHECK THE PAIR */
 
-                if (!firstCard) {
-                    firstCard = this;
-                    return;
-                }
+  function checkForMatch() {
 
-                secondCard = this;
-                flips++;
-                document.getElementById('flip-count').textContent = `Flips: ${flips}`;
+    if (
+      firstCard.dataset.name ===
+      secondCard.dataset.name
+    ) {
 
-                checkForMatch();
-            }
+      disableCards();
 
-            function checkForMatch() {
-                if (firstCard.dataset.name === secondCard.dataset.name) {
-                    disableCards();
-                    matches++;
-                    checkCompletion();
-                } else {
-                    unflipCards();
-                }
-            }
+      matches++;
 
-            function disableCards() {
-                firstCard.removeEventListener('click', flipCard);
-                secondCard.removeEventListener('click', flipCard);
-                resetBoard();
-            }
+      checkCompletion();
 
-            function unflipCards() {
-                lockBoard = true;
-                setTimeout(() => {
-                    firstCard.classList.remove('flipped');
-                    secondCard.classList.remove('flipped');
-                    resetBoard();
-                }, 1000);
-            }
+    } else {
 
-            function resetBoard() {
-                [firstCard, secondCard] = [null, null];
-                lockBoard = false;
-            }
+      unflipCards();
 
-            function checkCompletion() {
-                if (matches === cardArray.length / 2) {
-                    setTimeout(() => {
-                        alert('Congratulations! You have matched all the cards.');
-                    }, 500);
-                    document.getElementById('next-btn').style.display = "block"
-                }
-            }
+    }
 
+  }
 
-            document.getElementById('next-btn').addEventListener('click', () => {
-                completeActivity();
-            });
+  /* KEEP MATCHING CARDS FACE UP */
 
+  function disableCards() {
 
-            document.getElementById('restart-btn').addEventListener('click', () => {
-                gameBoard.innerHTML = '';
-                document.getElementById('flip-count').textContent = 'Flips: 0';
-                flips = 0;
-                matches = 0;
-                cardArray.sort(() => 0.5 - Math.random());
-                createBoard();
-            });
+    firstCard.removeEventListener(
+      'click',
+      flipCard
+    );
 
-            createBoard();
+    secondCard.removeEventListener(
+      'click',
+      flipCard
+    );
 
-            function completeActivity() {
-    window.opener.postMessage('stepCompleted', '*');  // Notify the main page
-    window.close();  // Close the activity tab
-}
-        });
+    resetBoard();
 
+  }
 
+  /* FLIP NONMATCHING CARDS BACK */
 
-    </script>
+  function unflipCards() {
+
+    lockBoard = true;
+
+    setTimeout(() => {
+
+      firstCard.classList.remove('flipped');
+
+      secondCard.classList.remove('flipped');
+
+      resetBoard();
+
+    }, 1000);
+
+  }
+
+  /* RESET SELECTED CARDS */
+
+  function resetBoard() {
+
+    [firstCard, secondCard] = [null, null];
+
+    lockBoard = false;
+
+  }
+
+  /* CHECK GAME COMPLETION */
+
+  function checkCompletion() {
+
+    if (matches === cardArray.length / 2) {
+
+      setTimeout(() => {
+
+        alert(
+          'Congratulations! You have matched all the cards.'
+        );
+
+      }, 500);
+
+    }
+
+  }
+
+  /* PLAY AGAIN */
+
+  document.getElementById('restart-btn')
+    .addEventListener('click', () => {
+
+      gameBoard.innerHTML = '';
+
+      document.getElementById('flip-count').textContent =
+        'Flips: 0';
+
+      flips = 0;
+
+      matches = 0;
+
+      firstCard = null;
+
+      secondCard = null;
+
+      lockBoard = false;
+
+      cardArray.sort(() => 0.5 - Math.random());
+
+      createBoard();
+
+    });
+
+  /* START GAME */
+
+  createBoard();
+
+});
+
+</script>
+
 </body>
 </html>

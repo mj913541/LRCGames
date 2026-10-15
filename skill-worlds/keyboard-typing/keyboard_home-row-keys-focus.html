@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Chromebook Keyboard Drag and Drop Game</title>
+
+<style>
+        body {
+		font-family: Arial, sans-serif;
+		text-align: center;
+		justify-content: center;
+		background-color: #f0f8ff;
+	}
+
+	.game-container {
+		margin: 0;
+		width: 1000px;
+		max-width: none;
+		position: absolute;
+		left: 0;
+		top: 0;
+		transform-origin: top left;
+	}
+
+	.dropzone {
+		cursor: pointer;
+		border-radius: 5px;
+		background-color: white;
+		border: 3px solid #000;
+		display: flex;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
+
+	.dropzonerow {
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 5px;
+	}
+
+	#dropzonecontainer {
+		background-color: grey;
+		border: 3px solid #000;
+		padding: 2px;
+		max-width: 1000px;
+		justify-content: center;
+		border-radius: 10px;
+	}
+
+	.draggablecontainer {
+		display: flex;
+		justify-content: space-between;
+		flex-wrap: wrap;
+	}
+
+	.draggable {
+		margin: 2px;
+		cursor: pointer;
+		border-radius: 5px;
+		background-color: white;
+		border: 3px solid #000;
+		display: flex;
+		background-size: contain;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
+
+	.draggable img {
+		pointer-events: none; /* Make it to where the img can't be draggable */
+	}
+
+	.bigkeys {
+		background-size: 80%;
+		background-repeat: no-repeat;
+		background-position: center;
+	}
+
+
+	.draggable.correct {
+		background-color: #90ee90;
+		border-color: #90ee90;
+	}
+
+	.hidden {
+		display: none;
+	}
+
+	#congratulations { text-align: center; margin: 0; font-size: 14px; }
+	#congratulations h2 { margin: 0; }
+
+	.dragging {
+		opacity: 0.5;
+	}
+
+	.bounce {
+		animation: bounce 0.5s;
+	}
+
+	@keyframes bounce {
+		0%, 20%, 50%, 80%, 100% {
+			transform: translateY(0);
+		}
+		40% {
+			transform: translateY(-30px);
+		}
+		60% {
+			transform: translateY(-15px);
+		}
+	}
+
+/* LRC Quest controls; original keyboard styling above is unchanged */
+* { box-sizing: border-box; }
+html, body { margin: 0; width: 100%; height: 100%; }
+body { overflow: hidden; }
+.page { height: 100dvh; display: flex; flex-direction: column; padding: 8px 14px; gap: 6px; }
+.top-bar { display: flex; justify-content: flex-end; flex: none; }
+.page h1 { font-size: clamp(20px, 2.4vw, 30px); margin: 0; }
+.directions { margin: 0; font-weight: bold; font-size: 14px; }
+.game-area { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+/* preserve the six original keyboard rows and the separate draggable row */
+#dropzonecontainer { width: 1000px; }
+.draggablecontainer { width: 1000px; }
+.bottom-bar { flex: none; display: flex; align-items: center; justify-content: center; gap: 12px; }
+.nav-button, .action-button { display: inline-flex; align-items: center; justify-content: center; padding: 9px 16px; border: 2px solid #4684b8; border-radius: 12px; background: #e4f2ff; color: #245e91; font: bold 15px Arial, sans-serif; text-decoration: none; cursor: pointer; }
+.nav-button:hover, .action-button:hover { filter: brightness(.96); }
+dialog { width: min(92vw, 620px); max-height: 86dvh; overflow: auto; padding: 24px; border: 3px solid #4684b8; border-radius: 18px; background: white; text-align: left; }
+dialog::backdrop { background: #152f4d99; }
+dialog h2, dialog h3 { color: #245e91; }
+dialog h2 { margin-top: 0; }
+.info-section { border-bottom: 1px solid #d5e4f1; padding-bottom: 10px; margin-bottom: 12px; }
+.info-section h3 { margin: 0 0 6px; font-size: 16px; }
+.info-section p, .info-section ul { line-height: 1.5; margin: 5px 0; }
+@media(max-height:600px) { .page { padding: 5px 10px; gap: 3px; } .nav-button, .action-button { padding: 6px 10px; font-size: 13px; } }
+</style>
+</head>
+
+<body>
+<div class="page">
+<header class="top-bar"><button class="nav-button" id="teacherInfoBtn" type="button">📋 Teacher Info</button></header>
+<h1>Chromebook Keyboard Drag and Drop Game</h1>
+<p class="directions">Drag each letter into its matching keyboard space!</p>
+<main class="game-area" id="gameArea">
+<div class="game-container" id="gameContainer">
+		<div id="dropzonecontainer">
+		<div class="dropzonerow" id="row1">
+			<div id="dropzone1" class="dropzone bigkeys" data-accept="draggable1" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/');"></div> <!--esc--> 
+			<div id="dropzone2" class="dropzone bigkeys" data-accept="draggable2" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/arrow-left.png');"></div> <!--larrow-->
+			<div id="dropzone3" class="dropzone bigkeys" data-accept="draggable3" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/arrow-right.png');"></div> <!--rarrow-->
+			<div id="dropzone4" class="dropzone bigkeys" data-accept="draggable4" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-4-refresh.png');"></div> <!--pic key 4 refresh-->
+			<div id="dropzone5" class="dropzone bigkeys" data-accept="draggable5" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-5-screenshot.png');"></div> <!--pic key 5-->
+			<div id="dropzone6" class="dropzone bigkeys" data-accept="draggable6" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-6.png');"></div> <!--pic key 6-->
+			<div id="dropzone7" class="dropzone bigkeys" data-accept="draggable7" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-7-dimmer.png');"></div> <!--pic key 7--> 
+			<div id="dropzone8" class="dropzone bigkeys" data-accept="draggable8" style="width: 70px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-8-brighter.png');"></div> <!--pic key 8--> 
+			<div id="dropzone9" class="dropzone bigkeys" data-accept="draggable9" style="width: 65px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-9-mute.png');"></div> <!--pic key 9-->
+			<div id="dropzone10" class="dropzone bigkeys" data-accept="draggable10" style="width: 65px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-10-low-sound.png');"></div> <!--pic key 10--> 
+			<div id="dropzone69" class="dropzone bigkeys" data-accept="draggable69" style="width: 65px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-11-high-sound.png');"></div> <!--pic key 11--> 
+			<div id="dropzone70" class="dropzone bigkeys" data-accept="draggable70" style="width: 65px; height: 35px; background-image: url('../../img/keyboard/symbols/pic-key-12-power.png');"></div> <!--pic key 12--> 
+		</div>
+
+		<div class="dropzonerow" id="row2">
+ 			<div id="dropzone11" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/tilde.png');"></div> <!--tilde-->
+ 			<div id="dropzone12" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/1.png');"></div> <!-- 1 key-->
+ 			<div id="dropzone13" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/2.png');"></div> <!-- 2 key-->
+ 			<div id="dropzone14" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/3.png');"></div> <!-- 3 key-->
+ 			<div id="dropzone15" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/4.png');"></div> <!-- 4 key-->
+ 			<div id="dropzone16" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/5.png');"></div> <!--num 5 key-->
+ 			<div id="dropzone17" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/6.png');"></div> <!--num 6 key-->
+			<div id="dropzone18" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/7.png');"></div> <!--num 7 key-->
+			<div id="dropzone19" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/8.png');"></div> <!--num 8 key-->
+ 			<div id="dropzone20" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/9.png');"></div> <!--num 9 key-->
+ 			<div id="dropzone21" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/numbers/0.png');"></div> <!--num 0 key-->
+ 			<div id="dropzone22" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/_-\ key.png');"></div> <!-- -_ key-->
+ 			<div id="dropzone23" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/plus-equal.png ');"></div> <!-- =+ key-->
+ 			<div id="dropzone24" class="dropzone bigkeys" style="width: 140px; height: 50px; background-image: url('../../img/keyboard/backspace.png');"></div> <!--backspace-->
+
+ 		</div>
+
+		<div class="dropzonerow" id="row3">
+ 			<div id="dropzone25" class="dropzone" data-accept="draggable25" style="width: 140px; height: 50px; background-image: url('../../img/keyboard/tab.png');"></div> <!--tab key-->
+ 			<div id="dropzone26" class="dropzone" data-accept="draggable26" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/q.png');"></div> <!--Q key-->
+ 			<div id="dropzone27" class="dropzone" data-accept="draggable27" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/w.png');"></div> <!--W key-->
+ 			<div id="dropzone28" class="dropzone" data-accept="draggable28" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/e.png');"></div> <!--E key-->
+			<div id="dropzone29" class="dropzone" data-accept="draggable29" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/r.png');"></div> <!--R key-->
+			<div id="dropzone30" class="dropzone" data-accept="draggable30" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/t.png');"></div> <!--T key-->
+ 			<div id="dropzone31" class="dropzone" data-accept="draggable31" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/y.png');"></div> <!--Y key-->
+			<div id="dropzone32" class="dropzone" data-accept="draggable32" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/u.png');"></div> <!--U key-->
+ 			<div id="dropzone33" class="dropzone" data-accept="draggable33" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/i.png');"></div> <!--I key-->
+ 			<div id="dropzone34" class="dropzone" data-accept="draggable34" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/o.png');"></div> <!--O key-->
+ 			<div id="dropzone35" class="dropzone" data-accept="draggable35" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/p.png');"></div> <!--P key-->
+ 			<div id="dropzone36" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/[{\ key.png');"></div> <!--{[ key-->
+ 			<div id="dropzone37" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/]}\ key.png');"></div> <!--}] key-->
+ 			<div id="dropzone38" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/__\ key.png');"></div> <!--|\ key-->
+		</div>
+
+		<div class="dropzonerow" id="row4">
+ 			<div id="dropzone39" class="dropzone" style="width: 160px; height: 50px; background-image: url('../../img/keyboard/search.png');"></div> <!--search-->
+			<div id="dropzone40" class="dropzone" style="width: 50px; height: 50px;"></div> <!--A key-->
+			<div id="dropzone41" class="dropzone" style="width: 50px; height: 50px;"></div> <!--S key-->
+			<div id="dropzone42" class="dropzone" style="width: 50px; height: 50px;"></div> <!--D key-->
+			<div id="dropzone43" class="dropzone" style="width: 50px; height: 50px;"></div> <!--F key-->
+			<div id="dropzone44" class="dropzone" style="width: 50px; height: 50px;"></div> <!--G key-->
+			<div id="dropzone45" class="dropzone" style="width: 50px; height: 50px;"></div> <!--H key-->
+			<div id="dropzone46" class="dropzone" style="width: 50px; height: 50px;"></div> <!--J key-->
+			<div id="dropzone47" class="dropzone" style="width: 50px; height: 50px;"></div> <!--K key-->
+			<div id="dropzone48" class="dropzone" style="width: 50px; height: 50px;"></div> <!--L key-->
+			<div id="dropzone49" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/_;\ key.png');"></div> <!--:; key-->
+			<div id="dropzone50" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/\'_\ key.png');"></div> <!--"' key-->
+			<div id="dropzone51" class="dropzone" style="width: 160px; height: 50px; background-image: url('../../img/keyboard/enter.png');"></div> <!--enter-->
+		</div>
+
+		<div class="dropzonerow" id="row5">
+			<div id="dropzone52" class="dropzone" style="width: 180px; height: 50px; background-image: url('../../img/keyboard/shift.png');"></div> <!--shift-->
+			<div id="dropzone53" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/z.png');"></div> <!--Z key-->
+			<div id="dropzone54" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/x.png');"></div> <!--X key-->
+			<div id="dropzone55" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/c.png');"></div> <!--C key-->
+			<div id="dropzone56" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/v.png');"></div> <!--V key-->
+			<div id="dropzone57" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/b.png');"></div> <!--B key-->
+			<div id="dropzone58" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/n.png');"></div> <!--N key-->
+			<div id="dropzone59" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/m.png');"></div> <!--M key-->
+			<div id="dropzone60" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/\,_\ key.png');"></div> <!--, key-->
+			<div id="dropzone61" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/_\ key.png');"></div> <!--. key-->
+			<div id="dropzone62" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/symbols/');"></div> <!--? key-->
+			<div id="dropzone63" class="dropzone" style="width: 180px; height: 50px; background-image: url('../../img/keyboard/shift.png');"></div> <!--rightshift-->
+		</div>
+
+
+
+		<div class="dropzonerow" id="row6">
+			<div id="dropzone64" class="dropzone" style="width: 150px; height: 50px; background-image: url('../../img/keyboard/ctrl.png');"></div> <!--LftCtrl-->
+			<div id="dropzone65" class="dropzone" style="width: 150px; height: 50px; background-image: url('../../img/keyboard/alt.png');"></div> <!--LftAlt-->
+			<div id="dropzone66" class="dropzone" style="width: 340px; height: 50px; background-image: url('../../img/keyboard/space.png');"></div> <!--Space-->
+			<div id="dropzone67" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/alt.png');"></div> <!--RtAlt-->
+			<div id="dropzone68" class="dropzone" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/ctrl.png');"></div> <!--RtCtrl-->
+			<div id="dropzone69" class="dropzone bigkeys" style="width: 220px; height: 50px; background-image: url('../../img/keyboard/symbols/arrows-set.png');"></div> <!--arrows-->
+		</div>
+		</div>
+
+
+
+
+
+
+
+
+
+        <div id="draggablecontainer" class="draggablecontainer">
+<!-- capslock/search row -->
+		<div id="draggable40" class="draggable" data-match="dropzone40" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/a.png');"></div> <!--A key-->
+		<div id="draggable41" class="draggable" data-match="dropzone41" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/s.png');"></div> <!--S key-->
+		<div id="draggable42" class="draggable" data-match="dropzone42" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/d.png');"></div> <!--D key-->
+		<div id="draggable43" class="draggable" data-match="dropzone43" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/f.png');"></div> <!--F key-->
+		<div id="draggable44" class="draggable" data-match="dropzone44" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/g.png');"></div> <!--G key-->
+		<div id="draggable45" class="draggable" data-match="dropzone45" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/h.png');"></div> <!--H key-->
+		<div id="draggable46" class="draggable" data-match="dropzone46" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/j.png');"></div> <!--J key-->
+		<div id="draggable47" class="draggable" data-match="dropzone47" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/k.png');"></div> <!--K key-->
+		<div id="draggable48" class="draggable" data-match="dropzone48" draggable="true" style="width: 50px; height: 50px; background-image: url('../../img/keyboard/letters/l.png');"></div> <!--L key-->
+
+	</div>
+	</div>
+
+<div id="congratulations" class="congratulations hidden" role="status"><h2>🎉 Congratulations! You've completed the keyboard!</h2></div>
+<footer class="bottom-bar"><button class="action-button" id="restart-btn" type="button">🔄 Play Again!</button><a class="action-button" href="../kinder-first-second-game-index.html">🏠 Back to Home</a></footer>
+</div>
+<dialog id="teacherDialog">
+<h2>📋 Teacher &amp; Standards</h2>
+<div class="info-section"><h3>🎓 Grade Level</h3><p>Grades 1–3 (adaptable)</p></div>
+<div class="info-section"><h3>📚 Strand</h3><p>Technology Skills — Keyboard Familiarity</p></div>
+<div class="info-section"><h3>🎯 Skill</h3><p>Identify and locate the nine home-row letter keys on a Chromebook keyboard.</p></div>
+<div class="info-section"><h3>🌟 Learning Target</h3><p>Students will place A, S, D, F, G, H, J, K, and L in the correct positions.</p></div>
+<div class="info-section"><h3>💬 I Can Statement</h3><p>“I can find letters on a Chromebook keyboard and put them in the right places.”</p></div>
+<div class="info-section"><h3>📖 AASL Connection</h3><p>Shared Foundation I — Inquire: applying prior knowledge and observation; Shared Foundation V — Explore: developing skills through practice. These are instructional connections, not quotations of indicators.</p></div>
+<div class="info-section"><h3>💻 ISTE Connection</h3><p>1.1 Empowered Learner: using an interactive tool and feedback to build skills. 1.5 Computational Thinker: recognizing spatial patterns and correcting placement errors.</p></div>
+<div class="info-section"><h3>🔎 Assessment Evidence</h3><ul><li>Correctly places all nine home-row letters</li><li>Locates practiced letters on a physical Chromebook</li><li>Works independently or with appropriate support</li></ul></div>
+<div class="info-section"><h3>🌈 Differentiation</h3><p><strong>Support:</strong> Compare with a physical keyboard, model one placement, or provide partner assistance.</p><p><strong>On-Level:</strong> Place all nine keys independently.</p><p><strong>Extension:</strong> Find the letters on a real keyboard and type a word using the practiced keys.</p></div>
+<button class="action-button" id="closeTeacherInfo" type="button">✖ Close Teacher Info</button>
+</dialog>
+
+	<script>
+		
+		document.addEventListener('DOMContentLoaded', () => {
+			const draggables = document.querySelectorAll('.draggable');
+			const dropzones = document.querySelectorAll('.dropzone');
+			const draggableContainer = document.getElementById('draggablecontainer');
+			const congratulationsMessage = document.getElementById('congratulations');
+		
+			// Shuffle draggables
+			function shuffleDraggables() {
+				const items = Array.from(draggables);
+				items.sort(() => Math.random() - 0.5);
+				items.forEach(item => draggableContainer.appendChild(item));
+			}
+		
+			shuffleDraggables();
+		
+			draggables.forEach(draggable => {
+				draggable.addEventListener('dragstart', () => {
+					draggable.classList.add('dragging');
+				});
+		
+				draggable.addEventListener('dragend', () => {
+					draggable.classList.remove('dragging');
+				});
+			});
+		
+			dropzones.forEach(dropzone => {
+				dropzone.addEventListener('dragover', (e) => {
+					e.preventDefault();
+				});
+		
+				dropzone.addEventListener('drop', (e) => {
+					e.preventDefault();
+					const draggable = document.querySelector('.dragging');
+					if (draggable && draggable.dataset.match === dropzone.id) {
+						dropzone.appendChild(draggable);
+						draggable.classList.add('correct');
+						dropzone.style.borderColor = 'green';
+						dropzone.style.backgroundColor = 'green'; // Change border color when placed correctly
+						checkCompletion();
+					} else {
+						draggableContainer.appendChild(draggable);
+						draggable.classList.add('bounce');
+						setTimeout(() => draggable.classList.remove('bounce'), 1000);
+					}
+				});
+			});
+		
+			function checkCompletion() {
+				const allCorrect = Array.from(draggables).every(draggable => draggable.classList.contains('correct'));
+				if (allCorrect) {
+					congratulationsMessage.classList.remove('hidden');
+				}
+			}
+		
+			window.restartGame = function() {
+				draggables.forEach(draggable => {
+					draggable.classList.remove('hidden', 'correct');
+					draggableContainer.appendChild(draggable);
+				});
+				dropzones.forEach(dropzone => {
+					dropzone.style.borderColor = ''; // Reset border color
+					dropzone.style.backgroundColor = ''; // Reset background color
+				});
+				congratulationsMessage.classList.add('hidden');
+				shuffleDraggables();
+                requestAnimationFrame(fitKeyboard);
+			};
+		});
+        document.getElementById('restart-btn').addEventListener('click', () => window.restartGame());
+        const teacherDialog = document.getElementById('teacherDialog');
+        document.getElementById('teacherInfoBtn').addEventListener('click', () => teacherDialog.showModal());
+        document.getElementById('closeTeacherInfo').addEventListener('click', () => teacherDialog.close());
+        function fitKeyboard() {
+          const area = document.getElementById('gameArea');
+          const content = document.getElementById('gameContainer');
+          content.style.transform = 'none';
+          const width = content.scrollWidth;
+          const height = content.scrollHeight;
+          const scale = Math.min(1, area.clientWidth / width, area.clientHeight / height);
+          content.style.transform = `scale(${scale})`;
+          content.style.left = Math.max(0, (area.clientWidth - width * scale) / 2) + 'px';
+          content.style.top = Math.max(0, (area.clientHeight - height * scale) / 2) + 'px';
+        }
+        window.addEventListener('resize', fitKeyboard);
+        window.addEventListener('load', fitKeyboard);
+        requestAnimationFrame(fitKeyboard);
+		</script>
+		
+</body>
+</html>
+
+
