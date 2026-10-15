@@ -2,553 +2,1213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parts of a Book</title>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+<title>Parts of a Book Matching Game</title>
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            overflow: hidden;
-        }
+<style>
+    * {
+        box-sizing: border-box;
+    }
 
+    html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+    }
+
+    body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        background: #f0f0f0;
+        padding: 8px;
+        height: 100vh;
+        height: 100dvh;
+    }
+
+    /* HEADER */
+
+    #game-header {
+        width: 100%;
+        min-height: 38px;
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+    }
+
+    #game-header h1 {
+        font-size: clamp(17px, 3vh, 28px);
+        text-align: center;
+        margin: 3px 0 7px;
+        padding: 0 135px;
+    }
+
+    #teacher-info-btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: #e5dcff;
+        border: 2px solid #9070c8;
+        color: #60419d;
+        border-radius: 10px;
+        padding: 7px 10px;
+        font-size: 12px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    /* DIFFICULTY BUTTONS */
+
+    #difficulty-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        flex-shrink: 0;
+    }
+
+    .difficulty-btn {
+        margin: 0;
+        padding: 7px 12px;
+        border: 2px solid #ccc;
+        border-radius: 8px;
+        background: white;
+        font-size: 14px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .difficulty-btn.active {
+        background: #d9c9ff;
+        border-color: #7954c8;
+    }
+
+    /* GAME BOARD */
+
+    #game-board {
+        display: grid;
+        gap: 6px;
+        width: 100%;
+        max-width: 1050px;
+        flex: 1;
+        min-height: 0;
+        margin: 0 auto;
+    }
+
+    #game-board.easy {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        max-width: 800px;
+    }
+
+    #game-board.medium {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(0, 1fr));
+        max-width: 1050px;
+    }
+
+    #game-board.hard {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-rows: repeat(4, minmax(0, 1fr));
+        max-width: 1050px;
+    }
+
+    /* CARDS */
+
+    .card {
+        width: 100%;
+        height: 100%;
+        min-width: 0;
+        min-height: 0;
+        perspective: 1000px;
+        cursor: pointer;
+    }
+
+    .card-inner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 0.6s;
+    }
+
+    .card.flipped .card-inner {
+        transform: rotateY(180deg);
+    }
+
+    .card-front,
+    .card-back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        background: white;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        backface-visibility: hidden;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .card-front {
+        font-size: clamp(18px, 4vh, 30px);
+        color: #333;
+    }
+
+    .card-back {
+        transform: rotateY(180deg);
+    }
+
+    .card-back img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        background: white;
+    }
+
+    img {
+        pointer-events: none;
+        user-select: none;
+    }
+
+    /* BIG STUDENT BUTTONS */
+
+    #bottom-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 8px;
+        flex-shrink: 0;
+    }
+
+    #restart-btn,
+    #menu-btn,
+    #next-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        min-height: 58px;
+        padding: 10px 22px;
+        margin: 0;
+        border-radius: 16px;
+        border: 3px solid;
+        font-family: Arial, sans-serif;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: transform 0.15s ease;
+    }
+
+    #restart-btn {
+        background: #d9f3df;
+        border-color: #5ca56b;
+        color: #27643b;
+    }
+
+    #menu-btn {
+        background: #e5dcff;
+        border-color: #9070c8;
+        color: #60419d;
+    }
+
+    #next-btn {
+        background: #fff0b8;
+        border-color: #e6b944;
+        color: #725000;
+    }
+
+    #restart-btn:hover,
+    #menu-btn:hover,
+    #next-btn:hover {
+        transform: scale(1.04);
+    }
+
+    .button-icon {
+        font-size: 26px;
+    }
+
+    #flip-count {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    /* CELEBRATION SCREEN */
+
+    #completion-message {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(25, 25, 45, 0.65);
+        z-index: 100;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    #completion-message.show {
+        display: flex;
+    }
+
+    .completion-box {
+        background: white;
+        border-radius: 24px;
+        padding: 30px;
+        text-align: center;
+        width: min(95%, 460px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    }
+
+    .completion-box h2 {
+        font-size: clamp(24px, 5vw, 36px);
+        margin: 0 0 12px;
+    }
+
+    .completion-box p {
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+    .completion-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .completion-buttons button {
+        border-radius: 14px;
+        border: 3px solid;
+        padding: 14px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #celebrate-restart {
+        background: #d9f3df;
+        border-color: #5ca56b;
+        color: #27643b;
+    }
+
+    #celebrate-menu {
+        background: #e5dcff;
+        border-color: #9070c8;
+        color: #60419d;
+    }
+
+    /* TEACHER STANDARDS OVERLAY */
+
+    .teacher-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        background: rgba(20, 20, 40, 0.65);
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .teacher-overlay[hidden] {
+        display: none;
+    }
+
+    .teacher-panel-box {
+        width: min(95vw, 650px);
+        max-height: 88vh;
+        max-height: 88dvh;
+        display: flex;
+        flex-direction: column;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+
+    .teacher-panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 14px 18px;
+        background: #e5dcff;
+        flex-shrink: 0;
+    }
+
+    .teacher-panel-header h2 {
+        margin: 0;
+        font-size: 22px;
+        color: #60419d;
+    }
+
+    #close-teacher-panel {
+        background: white;
+        border: 2px solid #9070c8;
+        border-radius: 10px;
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .teacher-panel-content {
+        overflow-y: auto;
+        padding: 18px;
+    }
+
+    .teacher-panel-content section {
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .teacher-panel-content h3 {
+        margin: 0 0 5px;
+        font-size: 16px;
+        color: #60419d;
+    }
+
+    .teacher-panel-content p {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    .ican-section {
+        background: #eaf8ed;
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    /* SMALL CHROMEBOOK SCREENS */
+
+    @media (max-height: 650px) {
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            padding: 8px;
-            height: 100vh;
-            height: 100dvh;
+            padding: 4px;
         }
 
-        h1 {
-            font-size: clamp(18px, 3vh, 28px);
-            margin: 4px 0 8px;
-            text-align: center;
-            flex-shrink: 0;
+        #game-header {
+            min-height: 30px;
         }
 
-        /* GAME BOARD */
+        #game-header h1 {
+            font-size: 17px;
+            margin: 2px 0 4px;
+            padding: 0 110px;
+        }
+
+        #teacher-info-btn {
+            font-size: 10px;
+            padding: 5px 7px;
+        }
+
+        #difficulty-buttons {
+            gap: 5px;
+            margin-bottom: 4px;
+        }
+
+        .difficulty-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
 
         #game-board {
-            display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            grid-template-rows: repeat(4, minmax(0, 1fr));
+            gap: 4px;
+        }
+
+        #bottom-controls {
             gap: 6px;
-            width: 100%;
-            max-width: 1050px;
-            flex: 1;
-            min-height: 0;
-            margin: 0 auto;
-        }
-
-        /* CARDS */
-
-        .card {
-            width: 100%;
-            height: 100%;
-            min-width: 0;
-            min-height: 0;
-            perspective: 1000px;
-            cursor: pointer;
-        }
-
-        .card-inner {
-            width: 100%;
-            height: 100%;
-            position: relative;
-            transform-style: preserve-3d;
-            transition: transform 0.6s;
-        }
-
-        .card.flipped .card-inner {
-            transform: rotateY(180deg);
-        }
-
-        .card-front,
-        .card-back {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            backface-visibility: hidden;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .card-front {
-            font-size: clamp(18px, 4vh, 30px);
-            color: #333;
-        }
-
-        .card-back {
-            transform: rotateY(180deg);
-            color: white;
-        }
-
-        /* CARD IMAGES */
-
-        .card-back img {
-            display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background-color: #fff;
-            border-radius: 5px;
-        }
-
-        img {
-            pointer-events: none;
-            user-select: none;
-        }
-
-        /* BUTTONS */
-
-        button {
-            margin-top: 6px;
-            padding: 6px 14px;
-            font-size: 14px;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
-
-        #restart-btn {
-            margin-top: 8px;
-        }
-
-        #next-btn {
             margin-top: 4px;
         }
 
-        #flip-count {
-            margin: 4px 0;
+        #restart-btn,
+        #menu-btn,
+        #next-btn {
+            min-height: 42px;
+            padding: 5px 12px;
             font-size: 14px;
-            flex-shrink: 0;
+            border-width: 2px;
+            border-radius: 10px;
         }
 
-        .sound-button {
-            background-color: #1f1d1d;
-            border: none;
-            border-radius: 50%;
-            padding: 8px;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 20px;
-            display: inline-flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0 5px;
-            vertical-align: middle;
+        .button-icon {
+            font-size: 18px;
         }
 
-        .sound-button:focus {
-            outline: none;
+        #flip-count {
+            font-size: 12px;
         }
 
-        /* SMALL CHROMEBOOK SCREENS */
-
-        @media (max-height: 650px) {
-            body {
-                padding: 4px;
-            }
-
-            h1 {
-                font-size: 18px;
-                margin: 2px 0 4px;
-            }
-
-            #game-board {
-                gap: 4px;
-            }
-
-            button {
-                padding: 4px 10px;
-                margin-top: 4px;
-                font-size: 12px;
-            }
-
-            #flip-count {
-                margin: 2px 0;
-                font-size: 12px;
-            }
+        .teacher-panel-header {
+            padding: 8px 12px;
         }
 
-        @media (max-width: 700px) {
-            #game-board {
-                gap: 4px;
-            }
-
-            .card-front {
-                font-size: 18px;
-            }
+        .teacher-panel-header h2 {
+            font-size: 18px;
         }
-    </style>
+    }
+
+    @media (max-width: 600px) {
+        #game-header {
+            justify-content: flex-start;
+        }
+
+        #game-header h1 {
+            padding: 0 105px 0 0;
+            font-size: 16px;
+        }
+
+        #teacher-info-btn {
+            font-size: 10px;
+        }
+
+        #game-board {
+            gap: 4px;
+        }
+
+        .card-front {
+            font-size: 18px;
+        }
+
+        .difficulty-btn {
+            padding: 5px 7px;
+            font-size: 12px;
+        }
+    }
+</style>
 </head>
 
 <body>
 
-    <h1>Matching Game</h1>
+    <!-- HEADER -->
 
-    <div id="game-board"></div>
+    <div id="game-header">
+        <h1>📚 Parts of a Book Matching Game</h1>
 
-    <button id="restart-btn">Play Again</button>
+        <button id="teacher-info-btn"
+                type="button"
+                aria-haspopup="dialog"
+                aria-controls="teacher-panel">
+            📋 Teacher Info
+        </button>
+    </div>
 
-    <p id="flip-count">Flips: 0</p>
+    <!-- DIFFICULTY SELECTION -->
 
-    <button id="next-btn" style="display: none;">
-        Next
-    </button>
+    <div id="difficulty-buttons">
+        <button class="difficulty-btn active"
+                data-level="easy">
+            🟢 Easy (8)
+        </button>
 
-    <script>
+        <button class="difficulty-btn"
+                data-level="medium">
+            🟡 Medium (14)
+        </button>
 
-        /* TEXT TO SPEECH */
+        <button class="difficulty-btn"
+                data-level="hard">
+            🔴 Hard (20)
+        </button>
+    </div>
 
-        function speakCaption(caption) {
-            if (!('speechSynthesis' in window)) {
-                return;
-            }
+    <!-- GAME BOARD -->
 
-            if (!caption) {
-                return;
-            }
+    <div id="game-board" class="easy"></div>
 
-            window.speechSynthesis.cancel();
+    <!-- STUDENT CONTROLS -->
 
-            const speech = new SpeechSynthesisUtterance(caption);
+    <div id="bottom-controls">
 
-            speech.lang = 'en-US';
-            speech.rate = 0.85;
-            speech.pitch = 1;
-            speech.volume = 1;
+        <button id="restart-btn">
+            <span class="button-icon">🔄</span>
+            <span>Play Again!</span>
+        </button>
 
-            window.speechSynthesis.speak(speech);
+        <button id="menu-btn">
+            <span class="button-icon">🏠</span>
+            <span>Game Room</span>
+        </button>
+
+        <p id="flip-count">Flips: 0</p>
+
+        <button id="next-btn" style="display: none;">
+            ⭐ Next!
+        </button>
+
+    </div>
+
+    <!-- CELEBRATION SCREEN -->
+
+    <div id="completion-message">
+        <div class="completion-box">
+
+            <h2>🎉 Great Job!</h2>
+
+            <p>You matched all the book parts!</p>
+
+            <div class="completion-buttons">
+                <button id="celebrate-restart">
+                    🔄 Play Again!
+                </button>
+
+                <button id="celebrate-menu">
+                    🏠 Back to Game Room
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- TEACHER & STANDARDS POP-UP -->
+
+    <div id="teacher-panel"
+         class="teacher-overlay"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="teacher-panel-title"
+         hidden>
+
+        <div class="teacher-panel-box">
+
+            <div class="teacher-panel-header">
+                <h2 id="teacher-panel-title">
+                    📋 Teacher & Standards
+                </h2>
+
+                <button id="close-teacher-panel"
+                        type="button"
+                        aria-label="Close teacher information">
+                    ✕
+                </button>
+            </div>
+
+            <div class="teacher-panel-content">
+
+                <section>
+                    <h3>🎓 Grade Level</h3>
+                    <p>Kindergarten – First Grade</p>
+                </section>
+
+                <section>
+                    <h3>📚 Strand</h3>
+                    <p>Information Literacy</p>
+                </section>
+
+                <section>
+                    <h3>🎯 Skill</h3>
+                    <p>Parts of a Book</p>
+                </section>
+
+                <section>
+                    <h3>📖 Learning Target</h3>
+                    <p>
+                        Students will identify and name
+                        common parts of a book using
+                        visual clues.
+                    </p>
+                </section>
+
+                <section class="ican-section">
+                    <h3>⭐ I Can Statement</h3>
+                    <p>
+                        I can recognize and name
+                        the parts of a book!
+                    </p>
+                </section>
+
+                <section>
+                    <h3>📘 AASL Standards Connection</h3>
+                    <p>
+                        Shared Foundation: Inquire
+                    </p>
+                    <p>
+                        Learners develop and use skills
+                        to recognize and build new knowledge.
+                    </p>
+                </section>
+
+                <section>
+                    <h3>💻 ISTE Standards Connection</h3>
+                    <p>
+                        1.1 Empowered Learner
+                    </p>
+                    <p>
+                        Students use technology to
+                        practice skills and demonstrate
+                        learning.
+                    </p>
+                </section>
+
+                <section>
+                    <h3>📝 Assessment Evidence</h3>
+                    <p>
+                        Students identify book-part images
+                        and match corresponding pairs.
+                        Spoken captions reinforce vocabulary.
+                    </p>
+                </section>
+
+                <section>
+                    <h3>🌈 Differentiation</h3>
+                    <p>
+                        Easy: 4 matching pairs<br>
+                        Medium: 7 matching pairs<br>
+                        Hard: 10 matching pairs
+                    </p>
+                </section>
+
+            </div>
+        </div>
+    </div>
+
+<script>
+
+    /* TEXT TO SPEECH */
+
+    function speakCaption(caption) {
+
+        if (!('speechSynthesis' in window)) {
+            return;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        if (!caption) {
+            return;
+        }
 
-            /* MATCHING CARDS */
+        window.speechSynthesis.cancel();
 
-            const cards = [
-                {
-                    name: 'A',
-                    img: '../../img/parts-of-a-book-pictures/author.png',
-                    caption: 'Author'
-                },
-                {
-                    name: 'A',
-                    img: '../../img/parts-of-a-book-pictures/author.png',
-                    caption: 'Author'
-                },
-                {
-                    name: 'B',
-                    img: '../../img/parts-of-a-book-pictures/back-cover.png',
-                    caption: 'Back Cover'
-                },
-                {
-                    name: 'B',
-                    img: '../../img/parts-of-a-book-pictures/back-cover.png',
-                    caption: 'Back Cover'
-                },
-                {
-                    name: 'C',
-                    img: '../../img/parts-of-a-book-pictures/copyright-page.png',
-                    caption: 'Copyright Page'
-                },
-                {
-                    name: 'C',
-                    img: '../../img/parts-of-a-book-pictures/copyright-page.png',
-                    caption: 'Copyright Page'
-                },
-                {
-                    name: 'D',
-                    img: '../../img/parts-of-a-book-pictures/front-cover.png',
-                    caption: 'Front Cover'
-                },
-                {
-                    name: 'D',
-                    img: '../../img/parts-of-a-book-pictures/front-cover.png',
-                    caption: 'Front Cover'
-                },
-                {
-                    name: 'E',
-                    img: '../../img/parts-of-a-book-pictures/illustrations.png',
-                    caption: 'Illustrations'
-                },
-                {
-                    name: 'E',
-                    img: '../../img/parts-of-a-book-pictures/illustrations.png',
-                    caption: 'Illustrations'
-                },
-                {
-                    name: 'F',
-                    img: '../../img/parts-of-a-book-pictures/illustrator.png',
-                    caption: 'Illustrator'
-                },
-                {
-                    name: 'F',
-                    img: '../../img/parts-of-a-book-pictures/illustrator.png',
-                    caption: 'Illustrator'
-                },
-                {
-                    name: 'G',
-                    img: '../../img/parts-of-a-book-pictures/publisher.png',
-                    caption: 'Publisher'
-                },
-                {
-                    name: 'G',
-                    img: '../../img/parts-of-a-book-pictures/publisher.png',
-                    caption: 'Publisher'
-                },
-                {
-                    name: 'H',
-                    img: '../../img/parts-of-a-book-pictures/spine.png',
-                    caption: 'Spine'
-                },
-                {
-                    name: 'H',
-                    img: '../../img/parts-of-a-book-pictures/spine.png',
-                    caption: 'Spine'
-                },
-                {
-                    name: 'I',
-                    img: '../../img/parts-of-a-book-pictures/table-of-contents.png',
-                    caption: 'Table of Contents'
-                },
-                {
-                    name: 'I',
-                    img: '../../img/parts-of-a-book-pictures/table-of-contents.png',
-                    caption: 'Table of Contents'
-                },
-                {
-                    name: 'J',
-                    img: '../../img/parts-of-a-book-pictures/title.png',
-                    caption: 'Title'
-                },
-                {
-                    name: 'J',
-                    img: '../../img/parts-of-a-book-pictures/title.png',
-                    caption: 'Title'
-                }
+        const speech =
+            new SpeechSynthesisUtterance(caption);
+
+        speech.lang = 'en-US';
+        speech.rate = 0.85;
+        speech.pitch = 1;
+        speech.volume = 1;
+
+        window.speechSynthesis.speak(speech);
+    }
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        () => {
+
+        /* ALL 20 CARDS */
+
+        const cards = [
+            {
+                name: 'A',
+                img: '../../img/parts-of-a-book-pictures/author.png',
+                caption: 'Author'
+            },
+            {
+                name: 'A',
+                img: '../../img/parts-of-a-book-pictures/author.png',
+                caption: 'Author'
+            },
+            {
+                name: 'B',
+                img: '../../img/parts-of-a-book-pictures/back-cover.png',
+                caption: 'Back Cover'
+            },
+            {
+                name: 'B',
+                img: '../../img/parts-of-a-book-pictures/back-cover.png',
+                caption: 'Back Cover'
+            },
+            {
+                name: 'C',
+                img: '../../img/parts-of-a-book-pictures/copyright-page.png',
+                caption: 'Copyright Page'
+            },
+            {
+                name: 'C',
+                img: '../../img/parts-of-a-book-pictures/copyright-page.png',
+                caption: 'Copyright Page'
+            },
+            {
+                name: 'D',
+                img: '../../img/parts-of-a-book-pictures/front-cover.png',
+                caption: 'Front Cover'
+            },
+            {
+                name: 'D',
+                img: '../../img/parts-of-a-book-pictures/front-cover.png',
+                caption: 'Front Cover'
+            },
+            {
+                name: 'E',
+                img: '../../img/parts-of-a-book-pictures/illustrations.png',
+                caption: 'Illustrations'
+            },
+            {
+                name: 'E',
+                img: '../../img/parts-of-a-book-pictures/illustrations.png',
+                caption: 'Illustrations'
+            },
+            {
+                name: 'F',
+                img: '../../img/parts-of-a-book-pictures/illustrator.png',
+                caption: 'Illustrator'
+            },
+            {
+                name: 'F',
+                img: '../../img/parts-of-a-book-pictures/illustrator.png',
+                caption: 'Illustrator'
+            },
+            {
+                name: 'G',
+                img: '../../img/parts-of-a-book-pictures/publisher.png',
+                caption: 'Publisher'
+            },
+            {
+                name: 'G',
+                img: '../../img/parts-of-a-book-pictures/publisher.png',
+                caption: 'Publisher'
+            },
+            {
+                name: 'H',
+                img: '../../img/parts-of-a-book-pictures/spine.png',
+                caption: 'Spine'
+            },
+            {
+                name: 'H',
+                img: '../../img/parts-of-a-book-pictures/spine.png',
+                caption: 'Spine'
+            },
+            {
+                name: 'I',
+                img: '../../img/parts-of-a-book-pictures/table-of-contents.png',
+                caption: 'Table of Contents'
+            },
+            {
+                name: 'I',
+                img: '../../img/parts-of-a-book-pictures/table-of-contents.png',
+                caption: 'Table of Contents'
+            },
+            {
+                name: 'J',
+                img: '../../img/parts-of-a-book-pictures/title.png',
+                caption: 'Title'
+            },
+            {
+                name: 'J',
+                img: '../../img/parts-of-a-book-pictures/title.png',
+                caption: 'Title'
+            }
+        ];
+
+        /* GAME SETTINGS */
+
+        const difficultyPairs = {
+            easy: 4,
+            medium: 7,
+            hard: 10
+        };
+
+        let currentDifficulty = 'easy';
+        let cardArray = [];
+
+        const gameBoard =
+            document.getElementById('game-board');
+
+        const flipCounter =
+            document.getElementById('flip-count');
+
+        const nextButton =
+            document.getElementById('next-btn');
+
+        const completionMessage =
+            document.getElementById('completion-message');
+
+        let firstCard = null;
+        let secondCard = null;
+        let flips = 0;
+        let matches = 0;
+        let lockBoard = false;
+        let unflipTimer = null;
+        let completionTimer = null;
+
+        /* SHUFFLE HELPER */
+
+        function shuffle(array) {
+            const result = [...array];
+
+            for (let i = result.length - 1; i > 0; i--) {
+                const j =
+                    Math.floor(Math.random() * (i + 1));
+
+                [result[i], result[j]] =
+                    [result[j], result[i]];
+            }
+
+            return result;
+        }
+
+        /* SELECT CARDS FOR DIFFICULTY */
+
+        function prepareCards() {
+
+            const uniqueNames = [
+                ...new Set(
+                    cards.map(card => card.name)
+                )
             ];
 
-            let cardArray = [...cards];
+            const selectedNames =
+                shuffle(uniqueNames).slice(
+                    0,
+                    difficultyPairs[currentDifficulty]
+                );
 
-            cardArray.sort(() => 0.5 - Math.random());
+            cardArray = cards.filter(card =>
+                selectedNames.includes(card.name)
+            );
 
-            const gameBoard = document.getElementById('game-board');
+            cardArray = shuffle(cardArray);
 
-            let firstCard = null;
-            let secondCard = null;
-            let flips = 0;
-            let matches = 0;
-            let lockBoard = false;
+            gameBoard.className = currentDifficulty;
+        }
 
-            /* CREATE GAME BOARD */
+        /* CREATE GAME BOARD */
 
-            function createBoard() {
+        function createBoard() {
 
-                cardArray.forEach((card) => {
+            cardArray.forEach(card => {
 
-                    const cardElement = document.createElement('div');
+                const cardElement =
+                    document.createElement('div');
 
-                    cardElement.classList.add('card');
+                cardElement.classList.add('card');
 
-                    cardElement.dataset.name = card.name;
+                cardElement.dataset.name = card.name;
+                cardElement.dataset.caption = card.caption;
 
-                    // Store the caption for speaking
-                    cardElement.dataset.caption = card.caption;
+                const cardInner =
+                    document.createElement('div');
 
-                    const cardInner = document.createElement('div');
-                    cardInner.classList.add('card-inner');
+                cardInner.classList.add('card-inner');
 
-                    const cardFront = document.createElement('div');
-                    cardFront.classList.add('card-front');
-                    cardFront.textContent = '?';
+                const cardFront =
+                    document.createElement('div');
 
-                    const cardBack = document.createElement('div');
-                    cardBack.classList.add('card-back');
+                cardFront.classList.add('card-front');
+                cardFront.textContent = '?';
 
-                    const imgElement = document.createElement('img');
-                    imgElement.src = card.img;
-                    imgElement.alt = card.caption;
+                const cardBack =
+                    document.createElement('div');
 
-                    cardBack.appendChild(imgElement);
+                cardBack.classList.add('card-back');
 
-                    cardInner.appendChild(cardFront);
-                    cardInner.appendChild(cardBack);
+                const imgElement =
+                    document.createElement('img');
 
-                    cardElement.appendChild(cardInner);
+                imgElement.src = card.img;
+                imgElement.alt = card.caption;
 
-                    cardElement.addEventListener('click', flipCard);
+                cardBack.appendChild(imgElement);
+                cardInner.appendChild(cardFront);
+                cardInner.appendChild(cardBack);
+                cardElement.appendChild(cardInner);
 
-                    gameBoard.appendChild(cardElement);
-                });
+                cardElement.addEventListener(
+                    'click',
+                    flipCard
+                );
+
+                gameBoard.appendChild(cardElement);
+            });
+        }
+
+        /* FLIP A CARD */
+
+        function flipCard() {
+
+            if (
+                lockBoard ||
+                this === firstCard ||
+                this.classList.contains('flipped')
+            ) {
+                return;
             }
 
-            /* FLIP A CARD */
+            this.classList.add('flipped');
 
-            function flipCard() {
+            speakCaption(this.dataset.caption);
 
-                if (
-                    lockBoard ||
-                    this === firstCard ||
-                    this.classList.contains('flipped')
-                ) {
-                    return;
-                }
-
-                this.classList.add('flipped');
-
-                // READ THE CAPTION OUT LOUD
-                speakCaption(this.dataset.caption);
-
-                if (!firstCard) {
-                    firstCard = this;
-                    return;
-                }
-
-                secondCard = this;
-
-                flips++;
-
-                document.getElementById('flip-count').textContent =
-                    `Flips: ${flips}`;
-
-                checkForMatch();
+            if (!firstCard) {
+                firstCard = this;
+                return;
             }
 
-            /* CHECK FOR MATCH */
+            secondCard = this;
+            flips++;
 
-            function checkForMatch() {
+            flipCounter.textContent =
+                `Flips: ${flips}`;
 
-                if (firstCard.dataset.name === secondCard.dataset.name) {
+            checkForMatch();
+        }
 
-                    disableCards();
+        /* CHECK FOR MATCH */
 
-                    matches++;
+        function checkForMatch() {
 
-                    checkCompletion();
-
-                } else {
-
-                    unflipCards();
-                }
+            if (
+                firstCard.dataset.name ===
+                secondCard.dataset.name
+            ) {
+                disableCards();
+                matches++;
+                checkCompletion();
+            } else {
+                unflipCards();
             }
+        }
 
-            /* MATCHED CARDS */
+        /* MATCHED CARDS */
 
-            function disableCards() {
+        function disableCards() {
 
-                firstCard.removeEventListener('click', flipCard);
+            firstCard.removeEventListener(
+                'click',
+                flipCard
+            );
 
-                secondCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener(
+                'click',
+                flipCard
+            );
 
+            resetBoard();
+        }
+
+        /* UNMATCHED CARDS */
+
+        function unflipCards() {
+
+            lockBoard = true;
+
+            unflipTimer = setTimeout(() => {
+
+                firstCard.classList.remove('flipped');
+                secondCard.classList.remove('flipped');
+
+                unflipTimer = null;
                 resetBoard();
-            }
 
-            /* UNMATCHED CARDS */
+            }, 1000);
+        }
 
-            function unflipCards() {
+        /* RESET CARD SELECTION */
+
+        function resetBoard() {
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+        }
+
+        /* CHECK COMPLETION */
+
+        function checkCompletion() {
+
+            if (matches === cardArray.length / 2) {
 
                 lockBoard = true;
 
-                setTimeout(() => {
+                completionTimer = setTimeout(() => {
 
-                    firstCard.classList.remove('flipped');
+                    completionMessage.classList.add('show');
+                    completionTimer = null;
 
-                    secondCard.classList.remove('flipped');
-
-                    resetBoard();
-
-                }, 1000);
+                }, 650);
             }
+        }
 
-            /* RESET SELECTED CARDS */
+        /* RESTART GAME */
 
-            function resetBoard() {
+        function restartGame() {
 
-                firstCard = null;
-                secondCard = null;
-                lockBoard = false;
-            }
-
-            /* CHECK FOR COMPLETION */
-
-            function checkCompletion() {
-
-                if (matches === cardArray.length / 2) {
-
-                    setTimeout(() => {
-
-                        alert('Congratulations! You have matched all the cards.');
-
-                    }, 500);
-
-                    document.getElementById('next-btn').style.display = 'block';
-                }
-            }
-
-            /* NEXT BUTTON */
-
-            document.getElementById('next-btn').addEventListener('click', () => {
-
-                completeActivity();
-            });
-
-            /* RESTART GAME */
-
-            document.getElementById('restart-btn').addEventListener('click', () => {
-
+            if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel();
-
-                gameBoard.innerHTML = '';
-
-                document.getElementById('flip-count').textContent = 'Flips: 0';
-
-                document.getElementById('next-btn').style.display = 'none';
-
-                flips = 0;
-                matches = 0;
-                firstCard = null;
-                secondCard = null;
-                lockBoard = false;
-
-                cardArray.sort(() => 0.5 - Math.random());
-
-                createBoard();
-            });
-
-            /* COMPLETE ACTIVITY */
-
-            function completeActivity() {
-
-                if (window.opener) {
-                    window.opener.postMessage('stepCompleted', '*');
-                }
-
-                window.close();
             }
 
-            /* START GAME */
+            if (unflipTimer !== null) {
+                clearTimeout(unflipTimer);
+                unflipTimer = null;
+            }
 
+            if (completionTimer !== null) {
+                clearTimeout(completionTimer);
+                completionTimer = null;
+            }
+
+            completionMessage.classList.remove('show');
+            gameBoard.innerHTML = '';
+
+            flipCounter.textContent = 'Flips: 0';
+            nextButton.style.display = 'none';
+
+            flips = 0;
+            matches = 0;
+            firstCard = null;
+            secondCard = null;
+            lockBoard = false;
+
+            prepareCards();
             createBoard();
+        }
 
+        /* RETURN TO GAME ROOM */
+
+        function goToGameRoom() {
+
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+
+            // Adjust this relative path only if needed.
+            window.location.href =
+                '../kinder-first-game-index.html';
+        }
+
+        /* STUDENT BUTTON EVENTS */
+
+        document.getElementById(
+            'restart-btn'
+        ).addEventListener('click', restartGame);
+
+        document.getElementById(
+            'menu-btn'
+        ).addEventListener('click', goToGameRoom);
+
+        document.getElementById(
+            'celebrate-restart'
+        ).addEventListener('click', restartGame);
+
+        document.getElementById(
+            'celebrate-menu'
+        ).addEventListener('click', goToGameRoom);
+
+        /* DIFFICULTY BUTTONS */
+
+        document.querySelectorAll(
+            '.difficulty-btn'
+        ).forEach(button => {
+
+            button.addEventListener('click', () => {
+
+                currentDifficulty =
+                    button.dataset.level;
+
+                document.querySelectorAll(
+                    '.difficulty-btn'
+                ).forEach(btn => {
+                    btn.classList.remove('active');
+                });
+
+                button.classList.add('active');
+
+                restartGame();
+            });
         });
 
-    </script>
+        /* NEXT BUTTON */
+
+        nextButton.addEventListener(
+            'click',
+            completeActivity
+        );
+
+        function completeActivity() {
+
+            if (window.opener) {
+                window.opener.postMessage(
+                    'stepCompleted',
+                    '*'
+                );
+            }
+
+            window.close();
+        }
+
+        /* TEACHER INFO POP-UP */
+
+        const teacherPanel =
+            document.getElementById('teacher-panel');
+
+        const teacherInfoButton =
+            document.getElementById('teacher-info-btn');
+
+        const closeTeacherButton =
+            document.getElementById('close-teacher-panel');
+
+        function openTeacherPanel() {
+            teacherPanel.hidden = false;
+            closeTeacherButton.focus();
+        }
+
+        function closeTeacherPanel() {
+            teacherPanel.hidden = true;
+            teacherInfoButton.focus();
+        }
+
+        teacherInfoButton.addEventListener(
+            'click',
+            openTeacherPanel
+        );
+
+        closeTeacherButton.addEventListener(
+            'click',
+            closeTeacherPanel
+        );
+
+        // Close by clicking outside the panel
+        teacherPanel.addEventListener(
+            'click',
+            (event) => {
+
+                if (event.target === teacherPanel) {
+                    closeTeacherPanel();
+                }
+            }
+        );
+
+        // Close using the Escape key
+        document.addEventListener(
+            'keydown',
+            (event) => {
+
+                if (
+                    event.key === 'Escape' &&
+                    !teacherPanel.hidden
+                ) {
+                    closeTeacherPanel();
+                }
+            }
+        );
+
+        /* START GAME */
+
+        restartGame();
+
+    });
+
+</script>
 
 </body>
 </html>
