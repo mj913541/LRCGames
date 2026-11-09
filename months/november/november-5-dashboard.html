@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width,initial-scale=1" name="viewport"/>
+  <title>
+   Fifth Grade November Learning Café | LRC Quest
+  </title>
+  <link href="learning-cafe.css" rel="stylesheet"/>
+ </head>
+ <body>
+  <div aria-hidden="true" class="leaves" id="leaves">
+  </div>
+  <main>
+   <div class="top">
+    <a class="home" href="https://lrcquest.org/">
+     ⌂ LRC Quest Home
+    </a>
+    <span class="tag">
+     🍁 November Adventures 🍂
+    </span>
+   </div>
+   <h1>
+    🍂 Fifth Grade Learning Café 🍂
+   </h1>
+   <p class="intro">
+    What's on your learning menu today?
+   </p>
+   <section aria-label="Choose your learning activity" class="cards">
+    <a aria-label="Mustard: Must Do" class="card mustard" href="#" id="mustard">
+     <span class="spark">
+      ✨
+     </span>
+     <h2>
+      💛 MUSTARD
+     </h2>
+     <div aria-hidden="true" class="mascot">
+      🌭
+     </div>
+     <p>
+      MUST DO!
+      <br/>
+      Start with your required mission.
+     </p>
+     <span class="cta">
+      Start My Mission →
+     </span>
+    </a>
+    <a aria-label="Ketchup: Catch Up" class="card ketchup" href="#" id="ketchup">
+     <span class="spark">
+      ⭐
+     </span>
+     <h2>
+      ❤️ KETCHUP
+     </h2>
+     <div aria-hidden="true" class="mascot">
+      🍅
+     </div>
+     <p>
+      CATCH UP!
+      <br/>
+      Finish something you've started.
+     </p>
+     <span class="cta">
+      Catch Up →
+     </span>
+    </a>
+    <a aria-label="Pickles: Pick Your Choice" class="card pickles" href="#" id="pickles">
+     <span class="spark">
+      🌟
+     </span>
+     <h2>
+      💚 PICKLES
+     </h2>
+     <div aria-hidden="true" class="mascot">
+      🥒
+     </div>
+     <p>
+      PICK YOUR CHOICE!
+      <br/>
+      All done? Choose your adventure.
+     </p>
+     <span class="cta">
+      Explore Choices →
+     </span>
+    </a>
+   </section>
+   <p class="note">
+    ⭐ First MUSTARD, then KETCHUP if needed, then PICKLES! ⭐
+   </p>
+   <section aria-label="November slideshow" class="slideshow">
+    <h2>
+     🍁 Our November Learning Board 🍁
+    </h2>
+    <p>
+     Take a peek at our November activities!
+    </p>
+    <div class="slide-frame" id="slide-frame">
+     <div class="slide-placeholder">
+      📽️ November slideshow coming soon!
+      <small>
+       Teacher: paste your published Google Slides link into SLIDESHOW_URL below.
+      </small>
+     </div>
+    </div>
+   </section>
+  </main>
+  <div aria-hidden="true" aria-labelledby="choice-title" aria-modal="true" class="choice-modal" id="choice-modal" role="dialog">
+   <div class="choice-panel">
+    <button aria-label="Close choices" class="choice-close" id="choice-close" type="button">
+     ×
+    </button>
+    <h2 id="choice-title">
+     🥒 PICKLES Choice Menu!
+    </h2>
+    <p>
+     Finished your MUSTARD missions? Pick an adventure!
+    </p>
+    <div class="choice-grid">
+     <a class="choice-link" href="/months/november/3-5-november-read-alouds.html" rel="noopener noreferrer" target="_blank">
+      <span aria-hidden="true" class="choice-emoji">
+       📚
+      </span>
+      <strong>
+       November Read-Alouds
+      </strong>
+      <span class="choice-go">
+       Explore →
+      </span>
+     </a>
+     <a class="choice-link" href="/skill-worlds/kinder-first-second-game-index.html" rel="noopener noreferrer" target="_blank">
+      <span aria-hidden="true" class="choice-emoji">
+       🎮
+      </span>
+      <strong>
+       K–2 Game Worlds
+      </strong>
+      <span class="choice-go">
+       Explore →
+      </span>
+     </a>
+     <a class="choice-link" href="/skill-worlds/lrcquest-main-portal/older/index.html" rel="noopener noreferrer" target="_blank">
+      <span aria-hidden="true" class="choice-emoji">
+       🗺️
+      </span>
+      <strong>
+       Older Game Worlds
+      </strong>
+      <span class="choice-go">
+       Explore →
+      </span>
+     </a>
+    </div>
+   </div>
+  </div>
+  <script>
+   // TEACHER SETUP: change image values to image URLs or filenames; blank uses emoji.
+// NOTE: teacher PIN in browser code is a convenience lock, not secure authentication.
+window.CAFE_CONFIG = {
+  "links": {
+    "ketchup": "",
+    "pickles": ""
+  },
+  "slideshow": "https://docs.google.com/presentation/d/e/2PACX-1vSVf7wRPZOGB15wj7NxrA0oihwSYZq7lDWjbgZxMMi9qkZBilbmxYhwBGGUVIvQOnLX6Yfx3q31NyEN/pubembed?start=true&loop=true&delayms=3000",
+  "missions": {
+    "feast1": {
+      "url": "https://classroom.google.com/c/Nzc0MjExNzg1NzY2/a/ODk1MzUxNzg2MDM1/details",
+      "image": "",
+      "title": "Build a Feast #1"
+    },
+    "feast2": {
+      "url": "https://classroom.google.com/c/Nzc0MjExNzg1NzY2/a/ODgzMjU3NjgyNTM3/details",
+      "image": "",
+      "title": "Build a Feast #2",
+      "teacherUnlock": true
+    }
+  },
+  "teacherPin": "0913"
+};
+  </script>
+  <script src="learning-cafe.js">
+  </script>
+  <div aria-hidden="true" aria-labelledby="mission-title" aria-modal="true" class="mission-modal" id="mission-modal" role="dialog">
+   <div class="mission-panel">
+    <button aria-label="Close mission menu" class="mission-close" id="mission-close" type="button">
+     ×
+    </button>
+    <h2 id="mission-title">
+     🌭 Your MUSTARD Missions!
+    </h2>
+    <p>
+     Complete Mission 1, then ask your teacher to unlock Mission 2!
+    </p>
+    <div class="mission-grid">
+     <a class="mission-link" id="feast1-link" rel="noopener noreferrer" target="_blank">
+      <div class="mission-art" id="feast1-art">
+       🍽️
+      </div>
+      <strong>
+       Mission 1
+      </strong>
+      <span class="mission-name">
+       Build a Feast #1
+      </span>
+      <span class="mission-go">
+       Let's Go! →
+      </span>
+     </a>
+     <div class="mission-link locked-mission" id="feast2-container">
+      <div class="mission-art" id="feast2-art">
+       🦃
+      </div>
+      <strong>
+       Mission 2
+      </strong>
+      <span class="mission-name">
+       Build a Feast #2
+      </span>
+      <button class="mission-go unlock-button" id="feast2-unlock" type="button">
+       🔒 Ask Teacher to Unlock
+      </button>
+      <a class="mission-go unlocked-link" hidden="" id="feast2-link" rel="noopener noreferrer" target="_blank">
+       Open Mission 2 →
+      </a>
+      <p aria-live="polite" class="unlock-status" id="unlock-status">
+       Teacher unlock required
+      </p>
+     </div>
+    </div>
+    <div class="mission-footer">
+     🍂 Complete both before heading to PICKLES!
+    </div>
+   </div>
+  </div>
+ </body>
+</html>

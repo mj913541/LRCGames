@@ -1,0 +1,240 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>First Grade November Learning Café | LRC Quest</title>
+
+  <!-- Shared café styling -->
+  <link rel="stylesheet" href="learning-cafe.css">
+
+  <!-- First Grade ONLY: side-by-side layout -->
+  <style>
+    .first-grade-layout {
+      display: grid;
+      grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.5fr);
+      align-items: stretch;
+      gap: 22px;
+      margin-top: 22px;
+    }
+
+    .first-grade-layout .cards {
+      display: block;
+      max-width: none;
+      margin: 0;
+    }
+
+    .first-grade-layout .pickles {
+      height: 100%;
+      min-height: 365px;
+    }
+
+    .first-grade-layout .slideshow {
+      width: 100%;
+      max-width: none;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    /* Stack vertically on smaller screens */
+    @media (max-width: 800px) {
+      .first-grade-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .first-grade-layout .pickles {
+        min-height: 290px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Animated falling leaves -->
+  <div class="leaves" id="leaves" aria-hidden="true"></div>
+
+  <main>
+
+    <!-- Top navigation -->
+    <div class="top">
+
+      <a class="home" href="https://lrcquest.org/">
+        ⌂ LRC Quest Home
+      </a>
+
+      <span class="tag">
+        🍁 November Adventures 🍂
+      </span>
+
+    </div>
+
+    <!-- Page heading -->
+    <h1>🍂 First Grade Learning Café 🍂</h1>
+
+    <p class="intro">
+      Pick an adventure or explore our November learning board!
+    </p>
+
+    <!-- SIDE-BY-SIDE CONTENT -->
+    <div class="first-grade-layout">
+
+      <!-- LEFT: PICKLES -->
+      <section class="cards" aria-label="Choose your learning activity">
+
+        <a
+          href="#"
+          class="card pickles"
+          id="pickles"
+          aria-label="Pickles: Pick Your Choice"
+        >
+
+          <span class="spark">🌟</span>
+
+          <h2>💚 PICKLES</h2>
+
+          <div class="mascot" aria-hidden="true">
+            🥒
+          </div>
+
+          <p>
+            PICK YOUR CHOICE!
+            <br>
+            All done? Choose your adventure.
+          </p>
+
+          <span class="cta">
+            Explore Choices →
+          </span>
+
+        </a>
+
+      </section>
+
+      <!-- RIGHT: NOVEMBER GOOGLE SLIDES -->
+      <section class="slideshow" aria-label="November slideshow">
+
+        <h2>🍁 Our November Learning Board 🍁</h2>
+
+        <p>Take a peek at our November activities!</p>
+
+        <div class="slide-frame" id="slide-frame">
+
+          <div class="slide-placeholder">
+            📽️ November slideshow coming soon!
+
+            <small>
+              Teacher: paste your published Google Slides
+              link into the configuration below.
+            </small>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+
+  <!-- PICKLES POP-UP MENU -->
+  <div
+    class="choice-modal"
+    id="choice-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="choice-title"
+    aria-hidden="true"
+  >
+
+    <div class="choice-panel">
+
+      <button
+        type="button"
+        class="choice-close"
+        id="choice-close"
+        aria-label="Close choices"
+      >
+        &times;
+      </button>
+
+      <h2 id="choice-title">
+        🥒 PICKLES Choice Menu!
+      </h2>
+
+      <p>
+        Choose a game or enjoy a November read-aloud!
+      </p>
+
+      <div class="choice-grid">
+
+        <!-- November Read-Alouds -->
+        <a
+          class="choice-link"
+          href="https://lrcquest.org/months/november/k-2-november-read-alouds.html"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+
+          <span class="choice-emoji" aria-hidden="true">
+            📚
+          </span>
+
+          <strong>November Read-Alouds</strong>
+
+          <span class="choice-go">Explore →</span>
+
+        </a>
+
+        <!-- K–2 Game Worlds -->
+        <a
+          class="choice-link"
+          href="https://lrcquest.org/skill-worlds/kinder-first-second-game-index.html"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+
+          <span class="choice-emoji" aria-hidden="true">
+            🎮
+          </span>
+
+          <strong>K–2 Game Worlds</strong>
+
+          <span class="choice-go">Explore →</span>
+
+        </a>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- TEACHER SETTINGS -->
+  <script>
+    window.CAFE_CONFIG = {
+
+      links: {
+        mustard: "https://lrcquest.org/skill-worlds/kinder-first-second-game-index.html",
+        ketchup: "",
+        pickles: ""
+      },
+
+      slideshow:
+        "https://docs.google.com/presentation/d/e/2PACX-1vQYL1s1CQwYiQ5qNkbhHXF78B8EwXWx6g2TdiQkh2IoZIhdqb-eAuV2xQlW-KLDrMZRzMBFUs2pQ2zv/pubembed?start=true&loop=true&delayms=3000"
+
+    };
+  </script>
+
+  <!-- Shared café functionality -->
+  <script src="learning-cafe.js"></script>
+
+</body>
+</html>
