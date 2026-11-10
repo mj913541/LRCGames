@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LRC Quest | Teacher Login Lab</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#24334a;background:#eef5fb}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px}.panel{width:min(100%,520px);background:white;border-radius:24px;padding:34px;box-shadow:0 14px 48px #1936531c}.eyebrow{color:#547398;font-weight:800;letter-spacing:.1em;font-size:.76rem}h1{font-size:2rem;margin:.5rem 0}p{line-height:1.6;color:#516176}.pill{display:inline-block;background:#fff1cf;color:#7b5400;border-radius:20px;padding:7px 12px;font-size:.82rem;font-weight:700;margin:8px 0 18px}button{background:#205ec8;color:white;border:0;border-radius:12px;padding:14px 20px;font-size:1rem;font-weight:700;cursor:pointer;width:100%;margin:8px 0}button:disabled{opacity:.5;cursor:wait}.secondary{background:#e9eef7;color:#24334a}.status{background:#f1f5fa;border-radius:12px;padding:14px;margin:15px 0;overflow-wrap:anywhere}.success{background:#e5f7ec;color:#185c36}.error{background:#fff0ee;color:#9d2722}.hidden{display:none}.small{font-size:.83rem}a{color:#205ec8}footer{margin-top:25px;font-size:.8rem;color:#64748b}
+</style>
+</head>
+<body><main class="panel">
+<div class="eyebrow">LRC QUEST · TEACHER LAB</div>
+<h1>Welcome, educators! ✨</h1>
+<p>We're testing Google Sign-In before building a customizable Must Do / May Do learning hub.</p>
+<span class="pill">TEST MODE · NO TEACHER DASHBOARD YET</span>
+<div id="status" class="status" role="status" aria-live="polite">Connecting to Firebase…</div>
+<button id="login" disabled>Sign in with Google</button>
+<section id="profile" class="hidden"><h2>You're signed in! 🎉</h2><p id="identity"></p><p class="small">This only confirms Google authentication. It does not verify district approval or grant teacher privileges.</p><button id="logout" class="secondary">Sign out</button></section>
+<p class="small">Only test with your own account. Don't enter student information. This page does not write to a database.</p>
+<footer>Having trouble? Check Firebase Authentication → Settings → Authorized domains and your district's third-party app policies.</footer>
+</main>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+const firebaseConfig={apiKey:'AIzaSyDTKYFcm26i0LsrLo9UjtLnZpNKx4XsWG4',authDomain:'lrcquest-3039e.firebaseapp.com',projectId:'lrcquest-3039e',storageBucket:'lrcquest-3039e.firebasestorage.app',messagingSenderId:'72063656342',appId:'1:72063656342:web:bc08c6538437f50b53bdb7',measurementId:'G-5VXRYJ733C'};
+const status=document.getElementById('status'),login=document.getElementById('login'),profile=document.getElementById('profile'),identity=document.getElementById('identity'),logout=document.getElementById('logout');
+function message(t,kind=''){status.textContent=t;status.className='status '+kind}
+try{
+const app=initializeApp(firebaseConfig);const auth=getAuth(app);const provider=new GoogleAuthProvider();provider.setCustomParameters({prompt:'select_account'});
+onAuthStateChanged(auth,user=>{login.disabled=false;login.classList.toggle('hidden',!!user);profile.classList.toggle('hidden',!user);if(user){identity.textContent=`${user.displayName||'Google user'} · ${user.email||'No email returned'}`;message('Google sign-in succeeded.','success')}else{identity.textContent='';message('Ready to test Google Sign-In.')}} ,err=>message('Authentication state error: '+err.message,'error'));
+login.addEventListener('click',async()=>{login.disabled=true;message('Opening Google sign-in…');try{await signInWithPopup(auth,provider)}catch(err){message(`Sign-in failed (${err.code||'unknown'}): ${err.message||'Please try again.'}`,'error')}finally{login.disabled=false}});
+logout.addEventListener('click',async()=>{logout.disabled=true;try{await signOut(auth);message('Signed out successfully.')}catch(err){message('Sign-out failed: '+err.message,'error')}finally{logout.disabled=false}});
+}catch(err){message('Setup error: '+err.message,'error')}
+</script></body></html>
