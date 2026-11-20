@@ -1,43 +1,5 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coding Corner</title>
-  <link rel="stylesheet" href="../../assets/css/adventure-peak.css">
-</head>
-<body data-group="upper" data-topic="coding">
-  <main class="page">
-    <nav>
-      <a data-local href="../adventure-peak.html">← Adventure Peak</a>
-      <a data-local href="../index.html">Winter Village</a>
-    </nav>
-    <h1>Coding Corner</h1>
-    <p>Grades 3–5 · Teacher planning draft</p>
-    <section class="panel">
-      <h2>Suggested activities</h2>
-      <label><input type="checkbox" data-task="idea-0"> Prepare: Use loops to shorten a route</label>
-      <label><input type="checkbox" data-task="idea-1"> Prepare: Debug an incorrect program</label>
-      <label><input type="checkbox" data-task="idea-2"> Prepare: Solve a block coding challenge</label>
-    </section>
-    <section class="panel">
-      <h2>Content setup checklist</h2>
-      <p id="progress" aria-live="polite"></p>
-      <label><input type="checkbox" data-task="task-0"> Review existing LRC Quest games for a match</label>
-      <label><input type="checkbox" data-task="task-1"> Choose activities to include</label>
-      <label><input type="checkbox" data-task="task-2"> Copy and verify existing activity URLs</label>
-      <label><input type="checkbox" data-task="task-3"> Create any missing activities</label>
-      <label><input type="checkbox" data-task="task-4"> Add short visual instructions and optional read-alouds</label>
-      <label><input type="checkbox" data-task="task-5"> Provide a sample program</label>
-      <label><input type="checkbox" data-task="task-6"> Test reset, retry and feedback</label>
-      <label><input type="checkbox" data-task="task-7"> Test wrong answers and restart behavior</label>
-      <label><input type="checkbox" data-task="task-8"> Test on a student Chromebook</label>
-      <label><input type="checkbox" data-task="task-9"> Check screen fitting and back navigation</label>
-      <label><input type="checkbox" data-task="task-10"> Replace planning checklist with student-facing activities before launch</label>
-      <button id="reset" type="button">Reset checklist</button>
-      <p><small>Teacher planning only. Progress is stored locally in this browser when available. No grading or submissions.</small></p>
-    </section>
-  </main>
-  <script src="../../assets/js/adventure-peak.js"></script>
-</body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Coding Corner — Fox Commands</title><style>*{box-sizing:border-box}body{margin:0;height:100dvh;overflow:hidden;background:#dceef5;color:#234456;font:clamp(13px,1.5vw,18px) system-ui;display:flex;flex-direction:column}header,footer{display:flex;align-items:center;justify-content:center;gap:10px;padding:8px;flex-wrap:wrap}h1{font-size:clamp(18px,2.5vw,28px);margin:0}button,select{font:inherit;color:inherit;background:white;border:2px solid #9bbfc9;border-radius:10px;padding:7px 12px;cursor:pointer}button:hover{background:#fff1bf}button:disabled{opacity:.45}main{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;gap:15px;padding:8px}#board{display:grid;gap:5px;width:min(66vw,650px);max-height:100%;align-content:center}aside{width:min(28vw,300px);max-height:100%;overflow:auto;background:#fff9;padding:12px;border-radius:16px}#board button{min-width:0;padding:3px;aspect-ratio:1; font-size:clamp(15px,3vw,33px)}.tile{background:#fff;border-radius:8px;display:grid;place-items:center;aspect-ratio:1;font-size:clamp(18px,3vw,36px)}#status{font-weight:bold}#tools{display:flex;gap:5px;flex-wrap:wrap} .selected{outline:3px solid #e99d35} @media(max-height:650px){#board{width:min(62vw,470px)}header,footer{padding:4px}aside{padding:8px}}</style></head><body><header><h1>Coding Corner — Fox Commands</h1><select id="mode"><option value="lower">Trail Explorer (1–2)</option><option value="upper">Peak Explorer (3–5)</option></select><button id="reset">Restart</button><button id="back">Back</button><button type="button" id="lrc-adult-open">For Grown-Ups</button></header><main><div id="board"></div><aside><h2 id="level"></h2><p id="help">Queue arrows to guide the fox to the flag. Run your code, then edit it if needed.</p><div id="tools"></div><p id="status" role="status"></p><button id="next" hidden>Next challenge →</button></aside></main><footer>Plan → Run → Debug</footer><script>
+const $=id=>document.getElementById(id), board=$('board'), tools=$('tools');let level=1, won=false; const upper=()=> $('mode').value==='upper'; function say(t){$('status').textContent=t} function win(t){won=true;say('🎉 '+t);$('next').hidden=level>=5} function start(){won=false;$('level').textContent='Challenge '+level+' / 5';$('next').hidden=true;tools.innerHTML='';setup()} function button(parent,t,fn){let b=document.createElement('button');b.textContent=t;b.onclick=fn;parent.append(b);return b} function grid(n){board.innerHTML='';board.style.gridTemplateColumns=`repeat(${n},1fr)`} function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a} $('reset').onclick=start;$('next').onclick=()=>{level++;start()};$('mode').onchange=()=>{level=1;start()};$('back').onclick=()=>location.href='../adventure-peak.html'+location.search;if(+new URLSearchParams(location.search).get('grade')>=3||location.pathname.includes('/upper/'))$('mode').value='upper';
+let n,path,commands,pos,busy=false,token=0;const ds=[[0,-1],[1,0],[0,1],[-1,0]],ar=['↑','→','↓','←'];function setup(){token++;busy=false;n=upper()?6:5;path=[[0,n-1]];let x=0,y=n-1;while(x<n-1||y>0){if(x<n-1&&(y===0||Math.random()<.5))x++;else y--;path.push([x,y])}commands=[];pos=[0,n-1];ar.forEach((s,i)=>button(tools,s,()=>{if(!busy&&!won&&commands.length<30){commands.push(i);draw()}}));button(tools,'Undo',()=>{if(!busy){commands.pop();draw()}});button(tools,'Clear',()=>{if(!busy){commands=[];draw()}});button(tools,'Run ▶',run);draw()}function draw(){grid(n);for(let y=0;y<n;y++)for(let x=0;x<n;x++){let d=document.createElement('div');d.className='tile';let ok=path.some(p=>p[0]===x&&p[1]===y);d.style.background=ok?'#fff':'#719cad';d.textContent=pos[0]===x&&pos[1]===y?'🦊':x===n-1&&y===0?'🏁':ok?'·':'🌲';board.append(d)}if(!busy&&!won)say('Code: '+(commands.map(i=>ar[i]).join(' ')||'Add arrows'))}async function run(){if(busy||won)return;busy=true;let t=++token;pos=[0,n-1];draw();for(let i of commands){await new Promise(r=>setTimeout(r,350));if(t!==token)return;let d=ds[i],x=pos[0]+d[0],y=pos[1]+d[1];if(!path.some(p=>p[0]===x&&p[1]===y)){busy=false;say('Oops! Edit your code and try again.');return}pos=[x,y];draw();if(x===n-1&&y===0){busy=false;win('Your code worked!');return}}busy=false;say('Add more steps to reach the flag!')}
+start();</script><style>#lrc-adult-open{font:600 12px system-ui;padding:6px 10px;min-width:0;background:#f1f5f9;color:#25465a;border:1px solid #94aabd;border-radius:8px;box-shadow:none}#lrc-adult-dialog{box-sizing:border-box;width:min(680px,92vw);max-height:85vh;overflow:auto;background:#fff;color:#203b4c;border:2px solid #94aabd;border-radius:16px;padding:22px;font:16px/1.5 system-ui;text-align:left}#lrc-adult-dialog::backdrop{background:#142e44bb}#lrc-adult-dialog h2{margin-top:0}#lrc-adult-dialog h3{font-size:16px;margin:16px 0 4px}#lrc-adult-dialog p{margin:5px 0}#lrc-adult-dialog a{color:#205d89;text-decoration:underline}#lrc-adult-dialog button{background:#e1eef5;color:#203b4c;border:1px solid #94aabd;padding:8px 14px;box-shadow:none}</style>
+<dialog id="lrc-adult-dialog" aria-labelledby="lrc-adult-title"><h2 id="lrc-adult-title">For Grown-Ups · Learning Goals</h2><p>Sequence directional commands, run a program and debug errors.</p><h3>Grades 1–2</h3><p>Build short command sequences.</p><h3>Grades 3–5</h3><p>Plan longer routes and revise algorithms.</p><h3>Common Core (CCSS)</h3><p>MP1, MP6 — precision and perseverance (supporting).</p><h3>ISTE Standards for Students</h3><p>1.5d — algorithmic thinking and automation (direct practice).</p><h3>AISLE · I-SAIL (2022)</h3><p>3 — Digital Literacy: purposeful use of digital tools.</p><p><small>Suggested instructional connections, not a formal standards assessment. Observe student strategies and ask them to explain their choices. I-SAIL references are at literacy-domain level.</small></p><p><a href="https://www.thecorestandards.org/" target="_blank" rel="noopener">Common Core</a> · <a href="https://iste.org/standards/students" target="_blank" rel="noopener">ISTE</a> · <a href="https://aisled.org/isail/" target="_blank" rel="noopener">AISLE I-SAIL</a></p><form method="dialog"><button autofocus>Close</button></form></dialog><script>(function(){const b=document.getElementById('lrc-adult-open'),d=document.getElementById('lrc-adult-dialog');b.addEventListener('click',()=>d.showModal());for(const type of ['keydown','keyup','keypress'])d.addEventListener(type,e=>{if(e.key!=='Escape')e.stopPropagation()});})();</script></body></html>

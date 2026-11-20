@@ -1,43 +1,28 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Maze Adventures</title>
-  <link rel="stylesheet" href="../../assets/css/adventure-peak.css">
-</head>
-<body data-group="upper" data-topic="maze">
-  <main class="page">
-    <nav>
-      <a data-local href="../adventure-peak.html">← Adventure Peak</a>
-      <a data-local href="../index.html">Winter Village</a>
-    </nav>
-    <h1>Maze Adventures</h1>
-    <p>Grades 3–5 · Teacher planning draft</p>
-    <section class="panel">
-      <h2>Suggested activities</h2>
-      <label><input type="checkbox" data-task="idea-0"> Prepare: Navigate a multi-level winter maze</label>
-      <label><input type="checkbox" data-task="idea-1"> Prepare: Plan a shortest-path challenge</label>
-      <label><input type="checkbox" data-task="idea-2"> Prepare: Collect clues while avoiding obstacles</label>
-    </section>
-    <section class="panel">
-      <h2>Content setup checklist</h2>
-      <p id="progress" aria-live="polite"></p>
-      <label><input type="checkbox" data-task="task-0"> Review existing LRC Quest games for a match</label>
-      <label><input type="checkbox" data-task="task-1"> Choose activities to include</label>
-      <label><input type="checkbox" data-task="task-2"> Copy and verify existing activity URLs</label>
-      <label><input type="checkbox" data-task="task-3"> Create any missing activities</label>
-      <label><input type="checkbox" data-task="task-4"> Add short visual instructions and optional read-alouds</label>
-      <label><input type="checkbox" data-task="task-5"> Check collision boundaries and reachable paths</label>
-      <label><input type="checkbox" data-task="task-6"> Test arrow keys and touch controls</label>
-      <label><input type="checkbox" data-task="task-7"> Test wrong answers and restart behavior</label>
-      <label><input type="checkbox" data-task="task-8"> Test on a student Chromebook</label>
-      <label><input type="checkbox" data-task="task-9"> Check screen fitting and back navigation</label>
-      <label><input type="checkbox" data-task="task-10"> Replace planning checklist with student-facing activities before launch</label>
-      <button id="reset" type="button">Reset checklist</button>
-      <p><small>Teacher planning only. Progress is stored locally in this browser when available. No grading or submissions.</small></p>
-    </section>
-  </main>
-  <script src="../../assets/js/adventure-peak.js"></script>
-</body>
-</html>
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maze Adventures</title><style>*{box-sizing:border-box}body{margin:0;background:#dceef5;color:#234456;font:16px system-ui;height:100dvh;display:flex;flex-direction:column;align-items:center;overflow:hidden}header{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap;padding:9px}h1{font-size:clamp(18px,3vw,30px);margin:0}button,select{font:inherit;padding:8px 14px;border:0;border-radius:10px;background:#fff;color:#234456;cursor:pointer;box-shadow:0 2px 3px #0002}main{flex:1;min-height:0;width:100%;display:flex;justify-content:center;align-items:center;gap:16px}canvas{width:auto;height:auto;min-width:0;max-width:72vw;max-height:100%;aspect-ratio:1;object-fit:contain;border:6px solid #527e91;border-radius:16px;background:white}aside{width:180px;padding:10px;background:#fff9;border-radius:15px}footer{padding:8px;display:flex;gap:8px;align-items:center}#status{font-weight:bold} @media(max-width:650px){aside{width:110px;font-size:12px}canvas{max-width:70vw}header{gap:5px}}</style><header><h1>❄️ Maze Adventures</h1><select id="mode" aria-label="Difficulty"><option value="lower">Trail Explorer (1–2)</option><option value="upper">Peak Explorer (3–5)</option></select><button id="reset">Restart maze</button><button id="back">Back</button><button type="button" id="lrc-adult-open">For Grown-Ups</button></header><main><canvas id="board" width="650" height="650" aria-label="Snowy maze"></canvas><aside><h2 id="level"></h2><p id="score"></p><p>🏁 Find the exit!</p><p>🔑 Collect the key and every star to open the exit.</p><p>🧊 Ice makes you slide.</p><p id="status" role="status"></p><button id="next" hidden>Next maze →</button></aside></main><footer><button data-dir="-1,0" aria-label="Left">←</button><button data-dir="0,-1" aria-label="Up">↑</button><button data-dir="0,1" aria-label="Down">↓</button><button data-dir="1,0" aria-label="Right">→</button><span>Arrow keys or buttons</span></footer><script>
+const $=id=>document.getElementById(id);const ctx=$('board').getContext('2d');let n,grid,player,treasures,key,exit,hasKey,ice,level=1,won=false,seed;const dirs=[[1,0],[-1,0],[0,1],[0,-1]];const id=(x,y)=>x+','+y;function rand(){seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296}function shuffle(a){for(let i=a.length-1;i>0;i--){let j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}function build(){seed=level*329+($('mode').value==='upper'?891:0);n=Math.min(23,($('mode').value==='upper'?15:9)+2*(level-1));grid=Array.from({length:n},()=>Array(n).fill(1));function carve(x,y){grid[y][x]=0;for(const [dx,dy] of shuffle([...dirs])){let a=x+dx*2,b=y+dy*2;if(a>0&&b>0&&a<n-1&&b<n-1&&grid[b][a]){grid[y+dy][x+dx]=0;carve(a,b)}}}carve(1,1);let cells=[];for(let y=1;y<n-1;y++)for(let x=1;x<n-1;x++)if(!grid[y][x]&&!(x===1&&y===1))cells.push([x,y]);shuffle(cells);const leaves=cells.filter(([x,y])=>dirs.filter(([dx,dy])=>grid[y+dy][x+dx]===0).length===1);exit=leaves[0];cells=cells.filter(([x,y])=>x!==exit[0]||y!==exit[1]);key=cells.pop();treasures=new Set(cells.splice(0,Math.min(5+level,10)).map(p=>id(...p)));ice=new Set();if(level>1||$('mode').value==='upper'){for(const [x,y] of cells){let exits=dirs.filter(([dx,dy])=>!grid[y+dy][x+dx]);if(exits.length===2&&exits[0][0]+exits[1][0]===0&&exits[0][1]+exits[1][1]===0&&rand()<.3)ice.add(id(x,y))}}// Verify every collectible is reachable even with forced ice movement.
+const reachable=new Set(['1,1']);const queue=[[1,1]];const visited=new Set(['1,1']);
+while(queue.length){const [a,b]=queue.shift();for(const [dx,dy] of dirs){let x=a,y=b;do{if(grid[y+dy]?.[x+dx]!==0)break;x+=dx;y+=dy;reachable.add(id(x,y));}while(ice.has(id(x,y)));if(!visited.has(id(x,y))){visited.add(id(x,y));queue.push([x,y]);}}}
+if(![...treasures,id(...key),id(...exit)].every(t=>reachable.has(t)))ice.clear();
+player=[1,1];hasKey=false;won=false;collected=0;$('next').hidden=true;$('status').textContent='Find the golden key!';draw()}
+let collected=0;function draw(){let s=650/n;ctx.clearRect(0,0,650,650);for(let y=0;y<n;y++)for(let x=0;x<n;x++){ctx.fillStyle=grid[y][x]?'#478294':ice.has(id(x,y))?'#9edff5':'#f5fcff';ctx.fillRect(x*s,y*s,s+.5,s+.5);if(grid[y][x]){ctx.fillStyle='#6ea7b7';ctx.fillRect(x*s+3,y*s+3,s-6,Math.max(2,s*.18))}else if(ice.has(id(x,y))){ctx.strokeStyle='#fff';ctx.beginPath();ctx.moveTo((x+.2)*s,(y+.8)*s);ctx.lineTo((x+.8)*s,(y+.2)*s);ctx.stroke()}}function icon(t,x,y){
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x*s,y*s,s,s);
+  ctx.clip();
+  ctx.translate((x+.5)*s,(y+.5)*s);
+  ctx.font='48px system-ui, sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='alphabetic';
+  const m=ctx.measureText(t);
+  const a=m.actualBoundingBoxAscent || 40;
+  const d=m.actualBoundingBoxDescent || 8;
+  const w=Math.max(m.width,(m.actualBoundingBoxLeft||0)+(m.actualBoundingBoxRight||0),1);
+  const scale=Math.min(s*.72/w,s*.72/(a+d));
+  ctx.scale(scale,scale);
+  ctx.fillText(t,0,(a-d)/2);
+  ctx.restore();
+}for(const t of treasures)icon('⭐',...t.split(',').map(Number));if(!hasKey)icon('🔑',...key);icon(hasKey&&treasures.size===0?'🏁':'🔒',...exit);icon('🦊',...player);$('level').textContent='Maze '+level+' / 5';$('score').textContent='⭐ '+collected+' collected • '+treasures.size+' left';}
+function step(dx,dy){if(won)return;do{let x=player[0]+dx,y=player[1]+dy;if(grid[y]?.[x]!==0)break;player=[x,y];if(treasures.delete(id(x,y)))collected++;if(x===key[0]&&y===key[1]){hasKey=true;$('status').textContent='Key collected! Find every star.'}if(x===exit[0]&&y===exit[1]&&(!hasKey||treasures.size)){$('status').textContent='Collect the key and every star first!'}if(x===exit[0]&&y===exit[1]&&hasKey&&treasures.size===0){won=true;$('status').textContent=level===5?'🎉 You conquered Adventure Peak!':'🎉 Maze complete!';$('next').hidden=level===5;break}}while(ice.has(id(...player)));draw()}
+const keys={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1],a:[-1,0],d:[1,0],w:[0,-1],s:[0,1]};window.addEventListener('keydown',e=>{if(keys[e.key]&&e.target.tagName!=='SELECT'){e.preventDefault();step(...keys[e.key])}});document.querySelectorAll('[data-dir]').forEach(b=>b.onclick=()=>step(...b.dataset.dir.split(',').map(Number)));$('reset').onclick=build;$('mode').onchange=()=>{level=1;build();$('mode').blur()};$('next').onclick=()=>{level++;build()};$('back').onclick=()=>{if(document.referrer)history.back();else location.href='../adventure-peak.html'+location.search};if(new URLSearchParams(location.search).get('grade')>=3)$('mode').value='upper';build();
+</script><style>#lrc-adult-open{font:600 12px system-ui;padding:6px 10px;min-width:0;background:#f1f5f9;color:#25465a;border:1px solid #94aabd;border-radius:8px;box-shadow:none}#lrc-adult-dialog{box-sizing:border-box;width:min(680px,92vw);max-height:85vh;overflow:auto;background:#fff;color:#203b4c;border:2px solid #94aabd;border-radius:16px;padding:22px;font:16px/1.5 system-ui;text-align:left}#lrc-adult-dialog::backdrop{background:#142e44bb}#lrc-adult-dialog h2{margin-top:0}#lrc-adult-dialog h3{font-size:16px;margin:16px 0 4px}#lrc-adult-dialog p{margin:5px 0}#lrc-adult-dialog a{color:#205d89;text-decoration:underline}#lrc-adult-dialog button{background:#e1eef5;color:#203b4c;border:1px solid #94aabd;padding:8px 14px;box-shadow:none}</style>
+<dialog id="lrc-adult-dialog" aria-labelledby="lrc-adult-title"><h2 id="lrc-adult-title">For Grown-Ups · Learning Goals</h2><p>Navigate paths, collect required objects and revise routes after obstacles.</p><h3>Grades 1–2</h3><p>Smaller mazes; plan short routes.</p><h3>Grades 3–5</h3><p>Larger mazes and ice; anticipate consequences.</p><h3>Common Core (CCSS)</h3><p>MP1, MP7 — perseverance and spatial structure (supporting).</p><h3>ISTE Standards for Students</h3><p>1.5 — Computational Thinker (route planning practice).</p><h3>AISLE · I-SAIL (2022)</h3><p>3 — Digital Literacy: purposeful technology use (supporting).</p><p><small>Suggested instructional connections, not a formal standards assessment. Observe student strategies and ask them to explain their choices. I-SAIL references are at literacy-domain level.</small></p><p><a href="https://www.thecorestandards.org/" target="_blank" rel="noopener">Common Core</a> · <a href="https://iste.org/standards/students" target="_blank" rel="noopener">ISTE</a> · <a href="https://aisled.org/isail/" target="_blank" rel="noopener">AISLE I-SAIL</a></p><form method="dialog"><button autofocus>Close</button></form></dialog><script>(function(){const b=document.getElementById('lrc-adult-open'),d=document.getElementById('lrc-adult-dialog');b.addEventListener('click',()=>d.showModal());for(const type of ['keydown','keyup','keypress'])d.addEventListener(type,e=>{if(e.key!=='Escape')e.stopPropagation()});})();</script></html>
