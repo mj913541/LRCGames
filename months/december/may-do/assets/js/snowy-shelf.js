@@ -10,16 +10,10 @@ function openBook(book) {
   document.querySelector('#video-title').textContent = book.title;
   const frame = document.createElement('iframe');
   frame.title = book.title;
-  frame.referrerPolicy = 'strict-origin-when-cross-origin';
-  const url = new URL('https://www.youtube-nocookie.com/embed/' + book.video);
-  url.searchParams.set('autoplay', '1');
-  url.searchParams.set('rel', '0');
-  if (location.protocol === 'https:' || location.protocol === 'http:') {
-    url.searchParams.set('origin', location.origin);
-  }
-  frame.src = url.href;
+  frame.src = 'https://www.youtube-nocookie.com/embed/' + book.video + '?autoplay=1&rel=0';
   frame.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture';
   frame.allowFullscreen = true;
+  frame.referrerPolicy = 'strict-origin-when-cross-origin';
   video.replaceChildren(frame);
   player.showModal();
 }
@@ -30,7 +24,7 @@ function render(page) {
     const button = document.createElement('button');
     button.className = 'book';
     const image = document.createElement('img');
-    image.src = '../../assets/images/snowy-stories/' + book.image;
+    image.src = '../../assets/images/' + (book.image.includes('/') ? book.image : 'snowy-stories/' + book.image);
     image.alt = '';
     const label = document.createElement('span');
     label.textContent = '▶ ' + book.title;

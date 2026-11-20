@@ -1,52 +1,5 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Genre Spotlight</title>
-  <link rel="stylesheet" href="../../assets/css/reading-nook.css">
-</head>
-<body class="" data-group="upper" data-topic="genre">
-  <main class="page">
-    <nav><a data-local href="../reading-nook.html">← Reading Nook</a><a data-local href="../index.html">Winter Village</a></nav>
-    <h1>📚 Genre Spotlight</h1>
-    <p>Grades 3–5 · Adventure fiction: journeys, challenges and discovery</p>
-    <section class="panel">
-      <h2>Teacher planning — suggested books</h2>
-      <p>Draft page: these are suggestions, not linked read-alouds yet.</p>
-      <div class="book">
-        <h3>The Wild Robot — Peter Brown</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-0"> Prepare this suggested book or replace it</label>
-      </div>
-      <div class="book">
-        <h3>Hatchet — Gary Paulsen (preview for maturity)</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-1"> Prepare this suggested book or replace it</label>
-      </div>
-      <div class="book">
-        <h3>My Side of the Mountain — Jean Craighead George</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-2"> Prepare this suggested book or replace it</label>
-      </div>
-    </section>
-    <section class="panel">
-      <h2>Content setup checklist</h2>
-      <p id="progress" aria-live="polite"></p>
-      <label><input type="checkbox" data-task="task-0"> Add a short spotlight introduction and optional narration</label>
-      <label><input type="checkbox" data-task="task-1"> Finalize book selections</label>
-      <label><input type="checkbox" data-task="task-2"> Confirm books are appropriate for this age group</label>
-      <label><input type="checkbox" data-task="task-3"> Check for winter-only content; avoid Christmas imagery or references</label>
-      <label><input type="checkbox" data-task="task-4"> Find authorized read-alouds or publisher previews</label>
-      <label><input type="checkbox" data-task="task-5"> Check school Chromebook access</label>
-      <label><input type="checkbox" data-task="task-6"> Add book cover images with appropriate permission</label>
-      <label><input type="checkbox" data-task="task-7"> Add short student-friendly descriptions</label>
-      <label><input type="checkbox" data-task="task-8"> Add and test reading links</label>
-      <label><input type="checkbox" data-task="task-9"> Preview page as a student</label>
-      <button id="reset" type="button">Reset checklist</button>
-      <p><small>Progress is saved in this browser when browser storage is available. These are teacher planning tasks, not student assignments.</small></p>
-    </section>
-  </main>
-  <script src="../../assets/js/reading-nook.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Realistic Fiction</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#203e46;color:#253c44;height:100dvh;display:grid;place-items:center}main{width:min(100vw,177.78vh);height:min(100vh,56.25vw);background:linear-gradient(#fff2daee,#fff2daee),url('../../assets/images/genre-spotlight.png') center/cover;display:flex;flex-direction:column;padding:2%;gap:1.2%;border:8px solid #775033;border-radius:18px;overflow:hidden}header,nav,footer{display:flex;align-items:center;justify-content:center;gap:10px}h1{font-size:clamp(18px,3vw,36px);margin:0;color:#205e62}header{flex-direction:column;gap:0}button,a{font:inherit;font-weight:bold;background:#23666b;color:white;border:2px solid #efc77d;border-radius:12px;padding:.5em .8em;cursor:pointer;text-decoration:none}button:focus-visible,a:focus-visible{outline:4px solid orange}button[aria-pressed=true]{background:#315b9b}#shelf{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,minmax(0,1fr));gap:10px;padding:8px;background:#986339;border-radius:12px} .book{background:#f7e4ba;color:#244650;display:flex;align-items:center;justify-content:center;flex-direction:column;min-width:0;min-height:0;gap:4px;font-size:clamp(10px,1.3vw,19px);overflow:hidden}.book img{height:66%;max-width:95%;object-fit:contain;min-height:0}.book span{text-align:center}dialog{width:min(850px,90vw);max-height:85vh;border:5px solid #32656e;border-radius:20px;background:#fff3d9;color:#253c44;padding:20px}dialog::backdrop{background:#152c39bb}#titles{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;max-height:45vh;overflow:auto}#titles div{background:white;border-radius:8px;padding:8px}#titles img{height:100px;max-width:100%;object-fit:contain;display:block;margin:auto}#titles p{font-size:14px;text-align:center}footer{justify-content:space-between}p{margin:5px 0}#empty{grid-column:1/-1;grid-row:1/-1;align-self:center;text-align:center;color:white;font-size:24px}
+</style></head><body><main><header><h1>Genre Spotlight · Realistic Fiction</h1><p>Made-up stories that could really happen!</p></header><nav id="tabs"></nav><div id="shelf"></div><footer><a id="back" href="../reading-nook.html">← Reading Nook</a><button id="prev">← Previous</button><span id="page"></span><button id="next">Next →</button></footer></main><dialog id="detail"><button id="close">✕ Close</button><h2 id="name"></h2><p id="description"></p><button id="read">🔊 Read to me</button><p id="location"></p><h3>Books in our LRC</h3><div id="titles"></div></dialog><script src="../../assets/js/genre-data.js"></script><script src="../../assets/js/genre-spotlight.js"></script></body></html>

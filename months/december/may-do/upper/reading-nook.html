@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Reading Nook</title>
   <link rel="stylesheet" href="../assets/css/reading-nook.css">
-</head>
+<style>.scene .locked{padding:0;background:#243c50a8;border:2px solid #f2c66d;color:white;display:grid;place-items:center;font-size:clamp(9px,1.2vw,18px);line-height:1.1}.locked span{background:#233c50e8;padding:.25em;border-radius:6px}.coming{border:4px solid #e8bc71;border-radius:18px;padding:24px;background:#fff3d9;color:#253c44;text-align:center}.coming::backdrop{background:#152c39aa}</style></head>
 <body class="room" data-group="upper" data-topic="room">
   <main class="scene">
     <img src="../assets/images/reading-nook.png" alt="Winter reading nook with four bookshelves and four spotlights">
@@ -19,14 +19,14 @@
        style="left: 72%; top: 50%; width: 24%; height: 23%;"></a>
     <a class="hotspot" data-local href="reading/genre.html" aria-label="Genre Spotlight" title="Genre Spotlight"
        style="left: 34%; top: 39%; width: 16%; height: 11%;"></a>
-    <a class="hotspot" data-local href="reading/author.html" aria-label="Author Spotlight" title="Author Spotlight"
-       style="left: 51%; top: 39%; width: 16%; height: 11%;"></a>
-    <a class="hotspot" data-local href="reading/illustrator.html" aria-label="Illustrator Spotlight" title="Illustrator Spotlight"
-       style="left: 34%; top: 51%; width: 16%; height: 11%;"></a>
-    <a class="hotspot" data-local href="reading/series.html" aria-label="Series Spotlight" title="Series Spotlight"
-       style="left: 51%; top: 51%; width: 16%; height: 11%;"></a>
+    <button type="button" class="hotspot locked" aria-label="Coming Soon — Author Spotlight" title="Coming Soon — Author Spotlight"
+       style="left: 51%; top: 39%; width: 16%; height: 11%;"><span>🔒 Coming Soon</span></button>
+    <button type="button" class="hotspot locked" aria-label="Coming Soon — Illustrator Spotlight" title="Coming Soon — Illustrator Spotlight"
+       style="left: 34%; top: 51%; width: 16%; height: 11%;"><span>🔒 Coming Soon</span></button>
+    <button type="button" class="hotspot locked" aria-label="Coming Soon — Series Spotlight" title="Coming Soon — Series Spotlight"
+       style="left: 51%; top: 51%; width: 16%; height: 11%;"><span>🔒 Coming Soon</span></button>
     <a class="hotspot" data-local href="index.html" aria-label="Back to village" title="Back to village" style="left: 79%; top: 78%; width: 20%; height: 21%;"></a>
-  </main>
+  </main><dialog class="coming" id="coming"><h2>Coming Soon!</h2><p>More reading adventures are on the way.</p><button onclick="this.closest('dialog').close()">Back to the Reading Nook</button></dialog><script>document.querySelectorAll(".locked").forEach(b=>b.onclick=()=>document.getElementById("coming").showModal());</script>
   <script src="../assets/js/reading-nook.js"></script>
 </body>
 </html>
