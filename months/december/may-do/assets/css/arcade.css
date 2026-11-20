@@ -1,0 +1,7 @@
+* { box-sizing: border-box; }
+body { margin: 0; height: 100dvh; display: grid; place-items: center; overflow: hidden; background: #102f41; }
+.scene { position: relative; width: min(100vw, calc(100dvh * 1672 / 941)); aspect-ratio: 1672 / 941; }
+.scene img { display: block; width: 100%; height: 100%; }
+.hotspot { position: absolute; border-radius: 12px; outline-offset: -4px; transition: background .15s; }
+.hotspot:hover, .hotspot:focus-visible { background: #ffffff25; outline: 3px solid #ffdf72; }
+@media (prefers-reduced-motion: reduce) { .hotspot { transition: none; } }

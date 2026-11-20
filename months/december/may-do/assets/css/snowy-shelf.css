@@ -1,0 +1,22 @@
+* { box-sizing: border-box; }
+body { margin: 0; height: 100dvh; display: grid; place-items: center; background: #183d41; font-family: system-ui, sans-serif; overflow: hidden; }
+.room { position: relative; width: min(100vw, 177.586dvh); aspect-ratio: 1648/928; background: url('../images/snowy-stories/room.png') center/100% 100% no-repeat; container-type: inline-size; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.tabs { position: absolute; top: 21%; left: 31%; width: 38%; display: flex; gap: 1%; justify-content: center; }
+button { cursor: pointer; font: inherit; }
+.tabs button { background: #fff0c7; border: 2px solid #a96b26; border-radius: 12px; color: #193b44; font-weight: 800; font-size: 1.4cqw; padding: .45em .7em; }
+.tabs button[aria-pressed="true"] { background: #006773; color: white; }
+#shelf { position: absolute; left: 20%; top: 27.5%; width: 64%; height: 54%; display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); gap: 5% 2%; background: #69401f; padding: 1%; border-radius: 8px; box-shadow: inset 0 0 20px #321c13; }
+.book { min-width: 0; min-height: 0; border: 3px solid #eab65d; background: #f9e7bb; border-radius: 8px; padding: 4%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3%; color: #182e36; font-weight: 700; font-size: 1.15cqw; }
+.book img { width: 100%; height: 73%; object-fit: contain; min-height: 0; }
+.book:hover, .book:focus-visible, #back:focus-visible { outline: 4px solid #ffdf6c; transform: scale(1.025); }
+#back { position: absolute; right: 1%; bottom: 1%; width: 19%; height: 19%; }
+.credit { position: absolute; bottom: 1%; left: 25%; color: white; background: #16494c; padding: .2em .5em; border-radius: 6px; font-size: .85cqw; }
+dialog { width: min(88vw, 1100px, 140dvh); border: 4px solid #d8a43b; border-radius: 16px; padding: 16px; background: #fff4d7; color: #193b44; }
+dialog::backdrop { background: #000b; }
+dialog header { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+dialog h2 { margin: 0 0 8px; font-size: clamp(16px, 3vw, 24px); }
+#close { background: #006773; color: white; border: 0; border-radius: 10px; padding: 10px; }
+#video { aspect-ratio: 16/9; background: #111; }
+#video iframe { width: 100%; height: 100%; border: 0; }
+dialog p { font-size: 13px; margin: 8px 0 0; }

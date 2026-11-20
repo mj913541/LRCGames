@@ -1,0 +1,9 @@
+* { box-sizing: border-box; }
+body { margin: 0; height: 100dvh; overflow: hidden; background: #193e62; color: white; font: 16px system-ui, sans-serif; display: grid; place-items: center; }
+.scene { position: relative; width: min(100vw, 150dvh); aspect-ratio: 3 / 2; }
+.scene img { width: 100%; height: 100%; display: block; }
+.hotspot { position: absolute; border: 2px solid transparent; border-radius: 18%; transition: background .15s; }
+.hotspot:hover, .hotspot:focus-visible { background: #ffffff26; border-color: #fff; outline: 3px solid #ffd581; }
+.back { position: absolute; bottom: 1%; left: 1%; background: #17374e; color: white; padding: .55em .8em; border-radius: 12px; text-decoration: none; font-size: clamp(11px, 2vw, 16px); }
+.preview { max-width: 90vw; text-align: center; padding: 24px; }
+.preview a { color: white; }

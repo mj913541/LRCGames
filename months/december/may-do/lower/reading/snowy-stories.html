@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snowy Stories</title>
+  <link rel="stylesheet" href="../../assets/css/snowy-shelf.css">
+</head>
+<body data-group="lower">
+  <main class="room">
+    <h1 class="sr-only">Snowy Stories</h1>
+    <nav class="tabs" aria-label="Story collection">
+      <button data-page="0">Snowman Stories</button>
+      <button data-page="1">Winter Stories</button>
+    </nav>
+    <section id="shelf" aria-label="Choose a story"></section>
+    <a id="back" href="../reading-nook.html" aria-label="Back to Reading Nook"></a>
+    <span class="credit">Original video collection: Amanda Lockwood</span>
+  </main>
+  <dialog id="player" aria-labelledby="video-title">
+    <header><h2 id="video-title"></h2><button id="close">✕ Close</button></header>
+    <div id="video"></div>
+    <p>If playback is unavailable, close this window and choose another story.</p>
+  </dialog>
+  <script src="../../assets/js/snowy-books.js"></script>
+  <script src="../../assets/js/snowy-shelf.js?v=153fix1"></script>
+</body>
+</html>
