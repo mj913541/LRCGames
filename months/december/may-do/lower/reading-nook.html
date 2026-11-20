@@ -3,50 +3,30 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Genre Spotlight</title>
-  <link rel="stylesheet" href="../../assets/css/reading-nook.css">
+  <title>The Reading Nook</title>
+  <link rel="stylesheet" href="../assets/css/reading-nook.css">
 </head>
-<body class="" data-group="lower" data-topic="genre">
-  <main class="page">
-    <nav><a data-local href="../reading-nook.html">← Reading Nook</a><a data-local href="../index.html">Winter Village</a></nav>
-    <h1>📚 Genre Spotlight</h1>
-    <p>Grades 1–2 · Realistic fiction: stories that could really happen</p>
-    <section class="panel">
-      <h2>Teacher planning — suggested books</h2>
-      <p>Draft page: these are suggestions, not linked read-alouds yet.</p>
-      <div class="book">
-        <h3>The Snowy Day — Ezra Jack Keats</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-0"> Prepare this suggested book or replace it</label>
-      </div>
-      <div class="book">
-        <h3>Last Stop on Market Street — Matt de la Peña</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-1"> Prepare this suggested book or replace it</label>
-      </div>
-      <div class="book">
-        <h3>Jabari Jumps — Gaia Cornwall</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-2"> Prepare this suggested book or replace it</label>
-      </div>
-    </section>
-    <section class="panel">
-      <h2>Content setup checklist</h2>
-      <p id="progress" aria-live="polite"></p>
-      <label><input type="checkbox" data-task="task-0"> Add a short spotlight introduction and optional narration</label>
-      <label><input type="checkbox" data-task="task-1"> Finalize book selections</label>
-      <label><input type="checkbox" data-task="task-2"> Confirm books are appropriate for this age group</label>
-      <label><input type="checkbox" data-task="task-3"> Check for winter-only content; avoid Christmas imagery or references</label>
-      <label><input type="checkbox" data-task="task-4"> Find authorized read-alouds or publisher previews</label>
-      <label><input type="checkbox" data-task="task-5"> Check school Chromebook access</label>
-      <label><input type="checkbox" data-task="task-6"> Add book cover images with appropriate permission</label>
-      <label><input type="checkbox" data-task="task-7"> Add short student-friendly descriptions</label>
-      <label><input type="checkbox" data-task="task-8"> Add and test reading links</label>
-      <label><input type="checkbox" data-task="task-9"> Preview page as a student</label>
-      <button id="reset" type="button">Reset checklist</button>
-      <p><small>Progress is saved in this browser when browser storage is available. These are teacher planning tasks, not student assignments.</small></p>
-    </section>
+<body class="room" data-group="upper" data-topic="room">
+  <main class="scene">
+    <img src="../assets/images/reading-nook.png" alt="Winter reading nook with four bookshelves and four spotlights">
+    <a class="hotspot" data-local href="reading/snowy-stories.html" aria-label="Snowy Stories" title="Snowy Stories"
+       style="left: 5%; top: 28%; width: 23%; height: 22%;"></a>
+    <a class="hotspot" data-local href="reading/winter-animals.html" aria-label="Winter Animals" title="Winter Animals"
+       style="left: 5%; top: 50%; width: 23%; height: 21%;"></a>
+    <a class="hotspot" data-local href="reading/warm-hearts.html" aria-label="Warm Hearts" title="Warm Hearts"
+       style="left: 72%; top: 28%; width: 24%; height: 22%;"></a>
+    <a class="hotspot" data-local href="reading/winter-wonders.html" aria-label="Winter Wonders" title="Winter Wonders"
+       style="left: 72%; top: 50%; width: 24%; height: 23%;"></a>
+    <a class="hotspot" data-local href="reading/genre.html" aria-label="Genre Spotlight" title="Genre Spotlight"
+       style="left: 34%; top: 39%; width: 16%; height: 11%;"></a>
+    <a class="hotspot" data-local href="reading/author.html" aria-label="Author Spotlight" title="Author Spotlight"
+       style="left: 51%; top: 39%; width: 16%; height: 11%;"></a>
+    <a class="hotspot" data-local href="reading/illustrator.html" aria-label="Illustrator Spotlight" title="Illustrator Spotlight"
+       style="left: 34%; top: 51%; width: 16%; height: 11%;"></a>
+    <a class="hotspot" data-local href="reading/series.html" aria-label="Series Spotlight" title="Series Spotlight"
+       style="left: 51%; top: 51%; width: 16%; height: 11%;"></a>
+    <a class="hotspot" data-local href="index.html" aria-label="Back to village" title="Back to village" style="left: 79%; top: 78%; width: 20%; height: 21%;"></a>
   </main>
-  <script src="../../assets/js/reading-nook.js"></script>
+  <script src="../assets/js/reading-nook.js"></script>
 </body>
 </html>

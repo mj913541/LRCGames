@@ -3,49 +3,26 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Winter Wonders</title>
-  <link rel="stylesheet" href="../../assets/css/reading-nook.css">
+  <title>Winter Animals</title>
+  <link rel="stylesheet" href="../../assets/css/snowy-shelf.css">
 </head>
-<body class="" data-group="lower" data-topic="winter-wonders">
-  <main class="page">
-    <nav><a data-local href="../reading-nook.html">← Reading Nook</a><a data-local href="../index.html">Winter Village</a></nav>
-    <h1>❄️ Winter Wonders</h1>
-    <p>Grades 1–2 · Winter science and nonfiction</p>
-    <section class="panel">
-      <h2>Teacher planning — suggested books</h2>
-      <p>Draft page: these are suggestions, not linked read-alouds yet.</p>
-      <div class="book">
-        <h3>Snowflake Bentley — Jacqueline Briggs Martin</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-0"> Prepare this suggested book or replace it</label>
-      </div>
-      <div class="book">
-        <h3>The Story of Snow — Mark Cassino with Jon Nelson</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-1"> Prepare this suggested book or replace it</label>
-      </div>
-      <div class="book">
-        <h3>Animals in Winter — Henrietta Bancroft and Richard G. Van Gelder</h3>
-        <!-- Add an approved cover and an authorized reading link here. -->
-        <label><input type="checkbox" data-task="book-2"> Prepare this suggested book or replace it</label>
-      </div>
-    </section>
-    <section class="panel">
-      <h2>Content setup checklist</h2>
-      <p id="progress" aria-live="polite"></p>
-      <label><input type="checkbox" data-task="task-0"> Finalize book selections</label>
-      <label><input type="checkbox" data-task="task-1"> Confirm books are appropriate for this age group</label>
-      <label><input type="checkbox" data-task="task-2"> Check for winter-only content; avoid Christmas imagery or references</label>
-      <label><input type="checkbox" data-task="task-3"> Find authorized read-alouds or publisher previews</label>
-      <label><input type="checkbox" data-task="task-4"> Check school Chromebook access</label>
-      <label><input type="checkbox" data-task="task-5"> Add book cover images with appropriate permission</label>
-      <label><input type="checkbox" data-task="task-6"> Add short student-friendly descriptions</label>
-      <label><input type="checkbox" data-task="task-7"> Add and test reading links</label>
-      <label><input type="checkbox" data-task="task-8"> Preview page as a student</label>
-      <button id="reset" type="button">Reset checklist</button>
-      <p><small>Progress is saved in this browser when browser storage is available. These are teacher planning tasks, not student assignments.</small></p>
-    </section>
+<body data-group="lower">
+  <main class="room">
+    <h1 class="shelf-heading">Winter Animals</h1>
+    <nav class="tabs" aria-label="Story collection">
+      <button data-page="0">Explore 1</button>
+      <button data-page="1">Explore 2</button>
+    </nav>
+    <section id="shelf" aria-label="Choose a story"></section>
+    <a id="back" href="../reading-nook.html" aria-label="Back to Reading Nook"></a>
+    <span class="credit">Original video collection: Amanda Lockwood</span>
   </main>
-  <script src="../../assets/js/reading-nook.js"></script>
+  <dialog id="player" aria-labelledby="video-title">
+    <header><h2 id="video-title"></h2><button id="close">✕ Close</button></header>
+    <div id="video"></div>
+    <p>If playback is unavailable, close this window and choose another story.</p>
+  </dialog>
+  <script src="../../assets/js/winter-animals-books.js"></script>
+  <script src="../../assets/js/snowy-shelf.js"></script>
 </body>
 </html>
